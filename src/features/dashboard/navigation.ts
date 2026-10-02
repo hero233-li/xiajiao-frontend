@@ -1,7 +1,7 @@
 import type { Navigation } from '../../api/generated/models';
 /** 所有入口接收后端的同一 Navigation，保留稳定条目和题目 ID。 */
-export function learningTargetPath(target: Navigation, cycleId: string) {
-  const query = new URLSearchParams({ cycleId });
+export function learningTargetPath(target: Navigation, _cycleId?: string) {
+  const query = new URLSearchParams();
   if (target.chapterId && target.pane !== 'PRACTICE') query.set('chapterId', target.chapterId);
   if (target.itemId) query.set('itemId', target.itemId);
   if (target.questionId) query.set('questionId', target.questionId);

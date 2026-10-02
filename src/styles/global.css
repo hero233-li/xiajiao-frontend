@@ -50,8 +50,8 @@ h1, h2, h3, p { margin: 0 0 16px; }
 .status-error { color: var(--color-danger); }
 .status-warning { color: var(--color-warning); }
 .status-info { color: var(--color-primary); }
-.progress-track { height: 8px; border-radius: var(--radius-normal); background: var(--color-line); overflow: hidden; }
-.progress-fill { height: 100%; background: var(--color-success); }
+.progress-track { height: 8px; border-radius: var(--radius-normal); background: #e5e7eb; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--color-primary); }
 .progress-label { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .tabs-list { display: flex; overflow-x: auto; gap: 8px; padding: 8px; border-bottom: 1px solid var(--color-line); }
 .tab { flex-shrink: 0; min-width: 44px; min-height: 44px; padding: 8px 16px; white-space: nowrap; border: 1px solid transparent; border-radius: var(--radius-normal); color: var(--color-primary); background: var(--color-surface); }
@@ -97,3 +97,14 @@ input[aria-invalid=true] { border-color: var(--color-danger); }
   h1 { font-size: var(--text-xl); }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+.course-frame-head { position: sticky; top: 0; z-index: 20; background: var(--color-canvas); padding: 12px 0; border-bottom: 1px solid var(--color-line); }
+.course-frame-head h1 { margin: 12px 0; }
+.course-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.course-tabs a { padding: 10px 14px; border-radius: 8px; }
+.course-tabs a.active { background: var(--color-primary-soft); font-weight: 700; }
+.cycle-switcher { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+.cycle-switcher select { width: auto; max-width: 260px; }
+.account-menu { position: relative; margin-left: auto; }
+.account-menu summary { cursor: pointer; padding: 10px; }
+.account-menu > div { position: absolute; right: 0; z-index: 30; background: white; padding: 12px; box-shadow: var(--shadow-raised); }

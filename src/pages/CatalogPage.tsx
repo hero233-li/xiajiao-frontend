@@ -1,4 +1,5 @@
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { Link, useSearchParams } from '../features/cycle/navigation';
 import { AlertCircle, LoaderCircle } from 'lucide-react';
 import { useCatalogCourse } from '../api/catalog';
 import { Button } from '../components/Button';
@@ -43,7 +44,7 @@ export function CatalogPage() {
           </Button>
         </section>
       )}
-      <h1>{course.data!.name} · 课程目录</h1>
+      <h2>学习目录</h2>
       <CatalogPanel key={course.data!.id} courseId={course.data!.id} />
     </>
   );

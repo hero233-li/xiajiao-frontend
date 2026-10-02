@@ -1,5 +1,5 @@
 import { AlertCircle, LoaderCircle, Inbox } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '../../features/cycle/navigation';
 export function RegionState({
   kind,
   message,

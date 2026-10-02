@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+
 import { Providers } from './app/Providers';
 import { routes } from './app/routes';
 import { initializeAuthRecovery } from './api/auth-recovery';

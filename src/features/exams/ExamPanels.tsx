@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link } from '../cycle/navigation';
 import { CheckCircle2, LockKeyhole, Info } from 'lucide-react';
 import type {
   Paper,
@@ -48,34 +48,15 @@ export function EmptyLine({ text, retry }: { text: string; retry: () => void }) 
     </div>
   );
 }
-export function UnlockSteps({ unlock, practice }: { unlock: Unlock; practice: string }) {
-  const rows = [
-    { title: '章节练习', href: practice, detail: '状态与进度暂未提供' },
-    { title: '章节检测', href: practice, detail: '状态与通过章数暂未提供' },
-    { title: '模拟卷', href: practice, detail: '状态与通过卷数暂未提供' },
-    {
-      title: '解锁真题',
-      href: '#exam-papers',
-      detail: `${unlock.canDownloadPapers ? '下载已开放' : '下载未开放'} · 进度暂未提供`,
-    },
-  ];
+export function UnlockSteps({ unlock: _unlock, practice }: { unlock: Unlock; practice: string }) {
   return (
     <>
-      <nav aria-label="真题解锁步骤" className="exam-steps">
-        {rows.map((row, index) => (
-          <a key={row.title} href={row.href} className="card exam-step">
-            <span className="exam-step-number">{index + 1}</span>
-            <strong>{row.title}</strong>
-            <span>{row.detail}</span>
-          </a>
-        ))}
-      </nav>
       <section className="exam-next">
         <Info size={20} aria-hidden="true" />
         <div>
           <p>章节练习 → 章节检测（≥90 分）→ 模拟卷（≥80 分）→ 解锁真题。</p>
           <p className="secondary">
-            当前步骤与具体进度暂不可用，请到刷题页查看后端返回的章节检测资格。
+            完成章节练习后，可查看检测资格。
           </p>
         </div>
         <Link className="button button-primary" to={practice}>
@@ -123,7 +104,7 @@ export function PredictionPanel({ prediction }: { prediction: Prediction }) {
   );
 }
 export function TrendPanel({ records }: { records: ScoreRecord[] }) {
-  // 后端返回最近记录；反转仅用于按时间从左到右绘制，不筛选预测样本。
+  // 服务端提供最近记录；反转仅用于按时间从左到右绘制，不筛选预测样本。
   const chronological = [...records].reverse();
   const points = chronological
     .map(
@@ -240,7 +221,7 @@ export function PaperGroups({
                         )}
                         {(unlock?.canDownloadPapers || unlock?.canWriteScores) && (
                           <>
-                            <p className="secondary">练习次数 / 首次成绩 / 最近成绩：暂未提供</p>
+                            <p className="secondary"></p>
                             <div className="row">
                               {unlock.canDownloadPapers && (
                                 <>

@@ -1,5 +1,9 @@
+import { useQuery } from '@tanstack/react-query';
+import { getLearningPosition } from '../../api/generated/courses/courses';
+import { progressStyle } from '../../utils/progress';
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { Link, useNavigate } from '../cycle/navigation';
 import {
   AlertCircle,
   ArrowRight,
@@ -36,6 +40,7 @@ function resourceUrl(item: CatalogItem) {
 }
 export function CatalogPanel({ courseId }: { courseId: string }) {
   const query = useCatalog(courseId);
+  const position = useQuery({ queryKey: ['learning-position', courseId], queryFn: async ({ signal }) => (await getLearningPosition(courseId, { signal, silent: true })).data, retry: false });
   const mutation = useCatalogCompletion(courseId);
   const location = useLocation();
   const navigate = useNavigate();
@@ -50,9 +55,11 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
   const processedHash = useRef<string>();
   const locked = useRef(false);
   const savedTimer = useRef<ReturnType<typeof setTimeout>>();
-  const next = query.data?.chapters
+  const candidates = query.data?.chapters
     .flatMap((chapter) => chapter.items.map((item) => ({ chapter, item })))
-    .find(({ item }) => !item.completed);
+;
+  const previous = position.data?.target.pane === 'CATALOG' ? candidates?.find(({ item }) => item.id === position.data?.target.itemId) : undefined;
+  const next = previous ?? candidates?.find(({ item }) => !item.completed);
 
   useEffect(() => () => clearTimeout(savedTimer.current), []);
   useEffect(() => {
@@ -204,7 +211,7 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
         </label>
         <section className="card catalog-continue" aria-labelledby="continue-heading">
           <div>
-            <h2 id="continue-heading">继续学习</h2>
+            <h2 id="continue-heading">上次停在这里</h2><p className="secondary">{previous ? '来自上次学习记录' : '来自目录完成进度 · 下一个未完成条目'}</p>
             {next ? (
               <>
                 <p>
@@ -247,7 +254,7 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
             aria-valuenow={progress.percent}
             aria-valuetext={`已完成 ${progress.completedItems} / ${progress.totalItems} 项`}
           >
-            <div className="progress-fill" style={{ width: `${progress.percent}%` }} />
+            <div className="progress-fill" style={progressStyle(progress.percent)} />
           </div>
         </section>
         {catalog.chapters.map((chapter) => {

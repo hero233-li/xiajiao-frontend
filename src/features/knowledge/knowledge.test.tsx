@@ -196,7 +196,7 @@ describe('知识合集', () => {
     await screen.findByText('解答暂不可用');
     server.use(http.get(solutionUrl, () => ok({ exampleId, answer: '', solution: '' })));
     await userEvent.click(screen.getByRole('button', { name: '重新加载' }));
-    await screen.findByText('本例题暂未提供答案与解法。');
+    await screen.findByText('本例题答案与解法准备中。');
   });
   it('搜索防抖，不为每个字符请求，并发送难度筛选', async () => {
     const received: string[] = [];

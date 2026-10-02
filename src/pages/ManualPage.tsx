@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { Link, useSearchParams } from '../features/cycle/navigation';
 import { LoaderCircle } from 'lucide-react';
 import { useCatalogCourse } from '../api/catalog';
 import { Button } from '../components/Button';
@@ -39,7 +40,7 @@ export function ManualPage() {
     );
   return (
     <>
-      <h1>{course.data!.name} · 实践手册</h1>
+      <h2>实践手册</h2>
       {course.isError && (
         <section className="card" role="alert">
           <p>课程信息刷新失败，正在显示上次加载的内容。</p>

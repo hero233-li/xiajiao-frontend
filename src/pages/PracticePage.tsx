@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { Link, useSearchParams } from '../features/cycle/navigation';
 import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -72,7 +73,7 @@ export function PracticePage({
   const [params] = useSearchParams();
   const cycleId = params.get('cycleId') || '';
   const course = usePracticeCourse(code, cycleId);
-  const back = `/zikao/course/${encodeURIComponent(code)}/practice?${new URLSearchParams({ cycleId })}`;
+  const back = `/zikao/course/${encodeURIComponent(code)}/practice?${new URLSearchParams()}`;
   if (!cycleId)
     return (
       <Region
@@ -482,7 +483,7 @@ function QuestionCard({
         data-error={answer.isError}
       >
         <div className="practice-meta">
-          <span>考点名称暂未提供</span>
+          <span>考点待补充</span>
           <span aria-label={`难度 ${question.difficulty} 星，满分 5 星`}>
             难度 {'★'.repeat(question.difficulty)}
             {'☆'.repeat(5 - question.difficulty)}

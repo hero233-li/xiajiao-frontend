@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from '../features/cycle/navigation';
 import { QuickNote } from '../features/notes/QuickNote';
 export function Component() {
   const [content, setContent] = useState('复盘错题：\n#错题');

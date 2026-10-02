@@ -179,12 +179,12 @@ describe('刷题章节选择', () => {
     await userEvent.click(start);
     expect(router.state.location.pathname).toBe(`/zikao/course/00023/practice/${chapterId}`);
   });
-  it('开始使用稳定 chapterId，保留周期参数', async () => {
+  it('开始使用稳定 chapterId，内部链接不带周期 UUID', async () => {
     const router = mount();
     await screen.findByText('函数与极限');
     await userEvent.click(screen.getAllByRole('button', { name: '开始' })[0]);
     expect(router.state.location.pathname).toBe(`/zikao/course/00023/practice/${chapterId}`);
-    expect(router.state.location.search).toContain(cycleId);
+    expect(router.state.location.search).not.toContain(cycleId);
     expect(router.state.location.pathname).not.toMatch(/ch\d+/);
   });
   it('真题变种没有解锁门槛，切换可刷新恢复', async () => {

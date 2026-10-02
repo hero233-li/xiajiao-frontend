@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useSearchParams } from '../features/cycle/navigation';
 import { FilePenLine, Plus, Search } from 'lucide-react';
 import type { Note } from '../api/generated/models';
 import { useNoteCourses, useNotes, useNoteTags } from '../api/notes';
@@ -87,7 +88,7 @@ export function Component() {
     (courses.data?.some((course) => course.id === recentNoteCourse()) ? recentNoteCourse() : '');
   return (
     <div className="notes-page stack">
-      <h1>{code ? `${current?.name ?? '课程'}备注` : '全部学习备注'}</h1>
+      <h2>{code ? '课程备注' : '全部学习备注'}</h2>
       <section className="card notes-filters" aria-label="筛选备注">
         <label htmlFor={`${id}-search`}>
           <Search size={18} aria-hidden="true" /> 搜索正文

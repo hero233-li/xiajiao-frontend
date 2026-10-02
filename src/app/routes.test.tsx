@@ -10,7 +10,7 @@ it.each(protectedPaths)('未登录路由 %s 携带原地址跳转登录',async p
   const {router}=renderRoute(`${path}?cycleId=example#anchor`); await screen.findByRole('heading',{name:'登录学习知途'}); expect(router.state.location.pathname).toBe('/login'); expect(new URLSearchParams(router.state.location.search).get('redirect')).toBe(`${path}?cycleId=example#anchor`);
 });
 it('登录后回到稳定章节ID深链接',async()=>{
-  const path='/zikao/course/00023/practice/b8816b55-e24a-5653-b1af-5c962d1b54f1?cycleId=example#anchor';const {router}=renderRoute(path); await screen.findByRole('heading',{name:'登录学习知途'}); await userEvent.click(screen.getByRole('button',{name:'使用演示账号'})); await screen.findByRole('heading',{name:'函数与极限'});expect(router.state.location.pathname+router.state.location.search+router.state.location.hash).toBe(path);
+  server.use(http.get('/api/v1/exams/cycles', () => HttpResponse.json({code:0,message:'ok',data:{items:[{id:'example',name:'测试周期',startDate:'2026-10-01',endDate:'2026-10-31',timezone:'Asia/Shanghai',courses:[]}],page:1,size:100,total:1}}))); const path='/zikao/course/00023/practice/b8816b55-e24a-5653-b1af-5c962d1b54f1#anchor';const {router}=renderRoute(path); await screen.findByRole('heading',{name:'登录学习知途'}); await userEvent.click(screen.getByRole('button',{name:'使用演示账号'})); await screen.findByRole('heading',{name:'函数与极限'});expect(router.state.location.pathname+router.state.location.search+router.state.location.hash).toBe(path);
 });
 it('未知地址无需登录即可显示404',async()=>{renderRoute('/does-not-exist');expect(await screen.findByRole('heading',{name:'页面未找到'})).toBeInTheDocument();});
 it('普通用户无法访问管理入口',async()=>{

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from '../features/cycle/navigation';
 import { AlertCircle, BookOpen, CheckCircle2, ChevronLeft, RotateCcw } from 'lucide-react';
 import {
   useApplyChapterAssessment,
@@ -129,7 +130,7 @@ function DetectionStatus({ chapter, onApply }: { chapter: PracticeChapter; onApp
     );
   return (
     <p className="selection-status status-warning">
-      {chapter.stats.canApplyChapterAssessment === false ? '检测未开放' : '检测开放状态暂未提供'}
+      {chapter.stats.canApplyChapterAssessment === false ? '检测未开放' : '该功能准备中'}
     </p>
   );
 }
@@ -164,7 +165,7 @@ function AssessmentDialog({
         key: key.current!.value,
       });
       navigate(
-        `/zikao/course/${encodeURIComponent(code)}/tests/${encodeURIComponent(session.id)}?cycleId=${encodeURIComponent(cycleId)}`,
+        `/zikao/course/${encodeURIComponent(code)}/tests/${encodeURIComponent(session.id)}`,
       );
     } catch {
       /* Button 展示后端错误，可用同一幂等键重试。 */
@@ -298,7 +299,7 @@ function WrongSelection({
               </p>
               <Link
                 className="button button-secondary"
-                to={`/zikao/course/${encodeURIComponent(code)}/practice/${encodeURIComponent(question.chapterId)}?filter=WRONG&questionId=${encodeURIComponent(question.id)}&cycleId=${encodeURIComponent(search.get('cycleId') || '')}`}
+                to={`/zikao/course/${encodeURIComponent(code)}/practice/${encodeURIComponent(question.chapterId)}?filter=WRONG&questionId=${encodeURIComponent(question.id)}`}
               >
                 重做此题
               </Link>
@@ -335,9 +336,7 @@ function Selection({ overview, code }: { overview: PracticeOverview; code: strin
   const [assessmentChapter, setAssessmentChapter] = useState<PracticeChapter | null>(null);
   const navigate = useNavigate();
   const base = `/zikao/course/${encodeURIComponent(code)}/practice`;
-  const cycleQuery = search.get('cycleId')
-    ? `?cycleId=${encodeURIComponent(search.get('cycleId')!)}`
-    : '';
+  const cycleQuery = '';
   function chooseMode(next: 'CHAPTER' | 'VARIANT', filter?: 'WRONG') {
     const params = new URLSearchParams(search);
     params.set('mode', next);
@@ -497,7 +496,7 @@ export function PracticeSelectionPage() {
           <h1>
             <BookOpen size={28} aria-hidden="true" /> 章节刷题
           </h1>
-          {course.data && <p className="secondary">{course.data.name}</p>}
+          
         </div>
         <Link className="button button-ghost" to="/zikao/courses">
           <ChevronLeft size={20} aria-hidden="true" />

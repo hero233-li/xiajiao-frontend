@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Link, NavLink, useSearchParams } from 'react-router-dom';
+import { CyclePicker, useCycle } from '../features/cycle/CycleContext';
+import { usePlan } from '../api/schedule';
+import { Link, NavLink, useSearchParams } from '../features/cycle/navigation';
 import { AlarmClock, ArrowRight, CalendarDays, NotebookPen, Sparkles } from 'lucide-react';
-import { useDashboard, useExamCycles } from '../api/dashboard';
+import { useDashboard } from '../api/dashboard';
 import type { Dashboard } from '../api/generated/models';
 import { CourseCard } from '../components/dashboard/CourseCard';
 import { ProgressBar } from '../components/dashboard/ProgressBar';
@@ -10,29 +11,19 @@ import { dateLabel, learningTargetPath } from '../features/dashboard/navigation'
 import '../features/dashboard/dashboard.css';
 
 export function DashboardPage() {
-  const [params, setParams] = useSearchParams();
-  const [page, setPage] = useState(1);
-  const cycles = useExamCycles(page);
+  const [params] = useSearchParams();
+  const cycle = useCycle();
   const cycleId = params.get('cycleId') || undefined;
   const planId = params.get('planId') || undefined;
   const query = useDashboard(cycleId ? { cycleId, ...(planId ? { planId } : {}) } : undefined);
   const suffix = params.size ? `?${params}` : '';
+  const plan = usePlan(query.data?.selectedPlanId ?? '');
+  const planDay = plan.data && query.data ? Math.floor((Date.parse(query.data.localDate) - Date.parse(plan.data.config.startDate)) / 86400000) + 1 : 0;
   const state = query.isError ? (
     <RegionState
       kind="error"
       message="备考数据加载失败，请重试。"
       retry={() => void query.refetch()}
-    />
-  ) : !cycleId ? (
-    <RegionState
-      kind="empty"
-      message={
-        cycles.data?.items.length
-          ? '选择考试周期后查看备考安排。'
-          : '暂无可选考试周期，可先查看科目。'
-      }
-      href={cycles.data?.items.length ? '#exam-cycle' : '/zikao/courses'}
-      action={cycles.data?.items.length ? '选择考试周期' : '查看我的科目'}
     />
   ) : query.isPending ? (
     <RegionState kind="loading" message="正在加载备考数据…" />
@@ -44,6 +35,7 @@ export function DashboardPage() {
           <p className="ov-kicker">学习知途 · 备考总览</p>
           <h1>一步一步，学有所成。</h1>
         </div>
+        <CyclePicker />
         <Link
           className="ov-button ov-secondary ov-icon"
           to={`/zikao/notes${suffix}`}
@@ -52,72 +44,7 @@ export function DashboardPage() {
           <NotebookPen aria-hidden="true" />
         </Link>
       </header>
-      <section className="ov-cycle" aria-label="考试周期选择">
-        {cycles.isPending ? (
-          <RegionState kind="loading" message="正在加载考试周期…" />
-        ) : cycles.isError ? (
-          <RegionState
-            kind="error"
-            message="考试周期加载失败，请重试。"
-            retry={() => void cycles.refetch()}
-          />
-        ) : !cycles.data.items.length ? (
-          <RegionState
-            kind="empty"
-            message="暂无可选考试周期。"
-            retry={() => void cycles.refetch()}
-            href="/zikao/courses"
-          />
-        ) : (
-          <>
-            <label htmlFor="exam-cycle">考试周期</label>
-            <select
-              id="exam-cycle"
-              value={cycleId ?? ''}
-              onChange={(event) => {
-                const next = new URLSearchParams(params);
-                next.delete('planId');
-                if (event.target.value) next.set('cycleId', event.target.value);
-                else next.delete('cycleId');
-                setParams(next);
-              }}
-            >
-              <option value="">请选择考试周期</option>
-              {cycleId && !cycles.data.items.some((c) => c.id === cycleId) && (
-                <option value={cycleId}>{query.data?.cycle?.name ?? '已选周期'}</option>
-              )}
-              {cycles.data.items.map((cycle) => (
-                <option key={cycle.id} value={cycle.id}>
-                  {cycle.name}
-                </option>
-              ))}
-            </select>
-            <div className="ov-pagination">
-              <button
-                className="ov-button ov-secondary"
-                disabled={page === 1}
-                title={page === 1 ? '已经是第一页' : undefined}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                上一页
-              </button>
-              <span className="ov-small">
-                第 {page} 页{page === 1 ? ' · 已是首页' : ''}
-              </span>
-              <button
-                className="ov-button ov-secondary"
-                disabled={page * cycles.data.size >= cycles.data.total}
-                title={
-                  page * cycles.data.size >= cycles.data.total ? '没有更多考试周期' : undefined
-                }
-                onClick={() => setPage((p) => p + 1)}
-              >
-                下一页
-              </button>
-            </div>
-          </>
-        )}
-      </section>
+      {cycle?.pending ? <RegionState kind="loading" message="正在加载考试周期…" /> : cycle?.error ? <RegionState kind="error" message="考试周期加载失败，请重试。" retry={cycle.retry} /> : !cycleId ? <RegionState kind="empty" message={cycle?.cycles.length ? '找不到这个考试周期，请选择其他周期。' : '暂无考试周期。'} href="/zikao/courses" action="查看我的科目" /> : state ? state : <>
       <div className="ov-top-grid">
         <section
           className="ov-card ov-countdown"
@@ -137,13 +64,14 @@ export function DashboardPage() {
         >
           <h2 id="suggestion-heading">
             <Sparkles aria-hidden="true" />
-            今日建议
+            今日计划
           </h2>
           {state ??
             (query.data?.todaySuggestion ? (
               <>
                 <h3>{query.data.todaySuggestion.title}</h3>
-                <p>{query.data.todaySuggestion.reason}</p>
+                <p className="ov-small">来自 35 天安排{planDay > 0 ? ` · 第 ${planDay} 天` : ''}</p>
+                {query.data.continueLearning?.target.courseCode === query.data.todaySuggestion.target.courseCode && JSON.stringify(query.data.continueLearning.target) !== JSON.stringify(query.data.todaySuggestion.target) && <><p>你的目录进度在 {query.data.continueLearning.title}，今日计划安排的是 {query.data.todaySuggestion.title}。</p><Link className="ov-button ov-secondary" to={learningTargetPath(query.data.continueLearning.target, cycleId!)}>继续上次位置</Link></>}
                 <p className="ov-small">
                   {query.data.courses.find(
                     (c) => c.code === query.data?.todaySuggestion?.target.courseCode,
@@ -153,7 +81,7 @@ export function DashboardPage() {
                   className="ov-button ov-primary"
                   to={learningTargetPath(query.data.todaySuggestion.target, cycleId!)}
                 >
-                  开始今日学习
+                  按计划学习
                   <ArrowRight aria-hidden="true" />
                 </Link>
               </>
@@ -230,6 +158,7 @@ export function DashboardPage() {
             />
           ))}
       </section>
+      </>}
     </section>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useSearchParams } from '../cycle/navigation';
 import type { PracticeNoteRequest } from '../../pages/PracticePage';
 import { QuickNote } from './QuickNote';
 

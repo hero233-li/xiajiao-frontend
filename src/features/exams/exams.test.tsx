@@ -73,9 +73,7 @@ describe('历年试卷与成绩', () => {
     expect(screen.queryByRole('button', { name: '下载题目' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '记录成绩' })).not.toBeInTheDocument();
     expect(screen.queryByText(/练习次数/)).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('navigation', { name: '真题解锁步骤' }).querySelectorAll('a'),
-    ).toHaveLength(4);
+    expect(screen.queryByRole('navigation', {name:'真题解锁步骤'})).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '手动跳过' })).not.toBeInTheDocument();
   });
   it('窗口内二次确认跳过，成功后可撤销', async () => {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from '../features/cycle/navigation';
 import { AlertTriangle, ArrowDown, ArrowUp, CalendarDays, Check, Settings } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';

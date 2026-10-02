@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { Link, useSearchParams } from '../features/cycle/navigation';
 import { CheckCircle2 } from 'lucide-react';
 import {
   useExamCourse,
@@ -31,8 +32,8 @@ export function Component() {
   return (
     <div className="exam-page stack">
       <header>
-        <p className="secondary">学习知途 · 课程 {code}</p>
-        <h1>历年试卷与成绩</h1>
+        
+        <h2>历年试卷与成绩</h2>
         <p>循序练习，记录每一次进步。</p>
       </header>
       {cycleId ? (
@@ -81,7 +82,7 @@ function ExamCourse({ code, cycleId }: { code: string; cycleId: string }) {
     <AsyncRegion query={course} label="课程">
       {(data) => (
         <>
-          <h2>{data.name}</h2>
+          
           <ExamContent courseId={data.id} code={code} cycleId={cycleId} />
         </>
       )}
@@ -105,7 +106,7 @@ export function ExamContent({
   const [dialog, setDialog] = useState<{ paperId: string; record?: ScoreRecord }>();
   const [skipConfirm, setSkipConfirm] = useState(false);
   const [downloadError, setDownloadError] = useState('');
-  const practice = `/zikao/course/${code}/practice?cycleId=${encodeURIComponent(cycleId)}`;
+  const practice = `/zikao/course/${code}/practice`;
   const canWrite = data.unlock.isSuccess && !data.unlock.isError && data.unlock.data.canWriteScores;
   async function download(paper: Paper, part: 'QUESTION' | 'ANSWER') {
     if (!data.unlock.data?.canDownloadPapers || actions.download.isPending) return;

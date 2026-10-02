@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from '../features/cycle/navigation';
 import { AlertTriangle, Check, Circle, Flag, Timer } from 'lucide-react';
 import {
   useAssessmentCourse,
@@ -38,7 +39,7 @@ export function Component() {
   useEffect(() => {
     setCompleted(false);
   }, [testId]);
-  const back = `/zikao/course/${code}/practice?cycleId=${encodeURIComponent(cycleId)}`;
+  const back = `/zikao/course/${code}/practice`;
   if (!cycleId)
     return (
       <div className="assessment-page">
@@ -159,7 +160,7 @@ export function Component() {
       onComplete={() => {
         setCompleted(true);
         navigate(
-          `/zikao/course/${code}/tests/${testId}/result?cycleId=${encodeURIComponent(cycleId)}`,
+          `/zikao/course/${code}/tests/${testId}/result`,
           { replace: true },
         );
       }}
@@ -501,14 +502,14 @@ function Result({
   session,
   result,
   code,
-  cycleId,
+  cycleId: _cycleId,
 }: {
   session: AssessmentSession;
   result: AssessmentResult;
   code: string;
   cycleId: string;
 }) {
-  const practice = `/zikao/course/${code}/practice${session.chapterId ? `/${session.chapterId}` : ''}?cycleId=${encodeURIComponent(cycleId)}`;
+  const practice = `/zikao/course/${code}/practice${session.chapterId ? `/${session.chapterId}` : ''}`;
   return (
     <>
       <section className="card stack">
@@ -596,7 +597,7 @@ function Result({
       <div className="row">
         <Link
           className="button button-primary"
-          to={`/zikao/course/${code}/tests/new?kind=${session.kind}&chapterId=${session.chapterId ?? ''}&cycleId=${encodeURIComponent(cycleId)}`}
+          to={`/zikao/course/${code}/tests/new?kind=${session.kind}&chapterId=${session.chapterId ?? ''}`}
         >
           重新检测
         </Link>
@@ -611,7 +612,7 @@ function Result({
           </p>
           <Link
             className="button button-primary"
-            to={`/zikao/course/${code}/exams?cycleId=${encodeURIComponent(cycleId)}`}
+            to={`/zikao/course/${code}/exams`}
           >
             查看历年真题
           </Link>

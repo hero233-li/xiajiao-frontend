@@ -200,12 +200,12 @@
   height: 8px;
   overflow: hidden;
   border-radius: 8px;
-  background: var(--ov-green-soft);
+  background: #e5e7eb;
 }
 .ov-progress span {
   display: block;
   height: 100%;
-  background: var(--ov-green);
+  background: var(--color-primary);
   border-radius: inherit;
 }
 .ov-button {

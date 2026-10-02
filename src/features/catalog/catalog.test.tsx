@@ -69,6 +69,7 @@ const fixture: Catalog = {
 let data: Catalog;
 const envelope = (data: unknown) => HttpResponse.json({ code: 0, message: '成功', data });
 const server = setupServer(
+  http.get('/api/v1/courses/:id/learning-position', () => HttpResponse.json({code:40401,data:null,message:'无记录'},{status:404})),
   http.get('/api/v1/catalog/courses/course-a', () => envelope(data)),
   http.put(
     '/api/v1/catalog/courses/course-a/items/:itemId/completion',
@@ -90,9 +91,10 @@ const server = setupServer(
     },
   ),
 );
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+beforeAll(() => { server.listen({ onUnhandledRequest: 'error' }); });
 afterAll(() => server.close());
 beforeEach(() => {
+  
   data = structuredClone(fixture);
 });
 afterEach(() => {

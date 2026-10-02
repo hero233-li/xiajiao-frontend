@@ -306,7 +306,7 @@ describe('35天安排', () => {
     await user.click(screen.getByRole('button', { name: '第 5 周' }));
     expect(view.router.state.location.search).toContain('week=5');
     const link = await screen.findByRole('link', { name: '进入历年试卷' });
-    expect(link).toHaveAttribute('href', '/zikao/course/00023/exams?cycleId=cycle');
+    expect(link).toHaveAttribute('href', '/zikao/course/00023/exams');
     await user.click(link);
     expect(await screen.findByRole('heading', { name: '历年试卷' })).toBeVisible();
     view.unmount();
@@ -385,7 +385,7 @@ describe('35天安排', () => {
     );
     expect(screen.getByRole('link', { name: '进入学习目录' })).toHaveAttribute(
       'href',
-      '/zikao/course/00023/catalog?cycleId=cycle&chapterId=chapter&itemId=today#chapter',
+      '/zikao/course/00023/catalog?chapterId=chapter&itemId=today#chapter',
     );
   });
   it('失败回滚并可重试；目录侧修改后重新进入计划读取同步状态', async () => {

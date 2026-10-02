@@ -64,6 +64,6 @@ describe('公共组件', () => {
   });
   it('错误公式降级，危险链接和原始HTML不执行', async () => {
     const { container } = render(<MathText text={'$\\notACommand$ $\\href{javascript:alert(1)}{链接}$ <img src=x onerror=alert(1)>'} />);
-    expect(await screen.findAllByRole('note')).not.toHaveLength(0); expect(container.querySelector('a[href^="javascript:"]')).toBeNull(); expect(container.querySelector('img')).toBeNull();
+    await waitFor(() => expect(container).toHaveTextContent('$\\notACommand$')); expect(container.querySelector('a[href^="javascript:"]')).toBeNull(); expect(container.querySelector('img')).toBeNull();
   });
 });

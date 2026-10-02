@@ -1,3 +1,4 @@
+import { CycleProvider } from '../cycle/CycleContext';
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { act, render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -92,10 +93,11 @@ const cyclesHandler = http.get('/api/v1/exams/cycles', () =>
     data: { items: [cycle], page: 1, size: 20, total: 1 },
   }),
 );
+const planHandler = http.get('/api/v1/schedule/plans/:id', () => HttpResponse.json({code:0,message:'ok',data:{id:'plan-1',config:{startDate:'2026-10-01'},days:[{day:'2026-10-01'},{day:'2026-10-02'}]}}));
 const dashboardHandler = http.get('/api/v1/dashboard', () =>
   HttpResponse.json({ code: 0, message: 'ok', data: fixture }),
 );
-const server = setupServer(cyclesHandler, dashboardHandler);
+const server = setupServer(cyclesHandler, dashboardHandler, planHandler);
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
@@ -111,7 +113,7 @@ function Destination() {
 function mount(path = '/zikao?cycleId=cycle-1') {
   const router = createMemoryRouter(
     [
-      { path: '/zikao', element: <DashboardPage /> },
+      { path: '/zikao', element: <CycleProvider><DashboardPage /></CycleProvider> },
       { path: '*', element: <Destination /> },
     ],
     { initialEntries: [path], future: { v7_relativeSplatPath: true } },
@@ -144,7 +146,7 @@ describe('备考总览', () => {
   it('建议与后端最近位置使用完全相同的结构化路由', async () => {
     const router = mount();
     await screen.findByRole('heading', { name: '测试理论课程' });
-    const suggestion = screen.getByRole('link', { name: '开始今日学习' });
+    const suggestion = screen.getByRole('link', { name: '按计划学习' });
     expect(suggestion).toHaveAttribute('href', learningTargetPath(target, 'cycle-1'));
     expect(screen.getByRole('link', { name: '继续学习 8/20' })).toHaveAttribute(
       'href',
@@ -153,6 +155,13 @@ describe('备考总览', () => {
     await userEvent.click(suggestion);
     expect(router.state.location.pathname).toBe('/zikao/course/99999/practice/chapter-1');
     expect(router.state.location.search).toContain('questionId=question-3');
+  });
+  it('计划和目录位置不同则说明来源并提供两个入口', async () => {
+    server.use(http.get('/api/v1/dashboard', () => HttpResponse.json({code:0,message:'ok',data:{...fixture,continueLearning:{...fixture.continueLearning!,title:'上次目录条目',target:{...target,pane:'CATALOG',itemId:'previous-item'}}}})));
+    mount(); await screen.findByText('你的目录进度在 上次目录条目，今日计划安排的是 完成今日计划条目。');
+    expect(screen.getByRole('link',{name:'按计划学习'})).toBeInTheDocument();
+    expect(screen.getByRole('link',{name:'继续上次位置'})).toHaveAttribute('href','/zikao/course/99999/catalog?chapterId=chapter-1&itemId=previous-item&questionId=question-3');
+    expect(await screen.findByText('来自 35 天安排 · 第 2 天')).toBeInTheDocument();
   });
   it('路由标签支持前进、后退及刷新后直接定位', async () => {
     const router = mount();
@@ -174,15 +183,15 @@ describe('备考总览', () => {
     await screen.findByRole('heading', { name: '测试理论课程' });
     expect(screen.getByRole('link', { name: '打开学习备注' })).toHaveAttribute(
       'href',
-      '/zikao/notes?cycleId=cycle-1',
+      '/zikao/notes',
     );
     expect(screen.getByRole('link', { name: '查看全部' })).toHaveAttribute(
       'href',
-      '/zikao/courses?cycleId=cycle-1',
+      '/zikao/courses',
     );
     expect(screen.getAllByRole('link', { name: '管理' })[0]).toHaveAttribute(
       'href',
-      '/zikao/courses?cycleId=cycle-1',
+      '/zikao/courses',
     );
   });
   it('每个异步数据区域都有加载状态', async () => {
@@ -193,7 +202,7 @@ describe('备考总览', () => {
       }),
     );
     mount();
-    expect(screen.getAllByText('正在加载备考数据…')).toHaveLength(4);
+    expect(await screen.findAllByText('正在加载备考数据…')).toHaveLength(1);
     await screen.findByRole('heading', { name: '测试理论课程' });
   });
   it('空建议、空科目、空倒计时和空目录有说明及行动', async () => {
@@ -232,7 +241,7 @@ describe('备考总览', () => {
     );
     mount();
     await screen.findAllByText('备考数据加载失败，请重试。');
-    expect(screen.getAllByRole('alert')).toHaveLength(4);
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
     await userEvent.click(screen.getAllByRole('button', { name: '重新加载' })[0]);
     await screen.findByRole('heading', { name: '测试理论课程' });
     expect(calls).toBe(2);
@@ -247,25 +256,19 @@ describe('备考总览', () => {
     await screen.findAllByText('备考数据加载失败，请重试。');
     expect(screen.queryByRole('article')).not.toBeInTheDocument();
   });
-  it('未提供下一步时禁用按钮，给出原因和目录入口', async () => {
-    mount();
-    await screen.findByText('测试未开始课程');
+  it('缺少下一位置时主入口可用，直接进入目录', async () => {
+    mount(); await screen.findByText('测试未开始课程');
     const card = screen.getAllByRole('article')[1];
-    expect(within(card).getByRole('button', { name: '从第 1 节开始 0/20' })).toBeDisabled();
-    expect(within(card).getByRole('button')).toHaveAccessibleDescription(
-      '暂无法直达：接口未提供本课的下一学习位置。',
-    );
-    expect(within(card).getByRole('link', { name: '查看课程目录' })).toBeInTheDocument();
-    expect(screen.queryByText('补课')).not.toBeInTheDocument();
-    expect(screen.queryByText('按计划')).not.toBeInTheDocument();
+    expect(within(card).getByRole('link', {name:'进入课程'})).toHaveAttribute('href','/zikao/course/00001/catalog');
+    expect(within(card).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(card).queryByText('查看课程目录')).not.toBeInTheDocument();
   });
-  it('明确选择周期并在 URL 保存；不猜测当前周期', async () => {
+  it('单周期自动选中，没有选择器或周期 UUID', async () => {
     const router = mount('/zikao');
-    await screen.findByLabelText('考试周期');
-    expect(screen.queryByRole('article')).not.toBeInTheDocument();
-    await userEvent.selectOptions(screen.getByLabelText('考试周期'), 'cycle-1');
-    await screen.findByRole('heading', { name: '测试理论课程' });
-    expect(router.state.location.search).toBe('?cycleId=cycle-1');
+    await screen.findByRole('heading', {name:'测试理论课程'});
+    expect(screen.queryByLabelText('考试周期')).not.toBeInTheDocument();
+    expect(router.state.location.search).toBe('');
+    expect(document.querySelector('a[href*="cycleId"]')).toBeNull();
   });
   it('周期区域支持失败、重试和空状态', async () => {
     server.use(
@@ -285,7 +288,7 @@ describe('备考总览', () => {
       ),
     );
     await userEvent.click(screen.getByRole('button', { name: '重新加载' }));
-    await screen.findByText('暂无可选考试周期。');
+    await screen.findByText('暂无考试周期。');
   });
   it('业务日期保持上海日期，状态显示以后端字段为准', async () => {
     expect(dateLabel('2026-10-24')).toBe('10/24');

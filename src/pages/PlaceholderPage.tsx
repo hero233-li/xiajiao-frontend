@@ -1,8 +1,9 @@
-import { useMatches, useNavigate } from 'react-router-dom';
+import { useMatches } from 'react-router-dom';
+import { useNavigate } from '../features/cycle/navigation';
 import { EmptyState } from '../components/EmptyState';
 import { Breadcrumb } from '../components/Breadcrumb';
 export function Component() {
   const navigate = useNavigate(); const matches = useMatches();
   const handle = matches.at(-1)?.handle as { title?: string } | undefined;
-  return <><Breadcrumb items={[{ label: '健康检查', to: '/health' },{ label: handle?.title || '工程占位' }]} /><h1>{handle?.title || '工程占位'}</h1><EmptyState message="此路由已就绪，业务内容尚未实现。" actionLabel="前往健康检查" onAction={() => navigate('/health')} /></>;
+  return <><Breadcrumb items={[{ label: '备考总览', to: '/zikao' },{ label: handle?.title || '功能准备中' }]} /><h1>{handle?.title || '功能准备中'}</h1><EmptyState message="该功能准备中。" actionLabel="前往备考总览" onAction={() => navigate('/zikao')} /></>;
 }

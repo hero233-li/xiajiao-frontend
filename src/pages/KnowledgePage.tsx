@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from '../features/cycle/navigation';
 import {
   AlertCircle,
   ArrowLeft,
@@ -162,7 +163,7 @@ function Solution({ courseId, exampleId }: { courseId: string; exampleId: string
       <Region error={query.error} retry={() => void query.refetch()} retrying={query.isFetching} />
     );
   if (!query.data.answer && !query.data.solution)
-    return <Region empty="本例题暂未提供答案与解法。" onAction={() => void query.refetch()} />;
+    return <Region empty="本例题答案与解法准备中。" onAction={() => void query.refetch()} />;
   return (
     <div className="kh-solution">
       <h4>答案</h4>
@@ -336,7 +337,7 @@ function DetailContent({
         {module.content ? (
           <KnowledgeMarkdown text={module.content} />
         ) : (
-          <Region empty="本模块暂未提供正文。" action="查看其他模块" onAction={onBack} />
+          <Region empty="本模块内容准备中。" action="查看其他模块" onAction={onBack} />
         )}
       </section>
       <section className="kh-section" aria-label="公式列表">
@@ -604,7 +605,7 @@ export function KnowledgePage() {
             <BookOpen size={28} aria-hidden="true" />
             知识合集
           </h1>
-          {course.data && <p className="secondary">{course.data.name}</p>}
+          
         </div>
         <Link className="button button-ghost" to="/zikao/courses">
           我的科目

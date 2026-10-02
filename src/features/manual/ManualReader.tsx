@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate, useNavigationType } from 'react-router-dom';
+import { useLocation, useNavigationType } from 'react-router-dom';
+import { useNavigate } from '../cycle/navigation';
 import { AlertCircle, BookOpen, Check, LoaderCircle, Search } from 'lucide-react';
 import { useManual, useManualCompletion } from '../../api/manual';
 import type { CatalogItem } from '../../api/generated/models';

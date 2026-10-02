@@ -1,5 +1,6 @@
+import { useCapability } from '../../features/capabilities/useCapability';
 import { BookOpen, CalendarDays, NotebookPen, Settings2, FileText, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '../../features/cycle/navigation';
 import type { Course, CycleCourse, LearningPosition } from '../../api/generated/models';
 import { dateLabel, learningTargetPath } from '../../features/dashboard/navigation';
 import { ProgressBar } from './ProgressBar';
@@ -17,8 +18,8 @@ export function CourseCard({
   cycleId: string;
 }) {
   const base = `/zikao/course/${course.code}`;
-  const query = new URLSearchParams({ cycleId }).toString();
-  const target = position?.courseId === course.id ? position.target : undefined;
+  const ready = useCapability('course.next', { course, position });
+  const target = ready ? position?.target : undefined;
   const label =
     course.progress.percent > 0
       ? `继续学习 ${course.progress.completedItems}/${course.progress.totalItems}`
@@ -61,36 +62,24 @@ export function CourseCard({
           <ArrowRight aria-hidden="true" />
         </Link>
       ) : (
-        <>
-          <button
-            className="ov-button ov-primary"
-            disabled
-            aria-describedby={`reason-${course.id}`}
-          >
-            {label}
-          </button>
-          <p id={`reason-${course.id}`} className="ov-small ov-disabled-reason">
-            暂无法直达：接口未提供本课的下一学习位置。
-          </p>
-          <Link className="ov-button ov-secondary" to={`${base}/catalog?${query}`}>
-            查看课程目录
-          </Link>
-        </>
+        <Link className="ov-button ov-primary" to={`${base}/catalog`}>
+          进入课程<ArrowRight aria-hidden="true" />
+        </Link>
       )}
       <div className="ov-paper-slot">
         {course.capabilities.exams && (
-          <Link className="ov-text-link" to={`${base}/exams?${query}`}>
+          <Link className="ov-text-link" to={`${base}/exams`}>
             <FileText aria-hidden="true" />
             历年试卷
           </Link>
         )}
       </div>
       <footer className="ov-course-footer">
-        <Link className="ov-button ov-secondary" to={`${base}/notes?${query}`}>
+        <Link className="ov-button ov-secondary" to={`${base}/notes`}>
           <NotebookPen aria-hidden="true" />
           备注
         </Link>
-        <Link className="ov-button ov-secondary" to={`/zikao/courses?${query}`}>
+        <Link className="ov-button ov-secondary" to={`/zikao/courses`}>
           <Settings2 aria-hidden="true" />
           管理
         </Link>

@@ -21,8 +21,8 @@ export const wholeHours = (hours: number) =>
   new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 0 }).format(hours);
 export const isWeekend = (day: string) =>
   [0, 6].includes(new Date(`${day}T12:00:00+08:00`).getUTCDay());
-export function taskHref(task: PlanTask, cycleId: string) {
-  const params = new URLSearchParams({ cycleId });
+export function taskHref(task: PlanTask, _cycleId?: string) {
+  const params = new URLSearchParams();
   if (task.target.chapterId) params.set('chapterId', task.target.chapterId);
   if (task.target.itemId) params.set('itemId', task.target.itemId);
   const pane =

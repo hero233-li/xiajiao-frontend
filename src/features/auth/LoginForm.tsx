@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from '../cycle/navigation';
 import { useAuth } from '../../hooks/useAuth';
 import { safeReturnPath } from '../../utils/navigation';
 import { errorMessage } from '../../api/errors';

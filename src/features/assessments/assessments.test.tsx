@@ -1,3 +1,4 @@
+import { CycleProvider } from '../cycle/CycleContext';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -27,16 +28,17 @@ function mount(path = `/zikao/course/00023/tests/session?cycleId=${cycle}`) {
   return render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[path]}>
-        <Routes>
+        <CycleProvider><Routes>
           <Route path="/zikao/course/:code/tests/:testId" element={<Component />} />
           <Route path="/zikao/course/:code/tests/:testId/result" element={<Component />} />
-        </Routes>
+        </Routes></CycleProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   );
 }
 beforeEach(() => {
   localStorage.clear();
+  server.use(http.get('/api/v1/exams/cycles', () => envelope({items:[{id:cycle,name:'测试周期',startDate:'2026-10-01',endDate:'2099-10-31',timezone:'Asia/Shanghai',courses:[]}],page:1,size:100,total:1})));
   resultReads = 0;
   submissions = 0;
   saved = 0;
@@ -184,7 +186,7 @@ describe('检测作答与结果', () => {
       }),
     );
     mount();
-    expect(screen.getByRole('status')).toHaveTextContent('正在加载');
+    expect(await screen.findByRole('status')).toHaveTextContent('正在加载');
     await screen.findByText('第 1 题 · 单选');
   });
   it('空题目状态有行动按钮', async () => {
@@ -288,7 +290,7 @@ describe('检测作答与结果', () => {
     await screen.findByText('真题已开放');
     expect(screen.getByRole('link', { name: '查看历年真题' })).toHaveAttribute(
       'href',
-      '/zikao/course/00023/exams?cycleId=cycle',
+      '/zikao/course/00023/exams',
     );
   });
   it('快速改选串行保存并使用上一次保存时间，最后选项保持选中', async () => {
