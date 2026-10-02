@@ -1,4 +1,4 @@
-import { type RouteObject } from 'react-router-dom';
+import { Navigate, type RouteObject } from 'react-router-dom';
 import { RequireAuth } from '../features/auth/RequireAuth';
 import { AppLayout } from './AppLayout';
 const placeholder = () => import('../pages/PlaceholderPage');
@@ -8,7 +8,7 @@ const children: RouteObject[] = [
   { element: <RequireAuth />, children: [{ element: <AppLayout />, children: [
     { path: '/health', lazy: () => import('../pages/HealthPage') },
     { path: '/components', lazy: () => import('../pages/ComponentsPage') },
-    stub('/','学习中心'), { path: '/zikao', lazy: () => import('../pages/DashboardPage') }, stub('/zikao/courses','我的科目'), { path: '/zikao/schedule', handle: { title: '35 天安排' }, lazy: () => import('../pages/SchedulePage') }, { path: '/zikao/notes', handle: { title: '学习备注' }, lazy: () => import('../pages/NotesPage') }, { path: '/zikao/notes/quick-note-preview', handle: { title: '快速备注测试' }, lazy: () => import('../pages/QuickNotePreviewPage') }, { path: '/zikao/course/:code/notes', handle: { title: '课程备注' }, lazy: () => import('../pages/NotesPage') },
+    { path: '/', element: <Navigate to="/zikao" replace /> }, { path: '/zikao', lazy: () => import('../pages/DashboardPage') }, { path: '/zikao/courses', handle: { title: '我的科目' }, lazy: () => import('../pages/CoursesPage') }, { path: '/zikao/schedule', handle: { title: '35 天安排' }, lazy: () => import('../pages/SchedulePage') }, { path: '/zikao/notes', handle: { title: '学习备注' }, lazy: () => import('../pages/NotesPage') }, { path: '/zikao/notes/quick-note-preview', handle: { title: '快速备注测试' }, lazy: () => import('../pages/QuickNotePreviewPage') }, { path: '/zikao/course/:code/notes', handle: { title: '课程备注' }, lazy: () => import('../pages/NotesPage') },
     { path: '/zikao/course/:code/catalog', handle: { title: '课程目录' }, lazy: () => import('../pages/CatalogPage') },
     { path: '/zikao/course/:code/manual', handle: { title: '实践手册' }, lazy: () => import('../pages/ManualPage') },
     { path: '/zikao/course/:code/exams', handle: { title: '历年试卷与成绩' }, lazy: () => import('../pages/ExamsPage') },

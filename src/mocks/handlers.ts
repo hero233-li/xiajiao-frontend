@@ -28,7 +28,7 @@ export const handlers = [
   }),
   http.post(pattern('/auth/logout'),({ request }) => { if (!authorized(request)) return failure(401,40101,'请先登录'); resetMockSession(); return ok(null); }),
   http.post(pattern('/auth/register'),() => failure(403,40301,'当前未开放注册')),
-  ...operations.filter(operation => !operation.operationId.startsWith('login') && !['getCurrentUser','refreshTokens','logout','registerUser'].includes(operation.operationId)).map(operation => {
+  ...operations.filter(operation => !operation.operationId.startsWith('login') && !['getCurrentUser','refreshTokens','logout','registerUser'].includes(operation.operationId)).sort((a,b) => (a.path.match(/\{/g)?.length ?? 0) - (b.path.match(/\{/g)?.length ?? 0)).map(operation => {
     const resolver = async ({ request }: { request: Request }) => {
       const isPublic = operation.public;
       if ((!isPublic || request.headers.has('Authorization')) && !authorized(request)) return failure(401,40101,'请先登录或令牌已失效');

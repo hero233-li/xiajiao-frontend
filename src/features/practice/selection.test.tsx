@@ -163,6 +163,22 @@ describe('刷题章节选择', () => {
     );
     expect(screen.getByText('后端尚未开放检测')).toBeInTheDocument();
   });
+  it('原创资格计数为零仍可开始普通练习，检测保持关闭', async () => {
+    server.use(http.get(overviewUrl, () => ok({
+      ...fixture,
+      chapters: [{ ...fixture.chapters[0], stats: {
+        ...stats, availableOriginalCount: 0, answeredOriginalCount: 0,
+        canApplyChapterAssessment: false, blockReasons: ['检测尚未开放'],
+      } }],
+    })));
+    const router = mount();
+    await screen.findByText('函数与极限');
+    expect(screen.getByText('检测尚未开放')).toBeInTheDocument();
+    const start = screen.getByRole('button', { name: '开始' });
+    expect(start).toBeEnabled();
+    await userEvent.click(start);
+    expect(router.state.location.pathname).toBe(`/zikao/course/00023/practice/${chapterId}`);
+  });
   it('开始使用稳定 chapterId，保留周期参数', async () => {
     const router = mount();
     await screen.findByText('函数与极限');

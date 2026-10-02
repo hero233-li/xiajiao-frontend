@@ -351,7 +351,7 @@ function Selection({ overview, code }: { overview: PracticeOverview; code: strin
       <Card className="selection-summary">
         <dl className="selection-stats" aria-label="刷题统计">
           <div>
-            <dt>已答 / 总题数</dt>
+            <dt>检测进度</dt>
             <dd>
               {overview.stats.answeredOriginalCount}{' '}
               <small>/ {overview.stats.availableOriginalCount}</small>
@@ -448,14 +448,12 @@ function Selection({ overview, code }: { overview: PracticeOverview; code: strin
                         />
                       )}
                       <p className="selection-count secondary">
-                        已答 {chapter.stats.answeredOriginalCount} /{' '}
+                        已答原创题 {chapter.stats.answeredOriginalCount} /{' '}
                         {chapter.stats.availableOriginalCount} 题
                       </p>
                     </div>
                     <Button
                       variant="secondary"
-                      disabled={chapter.stats.availableOriginalCount === 0}
-                      disabledReason="本章暂无可练习题目"
                       onClick={() =>
                         navigate(`${base}/${encodeURIComponent(chapter.chapterId)}${cycleQuery}`)
                       }
