@@ -20,7 +20,7 @@ export GIT_TERMINAL_PROMPT=0
 repository=https://github.com/hero233-li/xiajiao-frontend.git
 git_retry() {
     for attempt in 1 2 3; do
-        if git -c http.version=HTTP/1.1 "$@"; then return 0; fi
+        if git -c http.version=HTTP/1.1 -c http.lowSpeedLimit=100 -c http.lowSpeedTime=30 "$@"; then return 0; fi
         if (( attempt < 3 )); then
             echo "GitHub 连接失败，5 秒后重试（$attempt/3）……"
             sleep 5
