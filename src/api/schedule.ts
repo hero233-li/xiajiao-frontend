@@ -10,9 +10,10 @@ import {
 import { getCatalog } from './generated/catalog/catalog';
 import type { Plan, PlanTask, PreviewConfirm, RescheduleRequest } from './generated/models';
 export const planKey = (id: string) => ['plan', id] as const;
-export function usePlans(cycleId?: string) {
+export function usePlans(cycleId?: string, enabled = true) {
   return useQuery({
     queryKey: ['plans', cycleId],
+    enabled,
     queryFn: async ({ signal }) => {
       const first = (await listPlans({ cycleId, page: 1, size: 100 }, { signal, silent: true }))
         .data;

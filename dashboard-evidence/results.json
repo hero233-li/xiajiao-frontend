@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "width": 320,
+      "primaryBottom": 715.9375,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "primaryBottom": 641.546875,
+      "noOverflow": true
+    },
+    {
+      "width": 768,
+      "primaryBottom": 472.75,
+      "noOverflow": true
+    },
+    {
+      "width": 1024,
+      "primaryBottom": 354.546875,
+      "noOverflow": true
+    },
+    {
+      "width": 1440,
+      "primaryBottom": 354.546875,
+      "noOverflow": true
+    }
+  ],
+  "emptyState": true,
+  "completedState": true,
+  "noPlanState": true,
+  "localErrorRecovery": true,
+  "keyboardFocus": true,
+  "zoomReflowEquivalent": true,
+  "accessibilityViolations": [],
+  "pageErrors": []
+}

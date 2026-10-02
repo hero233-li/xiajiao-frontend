@@ -33,3 +33,13 @@ export function taskHref(task: PlanTask, _cycleId?: string) {
         : task.target.pane.toLowerCase();
   return `/zikao/course/${encodeURIComponent(task.target.courseCode)}/${pane}?${params}${pane === 'catalog' && task.target.chapterId ? `#${encodeURIComponent(task.target.chapterId)}` : ''}`;
 }
+
+export function durationLabel(minutes: number) {
+  const total = Math.max(0, Math.round(minutes));
+  const hours = Math.floor(total / 60);
+  const rest = total % 60;
+  return hours ? `${hours} 小时${rest ? ` ${rest} 分钟` : ''}` : `${rest} 分钟`;
+}
+export function planDays(start: string, end: string) {
+  return Math.max(0, Math.round((Date.parse(end) - Date.parse(start)) / 86400000) + 1);
+}

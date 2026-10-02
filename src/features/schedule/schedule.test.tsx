@@ -280,19 +280,22 @@ function mount(url = '/zikao/schedule?cycleId=cycle') {
 async function ready() {
   return screen.findByRole('region', { name: '今天的安排' });
 }
-describe('35天安排', () => {
-  it('标题唯一，默认今天所在周、自动滚动、过去折叠；每日没有课程级统计', async () => {
+describe('学习安排', () => {
+  it('初始概览可见，今天与逾期突出；跳到今天由用户触发', async () => {
     mount();
     const today = await ready();
-    expect(screen.getAllByRole('heading', { name: '35 天安排' })).toHaveLength(1);
-    expect(screen.getByRole('button', { name: '第 1 周' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getAllByRole('heading', { name: '学习安排' })).toHaveLength(1);
+    expect(screen.getByText(/第 1 周 ·/).closest('details')).toHaveAttribute('open');
+    expect(screen.getByText('1 / 35 天（3%）')).toBeVisible();
+    expect(HTMLElement.prototype.scrollIntoView).not.toHaveBeenCalled();
+    await userEvent.setup().click(screen.getByRole('button', { name: '跳到今天' }));
     expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
       block: 'start',
       behavior: 'auto',
     });
     expect(today).toHaveClass('schedule-today');
     expect(screen.getByRole('button', { name: '已过去 4 天 · 展开' })).toBeVisible();
-    expect(screen.queryByRole('checkbox', { name: '任务past' })).not.toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: '任务past' })).toBeVisible();
     expect(within(today).queryByText('课程目录完成度')).not.toBeInTheDocument();
     expect(screen.getByRole('progressbar', { name: '计划完成度' })).toHaveAttribute(
       'aria-valuenow',
@@ -303,7 +306,7 @@ describe('35天安排', () => {
     const user = userEvent.setup();
     const view = mount();
     await ready();
-    await user.click(screen.getByRole('button', { name: '第 5 周' }));
+    await user.click(screen.getByText(/第 5 周 ·/));
     expect(view.router.state.location.search).toContain('week=5');
     const link = await screen.findByRole('link', { name: '进入历年试卷' });
     expect(link).toHaveAttribute('href', '/zikao/course/00023/exams');
@@ -311,10 +314,56 @@ describe('35天安排', () => {
     expect(await screen.findByRole('heading', { name: '历年试卷' })).toBeVisible();
     view.unmount();
     mount('/zikao/schedule?cycleId=cycle&week=5');
-    expect(await screen.findByRole('button', { name: '第 5 周' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
+    expect((await screen.findByText(/第 5 周 ·/)).closest('details')).toHaveAttribute('open');
+  });
+  it('从未来周跳回今天，且短任务以分钟显示', async () => {
+    plan.days[4].segments[0].minutes = 2;
+    const user = userEvent.setup();
+    mount('/zikao/schedule?cycleId=cycle&week=5');
+    await screen.findByRole('checkbox', { name: '任务paper' });
+    expect(screen.queryByRole('region', { name: '今天的安排' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '跳到今天' }));
+    const today = await ready();
+    expect(within(today).getByText('2 分钟')).toBeVisible();
+    expect(today).toHaveFocus();
+    expect(screen.getByText(/第 5 周 ·/).closest('details')).not.toHaveAttribute('open');
+  });
+  it('链接指定其他周期的计划时不显示任务和修改入口', async () => {
+    plan.config.cycleId = 'another-cycle';
+    mount();
+    await screen.findByText('这份计划不属于当前考试周期，请重新选择计划。');
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '顺延未完成任务' })).not.toBeInTheDocument();
+  });
+  it('非35天计划按实际日期显示范围与天数', async () => {
+    plan.config.endDate = '2026-10-04';
+    mount();
+    await ready();
+    expect(screen.getByText(/共 7 天/)).toBeVisible();
+  });
+  it('失效预览确认失败后须重新预览，不能直接重试确认', async () => {
+    server.use(
+      http.post('/api/v1/schedule/plans/plan/reschedule-previews/preview/confirmation', () =>
+        HttpResponse.json(
+          { code: 40901, message: '预览已过期，请重新预览', data: null },
+          { status: 409 },
+        ),
+      ),
     );
+    const user = userEvent.setup();
+    mount();
+    await ready();
+    await user.click(screen.getByRole('button', { name: '顺延未完成任务' }));
+    const dialog = await screen.findByRole('dialog', { name: '顺延预览' });
+    await within(dialog).findByText(/缺口约/);
+    await user.click(within(dialog).getByRole('checkbox'));
+    await user.click(within(dialog).getByRole('button', { name: '确认顺延' }));
+    await within(dialog).findByText(/如预览已失效/);
+    expect(within(dialog).getByRole('button', { name: '确认顺延' })).toBeDisabled();
+    await user.click(within(dialog).getByRole('button', { name: '重新预览' }));
+    await waitFor(() => expect(previewBodies).toHaveLength(2));
+    expect(within(dialog).getByRole('checkbox')).not.toBeChecked();
+    expect(confirmations).toHaveLength(0);
   });
   it('顺延先预览后确认；缺口整数展示、三个选项、已完成任务保留', async () => {
     const user = userEvent.setup();
@@ -383,10 +432,11 @@ describe('35天安排', () => {
     ['catalog', 'dashboard', 'home', 'home-aggregate'].forEach((name) =>
       expect(client.getQueryState([name, 'seed'])?.isInvalidated).toBe(true),
     );
-    expect(screen.getByRole('link', { name: '进入学习目录' })).toHaveAttribute(
-      'href',
-      '/zikao/course/00023/catalog?chapterId=chapter&itemId=today#chapter',
-    );
+    expect(
+      within(screen.getByRole('region', { name: '今天的安排' })).getByRole('link', {
+        name: '进入学习目录',
+      }),
+    ).toHaveAttribute('href', '/zikao/course/00023/catalog?chapterId=chapter&itemId=today#chapter');
   });
   it('失败回滚并可重试；目录侧修改后重新进入计划读取同步状态', async () => {
     failCompletion = true;
@@ -420,20 +470,19 @@ describe('35天安排', () => {
     await waitFor(() => expect(checkbox).toBeEnabled());
     expect(writes[0].body.expectedItemRevision).toBeNull();
   });
-  it('设置字段和科目排序可编辑，保存明确说明接口缺口；Esc关闭并恢复焦点', async () => {
+  it('设置只读，无编辑控件或保存按钮；Esc关闭并恢复焦点', async () => {
     const user = userEvent.setup();
     mount();
     await ready();
-    const button = screen.getByRole('button', { name: '打开计划设置' });
+    const button = screen.getByRole('button', { name: '查看计划设置' });
     await user.click(button);
-    const dialog = screen.getByRole('dialog', { name: '计划设置' });
+    const dialog = screen.getByRole('dialog', { name: '查看计划设置' });
     expect(dialog).toContainElement(document.activeElement as HTMLElement);
-    expect(within(dialog).getByLabelText('起始日期')).toHaveValue('2026-09-28');
-    expect(within(dialog).getByLabelText('工作日每日小时')).toHaveValue(2);
-    expect(
-      within(dialog).getByText('将重新生成未开始日期的计划，已完成与过去的日期不受影响'),
-    ).toBeVisible();
-    expect(within(dialog).getByRole('button', { name: '保存设置' })).toBeDisabled();
+    expect(within(dialog).getByText('2026-09-28')).toBeVisible();
+    expect(within(dialog).getAllByText('2 小时').length).toBeGreaterThan(0);
+    expect(within(dialog).getByRole('note')).toHaveTextContent('仅供查看');
+    expect(dialog.querySelectorAll('input, select, textarea')).toHaveLength(0);
+    expect(within(dialog).queryByRole('button', { name: '保存设置' })).not.toBeInTheDocument();
     await user.keyboard('{Shift>}{Tab}{/Shift}');
     expect(dialog).toContainElement(document.activeElement as HTMLElement);
     await user.keyboard('{Escape}');
@@ -450,7 +499,9 @@ describe('35天安排', () => {
     const user = userEvent.setup();
     const view = mount();
     expect(screen.getByRole('status')).toHaveTextContent('正在加载安排');
-    await screen.findByText('暂无学习计划；如果刚创建过计划，可以刷新列表。');
+    await screen.findByText(
+      '当前周期尚未生成学习计划。计划根据本周期的科目、学习内容与考试日期安排。',
+    );
     expect(screen.getByRole('button', { name: '刷新计划列表' })).toBeVisible();
     view.unmount();
     server.use(http.get('/api/v1/schedule/plans', () => HttpResponse.error()));

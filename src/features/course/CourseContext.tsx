@@ -1,5 +1,5 @@
-import { createContext, useContext, type PropsWithChildren } from 'react';
-import { useParams } from 'react-router-dom';
+import { createContext, useContext, useEffect, useRef, type PropsWithChildren } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 import { NavLink, Link } from '../cycle/navigation';
 import { useCycle } from '../cycle/CycleContext';
 import { useCatalogCourse } from '../../api/catalog';
@@ -11,9 +11,29 @@ const CourseContext = createContext<Course | null>(null);
 export const useCourse = () => useContext(CourseContext);
 export function CourseFrame({ children }: PropsWithChildren) {
   const { code = '' } = useParams();
+  const location = useLocation();
+  const frame = useRef<HTMLDivElement>(null);
+  const head = useRef<HTMLElement>(null);
   const cycle = useCycle();
   const query = useCatalogCourse(code, cycle?.cycleId ?? '');
   const dashboard = useDashboard(cycle?.cycleId ? { cycleId: cycle.cycleId } : undefined);
+  useEffect(() => {
+    if (!head.current || !frame.current) return;
+    const measure = () =>
+      frame.current?.style.setProperty(
+        '--course-head-height',
+        `${head.current?.getBoundingClientRect().height ?? 0}px`,
+      );
+    measure();
+    const observer =
+      typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure);
+    observer?.observe(head.current);
+    window.addEventListener('resize', measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [query.data, location.pathname]);
   if (cycle?.pending || (query.isPending && !!cycle?.cycleId))
     return <p role="status">正在加载课程…</p>;
   if (!cycle?.cycleId)
@@ -52,43 +72,50 @@ export function CourseFrame({ children }: PropsWithChildren) {
     ['exams', '历年试卷'],
     ['notes', '备注'],
     ...(course.capabilities.manual ? [['manual', '实践手册']] : []),
-  ].filter(([path]) => path === 'notes' || course.capabilities[path as keyof Course['capabilities']]);
+  ].filter(
+    ([path]) => path === 'notes' || course.capabilities[path as keyof Course['capabilities']],
+  );
   return (
     <CourseContext.Provider value={course}>
-      <header className="course-frame-head">
-        <Breadcrumb
-          items={[
-            { label: '备考总览', to: '/zikao' },
-            { label: '我的科目', to: '/zikao/courses' },
-            { label: course.name },
-          ]}
-        />
-        <h1>{course.name}</h1>
-        <p className="secondary">
-          课程代码 {course.code}
-          {countdown && (
-            <>
-              {' '}
-              ·{' '}
-              {countdown.status === 'TODAY'
-                ? '今天考试'
-                : countdown.status === 'FINISHED'
-                  ? '考试已结束'
-                  : countdown.daysRemaining !== null
-                    ? `距考试 ${countdown.daysRemaining} 天`
-                    : '考试日期待确认'}
-            </>
-          )}
-        </p>
-        <nav aria-label="课程页面" className="course-tabs">
-          {tabs.map(([path, title]) => (
-            <NavLink key={path} to={`/zikao/course/${code}/${path}`}>
-              {title}
-            </NavLink>
-          ))}
-        </nav>
-      </header>
-      {children}
+      <div
+        ref={frame}
+        className={`course-frame ${location.pathname.endsWith('/catalog') ? 'course-frame-catalog' : ''}`}
+      >
+        <header ref={head} className="course-frame-head">
+          <Breadcrumb
+            items={[
+              { label: '备考总览', to: '/zikao' },
+              { label: '我的科目', to: '/zikao/courses' },
+              { label: course.name },
+            ]}
+          />
+          <h1>{course.name}</h1>
+          <p className="secondary">
+            课程代码 {course.code}
+            {countdown && (
+              <>
+                {' '}
+                ·{' '}
+                {countdown.status === 'TODAY'
+                  ? '今天考试'
+                  : countdown.status === 'FINISHED'
+                    ? '考试已结束'
+                    : countdown.daysRemaining !== null
+                      ? `距考试 ${countdown.daysRemaining} 天`
+                      : '考试日期待确认'}
+              </>
+            )}
+          </p>
+          <nav aria-label="课程页面" className="course-tabs">
+            {tabs.map(([path, title]) => (
+              <NavLink key={path} to={`/zikao/course/${code}/${path}`}>
+                {title}
+              </NavLink>
+            ))}
+          </nav>
+        </header>
+        {children}
+      </div>
     </CourseContext.Provider>
   );
 }

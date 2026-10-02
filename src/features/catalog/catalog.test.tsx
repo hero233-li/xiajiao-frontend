@@ -69,7 +69,9 @@ const fixture: Catalog = {
 let data: Catalog;
 const envelope = (data: unknown) => HttpResponse.json({ code: 0, message: '成功', data });
 const server = setupServer(
-  http.get('/api/v1/courses/:id/learning-position', () => HttpResponse.json({code:40401,data:null,message:'无记录'},{status:404})),
+  http.get('/api/v1/courses/:id/learning-position', () =>
+    HttpResponse.json({ code: 40401, data: null, message: '无记录' }, { status: 404 }),
+  ),
   http.get('/api/v1/catalog/courses/course-a', () => envelope(data)),
   http.put(
     '/api/v1/catalog/courses/course-a/items/:itemId/completion',
@@ -91,10 +93,11 @@ const server = setupServer(
     },
   ),
 );
-beforeAll(() => { server.listen({ onUnhandledRequest: 'error' }); });
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: 'error' });
+});
 afterAll(() => server.close());
 beforeEach(() => {
-  
   data = structuredClone(fixture);
 });
 afterEach(() => {
@@ -142,10 +145,9 @@ describe('课程目录', () => {
     expect(scroll).toHaveBeenCalled();
     expect(router.state.location.pathname).toBe('/zikao/course/00023/catalog');
     expect(router.state.location.hash).toBe('#stage-a');
-    expect(screen.getByRole('link', { name: '集合基础（新标签页打开）' })).toHaveAttribute(
-      'rel',
-      'noopener noreferrer',
-    );
+    expect(
+      screen.getByRole('link', { name: '打开集合基础（工专基础补充，新窗口打开）' }),
+    ).toHaveAttribute('rel', 'noopener noreferrer');
   });
   it('带 hash 直接展开章节；点击另一锚点也可定位', async () => {
     mount('#stage-b');
@@ -320,7 +322,7 @@ describe('课程目录', () => {
     );
     data.courseProgress = { completedItems: 3, totalItems: 3, percent: 100 };
     mount();
-    await screen.findByText('本课程目录已全部完成');
+    await screen.findByText('本课程目录已全部完成，可展开章节复习。');
     expect(screen.queryByRole('button', { name: '继续学习' })).not.toBeInTheDocument();
   });
   it('课程解析加载失败可以重试且保留hash', async () => {
