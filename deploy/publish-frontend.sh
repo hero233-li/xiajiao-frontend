@@ -16,24 +16,19 @@ mkdir -p "$state/releases" "$state/frontend-records"
 # Shared with backend publishing: do not replace both containers at once.
 exec 9>"$state/backend.lock"
 flock -n 9 || { echo '已有前端或后端发布正在执行，请等待它完成。'; exit 1; }
-export GIT_TERMINAL_PROMPT=0
-repository=https://github.com/hero233-li/xiajiao-frontend.git
-git_retry() {
-    for attempt in 1 2 3; do
-        if git -c http.version=HTTP/1.1 -c http.lowSpeedLimit=100 -c http.lowSpeedTime=30 "$@"; then return 0; fi
-        if (( attempt < 3 )); then
-            echo "GitHub 连接失败，5 秒后重试（$attempt/3）……"
-            sleep 5
-        fi
-    done
-    return 1
-}
-echo '正在读取前端 GitHub main 分支……'
-if [[ ! -d "$state/frontend.git" ]]; then
-    git_retry clone --bare "$repository" "$state/frontend.git"
-fi
-git_retry --git-dir="$state/frontend.git" fetch --prune origin '+refs/heads/main:refs/heads/main'
-revision=$(git --git-dir="$state/frontend.git" rev-parse main)
+echo '正在通过 GitHub API 读取前端 main 最新版本……'
+curl --fail --silent --show-error --connect-timeout 10 --max-time 30 \
+    --retry 2 --retry-delay 3 --retry-max-time 100 \
+    -H 'Accept: application/vnd.github+json' \
+    https://api.github.com/repos/hero233-li/xiajiao-frontend/commits/main > "$state/frontend-main.json"
+revision=$(python3 - "$state/frontend-main.json" <<'PY'
+import json,re,sys
+sha=json.load(open(sys.argv[1])).get('sha','')
+if not re.fullmatch('[0-9a-f]{40}',sha):
+    sys.exit('无法读取最新提交版本，发布已停止。')
+print(sha)
+PY
+)
 echo "目标版本：$revision"
 docker network inspect xiajiao-network >/dev/null
 docker inspect xiajiao-frontend >/dev/null
@@ -75,7 +70,13 @@ fi
 stamp=$(date -u +%Y%m%dT%H%M%SZ)
 release="$state/releases/frontend-$stamp-${revision:0:12}"
 mkdir "$release"
-git --git-dir="$state/frontend.git" archive "$revision" | tar -x -C "$release"
+echo '正在下载 GitHub 官方源码包，现有网站继续运行……'
+curl --location --fail --silent --show-error --connect-timeout 10 --max-time 180 \
+    --retry 2 --retry-delay 3 --retry-max-time 560 \
+    "https://codeload.github.com/hero233-li/xiajiao-frontend/tar.gz/$revision" \
+    -o "$release/.source.tar.gz"
+tar -xzf "$release/.source.tar.gz" --strip-components=1 -C "$release"
+rm -f -- "$release/.source.tar.gz"
 image="xiajiao-frontend:git-${revision:0:12}"
 echo '正在构建前端镜像，现有网站继续运行……'
 docker build --build-arg VITE_API_ORIGIN= -t "$image" "$release"

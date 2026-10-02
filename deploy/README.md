@@ -2,6 +2,8 @@
 
 服务器脚本：`/opt/projects/xiajao/deploy-frontend.sh`。拉取 GitHub 前端仓库 `main` 分支并在 Docker 内构建，不需要在宿主机安装 Node.js。先在本地提交并推送代码。
 
+为了避开服务器上的 Git HTTPS 连接中断，脚本通过 GitHub 官方 API 查询最新提交号，再从官方源码下载服务下载该提交的完整源码包，不使用 `git fetch`。版本查询超时 30 秒、源码下载超时 180 秒，并有有限重试；未完整下载时不更新线上容器。当前适用于公开仓库。
+
 1Panel 创建“发布前端”Shell 任务，用户 `ubuntu`（也支持 `root`），解释器 `bash`，不勾选“在容器中执行”，脚本内容：
 
 ```sh
