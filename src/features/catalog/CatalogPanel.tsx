@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { getLearningPosition } from '../../api/generated/courses/courses';
 import { progressStyle } from '../../utils/progress';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Link, useNavigate } from '../cycle/navigation';
 import {
@@ -69,6 +69,13 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
   const candidates = query.data?.chapters.flatMap((chapter) =>
     chapter.items.map((item) => ({ chapter, item })),
   );
+  const titleCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    query.data?.chapters.forEach((chapter) =>
+      chapter.items.forEach((item) => counts.set(item.title, (counts.get(item.title) ?? 0) + 1)),
+    );
+    return counts;
+  }, [query.data]);
   const previous =
     position.data?.target.pane === 'CATALOG'
       ? candidates?.find(({ item }) => item.id === position.data?.target.itemId)
@@ -85,7 +92,9 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
       return;
     processedHash.current = `${location.hash}|${location.search}`;
     const requestedItem = new URLSearchParams(location.search).get('itemId');
-    const requested = candidates?.some(({ item }) => item.id === requestedItem)
+    const requested = query.data.chapters.some((chapter) =>
+      chapter.items.some((item) => item.id === requestedItem),
+    )
       ? requestedItem!
       : hashId(location.hash);
     const chapter = query.data.chapters.find(
@@ -373,7 +382,7 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
                               <input
                                 type="checkbox"
                                 checked={item.completed}
-                                aria-label={`${item.title}完成状态`}
+                                aria-label={`${item.title}${(titleCounts.get(item.title) ?? 0) > 1 ? `（${chapter.title}）` : ''}完成状态`}
                                 disabled={mutation.isPending}
                                 aria-describedby={mutation.isPending ? 'catalog-saving' : undefined}
                                 onChange={(event) =>
@@ -386,10 +395,7 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
                               <h4>
                                 <MathText text={item.title} />
                               </h4>
-                              {catalog.chapters
-                                .flatMap((chapter) => chapter.items)
-                                .filter((candidate) => candidate.title === item.title).length >
-                                1 && (
+                              {(titleCounts.get(item.title) ?? 0) > 1 && (
                                 <p className="catalog-caption">
                                   所属{practice ? '阶段' : '章节'}：{chapter.title}
                                 </p>

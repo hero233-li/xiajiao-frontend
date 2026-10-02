@@ -325,6 +325,112 @@ describe('课程目录', () => {
     await screen.findByText('本课程目录已全部完成，可展开章节复习。');
     expect(screen.queryByRole('button', { name: '继续学习' })).not.toBeInTheDocument();
   });
+  it('零完成进度可继续首项；上次记录可定位其他章节的稳定条目ID', async () => {
+    data.chapters.forEach((chapter) =>
+      chapter.items.forEach((item) => {
+        item.completed = false;
+      }),
+    );
+    data.courseProgress = { completedItems: 0, totalItems: 3, percent: 0 };
+    server.use(
+      http.get('/api/v1/courses/:id/learning-position', () =>
+        envelope({
+          title: '关系与函数',
+          updatedAt: '2026-10-03T02:00:00Z',
+          target: { pane: 'CATALOG', courseCode: '00023', chapterId: 'stage-b', itemId: 'item-c' },
+        }),
+      ),
+    );
+    mount();
+    await screen.findByText('上次学习记录');
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
+    await userEvent.click(screen.getByRole('button', { name: '继续学习' }));
+    await waitFor(() => expect(document.activeElement?.id).toBe('item-c'));
+    expect(screen.getByRole('button', { name: /工本考点解析 共 1 项/ })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+  });
+  it('打开安全外链只访问资源，不修改完成状态；无效链接不渲染', async () => {
+    data.chapters[0].items[1].resource = {
+      kind: 'LINK',
+      label: '资料',
+      url: 'javascript:alert(1)',
+      fileId: null,
+    };
+    mount();
+    const link = await screen.findByRole('link', {
+      name: '打开集合基础（工专基础补充，新窗口打开）',
+    });
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('href', 'https://www.bilibili.com/video/example');
+    await userEvent.click(link);
+    expect(screen.getByRole('checkbox', { name: '集合基础完成状态' })).not.toBeChecked();
+    expect(data.chapters[0].items[0].revision).toBe(2);
+    expect(screen.queryByRole('link', { name: /打开逻辑运算/ })).not.toBeInTheDocument();
+    expect(screen.getByText('资源暂不可用，请稍后查看。')).toBeVisible();
+  });
+  it('重复题名包含父级上下文，深链接定位具体条目且保留周期', async () => {
+    data.chapters[1].items[0].title = '集合基础';
+    const { router } = mount('&itemId=item-c#stage-b');
+    await waitFor(() => expect(document.activeElement?.id).toBe('item-c'));
+    expect(
+      screen.getByRole('checkbox', { name: '集合基础（工本考点解析）完成状态' }),
+    ).toBeChecked();
+    expect(screen.getByText('所属章节：工本考点解析')).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: '继续学习' }));
+    expect(router.state.location.search).toContain('cycleId=cycle-a');
+    expect(router.state.location.search).toContain('itemId=item-a');
+    await router.navigate(-1);
+    await waitFor(() => expect(document.activeElement?.id).toBe('item-c'));
+  });
+  it('批量取消不会写入或更改原状态', async () => {
+    let writes = 0;
+    server.use(
+      http.patch('/api/v1/catalog/courses/course-a/completions', () => {
+        writes++;
+        return HttpResponse.error();
+      }),
+    );
+    mount();
+    await userEvent.click(await screen.findByRole('button', { name: '全部标记完成' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '取消' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: '集合基础完成状态' })).not.toBeChecked();
+    expect(writes).toBe(0);
+  });
+  it('无统计项目不显示0/100进度，长章节名保留全文', async () => {
+    data.courseProgress = { completedItems: 0, totalItems: 0, percent: 0 };
+    data.chapters[0].title = '实践阶段一：根据手册完成数据库模型分析、表结构设计与验证';
+    data.chapters.forEach((chapter) => {
+      chapter.items = [];
+    });
+    mount();
+    await screen.findByText('暂无可统计项目');
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: /实践阶段一：根据手册完成数据库模型分析、表结构设计与验证/,
+      }),
+    ).toBeVisible();
+  });
+  it('受控资料下载使用授权接口，失败可重试且不修改完成状态', async () => {
+    data.chapters[0].items[0].resource = {
+      kind: 'FILE',
+      label: 'PDF资料',
+      url: null,
+      fileId: 'file-a',
+    };
+    server.use(
+      http.get('/api/v1/catalog/courses/course-a/resources/file-a', () => HttpResponse.error()),
+    );
+    mount();
+    const button = await screen.findByRole('button', { name: '下载集合基础（工专基础补充）' });
+    await userEvent.click(button);
+    await screen.findByText(/资料下载失败/);
+    expect(button).toBeEnabled();
+    expect(screen.getByRole('checkbox', { name: '集合基础完成状态' })).not.toBeChecked();
+  });
   it('课程解析加载失败可以重试且保留hash', async () => {
     server.use(http.get('/api/v1/courses/by-code/00023', () => HttpResponse.error()));
     const { router } = mount('#stage-b', true);

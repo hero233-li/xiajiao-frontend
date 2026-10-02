@@ -323,3 +323,8 @@
     flex-basis: calc(100% - 40px);
   }
 }
+.catalog-main input,
+.catalog-main button,
+.catalog-main a {
+  scroll-margin-top: var(--catalog-anchor-offset);
+}
