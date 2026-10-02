@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": [
+    "src/features/dashboard/**/*.ts",
+    "src/features/dashboard/**/*.tsx",
+    "src/components/dashboard/**/*.tsx",
+    "src/pages/DashboardPage.tsx",
+    "src/api/dashboard.ts"
+  ]
+}

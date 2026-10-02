@@ -1,0 +1,420 @@
+/* 页面级设计令牌，避免影响现有页面。 */
+.ov-page {
+  --ov-bg: #f6f8fc;
+  --ov-surface: #ffffff;
+  --ov-text: #18263c;
+  --ov-muted: #485a72;
+  --ov-border: #c6d2e2;
+  --ov-blue: #1752bd;
+  --ov-blue-hover: #124297;
+  --ov-blue-pressed: #0d3274;
+  --ov-blue-soft: #eaf1ff;
+  --ov-green: #166534;
+  --ov-green-soft: #edf8ef;
+  --ov-amber: #854d0e;
+  --ov-amber-soft: #fff7df;
+  --ov-red: #b91c1c;
+  --ov-red-soft: #fff0ef;
+  --ov-disabled: #667085;
+  --ov-disabled-bg: #e4e7ec;
+  --ov-focus: #125bc7;
+  --ov-radius: 8px;
+  --ov-radius-float: 16px;
+  --ov-shadow: 0 2px 8px rgb(24 38 60 / 5%);
+  --ov-shadow-float: 0 8px 24px rgb(24 38 60 / 12%);
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+  color: var(--ov-text);
+  background: var(--ov-bg);
+  font:
+    16px/1.6 system-ui,
+    'PingFang SC',
+    sans-serif;
+}
+.ov-page *,
+.ov-page *::before,
+.ov-page *::after {
+  box-sizing: border-box;
+}
+.ov-page h1,
+.ov-page h2,
+.ov-page h3,
+.ov-page p {
+  margin: 0;
+}
+.ov-page h1 {
+  font-size: clamp(24px, 4vw, 32px);
+  line-height: 1.4;
+}
+.ov-page h2 {
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ov-page h3 {
+  font-size: 20px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.ov-page a {
+  color: var(--ov-blue);
+  text-decoration: none;
+}
+.ov-page svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.ov-page :is(a, button, select):focus-visible {
+  outline: 3px solid var(--ov-focus);
+  outline-offset: 4px;
+}
+.ov-heading,
+.ov-row,
+.ov-section-heading,
+.ov-course-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.ov-heading {
+  margin-bottom: 24px;
+  flex-wrap: nowrap;
+}
+.ov-kicker,
+.ov-small {
+  font-size: 14px;
+  color: var(--ov-muted);
+}
+.ov-kicker {
+  margin-bottom: 8px !important;
+}
+.ov-cycle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.ov-cycle select {
+  font: inherit;
+  min-height: 44px;
+  max-width: 100%;
+  border: 1px solid var(--ov-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--ov-text);
+  background: var(--ov-surface);
+}
+.ov-pagination {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.ov-top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.ov-card {
+  border: 1px solid var(--ov-border);
+  border-radius: var(--ov-radius-float);
+  background: var(--ov-surface);
+  padding: 24px;
+  box-shadow: var(--ov-shadow);
+  transition:
+    box-shadow 0.15s,
+    border-color 0.15s;
+  min-width: 0;
+}
+.ov-card:hover {
+  box-shadow: var(--ov-shadow-float);
+}
+.ov-card:active {
+  border-color: var(--ov-blue);
+}
+.ov-card:focus-within {
+  outline: 2px solid var(--ov-focus);
+  outline-offset: 2px;
+}
+.ov-card[aria-busy='true'] {
+  cursor: progress;
+}
+.ov-card:has(.ov-state-error) {
+  border-color: var(--ov-red);
+}
+.ov-card[aria-disabled='true'] {
+  background: var(--ov-disabled-bg);
+}
+.ov-countdown h2,
+.ov-suggestion h2 {
+  margin-bottom: 16px;
+}
+.ov-suggestion {
+  background: var(--ov-blue-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ov-suggestion h2 {
+  margin-bottom: 0;
+}
+.ov-suggestion .ov-button {
+  margin-top: auto;
+  align-self: flex-start;
+}
+.ov-countdown-list {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+.ov-countdown-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ov-border);
+}
+.ov-countdown-list strong {
+  color: var(--ov-amber);
+}
+.ov-exam {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.ov-overall {
+  margin: 24px 0;
+}
+.ov-overall .ov-row {
+  margin-bottom: 16px;
+}
+.ov-progress {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--ov-green-soft);
+}
+.ov-progress span {
+  display: block;
+  height: 100%;
+  background: var(--ov-green);
+  border-radius: inherit;
+}
+.ov-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--ov-border);
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.ov-page .ov-primary {
+  color: var(--ov-surface);
+  background: var(--ov-blue);
+  border-color: var(--ov-blue);
+}
+.ov-page .ov-primary:hover {
+  background: var(--ov-blue-hover);
+}
+.ov-page .ov-primary:active {
+  background: var(--ov-blue-pressed);
+}
+.ov-page .ov-secondary {
+  color: var(--ov-blue);
+  background: var(--ov-surface);
+}
+.ov-secondary:hover {
+  background: var(--ov-blue-soft);
+  border-color: var(--ov-blue);
+}
+.ov-secondary:active {
+  background: var(--ov-blue-soft);
+  transform: translateY(1px);
+}
+.ov-page button:disabled,
+.ov-page button:disabled:hover {
+  color: var(--ov-disabled);
+  background: var(--ov-disabled-bg);
+  border-color: var(--ov-disabled);
+  cursor: not-allowed;
+  transform: none;
+}
+.ov-button[aria-busy='true'] {
+  cursor: progress;
+}
+.ov-button[aria-invalid='true'] {
+  border-color: var(--ov-red);
+}
+.ov-icon {
+  padding: 12px;
+}
+.ov-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--ov-border);
+}
+.ov-tabs a {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px 16px;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+}
+.ov-tabs a:hover {
+  background: var(--ov-blue-soft);
+}
+.ov-tabs a:active {
+  background: var(--ov-blue-soft);
+}
+.ov-tabs a[aria-current='page'] {
+  background: var(--ov-blue-soft);
+  border-bottom-color: var(--ov-blue);
+  font-weight: 700;
+}
+.ov-section-heading {
+  margin-bottom: 16px;
+}
+.ov-text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 0;
+  white-space: nowrap;
+}
+.ov-text-link:hover {
+  text-decoration: underline;
+}
+.ov-text-link:active {
+  color: var(--ov-blue-pressed);
+}
+.ov-course-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+.ov-course {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+.ov-course-top {
+  margin-bottom: 8px;
+}
+.ov-badge {
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+}
+.ov-theory {
+  color: var(--ov-blue);
+  background: var(--ov-blue-soft);
+}
+.ov-practice {
+  color: var(--ov-amber);
+  background: var(--ov-amber-soft);
+}
+.ov-course-progress {
+  margin-top: auto;
+  min-height: 56px;
+  padding-top: 8px;
+}
+.ov-course-progress .ov-row {
+  margin-bottom: 8px;
+  gap: 8px;
+  font-size: 14px;
+}
+.ov-disabled-reason {
+  min-height: 48px;
+}
+.ov-paper-slot {
+  min-height: 44px;
+}
+.ov-course-footer {
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid var(--ov-border);
+  padding-top: 16px;
+  margin-top: auto;
+}
+.ov-course-footer > * {
+  flex: 1;
+  padding: 8px;
+}
+.ov-state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 0;
+}
+.ov-state p {
+  flex: 1 1 160px;
+}
+.ov-state-error {
+  color: var(--ov-red);
+}
+.ov-state-error .ov-button {
+  border-color: var(--ov-red);
+}
+.ov-state .ov-button {
+  width: auto;
+}
+.ov-spin {
+  animation: ov-spin 1s linear infinite;
+}
+@keyframes ov-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ov-page * {
+    animation: none;
+    transition: none;
+  }
+}
+@media (max-width: 767px) {
+  .ov-page {
+    padding: 24px 16px 32px;
+  }
+  .ov-top-grid,
+  .ov-course-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ov-card {
+    padding: 16px;
+  }
+  .ov-tabs a {
+    padding: 8px;
+  }
+  .ov-cycle select {
+    width: 100%;
+  }
+}
+
+.ov-countdown-list .ov-status-FINISHED {
+  color: var(--ov-green);
+}

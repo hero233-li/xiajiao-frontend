@@ -1,0 +1,100 @@
+.notes-page {
+  max-width: 960px;
+  margin: auto;
+}
+.notes-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+}
+.notes-filters label {
+  min-width: 0;
+}
+.notes-filters input,
+.notes-filters select {
+  margin-top: 8px;
+}
+.notes-filters > span {
+  align-self: center;
+}
+.notes-help {
+  font-size: var(--text-sm);
+  color: var(--color-secondary);
+}
+.notes-help.status-error {
+  color: var(--color-danger);
+}
+.notes-title {
+  font-size: var(--text-lg);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.notes-content {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: var(--text-base);
+}
+.notes-tag {
+  min-height: 44px;
+  padding: 8px;
+  font-size: var(--text-sm);
+}
+.notes-editor textarea,
+.notes-preview-input {
+  width: 100%;
+  min-height: 120px;
+  padding: 16px;
+  font: inherit;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-normal);
+  resize: vertical;
+}
+.notes-editor textarea:hover {
+  border-color: var(--color-primary);
+}
+.notes-editor textarea:disabled {
+  color: var(--color-disabled-ink);
+  background: var(--color-disabled);
+}
+.notes-editor textarea[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+.notes-success {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px;
+  color: var(--color-success);
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-normal);
+}
+.notes-floating {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 20;
+  border-radius: var(--radius-raised);
+  box-shadow: var(--shadow-raised);
+}
+.notes-quick-toast {
+  position: fixed;
+  bottom: 88px;
+  right: 24px;
+  z-index: 30;
+  max-width: calc(100% - 48px);
+  box-shadow: var(--shadow-raised);
+}
+@media (max-width: 767px) {
+  .notes-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .notes-floating {
+    bottom: 16px;
+    right: 16px;
+  }
+}

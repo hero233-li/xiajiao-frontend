@@ -1,0 +1,35 @@
+import type { PlanTask } from '../../api/generated/models';
+export function shanghaiDate(instant: string) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(instant));
+}
+export function dayLabel(day: string) {
+  return new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'long',
+  }).format(new Date(`${day}T12:00:00+08:00`));
+}
+export const hours = (minutes: number) =>
+  new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 2 }).format(minutes / 60);
+export const wholeHours = (hours: number) =>
+  new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 0 }).format(hours);
+export const isWeekend = (day: string) =>
+  [0, 6].includes(new Date(`${day}T12:00:00+08:00`).getUTCDay());
+export function taskHref(task: PlanTask, cycleId: string) {
+  const params = new URLSearchParams({ cycleId });
+  if (task.target.chapterId) params.set('chapterId', task.target.chapterId);
+  if (task.target.itemId) params.set('itemId', task.target.itemId);
+  const pane =
+    task.kind === 'PAPER'
+      ? 'exams'
+      : task.kind === 'ITEM'
+        ? 'catalog'
+        : task.target.pane.toLowerCase();
+  return `/zikao/course/${encodeURIComponent(task.target.courseCode)}/${pane}?${params}${pane === 'catalog' && task.target.chapterId ? `#${encodeURIComponent(task.target.chapterId)}` : ''}`;
+}

@@ -1,0 +1,218 @@
+.focus-practice {
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+}
+.focus-practice .button,
+.practice-back {
+  min-height: 44px;
+  white-space: nowrap;
+}
+.practice-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.practice-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.practice-heading h1 {
+  font-size: 24px;
+  margin: 0;
+}
+.practice-heading p {
+  margin: 0;
+}
+.practice-filters,
+.practice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 24px;
+}
+.practice-hint,
+.practice-meta {
+  color: var(--color-secondary);
+  font-size: 14px;
+}
+.practice-card,
+.practice-region,
+.practice-summary {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-raised);
+  box-shadow: var(--shadow-normal);
+  padding: 24px;
+}
+.practice-card:hover {
+  box-shadow: var(--shadow-raised);
+}
+.practice-card:active {
+  box-shadow: var(--shadow-normal);
+}
+.practice-card:focus-within {
+  border-color: var(--color-primary);
+}
+.practice-card[data-error='true'] {
+  border-color: var(--color-danger);
+}
+.practice-card[aria-busy='true'] {
+  border-color: var(--color-primary);
+}
+.practice-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.practice-stem {
+  font-size: 20px;
+  line-height: 1.8;
+  font-weight: 500;
+  margin-bottom: 32px;
+  overflow-wrap: anywhere;
+}
+.practice-options {
+  display: grid;
+  gap: 16px;
+}
+.practice-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 56px;
+  padding: 16px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-normal);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  text-align: left;
+}
+.practice-option:hover {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+.practice-option:active {
+  border-color: var(--color-primary-pressed);
+  box-shadow: var(--shadow-normal);
+}
+.practice-option[data-selected='true'] {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+.practice-option[data-correct='true'] {
+  border-color: var(--color-success);
+  color: var(--color-success);
+  background: var(--color-success-soft);
+}
+.practice-option[data-wrong='true'] {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+.practice-option[aria-disabled='true'] {
+  cursor: default;
+}
+.practice-option-letter {
+  font-weight: 700;
+}
+.practice-option-content {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.practice-option-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.practice-submit {
+  margin-top: 24px;
+}
+.practice-explanation {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-line);
+  overflow-wrap: anywhere;
+}
+.practice-explanation h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.practice-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding-block: 24px;
+}
+.practice-navigation > span {
+  width: 160px;
+}
+.practice-navigation .button {
+  width: 100%;
+}
+.practice-notice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
+  background: var(--color-success-soft);
+  border-radius: var(--radius-normal);
+}
+.practice-summary {
+  margin-top: 24px;
+}
+.focus-practice .math-text .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+@media (max-width: 767px) {
+  .focus-practice {
+    padding-bottom: 144px;
+  }
+  .practice-heading {
+    display: grid;
+    gap: 8px;
+  }
+  .practice-card,
+  .practice-region,
+  .practice-summary {
+    padding: 16px;
+  }
+  .practice-navigation {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 40;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-line);
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    box-shadow: var(--shadow-raised);
+  }
+  .practice-navigation > span {
+    width: 144px;
+    max-width: calc(50% - 12px);
+  }
+  .practice-option {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .practice-option-verdict {
+    margin-left: 24px;
+  }
+}

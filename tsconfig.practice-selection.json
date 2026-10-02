@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": [
+    "src/pages/PracticeSelectionPage.tsx",
+    "src/api/practice-selection.ts",
+    "src/features/practice/selection.test.tsx",
+    "src/features/practice/test-setup.ts",
+    "src/vite-env.d.ts"
+  ]
+}

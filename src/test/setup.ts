@@ -1,0 +1,12 @@
+import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/react';
+import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
+import { server } from '../mocks/server';
+import { resetMockSession } from '../mocks/handlers';
+import { sessionStore } from '../api/session';
+import { initializeAuthRecovery } from '../api/auth-recovery';
+import { notifications } from '../utils/notifications';
+beforeAll(() => { server.listen({ onUnhandledRequest: 'error' }); initializeAuthRecovery(); });
+beforeEach(() => { sessionStore.clear(); resetMockSession(); notifications.clear(); sessionStorage.clear(); });
+afterEach(() => { cleanup(); server.resetHandlers(); sessionStore.clear(); resetMockSession(); notifications.clear(); });
+afterAll(() => server.close());

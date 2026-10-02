@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": [
+    "src/features/dashboard/test-setup.ts",
+    "src/api/catalog.ts",
+    "src/pages/CatalogPage.tsx",
+    "src/features/catalog/**/*.tsx"
+  ]
+}

@@ -1,0 +1,304 @@
+.manual-layout {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.manual-toc {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  background: var(--color-surface);
+  padding: 16px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-normal);
+}
+.manual-toc h2 {
+  font-size: var(--text-lg);
+  margin-bottom: 8px;
+}
+.manual-toc a {
+  display: block;
+  min-height: 44px;
+  padding: 8px;
+  overflow-wrap: anywhere;
+  border-radius: var(--radius-normal);
+  text-decoration: none;
+}
+.manual-toc a:hover,
+.manual-toc a[aria-current] {
+  background: var(--color-primary-soft);
+}
+.manual-toc a[aria-current] {
+  font-weight: 700;
+  box-shadow: inset 4px 0 var(--color-primary);
+}
+.manual-toc a:active {
+  background: var(--color-line);
+}
+.manual-main,
+.manual-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+.manual-mobile-toc {
+  display: none;
+}
+.manual-search label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.manual-search p {
+  margin-top: 16px;
+}
+.manual-search ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.manual-result {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  text-align: left;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-normal);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.manual-result:hover {
+  background: var(--color-primary-soft);
+  box-shadow: var(--shadow-raised);
+}
+.manual-result:active {
+  background: var(--color-line);
+}
+.manual-result:disabled {
+  background: var(--color-disabled);
+  color: var(--color-disabled-ink);
+}
+.manual-section {
+  overflow-wrap: anywhere;
+}
+.manual-section h1,
+.manual-section h2 {
+  font-size: var(--text-xl);
+  margin-top: 24px;
+}
+.manual-section h3,
+.manual-section h4,
+.manual-section h5,
+.manual-section h6 {
+  font-size: var(--text-lg);
+  margin: 24px 0 16px;
+}
+.manual-section ul,
+.manual-section ol {
+  padding-inline-start: 24px;
+  margin-bottom: 16px;
+}
+.manual-section > :first-child {
+  margin-top: 0;
+}
+.manual-section img {
+  max-width: 100%;
+  height: auto;
+}
+.manual-section a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.manual-section a:hover {
+  background: var(--color-primary-soft);
+}
+.manual-section a:active {
+  background: var(--color-line);
+}
+.manual-section mark {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  border-bottom: 2px solid var(--color-warning);
+}
+.manual-section [id],
+.manual-section {
+  scroll-margin-top: 24px;
+}
+.manual-section [data-reading-target='true'] {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 4px;
+  background: var(--color-primary-soft);
+}
+.manual-section code {
+  font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  font-size: var(--text-sm);
+}
+.manual-table {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 16px 0;
+}
+.manual-table table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 400px;
+}
+.manual-table th,
+.manual-table td {
+  border: 1px solid var(--color-line);
+  padding: 8px 16px;
+  text-align: left;
+}
+.manual-table th {
+  background: var(--color-primary-soft);
+}
+.manual-section .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px;
+}
+.manual-code {
+  margin: 16px 0;
+  padding: 16px;
+}
+.manual-code figcaption {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.manual-code figcaption > span {
+  padding-top: 8px;
+  font-size: var(--text-sm);
+}
+.manual-code pre {
+  overflow-x: auto;
+  margin: 0;
+  padding: 16px;
+  background: var(--color-canvas);
+  border-radius: var(--radius-normal);
+  white-space: pre;
+  max-width: 100%;
+}
+.manual-code code {
+  white-space: pre;
+  overflow-wrap: normal;
+}
+.manual-code .hljs-keyword,
+.manual-code .hljs-literal,
+.manual-code .hljs-type,
+.manual-code .hljs-title {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.manual-code .hljs-string,
+.manual-code .hljs-number {
+  color: var(--color-success);
+}
+.manual-code .hljs-comment {
+  color: var(--color-secondary);
+  font-style: italic;
+}
+.manual-code .hljs-attr,
+.manual-code .hljs-variable {
+  color: var(--color-warning);
+}
+.manual-code .hljs-meta {
+  color: var(--color-secondary);
+}
+.manual-exercises {
+  border-top: 1px solid var(--color-line);
+  margin-top: 24px;
+  padding-top: 16px;
+}
+.manual-exercises ul {
+  list-style: none;
+  padding: 0;
+}
+.manual-exercises li {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-normal);
+  margin-top: 8px;
+  padding: 8px;
+}
+.manual-exercises li[data-state='error'] {
+  border-color: var(--color-danger);
+}
+.manual-exercise-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+.manual-exercise-label > span:last-child {
+  padding-top: 8px;
+}
+.manual-checkbox {
+  min-width: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+}
+.manual-checkbox input {
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  accent-color: var(--color-primary);
+  padding: 0;
+}
+.manual-checkbox input:checked {
+  accent-color: var(--color-success);
+}
+.manual-checkbox input:disabled {
+  cursor: progress;
+}
+.manual-completed,
+.manual-pending,
+.manual-error {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+}
+.manual-completed {
+  color: var(--color-success);
+}
+.manual-pending {
+  color: var(--color-warning);
+}
+.manual-error {
+  color: var(--color-danger);
+}
+@media (max-width: 1023px) {
+  .manual-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .manual-toc {
+    display: none;
+  }
+  .manual-mobile-toc {
+    display: block;
+  }
+}
+@media (max-width: 767px) {
+  .manual-main,
+  .manual-body {
+    gap: 16px;
+  }
+  .manual-code figcaption {
+    flex-wrap: wrap;
+  }
+}

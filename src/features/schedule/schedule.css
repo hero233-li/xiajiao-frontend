@@ -1,0 +1,223 @@
+.schedule-page {
+  max-width: 960px;
+  margin-inline: auto;
+}
+.schedule-page .button,
+.schedule-dialog .button {
+  white-space: nowrap;
+  min-height: 44px;
+}
+.schedule-plan-picker {
+  max-width: 480px;
+  margin-bottom: 24px;
+}
+.schedule-toolbar,
+.schedule-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-block: 24px;
+}
+.schedule-toolbar p,
+.schedule-day-header h2 {
+  margin: 0;
+}
+.schedule-day-header {
+  margin: 0 0 16px;
+}
+.schedule-day-header h2 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 20px;
+}
+.schedule-metrics,
+.schedule-course-progress,
+.schedule-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-block: 24px;
+}
+.schedule-metrics strong {
+  display: block;
+  font-size: 24px;
+  margin-top: 8px;
+}
+.schedule-overview h2 {
+  font-size: 18px;
+}
+.schedule-warning {
+  padding: 16px;
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-normal);
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
+  margin-block: 24px;
+}
+.schedule-warning p {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.schedule-actions,
+.schedule-weeks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.schedule-actions {
+  margin-top: 16px;
+}
+.schedule-weeks {
+  margin-block: 24px;
+}
+.schedule-days {
+  display: grid;
+  gap: 24px;
+}
+.schedule-day {
+  scroll-margin-top: 24px;
+}
+.schedule-today {
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary-soft);
+}
+.schedule-today-label {
+  font-size: 14px;
+  border-radius: var(--radius-normal);
+  padding: 4px 8px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.schedule-past {
+  margin-block: 24px;
+}
+.schedule-past p,
+.schedule-caption {
+  font-size: 14px;
+  color: var(--color-secondary);
+  margin-top: 8px;
+}
+.schedule-task-block {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-normal);
+  background: var(--color-surface);
+  margin-top: 16px;
+  padding: 16px;
+}
+.schedule-task-block:hover {
+  box-shadow: var(--shadow-raised);
+}
+.schedule-task-block:active {
+  box-shadow: var(--shadow-normal);
+}
+.schedule-task-block:focus-within {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 4px;
+}
+.schedule-task-block summary,
+.schedule-dialog summary {
+  min-height: 44px;
+  cursor: pointer;
+  padding: 8px;
+  color: var(--color-ink);
+}
+.schedule-subtasks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+.schedule-task {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.schedule-task input {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  flex: 0 0 20px;
+  margin: 4px 0;
+  accent-color: var(--color-primary);
+}
+.schedule-task small {
+  display: block;
+  font-size: 14px;
+  color: var(--color-secondary);
+}
+.schedule-task[data-completed='true'] {
+  color: var(--color-success);
+  background: var(--color-success-soft);
+  border-radius: var(--radius-normal);
+}
+.schedule-task:has(input:disabled) {
+  cursor: progress;
+}
+.schedule-task-link {
+  display: block;
+  min-height: 44px;
+  padding: 8px;
+  margin-top: 8px;
+}
+.schedule-unplaced {
+  margin-top: 24px;
+}
+.schedule-dialog {
+  color: var(--color-ink);
+}
+.schedule-dialog-footer {
+  margin-top: 24px;
+}
+.schedule-priority {
+  padding-left: 24px;
+}
+.schedule-priority li {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.schedule-priority li > span:first-child {
+  flex: 1;
+  padding-top: 8px;
+  min-width: 120px;
+}
+.schedule-fields label {
+  font-size: 14px;
+}
+@media (max-width: 767px) {
+  .schedule-metrics,
+  .schedule-course-progress,
+  .schedule-fields,
+  .schedule-subtasks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .schedule-toolbar,
+  .schedule-day-header {
+    align-items: flex-start;
+  }
+  .schedule-weeks > span {
+    flex: 1 1 88px;
+  }
+  .schedule-weeks .button {
+    width: 100%;
+  }
+  .schedule-actions > span,
+  .schedule-actions > a {
+    max-width: 100%;
+  }
+  .schedule-actions > span .button {
+    max-width: 100%;
+  }
+}

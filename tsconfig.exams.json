@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": [
+    "src/pages/ExamsPage.tsx",
+    "src/api/exams.ts",
+    "src/features/exams/**/*",
+    "src/vite-env.d.ts"
+  ]
+}
