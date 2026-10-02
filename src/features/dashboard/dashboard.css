@@ -1,36 +1,33 @@
-/* 页面级设计令牌，避免影响现有页面。 */
+/* Compatibility aliases share the global design tokens. */
 .ov-page {
-  --ov-bg: #f6f8fc;
-  --ov-surface: #ffffff;
-  --ov-text: #18263c;
-  --ov-muted: #485a72;
-  --ov-border: #c6d2e2;
-  --ov-blue: #1752bd;
-  --ov-blue-hover: #124297;
-  --ov-blue-pressed: #0d3274;
-  --ov-blue-soft: #eaf1ff;
-  --ov-green: #166534;
-  --ov-green-soft: #edf8ef;
-  --ov-amber: #854d0e;
-  --ov-amber-soft: #fff7df;
-  --ov-red: #b91c1c;
-  --ov-red-soft: #fff0ef;
-  --ov-disabled: #667085;
-  --ov-disabled-bg: #e4e7ec;
-  --ov-focus: #125bc7;
-  --ov-radius: 8px;
-  --ov-radius-float: 16px;
-  --ov-shadow: 0 2px 8px rgb(24 38 60 / 5%);
-  --ov-shadow-float: 0 8px 24px rgb(24 38 60 / 12%);
+  --ov-bg: var(--color-canvas);
+  --ov-surface: var(--color-surface);
+  --ov-text: var(--color-ink);
+  --ov-muted: var(--color-secondary);
+  --ov-border: var(--color-line);
+  --ov-blue: var(--color-primary);
+  --ov-blue-hover: var(--color-primary-hover);
+  --ov-blue-pressed: var(--color-primary-pressed);
+  --ov-blue-soft: var(--color-primary-soft);
+  --ov-green: var(--color-success);
+  --ov-green-soft: var(--color-success-soft);
+  --ov-amber: var(--color-warning);
+  --ov-amber-soft: var(--color-warning-soft);
+  --ov-red: var(--color-danger);
+  --ov-red-soft: var(--color-danger-soft);
+  --ov-disabled: var(--color-disabled-ink);
+  --ov-disabled-bg: var(--color-disabled);
+  --ov-focus: var(--color-primary);
+  --ov-radius: var(--radius-normal);
+  --ov-radius-float: var(--radius-raised);
+  --ov-shadow: var(--shadow-normal);
+  --ov-shadow-float: var(--shadow-raised);
   max-width: 960px;
   margin: 0 auto;
   padding: 32px 24px 48px;
   color: var(--ov-text);
   background: var(--ov-bg);
-  font:
-    16px/1.6 system-ui,
-    'PingFang SC',
-    sans-serif;
+  font: var(--text-base)/1.6 var(--font-sans);
 }
 .ov-page *,
 .ov-page *::before,
@@ -417,4 +414,180 @@
 
 .ov-countdown-list .ov-status-FINISHED {
   color: var(--ov-green);
+}
+
+.ov-dashboard {
+  padding: 0;
+  background: transparent;
+}
+.ov-dashboard .ov-heading {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.ov-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.ov-heading-actions .cycle-switcher {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.ov-heading-actions select {
+  max-width: min(260px, 100%);
+}
+.ov-current-cycle {
+  margin-top: 8px !important;
+  overflow-wrap: anywhere;
+}
+.ov-dashboard .ov-card {
+  margin-bottom: 24px;
+}
+.ov-dashboard .ov-card:focus-within {
+  outline: none;
+}
+.ov-dashboard .ov-card:hover {
+  box-shadow: var(--ov-shadow);
+}
+.ov-dashboard .ov-card:active {
+  border-color: var(--ov-border);
+}
+.ov-dashboard .ov-course {
+  margin-bottom: 0;
+}
+.ov-dashboard .ov-suggestion {
+  gap: 12px;
+}
+.ov-today-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.ov-today-content > div:first-child {
+  min-width: 0;
+}
+.ov-today-content h3 {
+  margin-bottom: 8px;
+}
+.ov-today-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.ov-position-title {
+  margin-top: 8px !important;
+}
+.ov-dashboard .ov-suggestion .ov-button {
+  margin-top: 0;
+}
+.ov-dashboard .ov-countdown h2 {
+  margin-bottom: 0;
+}
+.ov-exam-table-head,
+.ov-dashboard .ov-countdown-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.7fr) minmax(100px, 0.5fr);
+  gap: 12px;
+  align-items: center;
+}
+.ov-exam-table-head {
+  padding: 0 0 8px;
+  color: var(--ov-muted);
+  font-size: var(--text-sm);
+  border-bottom: 1px solid var(--ov-border);
+}
+.ov-exam-table-head > :last-child,
+.ov-dashboard .ov-countdown-list strong {
+  text-align: right;
+}
+.ov-dashboard .ov-countdown-list li {
+  padding: 10px 0;
+}
+.ov-dashboard .ov-countdown-list {
+  margin-bottom: 12px;
+}
+.ov-exam-course {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ov-dashboard .ov-countdown-list .ov-status-TODAY {
+  color: var(--ov-red);
+}
+.ov-dashboard .ov-countdown-list .ov-status-DATE_UNKNOWN {
+  color: var(--ov-muted);
+  font-weight: 400;
+}
+.ov-progress-scope {
+  margin-bottom: 12px !important;
+}
+.ov-course-count {
+  margin-bottom: 8px !important;
+}
+.ov-dashboard .ov-overall {
+  margin-top: 0;
+}
+.ov-dashboard .ov-course-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.ov-dashboard .ov-course .ov-button {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 767px) {
+  .ov-dashboard {
+    padding: 0;
+  }
+  .ov-dashboard .ov-heading {
+    gap: 12px;
+  }
+  .ov-dashboard .ov-heading-actions {
+    width: 100%;
+  }
+  .ov-heading-actions .cycle-switcher {
+    flex: 1;
+  }
+  .ov-heading-actions select {
+    width: 100%;
+  }
+  .ov-today-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .ov-today-actions {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+  .ov-dashboard .ov-exam-table-head {
+    display: none;
+  }
+  .ov-dashboard .ov-countdown-list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 8px;
+  }
+  .ov-exam-course {
+    grid-column: 1 / -1;
+  }
+  .ov-exam-date {
+    grid-column: 1;
+  }
+  .ov-dashboard .ov-countdown-list strong {
+    grid-column: 2;
+    font-size: var(--text-sm);
+  }
+  .ov-dashboard .ov-course-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

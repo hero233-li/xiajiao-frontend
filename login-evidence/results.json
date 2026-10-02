@@ -1,0 +1,38 @@
+{
+  "results": [
+    {
+      "width": 320,
+      "noOverflow": true,
+      "validationShift": 0
+    },
+    {
+      "width": 390,
+      "noOverflow": true,
+      "validationShift": 0
+    },
+    {
+      "width": 768,
+      "noOverflow": true,
+      "validationShift": 0
+    },
+    {
+      "width": 1024,
+      "noOverflow": true,
+      "validationShift": 0
+    },
+    {
+      "width": 1440,
+      "noOverflow": true,
+      "validationShift": 0
+    }
+  ],
+  "title": true,
+  "mockHidden": true,
+  "errorShift": 0,
+  "pendingRequests": 1,
+  "keyboardOrder": true,
+  "reducedViewportScroll": true,
+  "zoomReflowEquivalent": true,
+  "accessibilityViolations": [],
+  "pageErrors": []
+}

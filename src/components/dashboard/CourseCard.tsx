@@ -5,7 +5,7 @@ import type { Course, CycleCourse, LearningPosition } from '../../api/generated/
 import { dateLabel, learningTargetPath } from '../../features/dashboard/navigation';
 import { ProgressBar } from './ProgressBar';
 
-/** 仅展示生成类型字段；可由我的科目页复用，无既有组件行为变更。 */
+/** Shared course summary uses published catalog counts and real recent positions. */
 export function CourseCard({
   course,
   exam,
@@ -19,11 +19,7 @@ export function CourseCard({
 }) {
   const base = `/zikao/course/${course.code}`;
   const ready = useCapability('course.next', { course, position });
-  const target = ready ? position?.target : undefined;
-  const label =
-    course.progress.percent > 0
-      ? `继续学习 ${course.progress.completedItems}/${course.progress.totalItems}`
-      : `从第 1 节开始 0/${course.progress.totalItems}`;
+  const target = ready && position?.target.courseCode === course.code ? position.target : undefined;
   return (
     <article className="ov-course ov-card" aria-labelledby={`course-${course.id}`}>
       <div className="ov-course-top">
@@ -46,26 +42,31 @@ export function CourseCard({
         )}
       </p>
       <div className="ov-course-progress">
-        {course.progress.percent > 0 && (
-          <>
-            <div className="ov-row">
-              <span>目录完成度</span>
-              <strong>{course.progress.percent}%</strong>
-            </div>
-            <ProgressBar progress={course.progress} label={`${course.name}目录完成度`} />
-          </>
+        <div className="ov-row">
+          <span>目录完成度</span>
+          <strong>{course.progress.percent}%</strong>
+        </div>
+        <p className="ov-small ov-course-count">
+          {course.progress.completedItems} / {course.progress.totalItems} 项已完成
+        </p>
+        {course.progress.totalItems > 0 ? (
+          <ProgressBar progress={course.progress} label={`${course.name}目录完成度`} />
+        ) : (
+          <p className="ov-small">暂无已发布目录条目</p>
         )}
       </div>
       {target ? (
         <Link className="ov-button ov-primary" to={learningTargetPath(target, cycleId)}>
-          {label}
+          继续学习
           <ArrowRight aria-hidden="true" />
         </Link>
       ) : (
         <Link className="ov-button ov-primary" to={`${base}/catalog`}>
-          进入课程<ArrowRight aria-hidden="true" />
+          进入课程
+          <ArrowRight aria-hidden="true" />
         </Link>
       )}
+      {target && <p className="ov-small">上次学习：{position?.title}</p>}
       <div className="ov-paper-slot">
         {course.capabilities.exams && (
           <Link className="ov-text-link" to={`${base}/exams`}>
