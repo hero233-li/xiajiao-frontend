@@ -1,0 +1,41 @@
+{
+  "results": [
+    {
+      "width": 320,
+      "noOverflow": true,
+      "dialogFits": true,
+      "focusRestored": true
+    },
+    {
+      "width": 390,
+      "noOverflow": true,
+      "dialogFits": true,
+      "focusRestored": true
+    },
+    {
+      "width": 768,
+      "noOverflow": true,
+      "dialogFits": true,
+      "focusRestored": true
+    },
+    {
+      "width": 1024,
+      "noOverflow": true,
+      "dialogFits": true,
+      "focusRestored": true
+    },
+    {
+      "width": 1440,
+      "noOverflow": true,
+      "dialogFits": true,
+      "focusRestored": true
+    }
+  ],
+  "paymentContentRemoved": true,
+  "saveFailureRetainsDraft": true,
+  "savedPersistsAfterReload": true,
+  "otherCoursesPreserved": true,
+  "writes": 2,
+  "accessibilityViolations": [],
+  "pageErrors": []
+}

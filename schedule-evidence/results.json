@@ -1,0 +1,43 @@
+{
+  "results": [
+    {
+      "width": 320,
+      "initialScroll": 0,
+      "overflow": false,
+      "todayVisibleAfterJump": true,
+      "settingsReadOnly": true
+    },
+    {
+      "width": 390,
+      "initialScroll": 0,
+      "overflow": false,
+      "todayVisibleAfterJump": true,
+      "settingsReadOnly": true
+    },
+    {
+      "width": 768,
+      "initialScroll": 0,
+      "overflow": false,
+      "todayVisibleAfterJump": true,
+      "settingsReadOnly": true
+    },
+    {
+      "width": 1024,
+      "initialScroll": 0,
+      "overflow": false,
+      "todayVisibleAfterJump": true,
+      "settingsReadOnly": true
+    },
+    {
+      "width": 1440,
+      "initialScroll": 0,
+      "overflow": false,
+      "todayVisibleAfterJump": true,
+      "settingsReadOnly": true
+    }
+  ],
+  "axeViolations": 0,
+  "writes": 0,
+  "pageErrors": [],
+  "emptyDistinctFromError": true
+}
