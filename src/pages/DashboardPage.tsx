@@ -71,7 +71,7 @@ export function DashboardPage() {
               <>
                 <h3>{query.data.todaySuggestion.title}</h3>
                 <p className="ov-small">来自 35 天安排{planDay > 0 ? ` · 第 ${planDay} 天` : ''}</p>
-                {query.data.continueLearning?.target.courseCode === query.data.todaySuggestion.target.courseCode && JSON.stringify(query.data.continueLearning.target) !== JSON.stringify(query.data.todaySuggestion.target) && <><p>你的目录进度在 {query.data.continueLearning.title}，今日计划安排的是 {query.data.todaySuggestion.title}。</p><Link className="ov-button ov-secondary" to={learningTargetPath(query.data.continueLearning.target, cycleId!)}>继续上次位置</Link></>}
+                {query.data.continueLearning?.target.pane === 'CATALOG' && query.data.continueLearning.target.courseCode === query.data.todaySuggestion.target.courseCode && JSON.stringify(query.data.continueLearning.target) !== JSON.stringify(query.data.todaySuggestion.target) && <><p>你的目录进度在 {query.data.continueLearning.title}，今日计划安排的是 {query.data.todaySuggestion.title}。</p><Link className="ov-button ov-secondary" to={learningTargetPath(query.data.continueLearning.target, cycleId!)}>继续上次位置</Link></>}
                 <p className="ov-small">
                   {query.data.courses.find(
                     (c) => c.code === query.data?.todaySuggestion?.target.courseCode,

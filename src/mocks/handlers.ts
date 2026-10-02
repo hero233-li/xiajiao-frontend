@@ -1,3 +1,4 @@
+import { createUuid } from '../utils/uuid';
 import { http, HttpResponse, delay } from 'msw';
 import type { LoginData, LoginRequest, RefreshRequest } from '../api/generated/models';
 import operations from './generated.json';
@@ -6,7 +7,7 @@ const key = 'xuexizhitu.foundation.mock-server';
 let pair: LoginData | null = (() => { try { return JSON.parse(sessionStorage.getItem(key) || 'null'); } catch { return null; } })();
 let expired = false; let revoked = false;
 const save = () => { try { if (pair) sessionStorage.setItem(key,JSON.stringify(pair)); else sessionStorage.removeItem(key); } catch { /* 存储不可用时保留内存 Mock。 */ } };
-const issue = (): LoginData => ({ ...loginExample, accessToken: `mock-access-${crypto.randomUUID()}`, refreshToken: `mock-refresh-${crypto.randomUUID()}` });
+const issue = (): LoginData => ({ ...loginExample, accessToken: `mock-access-${createUuid()}`, refreshToken: `mock-refresh-${createUuid()}` });
 const ok = <T,>(data: T) => HttpResponse.json({ code: 0, data, message: 'ok' });
 const failure = (status: number, code: number, message: string) => HttpResponse.json({ code, data: null, message },{ status });
 const authorized = (request: Request) => !!pair && !expired && request.headers.get('Authorization') === `Bearer ${pair.accessToken}`;

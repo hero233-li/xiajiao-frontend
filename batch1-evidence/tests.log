@@ -1,0 +1,54 @@
+
+> xuexizhitu-frontend-foundation@0.0.1 test
+> vitest run --reporter=dot
+
+
+ RUN  v5.0.3 /Users/huagu/IDEA/自考/xiajiao/repo/frontend
+
+stderr | src/features/catalog/catalog.test.tsx > 课程目录 > 默认展开当前章，课程进度只有一次，继续学习聚焦具体条目
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+
+stderr | src/features/schedule/schedule.test.tsx > 35天安排 > 标题唯一，默认今天所在周、自动滚动、过去折叠；每日没有课程级统计
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+
+stderr | src/features/assessments/assessments.test.tsx > 检测作答与结果 > 选择、防抖保存、跳题与待查；交卷前不获取答案
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/features/notes/notes.test.tsx > 备注页面 > 正文纯文本、保留换行，点击后端标签通过接口筛选并同步 URL
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/features/exams/exams.test.tsx > 历年试卷与成绩 > 加载中、空数据和可重试的失败区域独立展示
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+·······························································································stderr | src/features/practice/practice.test.tsx > 专注做题页 > 未选择时解释禁用原因；键盘完成选择、提交、下一题；预取与公式生效
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+
+stderr | src/features/cycle/cycle.test.tsx > 周期上下文 > 切换后保存选择，短参数支持后退和前进
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+
+················(node:57622) [UNDICI-FETCH-patch] Warning: Using `patch` is highly likely to result in a `405 Method Not Allowed`. `PATCH` is much more likely to succeed.
+(Use `node --trace-warnings ...` to show where the warning was created)
+·········································stderr | src/features/manual/manual.test.tsx > 实践手册 > 搜索结果跳转并高亮，无结果提供清空操作
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+
+·········stderr | src/features/manual/manual.test.tsx > 实践手册 > 手册勾选成功后目录页同步变化，并可从目录取消后返回手册
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • GET /api/v1/courses/course-a/learning-position
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+······························
+
+ Test Files  18 passed (18)
+      Tests  191 passed (191)
+   Start at  17:50:10
+   Duration  13.53s (tests 53%, environment 16%, setup 13%, import 10%, transform 9%)
+
+    Isolate  18 workers spawned · ~503ms startup each (spawn + environment, per file)
+             at least ~791ms faster with isolate: false — reuses workers across files instead of one per file
+

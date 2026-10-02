@@ -1,0 +1,10 @@
+
+ RUN  v5.0.3 /Users/huagu/IDEA/自考/xiajiao/repo/frontend
+
+··············
+
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+   Start at  23:16:22
+   Duration  1.95s (tests 47%, environment 22%, import 17%, transform 8%, setup 6%)
+

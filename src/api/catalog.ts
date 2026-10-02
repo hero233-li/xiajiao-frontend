@@ -1,3 +1,4 @@
+import { createUuid } from '../utils/uuid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getCourseByCode } from './generated/courses/courses';
 import { completeCatalogBatch, completeCatalogItem, getCatalog } from './generated/catalog/catalog';
@@ -112,7 +113,7 @@ export function useCatalogCompletion(courseId: string) {
 }
 export function completionUpdates(items: CatalogItem[], completed: boolean): BatchCompletionWrite {
   return {
-    clientMutationId: crypto.randomUUID(),
+    clientMutationId: createUuid(),
     updates: items.map((item) => ({
       itemId: item.id,
       completed,

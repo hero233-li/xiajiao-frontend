@@ -1,0 +1,13 @@
+
+ RUN  v5.0.3 /Users/huagu/IDEA/自考/xiajiao/repo/frontend
+
+stderr | src/features/catalog/catalog.test.tsx > 课程目录 > 默认展开当前章，课程进度只有一次，继续学习聚焦具体条目
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+
+············
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  17:51:00
+   Duration  1.97s (tests 47%, environment 21%, import 16%, transform 8%, setup 7%)
+

@@ -100,6 +100,7 @@ beforeEach(() => {
 afterEach(() => {
   server.resetHandlers();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 function mount(hash = '', page = false) {
   const client = new QueryClient({
@@ -158,6 +159,17 @@ describe('课程目录', () => {
       within(screen.getByRole('navigation')).getByRole('link', { name: '工专基础补充' }),
     );
     await waitFor(() => expect(document.activeElement).toBe(document.getElementById('stage-a')));
+  });
+  it('HTTP 环境没有 randomUUID 时仍能保存完成状态', async () => {
+    const getRandomValues = globalThis.crypto.getRandomValues.bind(globalThis.crypto);
+    vi.stubGlobal('crypto', { getRandomValues });
+    mount();
+    const checkbox = await screen.findByRole('checkbox', { name: '集合基础完成状态' });
+    await userEvent.click(checkbox);
+    await screen.findByText('已保存');
+    expect(checkbox).toBeChecked();
+    expect(data.chapters[0].items[0].completed).toBe(true);
+    expect(screen.queryByText(/randomUUID/)).not.toBeInTheDocument();
   });
   it('单项保存即时反馈，接收后端进度，并失效关联汇总及35天安排', async () => {
     const { client } = mount();

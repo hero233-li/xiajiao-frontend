@@ -1,3 +1,4 @@
+import { createUuid } from '../../utils/uuid';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
 import { useNavigate } from '../cycle/navigation';
@@ -126,7 +127,7 @@ export default function ManualReader({ courseId }: { courseId: string }) {
         write: {
           completed,
           expectedRevision: item.revision,
-          clientMutationId: crypto.randomUUID(),
+          clientMutationId: createUuid(),
         },
       });
       setSaved(item.id);

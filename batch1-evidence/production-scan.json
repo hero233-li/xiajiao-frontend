@@ -1,0 +1,12 @@
+{
+  "forbiddenProductionCopy": {
+    "接口未提供": [],
+    "暂未提供": [],
+    "后端返回": []
+  },
+  "devPageChunks": [],
+  "openapiSha256": "7afe1a2027c742ddd9b37b502e9a511a7950209163d7131737dc31c94ffb12e9",
+  "scope": "P0-1 to P0-7 only",
+  "backendChanged": false,
+  "openapiChanged": false
+}

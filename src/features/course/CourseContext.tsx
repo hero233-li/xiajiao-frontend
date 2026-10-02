@@ -52,7 +52,7 @@ export function CourseFrame({ children }: PropsWithChildren) {
     ['exams', '历年试卷'],
     ['notes', '备注'],
     ...(course.capabilities.manual ? [['manual', '实践手册']] : []),
-  ];
+  ].filter(([path]) => path === 'notes' || course.capabilities[path as keyof Course['capabilities']]);
   return (
     <CourseContext.Provider value={course}>
       <header className="course-frame-head">

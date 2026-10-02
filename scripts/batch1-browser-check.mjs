@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, URL } from 'node:url';
 // Browser-only contract fixtures; no mock is installed in the production application.
 const frontendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(path.join(frontendRoot, 'package.json'));
@@ -11,7 +11,7 @@ const operations = JSON.parse(
 );
 const base = path.join(frontendRoot, 'batch1-evidence');
 fs.mkdirSync(base, { recursive: true });
-const example = (id) => structuredClone(operations.find((x) => x.operationId === id).example);
+const example = (id) => globalThis.structuredClone(operations.find((x) => x.operationId === id).example);
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 const errors = [];
@@ -35,7 +35,7 @@ await page.route('**/api/v1/**', async (route) => {
           x.method.toUpperCase() === req.method() &&
           new RegExp('^' + x.path.replace(/\{[^}]+\}/g, '[^/]+') + '$').test(path),
       );
-    if (op) result = structuredClone(op.example);
+    if (op) result = globalThis.structuredClone(op.example);
   }
   if (!result)
     return route.fulfill({ status: 404, json: { code: 40401, message: '无记录', data: null } });

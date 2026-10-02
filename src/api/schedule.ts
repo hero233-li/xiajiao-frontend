@@ -1,3 +1,4 @@
+import { createUuid } from '../utils/uuid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   completePlanTask,
@@ -63,7 +64,7 @@ export function useTaskCompletion(planId: string) {
             expectedCompleted: task.completed,
             expectedItemRevision,
             baseRevision: current.revision,
-            clientMutationId: crypto.randomUUID(),
+            clientMutationId: createUuid(),
           },
           { silent: true },
         );

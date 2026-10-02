@@ -1,3 +1,4 @@
+import { createUuid } from '../utils/uuid';
 import { useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Link, useNavigate, useSearchParams } from '../features/cycle/navigation';
@@ -157,7 +158,7 @@ function AssessmentDialog({
     if (!cycleId || submitting.current) return;
     submitting.current = true;
     // 相同申请重试保留幂等键，防止网络失败后重复创建检测。
-    if (key.current?.cycleId !== cycleId) key.current = { cycleId, value: crypto.randomUUID() };
+    if (key.current?.cycleId !== cycleId) key.current = { cycleId, value: createUuid() };
     try {
       const session = await mutation.mutateAsync({
         body: { kind: 'CHAPTER', chapterId: chapter.chapterId },

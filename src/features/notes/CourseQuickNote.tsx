@@ -1,3 +1,4 @@
+import { createUuid } from '../../utils/uuid';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSearchParams } from '../cycle/navigation';
@@ -13,7 +14,7 @@ export default function CourseQuickNote({ code }: { code: string }) {
       if (!location.pathname.includes('/practice/')) return;
       const detail = (event as CustomEvent<PracticeNoteRequest>).detail;
       if (!detail || typeof detail.summary !== 'string') return;
-      setRequest({ id: crypto.randomUUID(), content: detail.summary });
+      setRequest({ id: createUuid(), content: detail.summary });
     }
     window.addEventListener('practice:note-request', open);
     return () => window.removeEventListener('practice:note-request', open);

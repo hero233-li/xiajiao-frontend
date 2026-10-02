@@ -1,3 +1,4 @@
+import { createUuid } from '../utils/uuid';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Link, useSearchParams } from '../features/cycle/navigation';
@@ -413,7 +414,7 @@ function QuestionCard({
     submitLock.current = true;
     if (!attempt.current) {
       attempt.current = {
-        key: crypto.randomUUID(),
+        key: createUuid(),
         body: { revisionId: question.revisionId, selectedOption: selected },
       };
       try {
