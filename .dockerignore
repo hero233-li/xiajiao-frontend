@@ -1,0 +1,23 @@
+node_modules
+dist
+coverage
+playwright-report
+test-results
+blob-report
+
+.git
+.gitignore
+.idea
+.vscode
+.DS_Store
+*.log
+*.tsbuildinfo
+
+# 本地环境文件与 npm 认证信息不进入构建上下文。
+.env
+.env.*
+.npmrc
+
+# 部署镜像只需要源码、构建配置和锁文件。
+Dockerfile
+.dockerignore
