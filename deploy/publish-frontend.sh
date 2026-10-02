@@ -18,11 +18,21 @@ exec 9>"$state/backend.lock"
 flock -n 9 || { echo '已有前端或后端发布正在执行，请等待它完成。'; exit 1; }
 export GIT_TERMINAL_PROMPT=0
 repository=https://github.com/hero233-li/xiajiao-frontend.git
+git_retry() {
+    for attempt in 1 2 3; do
+        if git -c http.version=HTTP/1.1 "$@"; then return 0; fi
+        if (( attempt < 3 )); then
+            echo "GitHub 连接失败，5 秒后重试（$attempt/3）……"
+            sleep 5
+        fi
+    done
+    return 1
+}
 echo '正在读取前端 GitHub main 分支……'
 if [[ ! -d "$state/frontend.git" ]]; then
-    git clone --bare "$repository" "$state/frontend.git"
+    git_retry clone --bare "$repository" "$state/frontend.git"
 fi
-git --git-dir="$state/frontend.git" fetch --prune origin '+refs/heads/main:refs/heads/main'
+git_retry --git-dir="$state/frontend.git" fetch --prune origin '+refs/heads/main:refs/heads/main'
 revision=$(git --git-dir="$state/frontend.git" rev-parse main)
 echo "目标版本：$revision"
 docker network inspect xiajiao-network >/dev/null
