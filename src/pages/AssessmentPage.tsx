@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { Link as RecoveryLink, useLocation, useParams } from 'react-router-dom';
 import { Link, useNavigate, useSearchParams } from '../features/cycle/navigation';
 import { AlertTriangle, Check, Circle, Flag, Timer } from 'lucide-react';
 import {
@@ -14,7 +14,6 @@ import { sessionStore } from '../api/session';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { MathText } from '../features/practice/MathText';
-import { ProgressBar } from '../components/ProgressBar';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { formatShanghaiDate } from '../utils/date';
@@ -39,14 +38,19 @@ export function Component() {
   useEffect(() => {
     setCompleted(false);
   }, [testId]);
-  const back = `/zikao/course/${code}/practice`;
+  const context = new URLSearchParams();
+  if (search.get('kind')) context.set('kind', search.get('kind')!);
+  if (search.get('chapterId')) context.set('chapterId', search.get('chapterId')!);
+  const publicCycle = new URLSearchParams(location.search).get('cycle');
+  if (publicCycle) context.set('cycle', publicCycle);
+  const back = `/zikao/course/${encodeURIComponent(code)}/practice${context.size ? `?${context}` : ''}${search.get('chapterId') ? `#practice-chapter-${encodeURIComponent(search.get('chapterId')!)}` : ''}`;
   if (!cycleId)
     return (
       <div className="assessment-page">
         <p role="alert">缺少考试周期，请从检测入口重新进入。</p>
-        <Link className="button button-secondary" to={back}>
-          返回刷题
-        </Link>
+        <RecoveryLink className="button button-secondary" to={back}>
+          选择考试周期并查看检测资格
+        </RecoveryLink>
       </div>
     );
   if (course.isPending || (testId !== 'new' && course.data && query.isPending))
@@ -90,19 +94,20 @@ export function Component() {
   if (testId === 'new')
     return (
       <div className="assessment-page stack">
-        <h1>{search.get('kind') === 'MOCK' ? '模拟卷' : '章节检测'} · 开始前确认</h1>
+        <h1>{course.data.name} · 检测申请</h1>
         <section className="card stack">
-          <h2>作答规则</h2>
+          <h2>先查看检测资格</h2>
           <p>
-            单选题、等权计分、满分 100
-            分，交卷后由系统自动判分。离开页面不会暂停计时，每次重新检测由系统重新抽题。
+            请在章节刷题页查看检测条件，满足资格后选择考试周期并申请检测。申请成功会进入本次会话。
           </p>
-          <p>题数、限时和通过线暂不可用。</p>
-          <Button disabled disabledReason="暂时无法确认本次试卷规则，暂不能开始。">
-            开始作答
-          </Button>
-          <Link className="button button-secondary" to={back}>
-            返回刷题
+          {search.get('kind') === 'MOCK' && (
+            <p className="secondary">当前入口尚不能直接申请模拟卷，可先查看可用的章节检测。</p>
+          )}
+          <p className="secondary">
+            检测计时从会话创建后开始。离开页面不会暂停计时，刷新会恢复同一会话。
+          </p>
+          <Link className="button button-primary" to={back}>
+            查看检测资格并申请
           </Link>
         </section>
       </div>
@@ -148,7 +153,7 @@ export function Component() {
     );
   return (
     <Attempt
-      key={session.id}
+      key={`${sessionStore.getSnapshot()?.user.id}:${session.id}`}
       session={session}
       measuredAt={query.data.measuredAt}
       testName={`${course.data.name} · ${titleOf(session)}`}
@@ -159,10 +164,7 @@ export function Component() {
       }}
       onComplete={() => {
         setCompleted(true);
-        navigate(
-          `/zikao/course/${code}/tests/${testId}/result`,
-          { replace: true },
-        );
+        navigate(`/zikao/course/${code}/tests/${testId}/result`, { replace: true });
       }}
     />
   );
@@ -189,6 +191,34 @@ function Attempt({
   const { flush, fingerprint, clear } = queue;
   const [index, setIndex] = useState(0);
   const [confirm, setConfirm] = useState(false);
+  const [drawer, setDrawer] = useState(false);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const toolbar = useRef<HTMLElement>(null);
+  const firstQuestion = useRef(true);
+  useEffect(() => {
+    if (firstQuestion.current) {
+      firstQuestion.current = false;
+      return;
+    }
+    heading.current?.focus({ preventScroll: true });
+    heading.current?.scrollIntoView?.({ block: 'start' });
+  }, [index]);
+  useEffect(() => {
+    const element = toolbar.current;
+    if (!element || typeof ResizeObserver === 'undefined') return;
+    const update = () =>
+      document.documentElement.style.setProperty(
+        '--assessment-toolbar-height',
+        `${element.getBoundingClientRect().height}px`,
+      );
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    update();
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty('--assessment-toolbar-height');
+    };
+  }, []);
   const [finishing, setFinishing] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const markKey = `assessment-marks:${sessionStore.getSnapshot()?.user.id}:${session.id}`;
@@ -281,7 +311,8 @@ function Attempt({
     (row) => selected(row.question.revisionId, row.selectedOption) !== null,
   ).length;
   const row = session.questions[index];
-  const blocked = finishing || session.deadlineReached || seconds === 0;
+  const blocked =
+    finishing || session.status !== 'IN_PROGRESS' || session.deadlineReached || seconds === 0;
   const mark = (id: string) => {
     const next = marks.includes(id) ? marks.filter((item) => item !== id) : [...marks, id];
     setMarks(next);
@@ -291,34 +322,114 @@ function Attempt({
       /* Marking remains available in memory. */
     }
   };
+  useEffect(() => {
+    const keyboard = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        event.defaultPrevented ||
+        event.repeat ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        target?.closest(
+          'textarea, select, input:not([type="radio"]), [contenteditable], [role="dialog"]',
+        )
+      )
+        return;
+      const option = 'abcd'.indexOf(event.key.toLowerCase());
+      if (row && option >= 0 && option < row.question.options.length && !blocked) {
+        event.preventDefault();
+        queue.choose(row.question.revisionId, option);
+      } else if (
+        (event.key === 'ArrowLeft' || event.key === 'ArrowRight') &&
+        !target?.closest('input, [role="region"]')
+      ) {
+        event.preventDefault();
+        setIndex((value) =>
+          Math.max(
+            0,
+            Math.min(session.questions.length - 1, value + (event.key === 'ArrowLeft' ? -1 : 1)),
+          ),
+        );
+      }
+    };
+    document.addEventListener('keydown', keyboard);
+    return () => document.removeEventListener('keydown', keyboard);
+  });
+  const pendingCount = Object.keys(queue.drafts).length;
+  const grid = (
+    <nav className="assessment-grid" aria-label="选择题号">
+      {session.questions.map((item, itemIndex) => {
+        const id = item.question.revisionId;
+        const done = selected(id, item.selectedOption) !== null;
+        const marked = marks.includes(id);
+        return (
+          <Button
+            key={id}
+            variant="secondary"
+            className={`${done ? 'assessment-answered' : ''} ${marked ? 'assessment-marked' : ''}`}
+            aria-current={index === itemIndex ? 'step' : undefined}
+            aria-label={`第 ${item.position} 题，${done ? '已答' : '未答'}${marked ? '，标记待查' : ''}`}
+            onClick={() => {
+              setIndex(itemIndex);
+              setDrawer(false);
+            }}
+          >
+            {marked ? (
+              <Flag size={16} aria-hidden="true" />
+            ) : done ? (
+              <Check size={16} aria-hidden="true" />
+            ) : (
+              <Circle size={16} aria-hidden="true" />
+            )}
+            {item.position}
+          </Button>
+        );
+      })}
+    </nav>
+  );
   return (
-    <div className="assessment-page stack">
-      <header className="assessment-toolbar card">
+    <div className="assessment-page assessment-attempt stack">
+      <header ref={toolbar} className="assessment-toolbar">
         <h1>{testName}</h1>
-        <div
-          className={
-            seconds <= 60 ? 'status-error' : seconds <= 300 ? 'status-warning' : 'status-info'
-          }
-        >
-          <Timer size={20} aria-hidden="true" /> 剩余 {Math.floor(seconds / 60)}:
-          {String(seconds % 60).padStart(2, '0')}
-          {seconds <= 60 ? ' · 即将结束，请尽快交卷' : seconds <= 300 ? ' · 剩余不足 5 分钟' : ''}
+        <div className="assessment-topline">
+          <div
+            className={`assessment-timer ${seconds <= 60 ? 'status-error' : seconds <= 300 ? 'status-warning' : 'status-info'}`}
+          >
+            <Timer size={20} aria-hidden="true" />
+            剩余 {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}
+          </div>
+          <span>
+            已答 {answered} / {session.questionCount}
+          </span>
+          <span>未答 {Math.max(0, session.questionCount - answered)} 题</span>
         </div>
-        <span>
-          已答 {answered} / {session.questionCount}
-        </span>
-        <Button
-          loading={finishing}
-          onClick={() => (session.deadlineReached ? void finish(true) : setConfirm(true))}
-        >
-          交卷
-        </Button>
+        <div className="assessment-sync" aria-live="polite">
+          {queue.busy
+            ? '正在保存答案…'
+            : pendingCount
+              ? `未同步 ${pendingCount} 题 · 答案已本地暂存`
+              : '答案已保存'}
+          {queue.error && <span className="status-error"> · 同步失败</span>}
+        </div>
       </header>
-      <ProgressBar label="作答进度" value={answered} max={session.questionCount} />
-      <p className="secondary">
-        限时 {session.limitMinutes} 分钟 · 通过线 {session.passScore} 分 · 截止{' '}
-        {formatShanghaiDate(session.deadlineAt)}（上海时间）。离开页面不会暂停计时。
-      </p>
+      <details className="assessment-rules">
+        <summary>本次规则与快捷键</summary>
+        <p>
+          共 {session.questionCount} 题 · 限时 {session.limitMinutes} 分钟 · 通过线{' '}
+          {session.passScore} 分 · 截止 {formatShanghaiDate(session.deadlineAt)}
+          （上海时间）。离开页面不会暂停计时。
+        </p>
+        <p>A–D 选择 · ← → 切题。输入备注时不触发；单选框聚焦时方向键按原生选项操作。</p>
+      </details>
+      {queue.storageError && <p role="alert">{queue.storageError}</p>}
+      <Button
+        variant="secondary"
+        className="assessment-drawer-trigger"
+        onClick={() => setDrawer(true)}
+      >
+        题号面板 · 第 {row?.position ?? 0} 题
+      </Button>
       {syncError && (
         <div role="alert">
           <p>服务端同步失败：{errorMessage(syncError)}</p>
@@ -340,14 +451,6 @@ function Attempt({
       {seconds === 0 && !session.deadlineReached && (
         <p role="status">正在核对服务端截止状态，暂不可改选。</p>
       )}
-      <div aria-live="polite">
-        {queue.busy
-          ? '正在保存答案…'
-          : Object.keys(queue.drafts).length
-            ? '未保存 · 答案已本地暂存，恢复网络后补发。'
-            : '答案已保存'}
-        {queue.storageError && <p role="alert">{queue.storageError}</p>}
-      </div>
       {queue.error && (
         <div className="card" data-state="error" role="alert">
           <p>未保存：{queue.error}</p>
@@ -389,13 +492,15 @@ function Attempt({
         />
       ) : (
         <section
-          className="card stack"
+          className="assessment-question card stack"
           aria-label={`第 ${row.position} 题`}
           aria-disabled={blocked}
           aria-busy={finishing}
         >
           <div className="row">
-            <h2>第 {row.position} 题 · 单选</h2>
+            <h2 ref={heading} tabIndex={-1} className="assessment-question-title">
+              第 {row.position} 题 · 单选
+            </h2>
             <Button
               variant="secondary"
               aria-pressed={marks.includes(row.question.revisionId)}
@@ -444,36 +549,30 @@ function Attempt({
           </div>
         </section>
       )}
-      <section className="card stack">
+      <section className="assessment-desktop-panel">
         <h2>题号面板</h2>
-        <p>✓ 已答 / ○ 未答 / ⚑ 标记待查</p>
-        <nav className="assessment-grid" aria-label="选择题号">
-          {session.questions.map((item, itemIndex) => {
-            const id = item.question.revisionId;
-            const done = selected(id, item.selectedOption) !== null;
-            const marked = marks.includes(id);
-            return (
-              <Button
-                key={id}
-                variant="secondary"
-                className={marked ? 'assessment-marked' : done ? 'assessment-answered' : ''}
-                aria-current={index === itemIndex ? 'step' : undefined}
-                aria-label={`第 ${item.position} 题，${done ? '已答' : '未答'}${marked ? '，标记待查' : ''}`}
-                onClick={() => setIndex(itemIndex)}
-              >
-                {marked ? (
-                  <Flag size={16} aria-hidden="true" />
-                ) : done ? (
-                  <Check size={16} aria-hidden="true" />
-                ) : (
-                  <Circle size={16} aria-hidden="true" />
-                )}
-                {item.position}
-              </Button>
-            );
-          })}
-        </nav>
+        <p className="secondary">蓝框为当前题 · ✓ 已答 · ○ 未答 · ⚑ 标记待查</p>
+        {grid}
       </section>
+      <Modal open={drawer} title="题号面板" onClose={() => setDrawer(false)}>
+        <p>✓ 已答 · ○ 未答 · ⚑ 标记待查；蓝框为当前题。</p>
+        {grid}
+      </Modal>
+      <footer className="assessment-submitbar">
+        <span>
+          未答 {Math.max(0, session.questionCount - answered)} 题
+          {pendingCount > 0 ? ` · ${pendingCount} 题未同步` : ' · 答案已保存'}
+        </span>
+        <Button
+          loading={finishing}
+          loadingLabel="正在交卷"
+          disabled={!session.deadlineReached && seconds === 0}
+          disabledReason="正在核对服务端截止状态"
+          onClick={() => (session.deadlineReached ? void finish(true) : setConfirm(true))}
+        >
+          交卷
+        </Button>
+      </footer>
       <Modal open={confirm} title="确认交卷" onClose={() => setConfirm(false)}>
         <p>
           {session.questionCount - answered > 0
@@ -610,10 +709,7 @@ function Result({
           <p>
             <Check aria-hidden="true" /> 真题已开放
           </p>
-          <Link
-            className="button button-primary"
-            to={`/zikao/course/${code}/exams`}
-          >
+          <Link className="button button-primary" to={`/zikao/course/${code}/exams`}>
             查看历年真题
           </Link>
         </section>

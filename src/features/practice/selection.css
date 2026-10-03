@@ -283,3 +283,7 @@
     flex-basis: 100%;
   }
 }
+
+.selection-chapter {
+  scroll-margin-top: calc(var(--course-head-height, 160px) + 16px);
+}

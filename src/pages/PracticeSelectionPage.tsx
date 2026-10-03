@@ -419,7 +419,7 @@ function ChapterRow({
   const nonparticipant = chapter.stats.blockReasons.some((reason) => reason.includes('不参与检测'));
   const counts = usePracticeCounts(courseId, chapter.chapterId);
   return (
-    <li className="selection-chapter">
+    <li className="selection-chapter" id={`practice-chapter-${chapter.chapterId}`}>
       <div className="selection-chapter-main">
         <span className="selection-number" aria-label={`第 ${index + 1} 章`}>
           {index + 1}
