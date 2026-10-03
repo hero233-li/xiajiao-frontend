@@ -77,6 +77,51 @@ describe('历年试卷与成绩', () => {
     expect(screen.queryByRole('navigation', { name: '真题解锁步骤' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '手动跳过' })).not.toBeInTheDocument();
   });
+  it('年份与答案筛选组合使用，空结果可清除并恢复真实清单', async () => {
+    const papers = [
+      {
+        ...paper,
+        id: 'new',
+        paperMonth: '2026-04',
+        sourceCourseCode: null,
+        answerFile: null,
+        questionFile: { ...paper.questionFile, containsAnswers: false },
+      },
+      {
+        ...paper,
+        id: 'embedded',
+        paperMonth: '2025-10',
+        sourceCourseCode: null,
+        answerFile: null,
+        questionFile: { ...paper.questionFile, containsAnswers: true },
+      },
+      {
+        ...paper,
+        id: 'separate',
+        paperMonth: '2024-04',
+        sourceCourseCode: 'old',
+        answerFile: paper.questionFile,
+      },
+    ];
+    server.use(
+      http.get(`${base}/papers`, () => ok({ items: papers, page: 1, size: 100, total: 3 })),
+    );
+    mount();
+    const user = userEvent.setup();
+    const year = await screen.findByRole('combobox', { name: '筛选试卷年份' });
+    await user.selectOptions(year, '2026');
+    expect(screen.getAllByRole('article')).toHaveLength(1);
+    expect(screen.getByText('暂无答案')).toBeVisible();
+    await user.click(screen.getByLabelText('仅看有答案'));
+    expect(screen.queryAllByRole('article')).toHaveLength(0);
+    await user.click(screen.getByRole('button', { name: '清除筛选' }));
+    expect(screen.getAllByRole('article')).toHaveLength(3);
+    await user.click(screen.getByLabelText('仅看有答案'));
+    expect(screen.getAllByRole('article')).toHaveLength(2);
+    expect(screen.getByText('题目含答案')).toBeVisible();
+    expect(screen.getByText('独立答案')).toBeVisible();
+    expect(screen.getByText('补充资料 · 来源课程代码 old')).toBeVisible();
+  });
   it('窗口内二次确认跳过，成功后可撤销', async () => {
     let state: Unlock = {
       ...unlock,

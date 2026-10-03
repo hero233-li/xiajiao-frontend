@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { Link } from '../cycle/navigation';
-import { CheckCircle2, LockKeyhole, Info } from 'lucide-react';
+import { CheckCircle2, LockKeyhole, Info, FileText } from 'lucide-react';
 import type {
   Paper,
   Prediction,
@@ -48,22 +48,38 @@ export function EmptyLine({ text, retry }: { text: string; retry: () => void }) 
     </div>
   );
 }
-export function UnlockSteps({ unlock: _unlock, practice }: { unlock: Unlock; practice: string }) {
+export function UnlockSteps({ unlock, practice }: { unlock: Unlock; practice: string }) {
   return (
-    <>
-      <section className="exam-next">
-        <Info size={20} aria-hidden="true" />
+    <section className="exam-access" aria-label="真题权限">
+      <div className="exam-access-main">
+        {unlock.canDownloadPapers ? (
+          <CheckCircle2 size={18} aria-hidden="true" />
+        ) : (
+          <LockKeyhole size={18} aria-hidden="true" />
+        )}
         <div>
-          <p>章节练习 → 通过章节检测 → 通过模拟卷 → 解锁真题。</p>
-          <p className="secondary">
-            完成章节练习后，可查看检测资格；各次检测的通过线以试卷规则为准。
+          <strong>{unlock.canDownloadPapers ? '真题下载已开放' : '真题下载尚未开放'}</strong>
+          <p>
+            {unlock.canDownloadPapers
+              ? unlock.canWriteScores
+                ? '下载试卷后，可记录成绩与答题照片。'
+                : '可下载资料；当前暂不能新增或修改成绩。'
+              : unlock.missingChapterIds.length
+                ? `还有 ${unlock.missingChapterIds.length} 个章节待通过检测，完成后继续参加模拟卷。`
+                : '通过有效模拟卷后开放下载；具体资格以当前检测规则为准。'}
           </p>
         </div>
-        <Link className="button button-primary" to={practice}>
+        <Link className="button button-secondary" to={practice}>
           查看刷题进度
         </Link>
-      </section>
-    </>
+      </div>
+      {!unlock.canDownloadPapers && (
+        <details className="exam-access-rules">
+          <summary>查看解锁规则</summary>
+          <p>章节练习 → 通过章节检测 → 通过模拟卷 → 解锁真题。各次检测的通过线以试卷规则为准。</p>
+        </details>
+      )}
+    </section>
   );
 }
 export function PredictionPanel({ prediction }: { prediction: Prediction }) {
@@ -174,88 +190,154 @@ export function PaperGroups({
   onRecord: (paper: Paper) => void;
   downloading?: { id: string; part: 'QUESTION' | 'ANSWER' };
 }) {
+  const [yearFilter, setYearFilter] = useState('all');
+  const [withAnswers, setWithAnswers] = useState(false);
+  const allYears = [...new Set(papers.map((p) => p.paperMonth.slice(0, 4)))].sort().reverse();
+  const filtered = papers.filter(
+    (p) =>
+      (yearFilter === 'all' || p.paperMonth.startsWith(yearFilter)) &&
+      (!withAnswers || !!p.answerFile || p.questionFile.containsAnswers),
+  );
   const sources = [
-    ...new Set(papers.map((p) => (p.sourceCourseCode === code ? null : p.sourceCourseCode))),
-  ].sort();
+    ...new Set(filtered.map((p) => (p.sourceCourseCode === code ? null : p.sourceCourseCode))),
+  ].sort((a, b) => (a === null ? -1 : b === null ? 1 : a.localeCompare(b)));
   return (
-    <>
+    <div className="exam-library">
+      <div className="exam-library-tools">
+        <p>
+          <strong>{filtered.length}</strong> 套试卷
+          {filtered.length !== papers.length && <span> / 共 {papers.length} 套</span>}
+        </p>
+        <label>
+          年份
+          <select
+            aria-label="筛选试卷年份"
+            value={yearFilter}
+            onChange={(e) => setYearFilter(e.target.value)}
+          >
+            <option value="all">全部年份</option>
+            {allYears.map((year) => (
+              <option key={year} value={year}>
+                {year} 年
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="exam-answer-filter">
+          <input
+            type="checkbox"
+            checked={withAnswers}
+            onChange={(e) => setWithAnswers(e.target.checked)}
+          />
+          仅看有答案
+        </label>
+      </div>
+      {!filtered.length && (
+        <p className="exam-empty">
+          没有符合筛选条件的试卷。
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setYearFilter('all');
+              setWithAnswers(false);
+            }}
+          >
+            清除筛选
+          </Button>
+        </p>
+      )}
       {sources.map((source) => {
-        const matching = papers.filter(
+        const matching = filtered.filter(
           (p) => (p.sourceCourseCode === code ? null : p.sourceCourseCode) === source,
         );
         const years = [...new Set(matching.map((p) => p.paperMonth.slice(0, 4)))].sort().reverse();
         return (
-          <section className="stack" key={source ?? 'current'}>
-            <h3>{source ? `补充资料 · 来源课程代码 ${source}` : '本课程历年试卷'}</h3>
+          <section className="exam-source" key={source ?? 'current'}>
+            {source && <h3>补充资料 · 来源课程代码 {source}</h3>}
             {years.map((year) => (
-              <section key={year} className="stack">
-                <h4>{year} 年</h4>
-                <div
-                  className={
-                    unlock?.canDownloadPapers || unlock?.canWriteScores
-                      ? 'exam-paper-grid'
-                      : 'exam-locked-list'
-                  }
-                >
+              <section
+                key={year}
+                className="exam-year"
+                aria-label={`${source ? source + '来源 · ' : ''}${year}年试卷`}
+              >
+                <h4>
+                  {year}
+                  <small>年</small>
+                </h4>
+                <div className="exam-paper-list">
                   {matching
                     .filter((p) => p.paperMonth.startsWith(year))
                     .sort((a, b) => b.paperMonth.localeCompare(a.paperMonth))
                     .map((paper) => (
-                      <article className="card exam-paper" key={paper.id}>
-                        <div className="row">
-                          <strong>{Number(paper.paperMonth.slice(5))} 月试卷</strong>
-                          <span>{paper.questionPages ?? '未知'} 页</span>
-                          {!unlock?.canDownloadPapers && (
-                            <span className="status-warning">
-                              <LockKeyhole size={16} aria-hidden="true" />{' '}
+                      <article className="exam-paper" key={paper.id}>
+                        <div className="exam-paper-title">
+                          <FileText size={20} aria-hidden="true" />
+                          <div>
+                            <strong>{Number(paper.paperMonth.slice(5))} 月试卷</strong>
+                            <p>
+                              {paper.questionPages === null
+                                ? '题目页数未提供'
+                                : `${paper.questionPages} 页题目`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="exam-paper-answer">
+                          {paper.answerFile ? (
+                            <>
+                              <span>独立答案</span>
+                              <small>
+                                {paper.answerPages === null
+                                  ? '页数未提供'
+                                  : `${paper.answerPages} 页`}
+                              </small>
+                            </>
+                          ) : paper.questionFile.containsAnswers ? (
+                            <span className="status-warning">题目含答案</span>
+                          ) : (
+                            <span className="secondary">暂无答案</span>
+                          )}
+                          {paper.answerFile &&
+                            (paper.questionFile.containsAnswers ||
+                              paper.answerFile.containsAnswers) && (
+                              <small className="status-warning">资料含答案</small>
+                            )}
+                        </div>
+                        <div className="exam-paper-actions">
+                          {unlock?.canDownloadPapers ? (
+                            <>
+                              <Button
+                                variant="secondary"
+                                loading={
+                                  downloading?.id === paper.id && downloading.part === 'QUESTION'
+                                }
+                                onClick={() => onDownload(paper, 'QUESTION')}
+                              >
+                                下载题目
+                              </Button>
+                              {paper.answerFile && (
+                                <Button
+                                  variant="ghost"
+                                  loading={
+                                    downloading?.id === paper.id && downloading.part === 'ANSWER'
+                                  }
+                                  onClick={() => onDownload(paper, 'ANSWER')}
+                                >
+                                  下载答案
+                                </Button>
+                              )}
+                            </>
+                          ) : (
+                            <span className="exam-download-state">
+                              <LockKeyhole size={14} aria-hidden="true" />
                               {unlock ? '未开放下载' : '下载权限暂不可用'}
                             </span>
                           )}
+                          {unlock?.canWriteScores && (
+                            <Button variant="ghost" onClick={() => onRecord(paper)}>
+                              记录成绩
+                            </Button>
+                          )}
                         </div>
-                        {(paper.questionFile.containsAnswers ||
-                          paper.answerFile?.containsAnswers) && (
-                          <p className="status-warning">含答案</p>
-                        )}
-                        {!paper.answerFile && !paper.questionFile.containsAnswers && (
-                          <p>暂无答案</p>
-                        )}
-                        {(unlock?.canDownloadPapers || unlock?.canWriteScores) && (
-                          <>
-                            <p className="secondary"></p>
-                            <div className="row">
-                              {unlock.canDownloadPapers && (
-                                <>
-                                  <Button
-                                    loading={
-                                      downloading?.id === paper.id &&
-                                      downloading.part === 'QUESTION'
-                                    }
-                                    onClick={() => onDownload(paper, 'QUESTION')}
-                                  >
-                                    下载题目
-                                  </Button>
-                                  {paper.answerFile && (
-                                    <Button
-                                      variant="secondary"
-                                      loading={
-                                        downloading?.id === paper.id &&
-                                        downloading.part === 'ANSWER'
-                                      }
-                                      onClick={() => onDownload(paper, 'ANSWER')}
-                                    >
-                                      下载答案
-                                    </Button>
-                                  )}
-                                </>
-                              )}
-                              {unlock.canWriteScores && (
-                                <Button variant="secondary" onClick={() => onRecord(paper)}>
-                                  记录成绩
-                                </Button>
-                              )}
-                            </div>
-                          </>
-                        )}
                       </article>
                     ))}
                 </div>
@@ -264,9 +346,10 @@ export function PaperGroups({
           </section>
         );
       })}
-    </>
+    </div>
   );
 }
+
 const reasons: Record<ScoreRecordPredictionExclusionReasonsItem, string> = {
   INCOMPLETE: '未完整作答',
   OPEN_BOOK: '非闭卷',

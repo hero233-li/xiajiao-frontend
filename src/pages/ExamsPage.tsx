@@ -31,10 +31,6 @@ export function Component() {
   const cycleId = search.get('cycleId') ?? '';
   return (
     <div className="exam-page stack">
-      <header>
-        <h2>真题与成绩</h2>
-        <p>选择试卷，记录成绩与答题照片，再查看学习趋势。</p>
-      </header>
       {cycleId ? (
         <ExamCourse key={`${code}-${cycleId}`} code={code} cycleId={cycleId} />
       ) : (
@@ -177,7 +173,7 @@ export function ExamContent({
           )}
         </AsyncRegion>
         <section id="exam-papers" className="stack">
-          <div className="row">
+          <div className="exam-library-heading">
             <h2>历年试卷</h2>
             {canWrite && data.papers.data?.length ? (
               <Button onClick={() => setDialog({ paperId: data.papers.data![0].id })}>

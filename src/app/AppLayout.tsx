@@ -63,13 +63,20 @@ function Layout() {
         )}
         {course && !chapter && !test ? (
           <CourseFrame>
+            {location.pathname.endsWith('/exams') && (
+              <div className="exam-note-action">
+                <Suspense fallback={null}>
+                  <CourseQuickNote key={course.params.code} code={course.params.code ?? ''} />
+                </Suspense>
+              </div>
+            )}
             <Outlet />
           </CourseFrame>
         ) : (
           <Outlet />
         )}
       </main>
-      {course && !chapter && !test && (
+      {course && !chapter && !test && !location.pathname.endsWith('/exams') && (
         <Suspense fallback={null}>
           <CourseQuickNote key={course.params.code} code={course.params.code ?? ''} />
         </Suspense>
