@@ -9,13 +9,46 @@ fi
 case "${1:-frontend}" in
     frontend) mode=publish ;;
     check) mode=check ;;
-    *) echo '用法：deploy-frontend.sh frontend 或 deploy-frontend.sh check'; exit 2 ;;
+    cleanup) mode=cleanup ;;
+    *) echo '用法：deploy-frontend.sh frontend / check / cleanup'; exit 2 ;;
 esac
 state=/opt/projects/xiajao/.deploy
 mkdir -p "$state/releases" "$state/frontend-records"
 # Shared with backend publishing: do not replace both containers at once.
 exec 9>"$state/backend.lock"
 flock -n 9 || { echo '已有前端或后端发布正在执行，请等待它完成。'; exit 1; }
+cleanup_previous() {
+    python3 - <<'PY'
+import json, re, subprocess
+def docker(*args):
+    return subprocess.check_output(['docker', *args], text=True)
+names=docker('ps', '-a', '--format', '{{.Names}}').splitlines()
+previous=[]
+for name in names:
+    if not re.fullmatch(r'xiajiao-frontend-prev-\d{8}T\d{6}Z', name):
+        continue
+    info=json.loads(docker('inspect', name))[0]
+    # Only disposable, stopped frontend containers; never remove volumes.
+    if info['State']['Status'] not in ('exited', 'created') or info['Mounts']:
+        print('跳过运行中或带数据挂载的容器：'+name)
+        continue
+    previous.append(name)
+previous.sort(reverse=True)
+for name in previous:
+    subprocess.run(['docker', 'update', '--restart=no', name], check=True, stdout=subprocess.DEVNULL)
+for name in previous[1:]:
+    subprocess.run(['docker', 'rm', name], check=True, stdout=subprocess.DEVNULL)
+    print('已清理旧前端容器：'+name)
+if previous:
+    print('保留最近一个回退容器：'+previous[0])
+else:
+    print('没有需要清理的旧前端容器。')
+PY
+}
+if [[ "$mode" == cleanup ]]; then
+    cleanup_previous
+    exit 0
+fi
 echo '正在通过 GitHub API 读取前端 main 最新版本……'
 curl --fail --silent --show-error --connect-timeout 10 --max-time 30 \
     --retry 2 --retry-delay 3 --retry-max-time 100 \
@@ -94,7 +127,7 @@ finish() {
     if (( completed == 0 && previous_renamed == 1 )); then
         echo '发布未完成，正在恢复旧前端容器……'
         if (( new_created == 1 )); then docker rm -f xiajiao-frontend >/dev/null 2>&1 || true; fi
-        docker rename "$previous" xiajiao-frontend && docker start xiajiao-frontend >/dev/null && echo '旧前端容器已恢复。' || echo '恢复失败，请检查容器状态。'
+        docker rename "$previous" xiajiao-frontend && docker update --restart=always xiajiao-frontend >/dev/null && docker start xiajiao-frontend >/dev/null && echo '旧前端容器已恢复。' || echo '恢复失败，请检查容器状态。'
     fi
     exit "$rc"
 }
@@ -122,6 +155,7 @@ if ! docker rename xiajiao-frontend "$previous"; then
     exit 1
 fi
 previous_renamed=1
+docker update --restart=no "$previous" >/dev/null
 new_created=1
 docker run -d --name xiajiao-frontend --restart always --network xiajiao-network \
     -p 8080:80 -e BACKEND_ORIGIN=http://backend:8080 \
@@ -135,6 +169,9 @@ done
 printf '%s\n' "$revision" > "$state/frontend-deployed-revision"
 printf 'revision=%s\nprevious_container=%s\nimage=%s\n' "$revision" "$previous" "$image" > "$state/frontend-records/$stamp.txt"
 completed=1
+if ! cleanup_previous; then
+    echo '前端已发布成功，但旧容器清理失败，可稍后执行 cleanup 重试。'
+fi
 echo "前端发布成功：$revision"
 echo "旧容器保留为：$previous"
 echo '数据库、学习记录和附件未修改。'
