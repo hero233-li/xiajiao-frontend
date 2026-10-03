@@ -100,16 +100,103 @@ if [[ "$mode" == check ]]; then
     exit 0
 fi
 
+if [[ -f "$state/frontend-deployed-revision" ]] && [[ $(cat "$state/frontend-deployed-revision") == "$revision" ]]; then
+    verify_site http://127.0.0.1:8080
+    cleanup_previous
+    echo '当前已是 GitHub 最新版本，无需下载、构建或重启容器。'
+    exit 0
+fi
+
 stamp=$(date -u +%Y%m%dT%H%M%SZ)
 release="$state/releases/frontend-$stamp-${revision:0:12}"
 mkdir "$release"
-echo '正在下载 GitHub 官方源码包，现有网站继续运行……'
-curl --location --fail --silent --show-error --connect-timeout 10 --max-time 180 \
-    --retry 2 --retry-delay 3 --retry-max-time 560 \
-    "https://codeload.github.com/hero233-li/xiajiao-frontend/tar.gz/$revision" \
-    -o "$release/.source.tar.gz"
-tar -xzf "$release/.source.tar.gz" --strip-components=1 -C "$release"
-rm -f -- "$release/.source.tar.gz"
+echo '正在检查 Git 文件清单，仅下载变更文件，现有网站继续运行……'
+curl --fail --silent --show-error --connect-timeout 10 --max-time 60 \
+    --retry 2 --retry-delay 3 --retry-max-time 200 \
+    -H 'Accept: application/vnd.github+json' \
+    "https://api.github.com/repos/hero233-li/xiajiao-frontend/git/trees/$revision?recursive=1" \
+    -o "$state/frontend-tree.json"
+python3 - "$state" "$revision" "$release" <<'PY_SYNC'
+import concurrent.futures, hashlib, json, os, re, shutil, subprocess, sys
+from pathlib import Path, PurePosixPath
+from urllib.parse import quote
+state=Path(sys.argv[1]); revision=sys.argv[2]; release=Path(sys.argv[3])
+tree=json.loads((state/'frontend-tree.json').read_text())
+if tree.get('truncated') or not isinstance(tree.get('tree'), list):
+    sys.exit('Git 文件清单不完整，已停止发布。')
+entries=[]
+for entry in tree['tree']:
+    if entry['type']=='tree': continue
+    path=PurePosixPath(entry['path'])
+    if path.is_absolute() or '..' in path.parts or str(path)!=entry['path'] or '.git' in path.parts:
+        sys.exit('Git 文件路径无效，已停止发布。')
+    if entry['type']!='blob' or entry['mode'] not in ('100644','100755'):
+        sys.exit('仓库包含符号链接或子模块，请先调整源码同步方式。')
+    if not re.fullmatch('[0-9a-f]{40}',entry['sha']): sys.exit('Git 文件哈希无效。')
+    entries.append(entry)
+if not entries: sys.exit('Git 文件清单为空，已停止发布。')
+# Reuse only the last successfully published source, verified against target Git blobs.
+base=None
+pointer=state/'frontend-source-release'
+if pointer.exists():
+    candidate=Path(pointer.read_text().strip())
+    if candidate.is_dir() and candidate.parent==state/'releases': base=candidate
+if base is None:
+    deployed=state/'frontend-deployed-revision'
+    if deployed.exists():
+        sha=deployed.read_text().strip()
+        if re.fullmatch('[0-9a-f]{40}',sha):
+            choices=sorted((state/'releases').glob('frontend-*-'+sha[:12]),reverse=True)
+            base=next((p for p in choices if p!=release and (p/'package.json').is_file()),None)
+cache=state/'frontend-blobs';cache.mkdir(exist_ok=True)
+def blob_hash(data):
+    return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+def read_verified(path,entry):
+    if not path.is_file() or path.is_symlink(): return None
+    data=path.read_bytes()
+    return data if blob_hash(data)==entry['sha'] else None
+reused=downloaded=download_bytes=0
+pending=[]
+for entry in entries:
+    data=read_verified(cache/entry['sha'],entry)
+    if data is None and base: data=read_verified(base/entry['path'],entry)
+    if data is None: pending.append(entry);continue
+    target=release/entry['path'];target.parent.mkdir(parents=True,exist_ok=True)
+    target.write_bytes(data);target.chmod(0o755 if entry['mode']=='100755' else 0o644)
+    reused+=1
+print(f'复用未变更文件 {reused} 个；需要下载 {len(pending)} 个文件。',flush=True)
+def fetch(entry):
+    target=release/entry['path'];target.parent.mkdir(parents=True,exist_ok=True)
+    temporary=target.with_name(target.name+'.download-'+entry['sha'])
+    url='https://raw.githubusercontent.com/hero233-li/xiajiao-frontend/'+revision+'/'+quote(entry['path'],safe='/')
+    try:
+        subprocess.run(['curl','--fail','--silent','--show-error','--connect-timeout','15',
+                        '--max-time','300','--retry','1','--retry-delay','3','--retry-max-time','620',
+                        url,'-o',str(temporary)],check=True)
+        data=temporary.read_bytes()
+        if blob_hash(data)!=entry['sha']: raise ValueError('文件哈希不一致：'+entry['path'])
+        target.write_bytes(data);target.chmod(0o755 if entry['mode']=='100755' else 0o644)
+        cached=cache/(entry['sha']+'.tmp')
+        cached.write_bytes(data);os.replace(cached,cache/entry['sha'])
+        return len(data)
+    finally:
+        temporary.unlink(missing_ok=True)
+# A shared Git blob can occur at several paths; fetch one copy and reuse it.
+unique={}
+for entry in pending: unique.setdefault(entry['sha'],entry)
+with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+    for size in pool.map(fetch,unique.values()): downloaded+=1;download_bytes+=size
+for entry in pending:
+    target=release/entry['path']
+    if not target.exists():
+        target.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copyfile(cache/entry['sha'],target)
+        target.chmod(0o755 if entry['mode']=='100755' else 0o644)
+# Fresh directory contains only the target tree: deleted/renamed old paths are omitted.
+for entry in entries:
+    if read_verified(release/entry['path'],entry) is None: sys.exit('最终源码校验失败。')
+print(f'源码同步完成：下载 {downloaded} 个文件，{download_bytes} 字节；其余文件在服务器复用。',flush=True)
+PY_SYNC
 image="xiajiao-frontend:git-${revision:0:12}"
 echo '正在构建前端镜像，现有网站继续运行……'
 docker build --build-arg VITE_API_ORIGIN= -t "$image" "$release"
@@ -168,6 +255,7 @@ done
 [[ "$ready" == 1 ]] || { echo '切换后的检查未通过。'; exit 1; }
 printf '%s\n' "$revision" > "$state/frontend-deployed-revision"
 printf 'revision=%s\nprevious_container=%s\nimage=%s\n' "$revision" "$previous" "$image" > "$state/frontend-records/$stamp.txt"
+printf '%s\n' "$release" > "$state/frontend-source-release"
 completed=1
 if ! cleanup_previous; then
     echo '前端已发布成功，但旧容器清理失败，可稍后执行 cleanup 重试。'
