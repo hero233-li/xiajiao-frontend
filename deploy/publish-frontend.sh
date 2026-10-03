@@ -117,7 +117,7 @@ curl --fail --silent --show-error --connect-timeout 10 --max-time 60 \
     "https://api.github.com/repos/hero233-li/xiajiao-frontend/git/trees/$revision?recursive=1" \
     -o "$state/frontend-tree.json"
 python3 - "$state" "$revision" "$release" <<'PY_SYNC'
-import concurrent.futures, hashlib, json, os, re, shutil, subprocess, sys
+import base64, concurrent.futures, hashlib, json, os, re, shutil, subprocess, sys
 from pathlib import Path, PurePosixPath
 from urllib.parse import quote
 state=Path(sys.argv[1]); revision=sys.argv[2]; release=Path(sys.argv[3])
@@ -170,10 +170,22 @@ def fetch(entry):
     temporary=target.with_name(target.name+'.download-'+entry['sha'])
     url='https://raw.githubusercontent.com/hero233-li/xiajiao-frontend/'+revision+'/'+quote(entry['path'],safe='/')
     try:
-        subprocess.run(['curl','--fail','--silent','--show-error','--connect-timeout','15',
-                        '--max-time','300','--retry','1','--retry-delay','3','--retry-max-time','620',
-                        url,'-o',str(temporary)],check=True)
-        data=temporary.read_bytes()
+        # The official API is more reliable from this server than raw downloads.
+        api='https://api.github.com/repos/hero233-li/xiajiao-frontend/git/blobs/'+entry['sha']
+        result=subprocess.run(['curl','--fail','--silent','--show-error','--connect-timeout','10',
+                               '--max-time','60','--retry','1','--retry-delay','3','--retry-max-time','130',
+                               '-H','Accept: application/vnd.github+json',api,'-o',str(temporary)])
+        if result.returncode==0:
+            payload=json.loads(temporary.read_text())
+            if payload.get('encoding')!='base64' or payload.get('sha')!=entry['sha']:
+                raise ValueError('GitHub 文件响应无效：'+entry['path'])
+            data=base64.b64decode(payload['content'])
+        else:
+            # API rate limits or outages may still permit the raw service.
+            subprocess.run(['curl','--fail','--silent','--show-error','--connect-timeout','10',
+                            '--max-time','90','--retry','1','--retry-delay','3','--retry-max-time','190',
+                            url,'-o',str(temporary)],check=True)
+            data=temporary.read_bytes()
         if blob_hash(data)!=entry['sha']: raise ValueError('文件哈希不一致：'+entry['path'])
         target.write_bytes(data);target.chmod(0o755 if entry['mode']=='100755' else 0o644)
         cached=cache/(entry['sha']+'.tmp')
