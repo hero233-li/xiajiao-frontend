@@ -631,7 +631,7 @@ describe('完整计划配置编辑', () => {
     await user.type(screen.getByLabelText('计划名称'), '自定义五周');
     await user.clear(screen.getByLabelText('2026-09-28可用分钟'));
     await user.type(screen.getByLabelText('2026-09-28可用分钟'), '0');
-    fireEvent.change(screen.getByLabelText('开始日期'), { target: { value: '2026-10-03' } });
+    fireEvent.input(screen.getByLabelText('开始日期'), { target: { value: '2026-10-03' } });
     await user.click(screen.getByRole('button', { name: '降低高等数学优先级' }));
     await user.click(screen.getByRole('button', { name: '预览修改与重排' }));
     await screen.findByRole('button', { name: '确认保存新版本' });

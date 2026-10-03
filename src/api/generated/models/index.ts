@@ -4,6 +4,8 @@
 
 export * from './adminAcknowledgeAlertResponse';
 export * from './adminAcknowledgeAlertResponseMessage';
+export * from './adminCourseEntry';
+export * from './adminCourseEntryCourseType';
 export * from './adminCreateCourseParams';
 export * from './adminCreateCourseResponse';
 export * from './adminCreateCourseResponseMessage';
@@ -303,6 +305,14 @@ export * from './legacyRecordSummaryKind';
 export * from './legacyReviewDecision';
 export * from './legacyReviewDecisionDecision';
 export * from './legacyReviewPage';
+export * from './listAdminCourses200';
+export * from './listAdminCourses200Data';
+export * from './listAdminCoursesParams';
+export * from './localRubric';
+export * from './localRubricState';
+export * from './localRubricDocument';
+export * from './localQuestion';
+export * from './localPoint';
 export * from './listAssessmentsKind';
 export * from './listAssessmentsParams';
 export * from './listAssessmentsResponse';

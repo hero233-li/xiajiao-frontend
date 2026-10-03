@@ -1,0 +1,1020 @@
+{
+  "CatalogDraft": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "chapters": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ChapterDraft"
+        },
+        "minItems": 0
+      }
+    },
+    "required": ["chapters"],
+    "description": "只允许ADMIN替换草稿公共目录；用户不保存整棵树；ID重复/错误关联拒绝，重命名ID不变。",
+    "example": {
+      "chapters": [
+        {
+          "id": "b8816b55-e24a-5653-b1af-5c962d1b54f1",
+          "stableKey": "示例",
+          "title": "示例",
+          "sortOrder": 0,
+          "participatesInAssessment": false,
+          "gateOverride": null,
+          "points": [
+            {
+              "id": "9e0b419c-b4ce-520f-ae9d-61646670eae4",
+              "stableKey": "示例",
+              "title": "示例"
+            }
+          ],
+          "items": [
+            {
+              "id": "acfaf6fd-98ea-5e1e-aff9-865e5bc2fa15",
+              "stableKey": "示例",
+              "title": "示例",
+              "estimatedMinutes": 1,
+              "resource": {
+                "kind": "LINK",
+                "label": "课程资料",
+                "url": "https://example.invalid/course",
+                "fileId": "15c83d53-0422-5a9b-9879-243d2895ed64"
+              },
+              "sortOrder": 0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "ChapterDraft": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "b8816b55-e24a-5653-b1af-5c962d1b54f1"
+      },
+      "stableKey": {
+        "type": "string",
+        "description": "",
+        "minLength": 1,
+        "maxLength": 150
+      },
+      "title": {
+        "type": "string",
+        "description": "",
+        "minLength": 1,
+        "maxLength": 250
+      },
+      "sortOrder": {
+        "type": "integer",
+        "minimum": 0,
+        "description": ""
+      },
+      "participatesInAssessment": {
+        "type": "boolean",
+        "description": ""
+      },
+      "gateOverride": {
+        "type": "integer",
+        "minimum": 20,
+        "description": "",
+        "maximum": 100,
+        "nullable": true
+      },
+      "points": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/PointDraft"
+        },
+        "minItems": 0
+      },
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ItemDraft"
+        },
+        "minItems": 0
+      }
+    },
+    "required": [
+      "id",
+      "stableKey",
+      "title",
+      "sortOrder",
+      "participatesInAssessment",
+      "gateOverride",
+      "points",
+      "items"
+    ],
+    "description": ""
+  },
+  "PointDraft": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "9e0b419c-b4ce-520f-ae9d-61646670eae4"
+      },
+      "stableKey": {
+        "type": "string",
+        "description": "",
+        "minLength": 1,
+        "maxLength": 150
+      },
+      "title": {
+        "type": "string",
+        "description": "",
+        "minLength": 1,
+        "maxLength": 250
+      }
+    },
+    "required": ["id", "stableKey", "title"],
+    "description": ""
+  },
+  "ItemDraft": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "acfaf6fd-98ea-5e1e-aff9-865e5bc2fa15"
+      },
+      "stableKey": {
+        "type": "string",
+        "description": "",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "title": {
+        "type": "string",
+        "description": "",
+        "minLength": 1,
+        "maxLength": 300
+      },
+      "estimatedMinutes": {
+        "type": "integer",
+        "minimum": 1,
+        "description": ""
+      },
+      "resource": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Resource"
+          },
+          {
+            "type": "object",
+            "nullable": true,
+            "enum": [null]
+          }
+        ]
+      },
+      "sortOrder": {
+        "type": "integer",
+        "minimum": 0,
+        "description": ""
+      }
+    },
+    "required": ["id", "stableKey", "title", "estimatedMinutes", "resource", "sortOrder"],
+    "description": ""
+  },
+  "Resource": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "kind": {
+        "type": "string",
+        "description": "",
+        "enum": ["LINK", "FILE"]
+      },
+      "label": {
+        "type": "string",
+        "description": "",
+        "example": "课程资料"
+      },
+      "url": {
+        "type": "string",
+        "description": "仅公开外部学习链接；受控附件不能在此暴露直链",
+        "format": "uri",
+        "nullable": true,
+        "example": "https://example.invalid/course"
+      },
+      "fileId": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "15c83d53-0422-5a9b-9879-243d2895ed64",
+        "nullable": true
+      }
+    },
+    "required": ["kind", "label", "url", "fileId"],
+    "description": "FILE使用资源下载接口；url仅LINK非空。管理员发布验证不得把受保护答案/PDF放入公共URL。"
+  },
+  "KnowledgeDraft": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "modules": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "稳定UUID",
+              "format": "uuid",
+              "example": "88bc3df9-2983-5074-8d70-092aa6cf9e59"
+            },
+            "stableKey": {
+              "type": "string",
+              "description": "",
+              "minLength": 1,
+              "maxLength": 150
+            },
+            "title": {
+              "type": "string",
+              "description": "",
+              "minLength": 1,
+              "maxLength": 250
+            },
+            "content": {
+              "type": "string",
+              "description": ""
+            },
+            "difficulty": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "",
+              "maximum": 5
+            },
+            "formulas": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Formula"
+              },
+              "minItems": 0
+            },
+            "resources": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Resource"
+              },
+              "minItems": 0
+            },
+            "examples": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/AdminKnowledgeExample"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "id",
+            "stableKey",
+            "title",
+            "content",
+            "difficulty",
+            "formulas",
+            "resources",
+            "examples"
+          ],
+          "description": ""
+        },
+        "minItems": 0
+      }
+    },
+    "required": ["modules"],
+    "description": "",
+    "example": {
+      "modules": [
+        {
+          "id": "88bc3df9-2983-5074-8d70-092aa6cf9e59",
+          "stableKey": "示例",
+          "title": "示例",
+          "content": "示例",
+          "difficulty": 1,
+          "formulas": [],
+          "resources": [],
+          "examples": [
+            {
+              "id": "ebf86e65-54a3-54ed-86dd-b723d09671e6",
+              "question": "示例",
+              "stars": 1,
+              "answer": "示例",
+              "solution": "示例",
+              "sortOrder": 0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Formula": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "label": {
+        "type": "string",
+        "description": "",
+        "example": "导数公式"
+      },
+      "tex": {
+        "type": "string",
+        "description": "",
+        "example": "\\frac{d}{dx}x^2=2x"
+      },
+      "condition": {
+        "type": "string",
+        "description": "",
+        "example": "x为实数"
+      }
+    },
+    "required": ["label", "tex", "condition"],
+    "description": ""
+  },
+  "AdminKnowledgeExample": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "ebf86e65-54a3-54ed-86dd-b723d09671e6"
+      },
+      "question": {
+        "type": "string",
+        "description": "",
+        "minLength": 1
+      },
+      "stars": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "",
+        "maximum": 5
+      },
+      "answer": {
+        "type": "string",
+        "description": "",
+        "minLength": 1
+      },
+      "solution": {
+        "type": "string",
+        "description": "",
+        "minLength": 1
+      },
+      "sortOrder": {
+        "type": "integer",
+        "minimum": 0,
+        "description": ""
+      }
+    },
+    "required": ["id", "question", "stars", "answer", "solution", "sortOrder"],
+    "description": "答案仅ADMIN内容维护操作可见，不供学习页面预加载。"
+  },
+  "QuestionBankDraft": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "questions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/AdminQuestion"
+        },
+        "minItems": 0
+      }
+    },
+    "required": ["questions"],
+    "description": "",
+    "example": {
+      "questions": [
+        {
+          "id": "805c5427-486e-51e4-aee4-36950f81dae0",
+          "originalKey": "示例",
+          "chapterId": "b8816b55-e24a-5653-b1af-5c962d1b54f1",
+          "eligibleOriginal": false,
+          "mode": "CHAPTER",
+          "stem": "示例",
+          "options": ["示例", "示例"],
+          "difficulty": 1,
+          "pointIds": ["9e0b419c-b4ce-520f-ae9d-61646670eae4"],
+          "correctOption": 0,
+          "correctAnswer": "示例",
+          "explanation": "示例",
+          "sourceLocator": null,
+          "sortOrder": 0
+        }
+      ]
+    }
+  },
+  "AdminQuestion": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "805c5427-486e-51e4-aee4-36950f81dae0"
+      },
+      "originalKey": {
+        "type": "string",
+        "description": "",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "chapterId": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "b8816b55-e24a-5653-b1af-5c962d1b54f1"
+      },
+      "eligibleOriginal": {
+        "type": "boolean",
+        "description": "ADMIN已审核原创性；不得复制换ID"
+      },
+      "mode": {
+        "type": "string",
+        "description": "",
+        "enum": ["CHAPTER", "VARIANT"]
+      },
+      "stem": {
+        "type": "string",
+        "description": "",
+        "minLength": 1
+      },
+      "options": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "description": "",
+          "minLength": 1
+        },
+        "minItems": 2
+      },
+      "difficulty": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "",
+        "maximum": 5
+      },
+      "pointIds": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "description": "稳定UUID",
+          "format": "uuid",
+          "example": "9e0b419c-b4ce-520f-ae9d-61646670eae4"
+        },
+        "minItems": 1,
+        "uniqueItems": true
+      },
+      "correctOption": {
+        "type": "integer",
+        "minimum": 0,
+        "description": ""
+      },
+      "correctAnswer": {
+        "type": "string",
+        "description": ""
+      },
+      "explanation": {
+        "type": "string",
+        "description": ""
+      },
+      "sourceLocator": {
+        "type": "string",
+        "description": "",
+        "nullable": true
+      },
+      "sortOrder": {
+        "type": "integer",
+        "minimum": 0,
+        "description": ""
+      }
+    },
+    "required": [
+      "id",
+      "originalKey",
+      "chapterId",
+      "eligibleOriginal",
+      "mode",
+      "stem",
+      "options",
+      "difficulty",
+      "pointIds",
+      "correctOption",
+      "correctAnswer",
+      "explanation",
+      "sourceLocator",
+      "sortOrder"
+    ],
+    "description": "独立管理员题库编辑DTO；指纹由后端规范化计算，不信用户上传指纹。发布验证答案索引、考点/章节/课程一致性。"
+  },
+  "AssessmentPolicyWrite": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "gateRatio": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "description": "",
+        "example": 0.6
+      },
+      "gateFloor": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "",
+        "example": 20
+      },
+      "gateCap": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "",
+        "example": 100
+      },
+      "chapterMinQuestions": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "",
+        "example": 20
+      },
+      "chapterMaxQuestions": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "",
+        "example": 40
+      },
+      "chapterLimitMinutes": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "",
+        "example": 40
+      },
+      "chapterPassScore": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100,
+        "description": "",
+        "example": 90
+      },
+      "mockQuestionCount": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "",
+        "example": 40
+      },
+      "mockLimitMinutes": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "",
+        "example": 80
+      },
+      "mockPassScore": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100,
+        "description": "",
+        "example": 80
+      },
+      "weights": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/MockWeight"
+        },
+        "minItems": 0
+      },
+      "confirmWeightReview": {
+        "type": "boolean",
+        "description": "本人明确确认",
+        "enum": [true],
+        "example": true
+      }
+    },
+    "required": [
+      "gateRatio",
+      "gateFloor",
+      "gateCap",
+      "chapterMinQuestions",
+      "chapterMaxQuestions",
+      "chapterLimitMinutes",
+      "chapterPassScore",
+      "mockQuestionCount",
+      "mockLimitMinutes",
+      "mockPassScore",
+      "weights",
+      "confirmWeightReview"
+    ],
+    "description": "草稿可配置；floor≤cap、min≤max、权重覆盖本版参与章且和为1。ADMIN确认时保存审核人/时间，缺失权重不能申请模拟。",
+    "example": {
+      "gateRatio": 0.6,
+      "gateFloor": 20,
+      "gateCap": 100,
+      "chapterMinQuestions": 20,
+      "chapterMaxQuestions": 40,
+      "chapterLimitMinutes": 40,
+      "chapterPassScore": 90,
+      "mockQuestionCount": 40,
+      "mockLimitMinutes": 80,
+      "mockPassScore": 80,
+      "weights": [
+        {
+          "chapterId": "b8816b55-e24a-5653-b1af-5c962d1b54f1",
+          "scoreShare": 1,
+          "sampleFrom": "2021-01-01",
+          "sampleTo": "2025-12-31",
+          "evidence": {
+            "description": "管理员核对近五年历年试卷分值",
+            "sourcePaperKeys": ["00023:2025-04"]
+          }
+        }
+      ],
+      "confirmWeightReview": true
+    }
+  },
+  "MockWeight": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "chapterId": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "b8816b55-e24a-5653-b1af-5c962d1b54f1"
+      },
+      "scoreShare": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "description": "",
+        "example": 1
+      },
+      "sampleFrom": {
+        "type": "string",
+        "description": "上海时区业务日期",
+        "format": "date",
+        "example": "2021-01-01"
+      },
+      "sampleTo": {
+        "type": "string",
+        "description": "上海时区业务日期",
+        "format": "date",
+        "example": "2025-12-31"
+      },
+      "evidence": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "",
+            "minLength": 1,
+            "example": "管理员核对近五年历年试卷分值"
+          },
+          "sourcePaperKeys": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "",
+              "example": "00023:2025-04"
+            },
+            "minItems": 1
+          }
+        },
+        "required": ["description", "sourcePaperKeys"],
+        "description": ""
+      }
+    },
+    "required": ["chapterId", "scoreShare", "sampleFrom", "sampleTo", "evidence"],
+    "description": ""
+  },
+  "CourseAdminWrite": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "code": {
+        "type": "string",
+        "description": "",
+        "pattern": "^[0-9]{5}$",
+        "example": "00023",
+        "enum": ["00023", "02324", "13175", "13015", "13216", "13171"]
+      },
+      "name": {
+        "type": "string",
+        "description": "",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "courseType": {
+        "type": "string",
+        "description": "",
+        "enum": ["THEORY", "PRACTICE"]
+      },
+      "active": {
+        "type": "boolean",
+        "description": ""
+      }
+    },
+    "required": ["code", "name", "courseType", "active"],
+    "description": "",
+    "example": {
+      "code": "00023",
+      "name": "高等数学",
+      "courseType": "THEORY",
+      "active": true
+    }
+  },
+  "CycleWrite": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "startDate": {
+        "type": "string",
+        "description": "上海时区业务日期",
+        "format": "date",
+        "example": "2026-10-02"
+      },
+      "endDate": {
+        "type": "string",
+        "description": "上海时区业务日期",
+        "format": "date",
+        "example": "2026-10-31"
+      },
+      "courses": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/CycleCourse"
+        },
+        "minItems": 0
+      }
+    },
+    "required": ["name", "startDate", "endDate", "courses"],
+    "description": "首版仅六科；考试时段只能ADMIN维护，date未知NULL；更新不得自动重排已确认计划。"
+  },
+  "CycleCourse": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "courseId": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "afdac469-0fe4-5007-833c-51a71333967b"
+      },
+      "examDate": {
+        "type": "string",
+        "description": "上海时区业务日期",
+        "format": "date",
+        "example": "2026-10-17",
+        "nullable": true
+      },
+      "startsAt": {
+        "type": "string",
+        "description": "HH:mm:ss或NULL",
+        "nullable": true,
+        "example": "09:00:00"
+      },
+      "endsAt": {
+        "type": "string",
+        "description": "HH:mm:ss或NULL",
+        "nullable": true,
+        "example": "11:30:00"
+      }
+    },
+    "required": ["courseId", "examDate", "startsAt", "endsAt"],
+    "description": ""
+  },
+  "PaperWrite": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "paperMonth": {
+        "type": "string",
+        "description": "",
+        "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+        "example": "2025-04"
+      },
+      "sourceCourseCode": {
+        "type": "string",
+        "description": "",
+        "nullable": true,
+        "maxLength": 20
+      },
+      "questionFileId": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "15c83d53-0422-5a9b-9879-243d2895ed64"
+      },
+      "answerFileId": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "9db6356a-19cb-5957-8f62-5f0e93f67af1",
+        "nullable": true
+      },
+      "questionPages": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "",
+        "nullable": true
+      },
+      "answerPages": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "",
+        "nullable": true
+      },
+      "note": {
+        "type": "string",
+        "description": ""
+      }
+    },
+    "required": [
+      "paperMonth",
+      "sourceCourseCode",
+      "questionFileId",
+      "answerFileId",
+      "questionPages",
+      "answerPages",
+      "note"
+    ],
+    "description": "courseId+年月唯一；文件须ADMIN上传的PAPER用途，题答合一标记来自文件metadata。"
+  },
+  "LegacyReviewDecision": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "decision": {
+        "type": "string",
+        "description": "",
+        "enum": ["ACCEPT", "REJECT"]
+      },
+      "reason": {
+        "type": "string",
+        "description": "",
+        "minLength": 1
+      },
+      "courseId": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "afdac469-0fe4-5007-833c-51a71333967b"
+      },
+      "chapterId": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "b8816b55-e24a-5653-b1af-5c962d1b54f1",
+        "nullable": true
+      },
+      "mappingReleaseId": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "482e7a78-6eef-5bc6-b480-cb8652339a3f",
+        "nullable": true
+      }
+    },
+    "required": ["decision", "reason", "courseId", "chapterId", "mappingReleaseId"],
+    "description": "ACCEPT须完整稳定映射，旧版本未知不冒充新版本；本人认领后生成LEGACY_CONFIRMED pass，不能伪造新检测session。"
+  },
+  "LegacyPracticeCreditDecision": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "approved": {
+        "type": "boolean",
+        "description": "允许计入或撤销认领"
+      },
+      "canonicalQuestionId": {
+        "type": "string",
+        "description": "稳定UUID",
+        "format": "uuid",
+        "example": "805c5427-486e-51e4-aee4-36950f81dae0",
+        "nullable": true
+      },
+      "reason": {
+        "type": "string",
+        "description": "",
+        "minLength": 1
+      },
+      "confirm": {
+        "type": "boolean",
+        "description": "本人明确确认",
+        "enum": [true],
+        "example": true
+      }
+    },
+    "required": ["approved", "canonicalQuestionId", "reason", "confirm"],
+    "description": "本人ADMIN核对原记录确实已答及原创题映射。approved=true需canonicalQuestionId；不能因旧attempts次数复制题或补造历史。",
+    "example": {
+      "approved": true,
+      "canonicalQuestionId": "805c5427-486e-51e4-aee4-36950f81dae0",
+      "reason": "核对原作答记录和原创题映射后认领",
+      "confirm": true
+    }
+  },
+  "InvalidatePass": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "reason": {
+        "type": "string",
+        "description": "",
+        "minLength": 1,
+        "example": "复核发现旧记录归属错误"
+      },
+      "confirm": {
+        "type": "boolean",
+        "description": "本人明确确认",
+        "enum": [true],
+        "example": true
+      }
+    },
+    "required": ["reason", "confirm"],
+    "description": "仅作废该条，保留原session与审计；最后模拟依据作废且无其他有效模拟通过/活动override时立即关闭真题下载和成绩写入。"
+  },
+  "LocalRubricDocument": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["questions"],
+    "properties": {
+      "questions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/LocalQuestion"
+        },
+        "minItems": 1,
+        "maxItems": 200
+      }
+    }
+  },
+  "LocalQuestion": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["number", "stem", "referenceAnswer", "maximum", "points"],
+    "properties": {
+      "number": {
+        "type": "string"
+      },
+      "stem": {
+        "type": "string"
+      },
+      "referenceAnswer": {
+        "type": "string"
+      },
+      "maximum": {
+        "type": "number",
+        "minimum": 0.01,
+        "maximum": 100,
+        "multipleOf": 0.01
+      },
+      "points": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/LocalPoint"
+        },
+        "minItems": 1,
+        "maxItems": 100
+      }
+    }
+  },
+  "LocalPoint": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "description", "maximum"],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "maximum": {
+        "type": "number",
+        "minimum": 0.01,
+        "maximum": 100,
+        "multipleOf": 0.01
+      }
+    }
+  }
+}

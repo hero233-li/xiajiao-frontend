@@ -15,6 +15,8 @@ import type {
   GetEnrollmentResponse,
   GetLearningPositionResponse,
   LearningPositionWrite,
+  ListAdminCourses200,
+  ListAdminCoursesParams,
   ListCoursesParams,
   ListCoursesResponse,
   SaveEnrollmentResponse,
@@ -131,6 +133,19 @@ export const getCourseByCode = (
       options);
     }
   /**
+ * 仅 ADMIN。省略 cycleId 读取全部课程；提供 cycleId 读取周期关联课程，均包含停用项，可重新启用。无需返回个人报名或进度。
+ * @summary 管理员课程目录（包含停用课程）
+ */
+export const listAdminCourses = (
+    params?: ListAdminCoursesParams,
+ options?: SecondParameter<typeof apiRequest<ListAdminCourses200>>,) => {
+      return apiRequest<ListAdminCourses200>(
+      {url: `/api/v1/admin/courses`, method: 'GET',
+        params
+    },
+      options);
+    }
+  /**
  * 首版限制确认的六个代码，不能提前开放24科。报名状态仍归当前账号，课程基础定义为公共内容。
 仅ADMIN。
  * @summary 管理员创建六科基础定义
@@ -172,5 +187,6 @@ export type SaveLearningPositionResult = NonNullable<Awaited<ReturnType<typeof s
 export type GetEnrollmentResult = NonNullable<Awaited<ReturnType<typeof getEnrollment>>>
 export type SaveEnrollmentResult = NonNullable<Awaited<ReturnType<typeof saveEnrollment>>>
 export type GetCourseByCodeResult = NonNullable<Awaited<ReturnType<typeof getCourseByCode>>>
+export type ListAdminCoursesResult = NonNullable<Awaited<ReturnType<typeof listAdminCourses>>>
 export type AdminCreateCourseResult = NonNullable<Awaited<ReturnType<typeof adminCreateCourse>>>
 export type AdminUpdateCourseResult = NonNullable<Awaited<ReturnType<typeof adminUpdateCourse>>>

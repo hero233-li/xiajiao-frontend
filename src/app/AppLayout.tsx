@@ -38,7 +38,7 @@ function Layout() {
                       : path.endsWith('/training')
                         ? '练习与检测'
                         : '今日学习';
-    document.title = `${title} · 学习知途`;
+    document.title = `${path.startsWith('/admin') ? '管理工作台' : title} · 学习知途`;
   }, [location.pathname]);
   const course = useMatch('/zikao/course/:code/*');
   const chapter = useMatch('/zikao/course/:code/practice/:chapterId');

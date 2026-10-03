@@ -292,7 +292,9 @@ function ConfigurationDialog({
           }}
         >
           <p className="secondary">
-            完整35天、五个学习周。前四周按顺序各学一门理论课，第五周集中安排已发布的真题与复习任务。没有已发布真题或复习模板的科目，会安排一项60分钟的真题与错题复习，进入现有练习页；这是计划估时。每科任务遵守考试截止日期，时间不足会明确提示。
+            完整35天、五个学习周。前四周按顺序各学一门理论课，第五周集中安排已发布的真题与复习任务。每门理论课必须先发布
+            REVIEW
+            复习任务模板，预计分钟数由管理员维护。每科任务遵守考试截止日期，时间不足会明确提示。
           </p>
           <fieldset className="plan-config-fields" disabled={busy}>
             <label>
@@ -340,6 +342,15 @@ function ConfigurationDialog({
                   type="date"
                   required
                   value={config.startDate}
+                  onInput={(e) =>
+                    e.currentTarget.value &&
+                    range(
+                      e.currentTarget.value,
+                      config.strategy === 'WEEKLY_35'
+                        ? offsetDate(e.currentTarget.value, 34)
+                        : config.endDate,
+                    )
+                  }
                   onChange={(e) =>
                     e.target.value &&
                     range(
@@ -359,6 +370,9 @@ function ConfigurationDialog({
                   readOnly={config.strategy === 'WEEKLY_35'}
                   min={config.startDate}
                   value={config.endDate}
+                  onInput={(e) =>
+                    e.currentTarget.value && range(config.startDate, e.currentTarget.value)
+                  }
                   onChange={(e) => range(config.startDate, e.target.value)}
                 />
                 <small>

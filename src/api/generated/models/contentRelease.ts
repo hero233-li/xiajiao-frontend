@@ -21,4 +21,6 @@ export interface ContentRelease {
    * @nullable
    */
   sourceSha: string | null;
+  /** @minimum 0 */
+  draftRevision?: number;
 }

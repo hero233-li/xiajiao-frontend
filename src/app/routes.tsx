@@ -2,12 +2,6 @@ import { Navigate, type RouteObject } from 'react-router-dom';
 
 import { RequireAuth } from '../features/auth/RequireAuth';
 import { AppLayout } from './AppLayout';
-const placeholder = () => import('../pages/PlaceholderPage');
-const stub = (path: string, title: string): RouteObject => ({
-  path,
-  handle: { title },
-  lazy: placeholder,
-});
 const children: RouteObject[] = [
   { path: '/login', lazy: () => import('../pages/LoginPage') },
   {
@@ -89,7 +83,7 @@ const children: RouteObject[] = [
             handle: { title: '检测结果' },
             lazy: () => import('../pages/AssessmentPage'),
           },
-          { element: <RequireAuth admin />, children: [stub('/admin/*', '管理入口')] },
+          { element: <RequireAuth admin />, children: [{ path: '/admin/*', lazy: () => import('../pages/AdminPage') }] },
         ],
       },
     ],

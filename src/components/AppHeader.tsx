@@ -26,7 +26,7 @@ export function AppHeader() {
   const auth = useAuth();
   const [busy, setBusy] = useState(false);
   return (
-    <header className="desk-header">
+    <header className={location.pathname.startsWith('/admin') ? 'desk-header desk-admin-header' : 'desk-header'}>
       <div className="desk-header-inner">
         <Link to="/zikao" className="desk-brand">
           <span className="brand-symbol">途</span>
@@ -49,6 +49,7 @@ export function AppHeader() {
           </summary>
           <div>
             <p className="secondary">当前账户</p>
+            {auth.user?.role === 'ADMIN' && <Link to="/admin">管理员工作台</Link>}
             <Button
               variant="ghost"
               loading={busy}
