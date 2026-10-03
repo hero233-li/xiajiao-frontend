@@ -24,7 +24,7 @@
 .selection-heading {
   justify-content: space-between;
 }
-.selection-heading h1 {
+.selection-heading h2 {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -93,7 +93,7 @@
   display: grid;
   gap: 8px;
 }
-.selection-chapter-content h3 {
+.selection-chapter-content h4 {
   overflow-wrap: anywhere;
 }
 .selection-progress {
@@ -195,4 +195,91 @@
   display: grid;
   justify-items: center;
   gap: 16px;
+}
+
+.selection-chapter {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--color-line);
+}
+.selection-chapters {
+  gap: 0;
+}
+.selection-chapter-content h4 {
+  margin: 0;
+}
+.selection-counts {
+  display: grid;
+  gap: 8px;
+}
+.selection-count-error,
+.selection-detection {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.selection-detection > span {
+  font-size: var(--text-sm);
+}
+.selection-detection p {
+  margin: 0;
+}
+.selection-rules {
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+.selection-rules summary {
+  cursor: pointer;
+  color: var(--color-primary);
+  width: fit-content;
+}
+.selection-rules summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
+}
+.selection-rules p {
+  margin-top: 8px;
+}
+.selection-rules ul {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+.selection-stat-rules {
+  flex-basis: 100%;
+  border-top: 1px solid var(--color-line);
+  padding-top: 16px;
+}
+.selection-summary > div {
+  align-items: stretch;
+}
+.selection-stats .selection-count {
+  margin-top: 8px;
+  font-weight: 400;
+}
+.selection-page .card:hover,
+.selection-page .card:focus-within {
+  transform: none;
+  box-shadow: none;
+}
+@media (max-width: 767px) {
+  .selection-page {
+    gap: 20px;
+  }
+  .selection-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .selection-stats > div:first-child {
+    grid-column: 1 / -1;
+  }
+  .selection-stats dd {
+    font-size: var(--text-lg);
+    overflow-wrap: anywhere;
+  }
+  .selection-modes {
+    align-items: stretch;
+  }
+  .selection-modes > span {
+    flex-basis: 100%;
+  }
 }

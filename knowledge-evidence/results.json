@@ -1,0 +1,174 @@
+{
+  "results": [
+    {
+      "code": "00023",
+      "width": 390,
+      "top": 292.5625,
+      "headerBottom": 276.96875,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "00023",
+      "width": 847,
+      "top": 249.375,
+      "headerBottom": 233.78125,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "00023",
+      "width": 1440,
+      "top": 249.96875,
+      "headerBottom": 233.78125,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "02324",
+      "width": 390,
+      "top": 292.5625,
+      "headerBottom": 276.96875,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "02324",
+      "width": 847,
+      "top": 249.375,
+      "headerBottom": 233.78125,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "02324",
+      "width": 1440,
+      "top": 249.96875,
+      "headerBottom": 233.78125,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "13015",
+      "width": 390,
+      "top": 292.5625,
+      "headerBottom": 276.96875,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "13015",
+      "width": 847,
+      "top": 249.375,
+      "headerBottom": 233.78125,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "13015",
+      "width": 1440,
+      "top": 249.96875,
+      "headerBottom": 233.78125,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "13175",
+      "width": 390,
+      "top": 292.5625,
+      "headerBottom": 276.96875,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "13175",
+      "width": 847,
+      "top": 249.375,
+      "headerBottom": 233.78125,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "13175",
+      "width": 1440,
+      "top": 249.96875,
+      "headerBottom": 233.78125,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "13171",
+      "width": 390,
+      "top": 292.5625,
+      "headerBottom": 276.96875,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "13171",
+      "width": 847,
+      "top": 249.375,
+      "headerBottom": 233.78125,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "13171",
+      "width": 1440,
+      "top": 249.96875,
+      "headerBottom": 233.78125,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "13216",
+      "width": 390,
+      "top": 292.5625,
+      "headerBottom": 276.96875,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "13216",
+      "width": 847,
+      "top": 249.375,
+      "headerBottom": 233.78125,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    },
+    {
+      "code": "13216",
+      "width": 1440,
+      "top": 249.96875,
+      "headerBottom": 233.78125,
+      "focus": true,
+      "scrollRestored": true,
+      "overflow": false
+    }
+  ],
+  "width320Overflow": false,
+  "navigationWrites": 0,
+  "solutionsLoadedOnDemand": true,
+  "conflictPreservedDraft": true,
+  "conflictNoAutomaticRetry": true,
+  "explicitRetrySaved": true,
+  "axeViolations": 0,
+  "pageErrors": []
+}

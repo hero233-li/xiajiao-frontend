@@ -75,14 +75,16 @@ function Region({
       message={error ? errorMessage(error) : undefined}
     >
       {!error && <p>{empty}</p>}
-      <Button
-        variant="secondary"
-        onClick={retry || onAction}
-        loading={retrying}
-        loadingLabel="正在重新加载"
-      >
-        {action}
-      </Button>
+      {(retry || onAction) && (
+        <Button
+          variant="secondary"
+          onClick={retry || onAction}
+          loading={retrying}
+          loadingLabel="正在重新加载"
+        >
+          {action}
+        </Button>
+      )}
     </Card>
   );
 }
@@ -166,9 +168,9 @@ function Solution({ courseId, exampleId }: { courseId: string; exampleId: string
     return <Region empty="本例题答案与解法准备中。" onAction={() => void query.refetch()} />;
   return (
     <div className="kh-solution">
-      <h4>答案</h4>
+      <h5>答案</h5>
       <MathText text={query.data.answer} />
-      <h4>解法</h4>
+      <h5>解法</h5>
       <MathText text={query.data.solution} />
     </div>
   );
@@ -249,7 +251,7 @@ function UserNote({ courseId, module }: { courseId: string; module: KnowledgeMod
   const labels = { saved: '已保存', waiting: '等待自动保存', saving: '保存中', error: '保存失败' };
   return (
     <section className="kh-user-note" aria-labelledby={`${id}-title`}>
-      <h3 id={`${id}-title`}>我的掌握程度与笔记</h3>
+      <h4 id={`${id}-title`}>我的掌握程度与笔记</h4>
       <fieldset>
         <legend>掌握程度</legend>
         <div className="kh-mastery">
@@ -329,9 +331,9 @@ function DetailContent({
   const navigate = useNavigate();
   return (
     <Card className="kh-detail-card">
-      <h2>
+      <h3>
         <MathText text={module.title} />
-      </h2>
+      </h3>
       <Stars value={module.difficulty} />
       <section className="kh-prose" aria-label="模块正文">
         {module.content ? (
@@ -341,13 +343,13 @@ function DetailContent({
         )}
       </section>
       <section className="kh-section" aria-label="公式列表">
-        <h3>公式</h3>
+        <h4>公式</h4>
         {module.formulas.length ? (
           module.formulas.map((formula, index) => (
             <Card className="kh-formula" key={index}>
-              <h4>
+              <h5>
                 <MathText text={formula.label} />
-              </h4>
+              </h5>
               <div
                 className="kh-formula-scroll"
                 tabIndex={0}
@@ -367,7 +369,7 @@ function DetailContent({
         )}
       </section>
       <section className="kh-section" aria-label="例题列表">
-        <h3>例题</h3>
+        <h4>例题</h4>
         {module.examples.length ? (
           module.examples.map((example) => (
             <Example key={example.id} courseId={courseId} example={example} />
@@ -377,7 +379,7 @@ function DetailContent({
         )}
       </section>
       <section className="kh-section" aria-label="资源链接">
-        <h3>资源链接</h3>
+        <h4>资源链接</h4>
         {module.resources.length ? (
           <ul className="kh-resources">
             {module.resources.map((resource, index) => (
@@ -393,7 +395,7 @@ function DetailContent({
                   >
                     <ExternalLink size={20} aria-hidden="true" />
                     <MathText text={resource.label} />
-                    <span className="kh-sr-only">（新窗口打开）</span>
+                    <span className="kh-resource-caption">新窗口打开</span>
                   </a>
                 ) : (
                   <Button variant="secondary" disabled disabledReason="资源链接暂不可用">
@@ -425,22 +427,28 @@ function ModuleDetail({
   onBack: () => void;
 }) {
   const detail = useKnowledgeDetail(courseId, moduleId);
-  const title = useRef<HTMLDivElement>(null);
+  const title = useRef<HTMLElement>(null);
+  const focused = useRef('');
   useEffect(() => {
-    if (moduleId && window.matchMedia('(max-width: 767px)').matches) title.current?.focus();
-  }, [moduleId]);
+    if (!moduleId) {
+      focused.current = '';
+      return;
+    }
+    if (detail.isPending || focused.current === moduleId) return;
+    focused.current = moduleId;
+    title.current?.scrollIntoView?.({ block: 'start', behavior: 'auto' });
+    title.current?.focus({ preventScroll: true });
+  }, [moduleId, detail.isPending]);
   return (
-    <div className="kh-detail" ref={title} tabIndex={-1}>
-      <Button id="kh-back-list" variant="ghost" onClick={onBack}>
-        <ArrowLeft size={20} aria-hidden="true" />
-        返回模块列表
-      </Button>
+    <section className="kh-detail" ref={title} tabIndex={-1} aria-label="模块详情">
+      {moduleId && (
+        <Button id="kh-back-list" variant="ghost" onClick={onBack}>
+          <ArrowLeft size={20} aria-hidden="true" />
+          返回模块列表
+        </Button>
+      )}
       {!moduleId ? (
-        <Region
-          empty="选择一个模块查看正文、公式和例题。"
-          action="选择模块"
-          onAction={() => document.getElementById('kh-list-title')?.focus()}
-        />
+        <p className="kh-placeholder">选择左侧模块，查看知识说明、公式、例题和学习笔记。</p>
       ) : detail.isPending ? (
         <Region loading="正在加载模块详情" />
       ) : detail.isError ? (
@@ -452,7 +460,7 @@ function ModuleDetail({
       ) : (
         <DetailContent key={moduleId} courseId={courseId} module={detail.data} onBack={onBack} />
       )}
-    </div>
+    </section>
   );
 }
 function KnowledgeWorkspace({ courseId }: { courseId: string }) {
@@ -468,6 +476,18 @@ function KnowledgeWorkspace({ courseId }: { courseId: string }) {
   const page = Number.isSafeInteger(pageValue) && pageValue > 0 ? pageValue : 1;
   const moduleId = search.get('moduleId') || '';
   const latestSearch = useRef(search);
+  const listScroll = useRef<number | null>(null);
+  const previousModule = useRef(moduleId);
+  useEffect(() => {
+    if (previousModule.current && !moduleId) {
+      const heading = document.getElementById('kh-list-title');
+      heading?.focus({ preventScroll: true });
+      if (listScroll.current !== null)
+        window.scrollTo?.({ top: listScroll.current, behavior: 'auto' });
+      else heading?.scrollIntoView?.({ block: 'start', behavior: 'auto' });
+    }
+    previousModule.current = moduleId;
+  }, [moduleId]);
   useEffect(() => {
     latestSearch.current = search;
   }, [search]);
@@ -496,7 +516,10 @@ function KnowledgeWorkspace({ courseId }: { courseId: string }) {
   }
   function back() {
     patch({ moduleId: undefined });
-    setTimeout(() => document.getElementById('kh-list-title')?.focus(), 0);
+  }
+  function clearFilters() {
+    setInput('');
+    patch({ q: undefined, difficulty: undefined, page: undefined });
   }
   return (
     <>
@@ -506,14 +529,27 @@ function KnowledgeWorkspace({ courseId }: { courseId: string }) {
             <Search size={20} aria-hidden="true" />
             搜索知识模块
           </label>
-          <input
-            id="kh-search"
-            type="search"
-            value={input}
-            maxLength={200}
-            onChange={(event) => setInput(event.target.value)}
-            placeholder="输入模块名称或关键词"
-          />
+          <div className="kh-search-control">
+            <input
+              id="kh-search"
+              type="search"
+              value={input}
+              maxLength={200}
+              onChange={(event) => setInput(event.target.value)}
+              placeholder="输入模块名称或关键词"
+            />
+            {input && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setInput('');
+                  patch({ q: undefined, page: undefined });
+                }}
+              >
+                清空搜索
+              </Button>
+            )}
+          </div>
         </div>
         <div>
           <label htmlFor="kh-difficulty">难度筛选</label>
@@ -532,12 +568,19 @@ function KnowledgeWorkspace({ courseId }: { courseId: string }) {
             ))}
           </select>
         </div>
+        {(q || difficulty) && (
+          <div className="kh-filter-reset">
+            <Button variant="secondary" onClick={clearFilters}>
+              清除筛选
+            </Button>
+          </div>
+        )}
       </Card>
       <div className="kh-workspace" data-detail={!!moduleId}>
         <section className="kh-list" aria-labelledby="kh-list-title">
-          <h2 id="kh-list-title" tabIndex={-1}>
+          <h3 id="kh-list-title" tabIndex={-1}>
             知识模块
-          </h2>
+          </h3>
           {modules.isPending ? (
             <Region loading="正在加载知识模块" />
           ) : modules.isError ? (
@@ -549,8 +592,8 @@ function KnowledgeWorkspace({ courseId }: { courseId: string }) {
           ) : !modules.data.items.length ? (
             <Region
               empty="没有符合条件的知识模块。"
-              action="重新加载"
-              onAction={() => void modules.refetch()}
+              action={q || difficulty ? '清除筛选' : '刷新模块'}
+              onAction={q || difficulty ? clearFilters : () => void modules.refetch()}
             />
           ) : (
             <>
@@ -560,7 +603,10 @@ function KnowledgeWorkspace({ courseId }: { courseId: string }) {
                     <button
                       className="kh-module"
                       aria-current={module.id === moduleId ? 'true' : undefined}
-                      onClick={() => patch({ moduleId: module.id })}
+                      onClick={() => {
+                        listScroll.current = window.scrollY;
+                        patch({ moduleId: module.id });
+                      }}
                     >
                       <span className="kh-module-title">
                         <MathText text={module.title} />
@@ -586,26 +632,25 @@ function KnowledgeWorkspace({ courseId }: { courseId: string }) {
   );
 }
 export function KnowledgePage() {
-  useEffect(() => {
-    const previous = document.title;
-    document.title = '知识合集 · 学习知途';
-    return () => {
-      document.title = previous;
-    };
-  }, []);
   const { code = '' } = useParams();
   const [search, setSearch] = useSearchParams();
   const cycleId = search.get('cycleId') || '';
   const course = useKnowledgeCourse(code, cycleId);
+  useEffect(() => {
+    const previous = document.title;
+    document.title = `知识合集${course.data?.name ? ` · ${course.data.name}` : ''} · 学习知途`;
+    return () => {
+      document.title = previous;
+    };
+  }, [course.data?.name]);
   return (
     <div className="kh-page">
       <header className="kh-heading">
         <div>
-          <h1>
-            <BookOpen size={28} aria-hidden="true" />
+          <h2>
+            <BookOpen size={24} aria-hidden="true" />
             知识合集
-          </h1>
-          
+          </h2>
         </div>
         <Link className="button button-ghost" to="/zikao/courses">
           我的科目

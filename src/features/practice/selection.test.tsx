@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider, useLocation, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse, delay } from 'msw';
 import { setupServer } from 'msw/node';
@@ -13,6 +13,7 @@ import type {
   PracticeStats,
   QuestionPublic,
 } from '../../api/generated/models';
+import { cycleKey, CycleProvider, useCycle } from '../cycle/CycleContext';
 import { PracticeSelectionPage } from '../../pages/PracticeSelectionPage';
 
 const courseId = 'afdac469-0fe4-5007-833c-51a71333967b';
@@ -114,26 +115,50 @@ const server = setupServer(
   http.get('/api/v1/courses/by-code/00023', () => ok(course)),
   http.get(overviewUrl, () => ok(fixture)),
   http.get('/api/v1/exams/cycles', () => ok({ items: [cycle], page: 1, size: 20, total: 1 })),
-  http.get(questionsUrl, () => ok({ items: [question], page: 1, size: 20, total: 1 })),
+  http.get(questionsUrl, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    if (params.get('size') === '1')
+      return ok({
+        items: [question],
+        page: 1,
+        size: 1,
+        total: params.get('filter') === 'UNANSWERED' ? 300 : 315,
+      });
+    return ok({ items: [question], page: 1, size: 20, total: 1 });
+  }),
 );
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 function Destination() {
   const location = useLocation();
+  const selectedCycle = useCycle();
   return (
     <p>
       目标位置：{location.pathname}
       {location.search}
+      <span data-testid="destination-cycle">{selectedCycle?.cycleId}</span>
     </p>
   );
 }
-function mount(path = `/zikao/course/00023/practice?cycleId=${cycleId}`) {
+function mount(path = `/zikao/course/00023/practice?cycleId=${cycleId}`, withCycle = false) {
+  const routes = [
+    { path: '/zikao/course/:code/practice', element: <PracticeSelectionPage /> },
+    { path: '*', element: <Destination /> },
+  ];
   const router = createMemoryRouter(
-    [
-      { path: '/zikao/course/:code/practice', element: <PracticeSelectionPage /> },
-      { path: '*', element: <Destination /> },
-    ],
+    withCycle
+      ? [
+          {
+            element: (
+              <CycleProvider>
+                <Outlet />
+              </CycleProvider>
+            ),
+            children: routes,
+          },
+        ]
+      : routes,
     { initialEntries: [path], future: { v7_relativeSplatPath: true } },
   );
   const client = new QueryClient({
@@ -155,26 +180,38 @@ describe('刷题章节选择', () => {
     expect(screen.queryByText(/999/)).not.toBeInTheDocument();
     expect(screen.queryByText('推荐')).not.toBeInTheDocument();
     screen
-      .getAllByRole('button', { name: '开始' })
-      .forEach((button) => expect(button).toHaveClass('button-secondary'));
-    expect(screen.getByRole('progressbar', { name: '函数与极限题目进度' })).toHaveAttribute(
+      .getAllByRole('button', { name: '开始练习' })
+      .forEach((button) => expect(button).toHaveClass('button-primary'));
+    expect(await screen.findByRole('progressbar', { name: '函数与极限练习进度' })).toHaveAttribute(
       'aria-valuenow',
-      '30',
+      '15',
     );
-    expect(screen.getByText('后端尚未开放检测')).toBeInTheDocument();
+    expect(screen.getAllByText('后端尚未开放检测')[0]).toBeInTheDocument();
   });
   it('原创资格计数为零仍可开始普通练习，检测保持关闭', async () => {
-    server.use(http.get(overviewUrl, () => ok({
-      ...fixture,
-      chapters: [{ ...fixture.chapters[0], stats: {
-        ...stats, availableOriginalCount: 0, answeredOriginalCount: 0,
-        canApplyChapterAssessment: false, blockReasons: ['检测尚未开放'],
-      } }],
-    })));
+    server.use(
+      http.get(overviewUrl, () =>
+        ok({
+          ...fixture,
+          chapters: [
+            {
+              ...fixture.chapters[0],
+              stats: {
+                ...stats,
+                availableOriginalCount: 0,
+                answeredOriginalCount: 0,
+                canApplyChapterAssessment: false,
+                blockReasons: ['检测尚未开放'],
+              },
+            },
+          ],
+        }),
+      ),
+    );
     const router = mount();
     await screen.findByText('函数与极限');
-    expect(screen.getByText('检测尚未开放')).toBeInTheDocument();
-    const start = screen.getByRole('button', { name: '开始' });
+    expect(screen.getAllByText('检测尚未开放')[0]).toBeInTheDocument();
+    const start = screen.getByRole('button', { name: '开始练习' });
     expect(start).toBeEnabled();
     await userEvent.click(start);
     expect(router.state.location.pathname).toBe(`/zikao/course/00023/practice/${chapterId}`);
@@ -182,7 +219,7 @@ describe('刷题章节选择', () => {
   it('开始使用稳定 chapterId，内部链接不带周期 UUID', async () => {
     const router = mount();
     await screen.findByText('函数与极限');
-    await userEvent.click(screen.getAllByRole('button', { name: '开始' })[0]);
+    await userEvent.click(screen.getAllByRole('button', { name: '开始练习' })[0]);
     expect(router.state.location.pathname).toBe(`/zikao/course/00023/practice/${chapterId}`);
     expect(router.state.location.search).not.toContain(cycleId);
     expect(router.state.location.pathname).not.toMatch(/ch\d+/);
@@ -295,7 +332,7 @@ describe('刷题章节选择', () => {
       ),
     );
     mount();
-    await screen.findByText('题量不足');
+    await screen.findAllByText('题量不足');
     expect(screen.queryByRole('button', { name: '可申请检测' })).not.toBeInTheDocument();
     expect(screen.getByText('已通过')).toBeInTheDocument();
     expect(screen.queryByText(/^已通过.*\d+.*分/)).not.toBeInTheDocument();
@@ -322,11 +359,153 @@ describe('刷题章节选择', () => {
     await within(dialog).findByLabelText('考试周期');
     await userEvent.click(within(dialog).getByRole('button', { name: '申请检测' }));
     await screen.findByText('题量不足，无法组卷');
+    expect(within(dialog).getByLabelText('考试周期')).toHaveValue(cycleId);
     await userEvent.click(within(dialog).getByRole('button', { name: '申请检测' }));
     await waitFor(() => expect(router.state.location.pathname).toContain(`/tests/${session.id}`));
     expect(keys[0]).toBeTruthy();
     expect(keys[1]).toBe(keys[0]);
     expect(bodies[0]).toEqual({ kind: 'CHAPTER', chapterId });
+  });
+  it('315 道练习题不产生检测资格，不参与检测不显示 0/0', async () => {
+    server.use(
+      http.get(overviewUrl, () =>
+        ok({
+          ...fixture,
+          chapters: [
+            {
+              ...fixture.chapters[0],
+              stats: {
+                ...stats,
+                availableOriginalCount: 0,
+                answeredOriginalCount: 0,
+                canApplyChapterAssessment: false,
+                blockReasons: [
+                  '可用且已审核原创题不足20道',
+                  '已答原创题数未达到门槛',
+                  '此章节不参与检测',
+                ],
+              },
+            },
+          ],
+        }),
+      ),
+    );
+    mount();
+    await screen.findByText('不参与检测');
+    await waitFor(() => expect(screen.getAllByText('可练习 315 题 · 已答 15 题')).toHaveLength(2));
+    expect(screen.queryByText(/0\s*\/\s*0/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '可申请检测' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '开始练习' })).toBeEnabled();
+    await userEvent.click(screen.getByText('查看检测条件'));
+    expect(screen.getByText('可用且已审核原创题不足20道')).toBeVisible();
+  });
+  it('可练习题数确认为零时说明暂无题目，不误报加载失败', async () => {
+    server.use(http.get(questionsUrl, () => ok({ items: [], page: 1, size: 1, total: 0 })));
+    mount();
+    await screen.findAllByText('可练习 0 题 · 已答 0 题');
+    await waitFor(() =>
+      expect(screen.getAllByRole('button', { name: '开始练习' })[0]).toBeDisabled(),
+    );
+    expect(screen.getAllByRole('button', { name: '开始练习' })[0]).toHaveAccessibleDescription(
+      '当前章节暂无可练习题目',
+    );
+    expect(screen.queryByText('可练习题数暂时无法读取。')).not.toBeInTheDocument();
+  });
+  it('零作答样本不显示 0% 正确率，非零样本显示计数及跨周期范围', async () => {
+    server.use(
+      http.get(overviewUrl, () =>
+        ok({
+          ...fixture,
+          stats: {
+            ...stats,
+            practiceAttemptCount: 0,
+            practiceCorrectCount: 0,
+            practiceAccuracy: 0,
+          },
+        }),
+      ),
+    );
+    mount();
+    await screen.findByText('暂无作答样本');
+    expect(screen.queryByText('0%')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByText('统计口径与检测规则'));
+    expect(screen.getByText(/正确率按本课程所有周期的正式练习提交计算/)).toBeVisible();
+  });
+  it('题数读取失败可重试，不能阻止现有练习入口', async () => {
+    server.use(
+      http.get(questionsUrl, () =>
+        HttpResponse.json({ code: 50001, message: '失败', data: null }, { status: 500 }),
+      ),
+    );
+    mount();
+    await screen.findAllByText('可练习题数暂时无法读取。');
+    expect(screen.getAllByRole('button', { name: '开始练习' })[0]).toBeEnabled();
+    server.use(
+      http.get(questionsUrl, ({ request }) =>
+        ok({
+          items: [],
+          page: 1,
+          size: 1,
+          total: new URL(request.url).searchParams.get('filter') === 'UNANSWERED' ? 300 : 315,
+        }),
+      ),
+    );
+    await userEvent.click(screen.getAllByRole('button', { name: '重试题数' })[1]);
+    await screen.findByRole('progressbar', { name: '函数与极限练习进度' });
+  });
+  it('创建中连续点击及 Esc 关闭不会重复请求，成功沿用所选周期', async () => {
+    const nextCycle = { ...cycle, id: otherId, name: '下个考试周期', startDate: '2027-04-01' };
+    let calls = 0;
+    let receivedCycle = '';
+    server.use(
+      http.get('/api/v1/exams/cycles', () =>
+        ok({ items: [cycle, nextCycle], page: 1, size: 20, total: 2 }),
+      ),
+      http.post(applyUrl, async ({ request }) => {
+        calls++;
+        receivedCycle = new URL(request.url).searchParams.get('cycleId') || '';
+        await delay(250);
+        return ok(session);
+      }),
+    );
+    const router = mount();
+    await userEvent.click(await screen.findByRole('button', { name: '可申请检测' }));
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.selectOptions(await within(dialog).findByLabelText('考试周期'), otherId);
+    await userEvent.dblClick(within(dialog).getByRole('button', { name: '申请检测' }));
+    await screen.findByText('正在创建检测，请稍候。');
+    await userEvent.keyboard('{Escape}');
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole('button', { name: '关闭弹窗' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    await waitFor(() => expect(router.state.location.pathname).toContain(`/tests/${session.id}`));
+    expect(calls).toBe(1);
+    expect(receivedCycle).toBe(otherId);
+    expect(router.state.location.search).toBe(`?cycle=${cycleKey(nextCycle)}`);
+  });
+  it('实际周期上下文在申请切换后解析为所选周期', async () => {
+    localStorage.clear();
+    const next = {
+      ...cycle,
+      id: otherId,
+      name: '另一周期',
+      startDate: '2099-11-01',
+      endDate: '2099-11-30',
+    };
+    server.use(
+      http.get('/api/v1/exams/cycles', () =>
+        ok({ items: [{ ...cycle, endDate: '2099-10-31' }, next], page: 1, size: 100, total: 2 }),
+      ),
+      http.post(applyUrl, () => ok(session)),
+    );
+    const router = mount(undefined, true);
+    await userEvent.click(await screen.findByRole('button', { name: '可申请检测' }));
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.selectOptions(await within(dialog).findByLabelText('考试周期'), otherId);
+    await userEvent.click(within(dialog).getByRole('button', { name: '申请检测' }));
+    await screen.findByTestId('destination-cycle');
+    expect(screen.getByTestId('destination-cycle')).toHaveTextContent(otherId);
+    expect(router.state.location.search).toBe(`?cycle=${cycleKey(next)}`);
   });
   it('弹窗焦点陷阱、Esc 关闭和焦点回到触发按钮', async () => {
     mount();

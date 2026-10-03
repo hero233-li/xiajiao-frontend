@@ -1,0 +1,35 @@
+{
+  "source": "isolated API fixture, no real writes",
+  "results": [
+    {
+      "width": 320,
+      "horizontalOverflow": false,
+      "noteClearOfActions": true,
+      "axeViolations": 0
+    },
+    {
+      "width": 390,
+      "horizontalOverflow": false,
+      "noteClearOfActions": true,
+      "axeViolations": 0
+    },
+    {
+      "width": 847,
+      "horizontalOverflow": false,
+      "noteClearOfActions": true,
+      "axeViolations": 0
+    },
+    {
+      "width": 1440,
+      "horizontalOverflow": false,
+      "noteClearOfActions": true,
+      "axeViolations": 0
+    }
+  ],
+  "longMath": true,
+  "multilineOptions": true,
+  "noteShortcutSafe": true,
+  "sameRetryRequest": true,
+  "sequenceStable": true,
+  "errors": []
+}

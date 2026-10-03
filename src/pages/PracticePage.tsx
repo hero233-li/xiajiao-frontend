@@ -3,18 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Link, useSearchParams } from '../features/cycle/navigation';
 import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  ArrowLeft,
-  ArrowRight,
-  Bookmark,
-  CircleHelp,
-  Check,
-  X,
-  BookOpen,
-  StickyNote,
-} from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bookmark, CircleHelp, Check, X, StickyNote } from 'lucide-react';
 import { Button } from '../components/Button';
-import { ProgressBar } from '../components/ProgressBar';
 import { MathText } from '../features/practice/MathText';
 import {
   questionOptions,
@@ -94,6 +84,7 @@ export function PracticePage({
     <PracticeSession
       key={`${course.data.id}:${chapterId}`}
       courseId={course.data.id}
+      courseName={course.data.name}
       chapterId={chapterId}
       back={back}
       onNoteRequest={onNoteRequest}
@@ -102,11 +93,13 @@ export function PracticePage({
 }
 function PracticeSession({
   courseId,
+  courseName,
   chapterId,
   back,
   onNoteRequest,
 }: {
   courseId: string;
+  courseName: string;
   chapterId: string;
   back: string;
   onNoteRequest?: (request: PracticeNoteRequest) => void;
@@ -167,6 +160,8 @@ function PracticeSession({
         );
     }
     void queryClient.invalidateQueries({ queryKey: ['practice-overview', courseId] });
+    void queryClient.invalidateQueries({ queryKey: ['practice-counts', courseId] });
+    void queryClient.invalidateQueries({ queryKey: ['practice-wrong', courseId] });
     if (index === items.length - 1) setCompleted(true);
   }
   function changeFilter(nextFilter: ListQuestionsFilter) {
@@ -187,7 +182,7 @@ function PracticeSession({
         <ArrowLeft size={20} aria-hidden="true" />
         返回章节列表
       </Link>
-      {overview.isPending || overview.isError ? (
+      {overview.isPending || (overview.isError && !overview.data) ? (
         <Region
           loading={overview.isPending}
           error={overview.error}
@@ -205,31 +200,58 @@ function PracticeSession({
       ) : (
         <>
           <header className="practice-heading">
-            <h1>{chapter.title}</h1>
-            <p>
-              第 {items.length ? index + 1 : 0} / {sequence.data?.total ?? '…'} 题
+            <div>
+              <p className="practice-context">{courseName}</p>
+              <h1>{chapter.title}</h1>
+            </div>
+            <p className="practice-position" aria-live="polite">
+              {sequence.isPending
+                ? '正在加载本轮题目…'
+                : sequence.isError
+                  ? '本轮题目未加载'
+                  : items.length
+                    ? `第 ${index + 1} / ${items.length} 题`
+                    : '本轮暂无题目'}
             </p>
           </header>
-          <ProgressBar
-            value={chapter.stats.answeredOriginalCount}
-            max={chapter.stats.availableOriginalCount}
-            label="本章已答原创题"
-          />
-          <div className="practice-filters" role="group" aria-label="题目筛选">
-            {(['ALL', 'UNANSWERED', 'WRONG'] as const).map((value, i) => (
+          {overview.isError && (
+            <div className="practice-stats-error" role="status">
+              <p>统计暂未更新，作答结果已保留。</p>
               <Button
-                key={value}
-                variant={filter === value ? 'primary' : 'secondary'}
-                aria-pressed={filter === value}
-                disabled={busy}
-                disabledReason="正在提交，请稍候"
-                onClick={() => changeFilter(value)}
+                variant="ghost"
+                loading={overview.isFetching}
+                onClick={() => void overview.refetch()}
               >
-                {['全部', '未做', `错题 ${chapter.stats.latestWrongCount}`][i]}
+                重新加载统计
               </Button>
-            ))}
-          </div>
-          <p className="practice-hint">键盘 A–D 选择 · Enter 提交 · ← → 切题</p>
+            </div>
+          )}
+          <details className="practice-tools">
+            <summary>
+              练习工具 ·{' '}
+              {filter === 'WRONG' ? '错题重做' : filter === 'UNANSWERED' ? '未做题' : '全部题目'}
+            </summary>
+            <div className="practice-filters" role="group" aria-label="题目筛选">
+              {(['ALL', 'UNANSWERED', 'WRONG'] as const).map((value, i) => (
+                <Button
+                  key={value}
+                  variant={filter === value ? 'primary' : 'secondary'}
+                  aria-pressed={filter === value}
+                  disabled={busy}
+                  disabledReason="正在提交，请稍候"
+                  onClick={() => changeFilter(value)}
+                >
+                  {['全部', '未做', `错题 ${chapter.stats.latestWrongCount}`][i]}
+                </Button>
+              ))}
+            </div>
+            <p className="practice-hint">
+              题号仅表示当前筛选的本轮范围，提交后不会自动切题。重新筛选会重新读取题目。
+            </p>
+            <p className="practice-hint">
+              键盘 A–D 选择 · Enter 提交，提交后 Enter 下一题 · ← → 切题；输入备注时不触发。
+            </p>
+          </details>
           {sequence.isPending || sequence.isError ? (
             <Region
               loading={sequence.isPending}
@@ -333,6 +355,27 @@ function QuestionCard({
   next?: () => void;
   onNoteRequest?: (request: PracticeNoteRequest) => void;
 }) {
+  const stemRef = useRef<HTMLHeadingElement>(null);
+  const navigationRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const stem = stemRef.current;
+    stem?.focus({ preventScroll: true });
+    if (window.scrollY > 0) stem?.scrollIntoView?.({ block: 'start' });
+    const navigation = navigationRef.current;
+    if (!navigation || typeof ResizeObserver === 'undefined') return;
+    const update = () =>
+      document.documentElement.style.setProperty(
+        '--practice-actions-height',
+        `${navigation.getBoundingClientRect().height}px`,
+      );
+    const observer = new ResizeObserver(update);
+    observer.observe(navigation);
+    update();
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty('--practice-actions-height');
+    };
+  }, []);
   const [selected, setSelected] = useState<number | null>(result?.selectedOption ?? null);
   const [mark, setMark] = useState(question.mark);
   const [noteNotice, setNoteNotice] = useState('');
@@ -442,10 +485,22 @@ function QuestionCard({
       const target = event.target as HTMLElement | null;
       if (
         event.defaultPrevented ||
+        event.repeat ||
         event.altKey ||
         event.ctrlKey ||
         event.metaKey ||
-        target?.closest('input, textarea, select, [contenteditable="true"], [role="textbox"]')
+        target?.closest(
+          'input, textarea, select, [contenteditable], [role="textbox"], [role="dialog"], dialog',
+        )
+      )
+        return;
+      const horizontalReader = target?.closest<HTMLElement>(
+        '[role="region"][tabindex], .practice-option',
+      );
+      if (
+        (event.key === 'ArrowLeft' || event.key === 'ArrowRight') &&
+        horizontalReader &&
+        horizontalReader.scrollWidth > horizontalReader.clientWidth
       )
         return;
       const option = 'abcd'.indexOf(event.key.toLowerCase());
@@ -484,13 +539,13 @@ function QuestionCard({
         data-error={answer.isError}
       >
         <div className="practice-meta">
-          <span>考点待补充</span>
+          <span>{question.sourceLabel}</span>
           <span aria-label={`难度 ${question.difficulty} 星，满分 5 星`}>
             难度 {'★'.repeat(question.difficulty)}
             {'☆'.repeat(5 - question.difficulty)}
           </span>
         </div>
-        <h2 className="practice-stem" id="practice-stem">
+        <h2 ref={stemRef} tabIndex={-1} className="practice-stem" id="practice-stem">
           <MathText text={question.stem} />
         </h2>
         <div className="practice-options" role="radiogroup" aria-labelledby="practice-stem">
@@ -532,6 +587,11 @@ function QuestionCard({
             );
           })}
         </div>
+        {!submitted && selected === null && (
+          <p className="practice-hint" role="status">
+            请先选择一个答案
+          </p>
+        )}
         <div className="practice-actions">
           <Button
             variant="secondary"
@@ -553,10 +613,6 @@ function QuestionCard({
             <CircleHelp size={20} aria-hidden="true" />
             {mark.uncertain ? '已标不确定' : '不确定'}
           </Button>
-          <Button variant="secondary" disabled disabledReason="接口尚未提供关联资料映射">
-            <BookOpen size={20} aria-hidden="true" />
-            关联资料
-          </Button>
         </div>
         {marking.isError && (
           <div role="alert">
@@ -575,24 +631,19 @@ function QuestionCard({
           </div>
         )}
         {storageError && <p role="alert">{storageError}</p>}
-        {!submitted && (
-          <div className="practice-submit">
-            <Button
-              disabled={selected === null}
-              disabledReason="请先选择一个答案"
-              loading={answer.isPending}
-              loadingLabel="答案已选择，正在确认结果"
-              error={answer.isError ? answer.error.message : undefined}
-              onClick={submit}
-            >
-              {answer.isError || attempt.current ? '重试提交' : '提交答案'}
-            </Button>
-            {answer.isError && <p>重试会沿用同一提交记录，请勿更改答案。</p>}
+        {!submitted && answer.isError && (
+          <div className="practice-submit-error" role="alert">
+            <p>{answer.error.message}</p>
+            <p>已保留所选答案，重试会沿用同一提交记录。</p>
           </div>
         )}
         {submitted && (
-          <section className="practice-explanation" aria-live="polite">
-            <h3>
+          <section
+            className="practice-explanation"
+            aria-live="polite"
+            data-correct={submitted.correct}
+          >
+            <h3 className="practice-verdict">
               {submitted.correct ? <Check aria-hidden="true" /> : <X aria-hidden="true" />}
               {submitted.correct ? '回答正确' : '回答错误'}
             </h3>
@@ -604,8 +655,6 @@ function QuestionCard({
             <p>
               <MathText text={submitted.explanation} />
             </p>
-            <h3>易错点</h3>
-            <p>接口尚未提供易错点，请结合解析复习。</p>
             <p className="practice-hint">
               提交于{' '}
               {new Intl.DateTimeFormat('zh-CN', {
@@ -627,7 +676,7 @@ function QuestionCard({
           </section>
         )}
       </article>
-      <nav className="practice-navigation" aria-label="切换题目">
+      <nav ref={navigationRef} className="practice-navigation" aria-label="作答与切换题目">
         <Button
           variant="secondary"
           onClick={previous}
@@ -637,6 +686,25 @@ function QuestionCard({
           <ArrowLeft size={20} aria-hidden="true" />
           上一题
         </Button>
+        {!submitted ? (
+          <Button
+            disabled={selected === null}
+            disabledReason="选择选项后即可提交"
+            loading={answer.isPending}
+            loadingLabel="正在确认结果"
+            onClick={submit}
+          >
+            {answer.isPending
+              ? '提交中'
+              : answer.isError || attempt.current
+                ? '重试提交'
+                : '提交答案'}
+          </Button>
+        ) : (
+          <Button variant="secondary" disabled disabledReason="可查看本题反馈">
+            已提交
+          </Button>
+        )}
         <Button
           variant={submitted ? 'primary' : 'secondary'}
           onClick={next}

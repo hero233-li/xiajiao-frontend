@@ -41,6 +41,11 @@ export function usePracticeSequence(
 ) {
   return useQuery({
     queryKey: ['practice-sequence', courseId, chapterId, filter, version],
+    // 本轮快照不随窗口聚焦/网络恢复重排；重新进入或主动筛选才重读。
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: 'always',
     enabled: !!courseId && !!chapterId,
     queryFn: async ({ signal }) => {
       const first = (

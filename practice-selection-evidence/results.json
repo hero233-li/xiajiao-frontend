@@ -1,0 +1,97 @@
+{
+  "source": "isolated API fixture, no real account or writes",
+  "results": [
+    {
+      "code": "00023",
+      "width": 390,
+      "horizontalOverflow": false,
+      "canApply": false,
+      "practiceQuestions": 315
+    },
+    {
+      "code": "00023",
+      "width": 847,
+      "horizontalOverflow": false,
+      "canApply": false,
+      "practiceQuestions": 315
+    },
+    {
+      "code": "00023",
+      "width": 1440,
+      "horizontalOverflow": false,
+      "canApply": false,
+      "practiceQuestions": 315
+    },
+    {
+      "code": "02324",
+      "width": 390,
+      "horizontalOverflow": false,
+      "canApply": false,
+      "practiceQuestions": 315
+    },
+    {
+      "code": "02324",
+      "width": 847,
+      "horizontalOverflow": false,
+      "canApply": false,
+      "practiceQuestions": 315
+    },
+    {
+      "code": "02324",
+      "width": 1440,
+      "horizontalOverflow": false,
+      "canApply": false,
+      "practiceQuestions": 315
+    },
+    {
+      "code": "13015",
+      "width": 390,
+      "horizontalOverflow": false,
+      "canApply": false,
+      "practiceQuestions": 315
+    },
+    {
+      "code": "13015",
+      "width": 847,
+      "horizontalOverflow": false,
+      "canApply": false,
+      "practiceQuestions": 315
+    },
+    {
+      "code": "13015",
+      "width": 1440,
+      "horizontalOverflow": false,
+      "canApply": false,
+      "practiceQuestions": 315
+    },
+    {
+      "code": "13175",
+      "width": 390,
+      "horizontalOverflow": false,
+      "canApply": false,
+      "practiceQuestions": 315
+    },
+    {
+      "code": "13175",
+      "width": 847,
+      "horizontalOverflow": false,
+      "canApply": false,
+      "practiceQuestions": 315
+    },
+    {
+      "code": "13175",
+      "width": 1440,
+      "horizontalOverflow": false,
+      "canApply": false,
+      "practiceQuestions": 315
+    }
+  ],
+  "narrow320": true,
+  "modes": [
+    "CHAPTER",
+    "VARIANT",
+    "WRONG"
+  ],
+  "axeViolations": 0,
+  "errors": []
+}

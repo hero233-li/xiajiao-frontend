@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { beforeAll, afterAll, beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
@@ -438,6 +438,76 @@ describe('知识合集', () => {
       '0',
     );
     expect(document.querySelector('.kh-workspace')).toHaveAttribute('data-detail', 'true');
+  });
+  it('未选模块不显示返回按钮，知识合集只有二级标题且不写入掌握状态', async () => {
+    mount(false);
+    await screen.findByRole('button', { name: /导数定义/ });
+    expect(screen.getByRole('heading', { name: '知识合集' })).toHaveProperty('tagName', 'H2');
+    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '返回模块列表' })).not.toBeInTheDocument();
+    expect(writes).toHaveLength(0);
+  });
+  it('无结果清除组合筛选并重置页码，周期保留', async () => {
+    server.use(
+      http.get(listUrl, ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        return ok(
+          params.get('q')
+            ? { items: [], page: 2, size: 20, total: 0 }
+            : {
+                items: [{ id: moduleId, title: module.title, difficulty: 2 }],
+                page: 1,
+                size: 20,
+                total: 1,
+              },
+        );
+      }),
+    );
+    const { router } = mount(
+      false,
+      `/zikao/course/00023/knowledge?cycleId=${cycleId}&q=无结果&difficulty=5&page=2`,
+    );
+    await screen.findByText('没有符合条件的知识模块。');
+    await userEvent.click(screen.getAllByRole('button', { name: '清除筛选' }).at(-1)!);
+    await screen.findByRole('button', { name: /导数定义/ });
+    const params = new URLSearchParams(router.state.location.search);
+    expect(params.get('cycleId')).toBe(cycleId);
+    ['q', 'difficulty', 'page'].forEach((key) => expect(params.has(key)).toBe(false));
+    expect(screen.getByRole('searchbox')).toHaveValue('');
+  });
+  it('返回模块列表保留筛选并恢复原滚动位置', async () => {
+    const scroll = vi.spyOn(window, 'scrollTo');
+    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(480);
+    const { router } = mount(
+      false,
+      `/zikao/course/00023/knowledge?cycleId=${cycleId}&q=导数&difficulty=2`,
+    );
+    await screen.findByRole('button', { name: /导数定义/ });
+    await userEvent.click(screen.getByRole('button', { name: /导数定义/ }));
+    await loaded();
+    await userEvent.click(screen.getByRole('button', { name: '返回模块列表' }));
+    expect(router.state.location.search).toContain('difficulty=2');
+    expect(new URLSearchParams(router.state.location.search).get('q')).toBe('导数');
+    expect(scroll).toHaveBeenCalledWith({ top: 480, behavior: 'auto' });
+    vi.restoreAllMocks();
+  });
+  it('Markdown表格使用局部滚动区域，代码与公式保留，例题可键盘展开', async () => {
+    stored.content =
+      '# 定义\n\n| 条件 | 结论 |\n| --- | --- |\n| 极限存在 | 可导 |\n\n```java\nSystem.out.println("学习");\n```';
+    mount();
+    await loaded();
+    expect(
+      within(screen.getByRole('region', { name: '知识表格，可横向滚动' })).getByRole('table'),
+    ).toBeVisible();
+    expect(screen.getByText('System.out.println("学习");')).toBeVisible();
+    expect(document.querySelector('.katex')).not.toBeNull();
+    const button = screen.getByRole('button', { name: '查看答案与解法' });
+    button.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    await screen.findByText('答案');
+    await userEvent.keyboard('{Enter}');
+    expect(button).toHaveAttribute('aria-expanded', 'false');
   });
   it('缺少周期时选择后加载课程', async () => {
     const { router } = mount(false, '/zikao/course/00023/knowledge');

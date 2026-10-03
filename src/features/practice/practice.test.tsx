@@ -300,6 +300,127 @@ describe('专注做题页', () => {
     render(<MathText text={'失败 $\\invalidcommand$'} />);
     expect(await screen.findByText('$\\invalidcommand$')).toBeVisible();
   });
+  it('课程和本轮范围明确，零原创资格不显示 0/100 或技术缺口', async () => {
+    server.use(
+      http.get('/api/v1/practice/courses/course/overview', () =>
+        ok({
+          ...overview,
+          chapters: [{ ...overview.chapters[0], stats: { ...stats, availableOriginalCount: 0 } }],
+        }),
+      ),
+    );
+    mount();
+    await ready();
+    expect(screen.getByText('测试课程')).toBeVisible();
+    expect(screen.getByText('第 1 / 2 题')).toBeVisible();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.queryByText(/考点待补充|接口尚未提供|0 \/ 100/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '关联资料' })).not.toBeInTheDocument();
+    expect(screen.queryByText('解析')).not.toBeInTheDocument();
+  });
+  it('连点提交期间冻结选项和导航，成功后不自动跳题', async () => {
+    let calls = 0;
+    server.use(
+      http.post(
+        '/api/v1/practice/courses/course/questions/:id/submissions',
+        async ({ request }) => {
+          calls++;
+          const body = (await request.json()) as AnswerWrite;
+          await delay(150);
+          return ok({
+            submissionId: 'one-submission',
+            questionId: 'q1',
+            revisionId: body.revisionId,
+            selectedOption: body.selectedOption,
+            correct: true,
+            correctOption: 1,
+            correctAnswer: '$x^2$',
+            explanation: '根据公式判断。',
+            submittedAt: '2026-10-24T06:30:00Z',
+            stats,
+          });
+        },
+      ),
+    );
+    const { router } = mount();
+    await ready();
+    await userEvent.keyboard('b');
+    await userEvent.dblClick(screen.getByRole('button', { name: '提交答案' }));
+    expect(screen.getByRole('button', { name: '下一题' })).toBeDisabled();
+    await userEvent.click(screen.getAllByRole('radio')[0]);
+    expect(screen.getAllByRole('radio')[1]).toHaveAttribute('aria-checked', 'true');
+    await screen.findByText('回答正确');
+    expect(calls).toBe(1);
+    expect(router.state.location.search).toContain('questionId=q1');
+  });
+  it('备注弹窗按钮聚焦时快捷键和长按 Enter 均不作答', async () => {
+    const { router } = mount();
+    await ready();
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+    const button = document.createElement('button');
+    dialog.appendChild(button);
+    document.body.appendChild(dialog);
+    button.focus();
+    await userEvent.keyboard('b{Enter}{ArrowRight}');
+    expect(submittedBodies).toHaveLength(0);
+    expect(router.state.location.search).toContain('questionId=q1');
+    expect(
+      screen.getAllByRole('radio').every((item) => item.getAttribute('aria-checked') === 'false'),
+    ).toBe(true);
+    dialog.remove();
+    screen.getByRole('heading', { name: /函数/, level: 1 }).focus();
+    await userEvent.keyboard('b');
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', repeat: true, bubbles: true }),
+    );
+    expect(submittedBodies).toHaveLength(0);
+  });
+  it('错题作答后保持本轮序列，聚焦恢复不重新查询，上一题仍可查看反馈', async () => {
+    server.use(
+      http.get('/api/v1/practice/courses/course/questions', () =>
+        ok({ items: questions, page: 1, size: 100, total: 2 }),
+      ),
+    );
+    const { router, client } = mount(
+      '/zikao/course/00001/practice/chapter?cycleId=cycle&filter=WRONG',
+    );
+    await ready();
+    await userEvent.keyboard('b{Enter}');
+    await screen.findByText('回答正确');
+    const query = client
+      .getQueryCache()
+      .find({ queryKey: ['practice-sequence', 'course', 'chapter', 'WRONG', 0] });
+    expect(query?.isStale()).toBe(false);
+    client.getQueryCache().onFocus();
+    await userEvent.click(screen.getByRole('button', { name: '下一题' }));
+    await waitFor(() => expect(router.state.location.search).toContain('questionId=q2'));
+    await ready();
+    await userEvent.click(screen.getByRole('button', { name: '上一题' }));
+    await screen.findByText('回答正确');
+    expect(router.state.location.search).toContain('questionId=q1');
+    expect(submittedBodies).toHaveLength(1);
+  });
+  it('提交成功后统计刷新失败仍保留答案和反馈', async () => {
+    let calls = 0;
+    server.use(
+      http.get('/api/v1/practice/courses/course/overview', () =>
+        ++calls === 1
+          ? ok(overview)
+          : HttpResponse.json(
+              { code: 50001, message: '统计读取失败', data: null },
+              { status: 500 },
+            ),
+      ),
+    );
+    mount();
+    await ready();
+    await userEvent.keyboard('b{Enter}');
+    await screen.findByText('回答正确');
+    await screen.findByText('统计暂未更新，作答结果已保留。');
+    expect(screen.getByText('回答正确')).toBeVisible();
+    expect(screen.getByRole('button', { name: '已提交' })).toBeDisabled();
+  });
   it('十题提示非阻断，最后一题显示本章小结', async () => {
     questions = Array.from({ length: 10 }, (_, i) => ({
       ...baseQuestion,
