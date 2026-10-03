@@ -51,6 +51,7 @@ export function PlanConfiguration({ plan }: { plan?: Plan }) {
   return (
     <>
       <Button
+        type="button"
         variant="secondary"
         disabled={!cycleId || !courses.data?.items.length}
         onClick={() => {
@@ -161,6 +162,7 @@ function ConfigurationDialog({
   const data = preview.data;
   return (
     <Modal
+      key={review ? 'preview' : 'config'}
       open
       title={plan ? '编辑当前计划' : '建立学习计划'}
       onClose={() => {
@@ -168,7 +170,7 @@ function ConfigurationDialog({
       }}
     >
       {review && data ? (
-        <div className="stack">
+        <div className="stack plan-config-review">
           <p className="eyebrow">确认新版本 · {data.baseRevision + 1}</p>
           <h3>{data.proposedPlan.config.name}</h3>
           <p>
@@ -233,6 +235,7 @@ function ConfigurationDialog({
           )}
           <div className="modal-actions">
             <Button
+              type="button"
               variant="secondary"
               disabled={busy}
               onClick={() => {
@@ -244,6 +247,7 @@ function ConfigurationDialog({
               返回修改
             </Button>
             <Button
+              type="button"
               loading={confirm.isPending}
               disabled={data.gapMinutes > 0 && !accept}
               disabledReason="请先调整容量或明确接受待安排任务"
@@ -288,7 +292,7 @@ function ConfigurationDialog({
           }}
         >
           <p className="secondary">
-            完整35天、五个学习周。前四周按顺序各学一门理论课，第五周集中安排已发布的真题与复习任务。每科任务遵守考试截止日期，时间不足会明确提示。
+            完整35天、五个学习周。前四周按顺序各学一门理论课，第五周集中安排已发布的真题与复习任务。没有已发布真题或复习模板的科目，会安排一项60分钟的真题与错题复习，进入现有练习页；这是计划估时。每科任务遵守考试截止日期，时间不足会明确提示。
           </p>
           <fieldset className="plan-config-fields" disabled={busy}>
             <label>
@@ -398,6 +402,7 @@ function ConfigurationDialog({
                     </span>
                     {[-1, 1].map((delta) => (
                       <Button
+                        type="button"
                         key={delta}
                         variant="ghost"
                         disabled={i + delta < 0 || i + delta >= config.coursePriority.length}
@@ -436,6 +441,7 @@ function ConfigurationDialog({
                   />
                 </label>
                 <Button
+                  type="button"
                   variant="secondary"
                   disabled={!Number.isInteger(minutes) || minutes < 0 || minutes > 1440}
                   onClick={() =>

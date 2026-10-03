@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -610,5 +610,92 @@ describe('学习安排', () => {
     await user.click(screen.getByRole('button', { name: '重新加载' }));
     expect(await screen.findByText('这一周暂无每日安排。')).toBeVisible();
     expect(screen.getByRole('button', { name: '查看计划设置' })).toBeVisible();
+  });
+});
+
+describe('完整计划配置编辑', () => {
+  function editableCourses() {
+    const items = [
+      course,
+      ...[2, 3, 4].map((i) => ({ ...course, id: `course${i}`, name: `理论课${i}` })),
+    ];
+    server.use(http.get('/api/v1/courses', () => ok({ items, total: 4, page: 1, size: 100 })));
+  }
+  it('修改名称、开始日、科目顺序和独立容量，预览前后均不自动确认', async () => {
+    editableCourses();
+    const user = userEvent.setup();
+    mount();
+    await ready();
+    await user.click(await screen.findByRole('button', { name: '编辑当前计划' }));
+    await user.clear(screen.getByLabelText('计划名称'));
+    await user.type(screen.getByLabelText('计划名称'), '自定义五周');
+    await user.clear(screen.getByLabelText('2026-09-28可用分钟'));
+    await user.type(screen.getByLabelText('2026-09-28可用分钟'), '0');
+    fireEvent.change(screen.getByLabelText('开始日期'), { target: { value: '2026-10-03' } });
+    await user.click(screen.getByRole('button', { name: '降低高等数学优先级' }));
+    await user.click(screen.getByRole('button', { name: '预览修改与重排' }));
+    await screen.findByRole('button', { name: '确认保存新版本' });
+    expect(previewBodies[0]).toMatchObject({
+      baseRevision: 1,
+      config: {
+        name: '自定义五周',
+        strategy: 'WEEKLY_35',
+        startDate: '2026-10-03',
+        endDate: '2026-11-06',
+        coursePriority: ['course2', 'course', 'course3', 'course4'],
+      },
+    });
+    expect(previewBodies[0].config?.dayCapacities).toHaveLength(35);
+    expect(previewBodies[0].config?.dayCapacities[0]).toEqual({
+      day: '2026-10-03',
+      capacityMinutes: 0,
+    });
+    expect(confirmations).toHaveLength(0);
+    expect(screen.getByRole('button', { name: '确认保存新版本' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: '返回修改' }));
+    expect(screen.getByLabelText('计划名称')).toHaveValue('自定义五周');
+    expect(screen.getByLabelText('2026-10-03可用分钟')).toHaveValue(0);
+  });
+  it('缺口需明确接受，再以预览指纹和版本保存', async () => {
+    editableCourses();
+    const user = userEvent.setup();
+    mount();
+    await ready();
+    await user.click(await screen.findByRole('button', { name: '编辑当前计划' }));
+    await user.click(screen.getByRole('button', { name: '预览修改与重排' }));
+    await screen.findByRole('button', { name: '确认保存新版本' });
+    await user.click(screen.getByLabelText('接受这些任务保持待安排'));
+    await user.click(screen.getByRole('button', { name: '确认保存新版本' }));
+    await waitFor(() => expect(confirmations).toHaveLength(1));
+    expect(confirmations[0]).toEqual({
+      baseRevision: 1,
+      inputFingerprint: 'a'.repeat(64),
+      acceptUnscheduled: true,
+      confirm: true,
+    });
+  });
+  it('已完成且折叠的任务组仍显示紧凑学习入口', async () => {
+    plan.tasks = plan.tasks.map((t) => ({ ...t, completed: true }));
+    mount();
+    const today = await ready();
+    const link = within(today).getByRole('link', { name: '进入学习目录' });
+    expect(link).toBeVisible();
+    expect(link).toHaveClass('schedule-task-entry');
+    expect(link.closest('details')).toBeNull();
+  });
+  it('旧版本保持只读且保留学习入口', async () => {
+    const old = structuredClone(plan);
+    plan.revision = 2;
+    server.use(http.get('/api/v1/schedule/plans/plan/revisions/1', () => ok(old)));
+    const user = userEvent.setup();
+    mount();
+    await ready();
+    await user.selectOptions(screen.getByLabelText('计划版本'), '1');
+    expect(await screen.findByText(/正在查看历史安排/)).toBeVisible();
+    expect(screen.queryByRole('button', { name: '编辑当前计划' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('checkbox').every((c) => (c as HTMLInputElement).disabled)).toBe(
+      true,
+    );
+    expect(screen.getAllByRole('link', { name: '进入学习目录' }).length).toBeGreaterThan(0);
   });
 });

@@ -18,7 +18,16 @@ vi.mock('./cycle/CycleContext', async (original) => ({
   }),
 }));
 const ok = (data: unknown) => HttpResponse.json({ code: 0, message: '成功', data });
-const course = { id: 'course', code: '00023', name: '高等数学' };
+const course = { id: 'course', code: '00023', name: '高等数学', courseType: 'THEORY' };
+const theoryCourses = [
+  course,
+  ...[2, 3, 4].map((i) => ({
+    id: `course${i}`,
+    code: `0002${i}`,
+    name: `理论课${i}`,
+    courseType: 'THEORY',
+  })),
+];
 function Location() {
   const l = useLocation();
   return (
@@ -46,7 +55,7 @@ function mount(element: React.ReactNode) {
 }
 function courses() {
   server.use(
-    http.get('/api/v1/courses', () => ok({ items: [course], size: 100, page: 1, total: 1 })),
+    http.get('/api/v1/courses', () => ok({ items: theoryCourses, size: 100, page: 1, total: 4 })),
   );
 }
 function gate(allowed: boolean) {
@@ -72,23 +81,25 @@ describe('新增的完整业务入口', () => {
     mount(<CreatePlan />);
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: '新建计划' }));
-    await user.clear(screen.getByLabelText('每日可用时间（分钟）'));
-    await user.type(screen.getByLabelText('每日可用时间（分钟）'), '60');
+    await user.clear(screen.getByLabelText('批量设置分钟'));
+    await user.type(screen.getByLabelText('批量设置分钟'), '60');
+    await user.click(screen.getByRole('button', { name: '应用到所有日期' }));
     await user.click(screen.getByRole('button', { name: '确认配置并创建' }));
     await waitFor(() =>
       expect(screen.getByText('/zikao/schedule?planId=created')).toBeInTheDocument(),
     );
-    expect(body?.config).toEqual({
+    expect(body?.config).toMatchObject({
+      name: '五周备考计划',
+      strategy: 'WEEKLY_35',
       cycleId: 'cycle',
       startDate: '2026-10-03',
-      endDate: '2026-10-04',
-      coursePriority: ['course'],
-      courseScope: ['course'],
-      dayCapacities: [
-        { day: '2026-10-03', capacityMinutes: 60 },
-        { day: '2026-10-04', capacityMinutes: 60 },
-      ],
+      endDate: '2026-11-06',
+      coursePriority: ['course', 'course2', 'course3', 'course4'],
+      courseScope: ['course', 'course2', 'course3', 'course4'],
     });
+    expect(body?.config.dayCapacities).toHaveLength(35);
+    expect(body?.config.dayCapacities.every((d) => d.capacityMinutes === 60)).toBe(true);
+    expect(body?.config.dayCapacities.at(-1)?.day).toBe('2026-11-06');
     expect(body?.acceptUnscheduled).toBe(false);
   });
   it('容量缺口保留配置，只有明确勾选才接受未排入任务', async () => {
@@ -105,7 +116,7 @@ describe('新增的完整业务入口', () => {
     await user.click(await screen.findByRole('button', { name: '新建计划' }));
     await user.click(screen.getByRole('button', { name: '确认配置并创建' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('可用时间不足');
-    expect(screen.getByLabelText('每日可用时间（分钟）')).toHaveValue(90);
+    expect(screen.getByLabelText('批量设置分钟')).toHaveValue(180);
     await user.click(screen.getByLabelText('接受容量不足的任务保持“未排入”'));
     await user.click(screen.getByRole('button', { name: '确认配置并创建' }));
     await waitFor(() => expect(writes).toHaveLength(2));

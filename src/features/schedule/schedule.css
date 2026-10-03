@@ -471,3 +471,19 @@
     grid-template-columns: minmax(0, 1fr) auto;
   }
 }
+
+.plan-config-review {
+  gap: 14px;
+}
+.plan-config-review > p,
+.plan-config-review > h3,
+.plan-config-review > ul {
+  margin: 0;
+}
+.plan-config-review .plan-week-preview > div {
+  padding: 10px 0;
+  gap: 5px;
+}
+.plan-config-review .modal-actions {
+  margin-top: 6px;
+}

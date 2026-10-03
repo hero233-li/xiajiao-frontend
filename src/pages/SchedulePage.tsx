@@ -683,7 +683,9 @@ function DayCard({
                   ? '进入历年试卷'
                   : first.kind === 'ITEM'
                     ? '进入学习目录'
-                    : '进入复习资料'}
+                    : first.target.pane === 'PRACTICE'
+                      ? '进入复习练习'
+                      : '进入复习资料'}
               </Link>
             </div>
           );
