@@ -389,6 +389,7 @@ export * from './passSource';
 export * from './plan';
 export * from './planConfig';
 export * from './planConfigDayCapacitiesItem';
+export * from './planConfigStrategy';
 export * from './planCreate';
 export * from './planDay';
 export * from './planPage';

@@ -1,3 +1,6 @@
+import { PlanConfiguration } from '../features/schedule/PlanConfiguration';
+import { useQuery } from '@tanstack/react-query';
+import { getPlanRevision } from '../api/generated/schedule/schedule';
 import { CreatePlan } from '../features/schedule/CreatePlan';
 import { CyclePicker } from '../features/cycle/CycleContext';
 import { useEffect, useRef, useState } from 'react';
@@ -119,6 +122,7 @@ export function SchedulePage() {
                       const next = new URLSearchParams(previous);
                       next.set('planId', event.target.value);
                       next.delete('week');
+                      next.delete('revision');
                       return next;
                     })
                   }
@@ -142,7 +146,15 @@ export function SchedulePage() {
   );
 }
 function PlanPanel({ id, cycleId }: { id: string; cycleId?: string }) {
-  const query = usePlan(id);
+  const current = usePlan(id);
+  const [params, setParams] = useSearchParams();
+  const revision = Number(params.get('revision'));
+  const old = useQuery({
+    queryKey: ['plan-revision', id, revision],
+    enabled: Number.isInteger(revision) && revision > 0,
+    queryFn: async () => (await getPlanRevision(id, revision, { silent: true })).data,
+  });
+  const query = revision > 0 ? old : current;
   if (query.isPending || (query.isError && !query.data))
     return (
       <State loading={query.isPending} error={query.error} retry={() => void query.refetch()} />
@@ -152,11 +164,42 @@ function PlanPanel({ id, cycleId }: { id: string; cycleId?: string }) {
   return (
     <>
       {query.isError && <State error={query.error} retry={() => void query.refetch()} />}
-      <PlanView plan={query.data!} refreshing={query.isFetching} />
+      {current.data && (
+        <label className="plan-version-select">
+          计划版本
+          <select
+            value={revision > 0 ? String(revision) : ''}
+            onChange={(e) =>
+              setParams((prev) => {
+                const next = new URLSearchParams(prev);
+                if (e.target.value) next.set('revision', e.target.value);
+                else next.delete('revision');
+                return next;
+              })
+            }
+          >
+            <option value="">当前版本 · {current.data.revision}</option>
+            {Array.from({ length: current.data.revision - 1 }, (_, i) => (
+              <option key={i + 1} value={i + 1}>
+                旧版本 {i + 1} · 只读
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      <PlanView plan={query.data!} refreshing={query.isFetching} readOnly={revision > 0} />
     </>
   );
 }
-function PlanView({ plan, refreshing }: { plan: Plan; refreshing: boolean }) {
+function PlanView({
+  plan,
+  refreshing,
+  readOnly = false,
+}: {
+  plan: Plan;
+  refreshing: boolean;
+  readOnly?: boolean;
+}) {
   const [params, setParams] = useSearchParams();
   // 日期定位来自服务端快照时间；不使用设备日期判断逾期、容量或考试截止。
   const today = shanghaiDate(plan.asOf);
@@ -179,7 +222,7 @@ function PlanView({ plan, refreshing }: { plan: Plan; refreshing: boolean }) {
   const [jump, setJump] = useState(0);
   const completion = useTaskCompletion(plan.id);
   const completionLock = useRef(false);
-  const busy = completion.isPending;
+  const busy = completion.isPending || readOnly;
   useEffect(() => {
     if (jumpRequested.current && todayElement.current) {
       todayElement.current.scrollIntoView?.({ block: 'start', behavior: 'auto' });
@@ -228,15 +271,25 @@ function PlanView({ plan, refreshing }: { plan: Plan; refreshing: boolean }) {
   }
   return (
     <>
+      {readOnly && (
+        <p className="status-warning" role="status">
+          正在查看历史安排；任务完成状态仍以实际学习记录为准。修改计划请切回当前版本。
+        </p>
+      )}
       <div className="schedule-toolbar">
         <p>
+          <strong>{plan.config.name ?? '学习计划'}</strong>
+          <br />
           {plan.config.startDate} 至 {plan.config.endDate} · 共{' '}
           {planDays(plan.config.startDate, plan.config.endDate)} 天
         </p>
-        <Button variant="secondary" aria-label="查看计划设置" onClick={() => setSettings(true)}>
-          <Settings size={20} aria-hidden="true" />
-          查看计划设置
-        </Button>
+        <div className="plan-toolbar-actions">
+          {!readOnly && <PlanConfiguration plan={plan} />}
+          <Button variant="ghost" aria-label="查看计划设置" onClick={() => setSettings(true)}>
+            <Settings size={20} aria-hidden="true" />
+            查看计划设置
+          </Button>
+        </div>
       </div>
       <section className="schedule-today-summary" aria-label="今日任务摘要">
         <h2>今日任务</h2>
@@ -268,7 +321,7 @@ function PlanView({ plan, refreshing }: { plan: Plan; refreshing: boolean }) {
           )}
         </div>
       </section>
-      {plan.overdueUncompletedMinutes > 0 && (
+      {!readOnly && plan.overdueUncompletedMinutes > 0 && (
         <aside className="schedule-warning">
           <p>
             <AlertTriangle size={20} aria-hidden="true" />
@@ -314,6 +367,15 @@ function PlanView({ plan, refreshing }: { plan: Plan; refreshing: boolean }) {
               onClick={() => selectWeek(item.index)}
             >
               <strong>第 {item.index} 周</strong>
+              {plan.config.strategy === 'WEEKLY_35' && (
+                <span>
+                  {item.index === 5
+                    ? '真题与复习'
+                    : plan.courseSummaries.find(
+                        (c) => c.id === plan.config.coursePriority[item.index - 1],
+                      )?.name}
+                </span>
+              )}
               <span>
                 {item.startDate} 至 {item.endDate}
               </span>
@@ -560,72 +622,70 @@ function DayCard({
           const course = plan.courseSummaries.find((course) => course.id === tasks[0].courseId);
           const first = tasks.find((task) => !task.completed) || tasks[0];
           return (
-            <details
-              className="schedule-task-block"
-              key={courseId}
-              open={tasks.length <= 4 ? true : undefined}
-            >
-              <summary>
-                {course?.name || first.target.courseCode} · {tasks.length} 项任务
-              </summary>
-              <div className="schedule-subtasks">
-                {tasks.map((task) => (
-                  <label key={task.id} className="schedule-task" data-completed={task.completed}>
-                    <input
-                      type="checkbox"
-                      aria-label={task.title}
-                      checked={task.completed}
-                      disabled={busy}
-                      title={busy ? '正在保存任务，请稍候' : undefined}
-                      onChange={(event) => save([task], event.target.checked)}
-                    />
-                    <span>
-                      {task.completed && <Check size={16} aria-hidden="true" />}
-                      {task.title}
-                      <small>
-                        {segments
-                          .filter((segment) => segment.taskId === task.id)
-                          .map((segment) => `${durationLabel(segment.minutes)}`)
-                          .join(' + ')}
-                      </small>
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <div className="schedule-actions">
-                <Button
-                  variant="secondary"
-                  disabled={busy || tasks.every((task) => task.completed)}
-                  disabledReason={busy ? '正在保存任务，请稍候' : '本组任务已全部完成'}
-                  onClick={() =>
-                    save(
-                      tasks.filter((task) => !task.completed),
-                      true,
-                    )
-                  }
-                >
-                  全部标记完成
-                </Button>
-                <Link className="button button-secondary" to={taskHref(first, plan.config.cycleId)}>
-                  {first.kind === 'PAPER'
-                    ? '进入历年试卷'
-                    : first.kind === 'ITEM'
-                      ? '进入学习目录'
-                      : '进入复习资料'}
-                </Link>
-              </div>
-              {tasks
-                .filter((task) => task.kind !== first.kind)
-                .map((task) => (
-                  <Link
-                    className="schedule-task-link"
-                    key={task.id}
-                    to={taskHref(task, plan.config.cycleId)}
+            <div className="schedule-task-group" key={courseId}>
+              <details className="schedule-task-block" open={tasks.length <= 4 ? true : undefined}>
+                <summary>
+                  {course?.name || first.target.courseCode} · {tasks.length} 项任务
+                </summary>
+                <div className="schedule-subtasks">
+                  {tasks.map((task) => (
+                    <label key={task.id} className="schedule-task" data-completed={task.completed}>
+                      <input
+                        type="checkbox"
+                        aria-label={task.title}
+                        checked={task.completed}
+                        disabled={busy}
+                        title={busy ? '正在保存任务，请稍候' : undefined}
+                        onChange={(event) => save([task], event.target.checked)}
+                      />
+                      <span>
+                        {task.completed && <Check size={16} aria-hidden="true" />}
+                        {task.title}
+                        <small>
+                          {segments
+                            .filter((segment) => segment.taskId === task.id)
+                            .map((segment) => `${durationLabel(segment.minutes)}`)
+                            .join(' + ')}
+                        </small>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <div className="schedule-actions">
+                  <Button
+                    variant="secondary"
+                    disabled={busy || tasks.every((task) => task.completed)}
+                    disabledReason={busy ? '正在保存任务，请稍候' : '本组任务已全部完成'}
+                    onClick={() =>
+                      save(
+                        tasks.filter((task) => !task.completed),
+                        true,
+                      )
+                    }
                   >
-                    {task.kind === 'PAPER' ? '进入历年试卷' : '进入学习资料'}：{task.title}
-                  </Link>
-                ))}
-            </details>
+                    全部标记完成
+                  </Button>
+                </div>
+                {tasks
+                  .filter((task) => task.kind !== first.kind)
+                  .map((task) => (
+                    <Link
+                      className="schedule-task-link"
+                      key={task.id}
+                      to={taskHref(task, plan.config.cycleId)}
+                    >
+                      {task.kind === 'PAPER' ? '进入历年试卷' : '进入学习资料'}：{task.title}
+                    </Link>
+                  ))}
+              </details>
+              <Link className="schedule-task-entry" to={taskHref(first, plan.config.cycleId)}>
+                {first.kind === 'PAPER'
+                  ? '进入历年试卷'
+                  : first.kind === 'ITEM'
+                    ? '进入学习目录'
+                    : '进入复习资料'}
+              </Link>
+            </div>
           );
         })
       )}

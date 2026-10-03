@@ -333,3 +333,141 @@
     margin-top: 24px;
   }
 }
+
+.schedule-task-group {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-line);
+  padding: 8px 0;
+}
+.schedule-task-group .schedule-task-block {
+  margin-top: 0;
+}
+.schedule-task-entry {
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 0;
+  white-space: nowrap;
+}
+.schedule-task-group .schedule-actions {
+  margin-top: 12px;
+}
+.schedule-task-group .schedule-actions .button {
+  font-size: 12px;
+  min-height: 32px;
+  padding: 5px 10px;
+}
+@media (max-width: 760px) {
+  .schedule-task-entry {
+    font-size: 11px;
+  }
+  .schedule-task-group {
+    gap: 8px;
+  }
+}
+
+.plan-config-fields {
+  display: grid;
+  gap: 24px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.plan-config-fields label {
+  font-size: 13px;
+}
+.plan-config-fields .schedule-fields {
+  margin: 0;
+}
+.plan-capacity-bulk {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  margin: 16px 0;
+}
+.plan-capacity-bulk label {
+  flex: 1;
+}
+.plan-capacity-bulk .button {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.plan-capacity-week {
+  border-top: 1px solid var(--color-line);
+}
+.plan-capacity-week summary {
+  cursor: pointer;
+  padding: 14px 0;
+  font-size: 13px;
+}
+.plan-capacity-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding-bottom: 16px;
+}
+.plan-capacity-grid label {
+  font-size: 11px;
+}
+.plan-capacity-grid input {
+  margin-top: 6px;
+  padding: 8px;
+  min-height: 36px;
+}
+.plan-week-preview > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-line);
+}
+.plan-week-preview strong {
+  width: 100%;
+  font-size: 14px;
+}
+.plan-week-preview small {
+  flex: 1;
+  color: var(--color-secondary);
+}
+.plan-week-preview span {
+  font-size: 12px;
+}
+.plan-version-select {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  margin: 16px 0;
+}
+.plan-version-select select {
+  width: auto;
+}
+.plan-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.plan-toolbar-actions .button {
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .plan-capacity-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .schedule-toolbar {
+    flex-wrap: wrap;
+  }
+  .plan-toolbar-actions {
+    width: 100%;
+  }
+  .schedule-task-group {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
