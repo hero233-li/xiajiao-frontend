@@ -427,6 +427,7 @@ describe('刷题章节选择', () => {
     );
     mount();
     await screen.findByText('暂无作答样本');
+    await userEvent.click(screen.getByText('我的练习记录与统计口径'));
     expect(screen.queryByText('0%')).not.toBeInTheDocument();
     await userEvent.click(screen.getByText('统计口径与检测规则'));
     expect(screen.getByText(/正确率按本课程所有周期的正式练习提交计算/)).toBeVisible();
@@ -450,7 +451,7 @@ describe('刷题章节选择', () => {
         }),
       ),
     );
-    await userEvent.click(screen.getAllByRole('button', { name: '重试题数' })[1]);
+    await userEvent.click(screen.getAllByRole('button', { name: '重试题数' })[0]);
     await screen.findByRole('progressbar', { name: '函数与极限练习进度' });
   });
   it('创建中连续点击及 Esc 关闭不会重复请求，成功沿用所选周期', async () => {

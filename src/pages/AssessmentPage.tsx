@@ -1,3 +1,4 @@
+import { AssessmentGate } from '../features/practice/AssessmentGate';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link as RecoveryLink, useLocation, useParams } from 'react-router-dom';
 import { Link, useNavigate, useSearchParams } from '../features/cycle/navigation';
@@ -94,22 +95,27 @@ export function Component() {
   if (testId === 'new')
     return (
       <div className="assessment-page stack">
-        <h1>{course.data.name} · 检测申请</h1>
-        <section className="card stack">
-          <h2>先查看检测资格</h2>
-          <p>
-            请在章节刷题页查看检测条件，满足资格后选择考试周期并申请检测。申请成功会进入本次会话。
-          </p>
-          {search.get('kind') === 'MOCK' && (
-            <p className="secondary">当前入口尚不能直接申请模拟卷，可先查看可用的章节检测。</p>
-          )}
-          <p className="secondary">
-            检测计时从会话创建后开始。离开页面不会暂停计时，刷新会恢复同一会话。
-          </p>
-          <Link className="button button-primary" to={back}>
-            查看检测资格并申请
-          </Link>
-        </section>
+        <header className="page-heading">
+          <div>
+            <p className="eyebrow">ASSESS / 检测准备</p>
+            <h1>{course.data.name}</h1>
+            <p className="secondary">先核对条件与计时规则，再进入独立作答。</p>
+          </div>
+        </header>
+        {search.get('kind') === 'MOCK' ? (
+          <AssessmentGate courseId={course.data.id} code={code} cycleId={cycleId} />
+        ) : (
+          <section className="assessment-entry">
+            <h2>章节检测</h2>
+            <p>从章节列表查看当前资格和组卷条件。符合条件后可选择章节开始。</p>
+            <Link
+              className="button button-primary"
+              to={`${back}${back.includes('?') ? '&' : '?'}mode=detect`}
+            >
+              选择检测章节
+            </Link>
+          </section>
+        )}
       </div>
     );
   if (!query.data)
@@ -551,11 +557,11 @@ function Attempt({
       )}
       <section className="assessment-desktop-panel">
         <h2>题号面板</h2>
-        <p className="secondary">蓝框为当前题 · ✓ 已答 · ○ 未答 · ⚑ 标记待查</p>
+        <p className="secondary">绿框为当前题 · ✓ 已答 · ○ 未答 · ⚑ 标记待查</p>
         {grid}
       </section>
       <Modal open={drawer} title="题号面板" onClose={() => setDrawer(false)}>
-        <p>✓ 已答 · ○ 未答 · ⚑ 标记待查；蓝框为当前题。</p>
+        <p>✓ 已答 · ○ 未答 · ⚑ 标记待查；绿框为当前题。</p>
         {grid}
       </Modal>
       <footer className="assessment-submitbar">
@@ -611,7 +617,7 @@ function Result({
   const practice = `/zikao/course/${code}/practice${session.chapterId ? `/${session.chapterId}` : ''}`;
   return (
     <>
-      <section className="card stack">
+      <section className="result-score stack">
         <h2>{result.score} / 100 分</h2>
         <p className={result.passed ? 'status-success' : 'status-error'}>
           {result.passed ? <Check aria-hidden="true" /> : <AlertTriangle aria-hidden="true" />}{' '}
@@ -627,14 +633,21 @@ function Result({
         </p>
         <p>交卷时间：{formatShanghaiDate(result.submittedAt)}（上海时间）</p>
       </section>
-      <section className="card stack">
-        <h2>考点掌握情况</h2>
-        <p>本次检测的考点掌握情况暂不可用。</p>
-        <Button disabled disabledReason="暂无法获取薄弱考点及对应章节。">
-          去练习薄弱考点
-        </Button>
+      <section className="result-next">
+        <p className="eyebrow">NEXT / 接下来</p>
+        <h2>
+          {result.passed
+            ? '保持节奏，继续下一阶段。'
+            : `先复盘这次的 ${result.questionCount - result.correctCount} 道错题。`}
+        </h2>
+        <p>
+          {result.passed
+            ? '检测通过状态由系统记录。可以回到课程继续学习，或核对下一项检测资格。'
+            : '先在下方查看错题解析，再回到对应章节练习。完成复习后重新核对检测资格。'}
+        </p>
+        <p className="secondary">逐题回顾本次作答与解析，成绩和通过状态以这次检测结果为准。</p>
         <Link className="button button-secondary" to={practice}>
-          返回章节刷题
+          继续章节练习
         </Link>
       </section>
       <section className="stack" aria-label="题目回顾">
@@ -653,7 +666,7 @@ function Result({
               (item) => item.question.revisionId === answer.revisionId,
             );
             return (
-              <article className="card stack" key={answer.revisionId}>
+              <article className="result-review stack" key={answer.revisionId}>
                 <h3>
                   第 {row?.position ?? '未知'} 题 ·{' '}
                   <span className={answer.correct ? 'status-success' : 'status-error'}>

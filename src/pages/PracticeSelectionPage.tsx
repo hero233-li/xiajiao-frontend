@@ -1,9 +1,10 @@
+import { AssessmentGate } from '../features/practice/AssessmentGate';
 import { createUuid } from '../utils/uuid';
 import { useRef, useState } from 'react';
 import { useParams, useNavigate as useRouterNavigate } from 'react-router-dom';
 import { cycleKey, useCycle } from '../features/cycle/CycleContext';
 import { Link, useNavigate, useSearchParams } from '../features/cycle/navigation';
-import { AlertCircle, BookOpen, CheckCircle2, ChevronLeft, RotateCcw } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronLeft, RotateCcw } from 'lucide-react';
 import {
   useApplyChapterAssessment,
   useAssessmentCycles,
@@ -472,6 +473,7 @@ function Selection({ overview, code }: { overview: PracticeOverview; code: strin
   const [search, setSearch] = useSearchParams();
   const mode = search.get('mode') === 'VARIANT' ? 'VARIANT' : 'CHAPTER';
   const wrong = search.get('filter') === 'WRONG';
+  const detection = search.get('mode') === 'detect';
   const [assessmentChapter, setAssessmentChapter] = useState<PracticeChapter | null>(null);
   const navigate = useNavigate();
   const base = `/zikao/course/${encodeURIComponent(code)}/practice`;
@@ -486,7 +488,101 @@ function Selection({ overview, code }: { overview: PracticeOverview; code: strin
   }
   return (
     <>
-      <Card className="selection-summary">
+      <div className="selection-modes" role="group" aria-label="刷题模式">
+        <Button
+          variant="secondary"
+          className="selection-mode"
+          aria-pressed={mode === 'CHAPTER' && !wrong && !detection}
+          onClick={() => chooseMode('CHAPTER')}
+        >
+          章节刷题
+        </Button>
+        <Button
+          variant="secondary"
+          className="selection-mode"
+          aria-pressed={mode === 'VARIANT' && !wrong}
+          onClick={() => chooseMode('VARIANT')}
+        >
+          真题变种
+        </Button>
+        <Button
+          variant="secondary"
+          className="selection-mode"
+          aria-pressed={wrong}
+          disabled={overview.stats.latestWrongCount === 0}
+          disabledReason="暂无错题"
+          onClick={() => chooseMode('CHAPTER', 'WRONG')}
+        >
+          <RotateCcw size={18} aria-hidden="true" />
+          错题重做
+        </Button>
+        <Button
+          variant="secondary"
+          aria-pressed={detection}
+          onClick={() => {
+            const next = new URLSearchParams(search);
+            next.set('mode', 'detect');
+            next.delete('filter');
+            setSearch(next);
+          }}
+        >
+          检测与模拟
+        </Button>
+      </div>
+      {detection && (
+        <AssessmentGate
+          courseId={overview.courseId}
+          code={code}
+          cycleId={search.get('cycleId') || ''}
+        />
+      )}
+      {wrong ? (
+        <WrongSelection
+          courseId={overview.courseId}
+          code={code}
+          onBack={() => chooseMode('CHAPTER')}
+        />
+      ) : mode === 'VARIANT' ? (
+        overview.variantQuestionCount === 0 ? (
+          <State
+            message="当前暂无真题变种。"
+            action="返回章节刷题"
+            onAction={() => chooseMode('CHAPTER')}
+          />
+        ) : (
+          <Card className="selection-variant">
+            <h3>真题变种</h3>
+            <p>共 {overview.variantQuestionCount} 题，直接开始练习。</p>
+            <Button variant="secondary" onClick={() => navigate(`${base}/variant${cycleQuery}`)}>
+              开始真题变种
+            </Button>
+          </Card>
+        )
+      ) : overview.chapters.length === 0 ? (
+        <State
+          message="当前课程暂无已发布的刷题章节。"
+          action="查看我的科目"
+          onAction={() => navigate('/zikao/courses')}
+        />
+      ) : (
+        <section className="stack" aria-labelledby="chapters-title">
+          <h3 id="chapters-title">{detection ? '章节检测资格' : '按章节练习'}</h3>
+          <ol className="selection-chapters">
+            {overview.chapters.map((chapter, index) => (
+              <ChapterRow
+                key={chapter.chapterId}
+                chapter={chapter}
+                index={index}
+                courseId={overview.courseId}
+                onStart={() => navigate(`${base}/${encodeURIComponent(chapter.chapterId)}`)}
+                onApply={() => setAssessmentChapter(chapter)}
+              />
+            ))}
+          </ol>
+        </section>
+      )}
+      <details className="selection-summary">
+        <summary>我的练习记录与统计口径</summary>
         <dl className="selection-stats" aria-label="刷题统计">
           <div>
             <dt>章节题库</dt>
@@ -543,81 +639,7 @@ function Selection({ overview, code }: { overview: PracticeOverview; code: strin
             章。
           </p>
         </details>
-      </Card>
-      <div className="selection-modes" role="group" aria-label="刷题模式">
-        <Button
-          variant="secondary"
-          className="selection-mode"
-          aria-pressed={mode === 'CHAPTER' && !wrong}
-          onClick={() => chooseMode('CHAPTER')}
-        >
-          章节刷题
-        </Button>
-        <Button
-          variant="secondary"
-          className="selection-mode"
-          aria-pressed={mode === 'VARIANT' && !wrong}
-          onClick={() => chooseMode('VARIANT')}
-        >
-          真题变种
-        </Button>
-        <Button
-          variant="secondary"
-          className="selection-mode"
-          aria-pressed={wrong}
-          disabled={overview.stats.latestWrongCount === 0}
-          disabledReason="暂无错题"
-          onClick={() => chooseMode('CHAPTER', 'WRONG')}
-        >
-          <RotateCcw size={18} aria-hidden="true" />
-          错题重做
-        </Button>
-      </div>
-      {wrong ? (
-        <WrongSelection
-          courseId={overview.courseId}
-          code={code}
-          onBack={() => chooseMode('CHAPTER')}
-        />
-      ) : mode === 'VARIANT' ? (
-        overview.variantQuestionCount === 0 ? (
-          <State
-            message="当前暂无真题变种。"
-            action="返回章节刷题"
-            onAction={() => chooseMode('CHAPTER')}
-          />
-        ) : (
-          <Card className="selection-variant">
-            <h3>真题变种</h3>
-            <p>共 {overview.variantQuestionCount} 题，直接开始练习。</p>
-            <Button variant="secondary" onClick={() => navigate(`${base}/variant${cycleQuery}`)}>
-              开始真题变种
-            </Button>
-          </Card>
-        )
-      ) : overview.chapters.length === 0 ? (
-        <State
-          message="当前课程暂无已发布的刷题章节。"
-          action="查看我的科目"
-          onAction={() => navigate('/zikao/courses')}
-        />
-      ) : (
-        <section className="stack" aria-labelledby="chapters-title">
-          <h3 id="chapters-title">选择章节</h3>
-          <ol className="selection-chapters">
-            {overview.chapters.map((chapter, index) => (
-              <ChapterRow
-                key={chapter.chapterId}
-                chapter={chapter}
-                index={index}
-                courseId={overview.courseId}
-                onStart={() => navigate(`${base}/${encodeURIComponent(chapter.chapterId)}`)}
-                onApply={() => setAssessmentChapter(chapter)}
-              />
-            ))}
-          </ol>
-        </section>
-      )}
+      </details>
       {assessmentChapter && (
         <AssessmentDialog
           chapter={assessmentChapter}
@@ -639,9 +661,7 @@ export function PracticeSelectionPage() {
     <div className="selection-page">
       <header className="selection-heading">
         <div>
-          <h2>
-            <BookOpen size={28} aria-hidden="true" /> 章节刷题
-          </h2>
+          <h2>练习与检测</h2>
         </div>
         <Link className="button button-ghost" to="/zikao/courses">
           <ChevronLeft size={20} aria-hidden="true" />

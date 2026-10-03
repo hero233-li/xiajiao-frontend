@@ -79,7 +79,7 @@ beforeEach(() => {
     }),
   );
 });
-describe('备注页面', () => {
+describe('笔记页面', () => {
   it('正文纯文本、保留换行，点击后端标签通过接口筛选并同步 URL', async () => {
     const user = userEvent.setup();
     const view = mount();
@@ -104,16 +104,16 @@ describe('备注页面', () => {
     expect(screen.getByRole('searchbox')).toHaveValue('极限');
     expect(params.get('q')).toBe('极限');
   });
-  it('课程备注预设当前课程，保存新备注时采用当前课程和上海日期', async () => {
+  it('课程笔记预设当前课程，保存新笔记时采用当前课程和上海日期', async () => {
     const user = userEvent.setup();
     mount(`/zikao/course/${course.code}/notes?cycleId=cycle`);
     await waitFor(() => expect(params.get('courseId')).toBe(course.id));
-    await user.click(screen.getByRole('button', { name: '新建备注' }));
+    await user.click(screen.getByRole('button', { name: '写一条笔记' }));
     expect(within(screen.getByRole('dialog')).getByLabelText('课程')).toHaveValue(course.id);
     expect(screen.getByLabelText('日期（上海时间）')).toHaveValue(shanghaiToday());
-    await user.type(screen.getByLabelText('备注正文'), '新收获 #高数');
-    await user.click(screen.getByRole('button', { name: '保存备注' }));
-    await screen.findByText('✓ 备注已保存');
+    await user.type(screen.getByLabelText('笔记正文'), '新收获 #高数');
+    await user.click(screen.getByRole('button', { name: '保存笔记' }));
+    await screen.findByText('✓ 笔记已保存');
     expect(writes[0]).toMatchObject({
       courseId: course.id,
       noteDate: shanghaiToday(),
@@ -125,13 +125,13 @@ describe('备注页面', () => {
     const user = userEvent.setup();
     mount();
     await screen.findByText(/复习极限/);
-    await user.click(screen.getByRole('button', { name: /编辑 .* 的备注/ }));
+    await user.click(screen.getByRole('button', { name: /编辑 .* 的笔记/ }));
     expect(within(screen.getByRole('dialog')).getByLabelText('课程')).toBeDisabled();
-    await user.clear(screen.getByLabelText('备注正文'));
-    await user.type(screen.getByLabelText('备注正文'), '保留我的编辑');
-    await user.click(screen.getByRole('button', { name: '保存备注' }));
+    await user.clear(screen.getByLabelText('笔记正文'));
+    await user.type(screen.getByLabelText('笔记正文'), '保留我的编辑');
+    await user.click(screen.getByRole('button', { name: '保存笔记' }));
     await screen.findByText(/输入内容已保留/);
-    expect(screen.getByLabelText('备注正文')).toHaveValue('保留我的编辑');
+    expect(screen.getByLabelText('笔记正文')).toHaveValue('保留我的编辑');
     server.use(
       http.put('*/api/v1/notes/:id', async ({ request }) => {
         const body = (await request.json()) as NoteUpdate;
@@ -140,7 +140,7 @@ describe('备注页面', () => {
       }),
     );
     await user.click(screen.getByRole('button', { name: '重试保存' }));
-    await screen.findByText('✓ 备注已保存');
+    await screen.findByText('✓ 笔记已保存');
     expect(writes[0]).toEqual({
       noteDate: note.noteDate,
       content: '保留我的编辑',
@@ -151,13 +151,13 @@ describe('备注页面', () => {
     const user = userEvent.setup();
     mount();
     await screen.findByText(/复习极限/);
-    const trigger = screen.getByRole('button', { name: /编辑 .* 的备注/ });
+    const trigger = screen.getByRole('button', { name: /编辑 .* 的笔记/ });
     await user.click(trigger);
-    await user.type(screen.getByLabelText('备注正文'), '修改');
+    await user.type(screen.getByLabelText('笔记正文'), '修改');
     await user.keyboard('{Escape}');
     expect(screen.getByRole('dialog')).toHaveAccessibleName('放弃未保存的内容？');
     await user.keyboard('{Escape}');
-    expect(screen.getByLabelText('备注正文')).toHaveValue(`${note.content}修改`);
+    expect(screen.getByLabelText('笔记正文')).toHaveValue(`${note.content}修改`);
     await user.click(screen.getByRole('button', { name: '取消' }));
     await user.click(screen.getByRole('button', { name: '放弃修改并关闭' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -167,14 +167,14 @@ describe('备注页面', () => {
     const user = userEvent.setup();
     mount();
     await screen.findByText(/复习极限/);
-    await user.click(screen.getByRole('button', { name: '新建备注' }));
-    await user.click(screen.getByLabelText('备注正文'));
+    await user.click(screen.getByRole('button', { name: '写一条笔记' }));
+    await user.click(screen.getByLabelText('笔记正文'));
     await user.paste('字'.repeat(5001));
     expect(screen.getByText(/5001 \/ 5000 字/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '保存备注' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '保存笔记' })).toBeDisabled();
     expect(screen.getByText('正文不能超过 5000 字。')).toBeInTheDocument();
   });
-  it('备注加载状态', async () => {
+  it('笔记加载状态', async () => {
     server.use(
       http.get('*/api/v1/notes', async () => {
         await delay(100);
@@ -182,19 +182,19 @@ describe('备注页面', () => {
       }),
     );
     mount();
-    await screen.findByText('正在加载备注…');
+    await screen.findByText('正在加载笔记…');
     await screen.findByText(/复习极限/);
   });
-  it('没有备注和没有匹配备注使用不同空状态，清除筛选', async () => {
+  it('没有笔记和没有匹配笔记使用不同空状态，清除筛选', async () => {
     server.use(http.get('*/api/v1/notes', () => ok({ items: [], page: 1, size: 20, total: 0 })));
     const user = userEvent.setup();
     mount('/zikao/notes?cycleId=cycle&q=没有');
-    await screen.findByText('没有符合条件的备注。');
+    await screen.findByText('没有符合条件的笔记。');
     await user.click(screen.getByRole('button', { name: '清除筛选' }));
-    await screen.findByText('还没有备注，记下今天的学习收获吧。');
+    await screen.findByText('还没有笔记，记下今天的学习收获吧。');
     expect(screen.getByRole('searchbox')).toHaveValue('');
   });
-  it('备注请求失败可以重试', async () => {
+  it('笔记请求失败可以重试', async () => {
     server.use(http.get('*/api/v1/notes', () => HttpResponse.error()));
     const user = userEvent.setup();
     mount();
@@ -236,11 +236,11 @@ describe('QuickNote 独立组件', () => {
     const user = userEvent.setup();
     mount('/zikao/notes', { initialContent: '复盘错题\n#高数', defaultCourseId: course.id });
     await user.click(screen.getByRole('button', { name: '快速记一条' }));
-    await screen.findByLabelText('备注正文');
-    expect(screen.getByLabelText('备注正文')).toHaveValue('复盘错题\n#高数');
+    await screen.findByLabelText('笔记正文');
+    expect(screen.getByLabelText('笔记正文')).toHaveValue('复盘错题\n#高数');
     expect(screen.queryByLabelText('日期（上海时间）')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: '保存备注' }));
-    await screen.findByText('备注已保存');
+    await user.click(screen.getByRole('button', { name: '保存笔记' }));
+    await screen.findByText('笔记已保存');
     expect(writes[0]).toEqual({
       content: '复盘错题\n#高数',
       courseId: course.id,
@@ -250,9 +250,9 @@ describe('QuickNote 独立组件', () => {
   it('独立测试路由可用，预填没有编辑也会确认放弃', async () => {
     const user = userEvent.setup();
     mount(`/zikao/notes/quick-note-preview?cycleId=cycle&courseId=${course.id}`);
-    expect(screen.getByRole('heading', { name: '快速备注独立测试页' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '快速笔记独立测试页' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '快速记一条' }));
-    await screen.findByLabelText('备注正文');
+    await screen.findByLabelText('笔记正文');
     await user.keyboard('{Escape}');
     expect(screen.getByRole('dialog')).toHaveAccessibleName('放弃未保存的内容？');
   });
@@ -269,32 +269,32 @@ describe('QuickNote 独立组件', () => {
       http.get('*/api/v1/courses', () => ok({ items: [course], total: 1, page: 1, size: 100 })),
     );
     await user.click(screen.getByRole('button', { name: '重新加载课程' }));
-    await screen.findByLabelText('备注正文');
-    expect(screen.getByLabelText('备注正文')).toHaveValue('预填');
+    await screen.findByLabelText('笔记正文');
+    expect(screen.getByLabelText('笔记正文')).toHaveValue('预填');
   });
   it('QuickNote 保存失败保留预填及追加内容', async () => {
     server.use(http.post('*/api/v1/notes', () => HttpResponse.error()));
     const user = userEvent.setup();
     mount('/zikao/notes', { initialContent: '错题预填', defaultCourseId: course.id });
     await user.click(screen.getByRole('button', { name: '快速记一条' }));
-    await screen.findByLabelText('备注正文');
-    await user.type(screen.getByLabelText('备注正文'), '补充');
-    await user.click(screen.getByRole('button', { name: '保存备注' }));
+    await screen.findByLabelText('笔记正文');
+    await user.type(screen.getByLabelText('笔记正文'), '补充');
+    await user.click(screen.getByRole('button', { name: '保存笔记' }));
     await screen.findByText(/输入内容已保留/);
-    expect(screen.getByLabelText('备注正文')).toHaveValue('错题预填补充');
-    expect(screen.queryByText('备注已保存')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('笔记正文')).toHaveValue('错题预填补充');
+    expect(screen.queryByText('笔记已保存')).not.toBeInTheDocument();
   });
   it('弹窗 Tab 循环保持焦点，最近保存的课程作为下一条默认值', async () => {
     localStorage.setItem('notes-recent-course:undefined', course.id);
     const user = userEvent.setup();
     mount('/zikao/notes', { initialContent: '正文' });
     await user.click(screen.getByRole('button', { name: '快速记一条' }));
-    await screen.findByLabelText('备注正文');
+    await screen.findByLabelText('笔记正文');
     expect(screen.getByLabelText('课程')).toHaveValue(course.id);
-    screen.getByRole('button', { name: '保存备注' }).focus();
+    screen.getByRole('button', { name: '保存笔记' }).focus();
     await user.tab();
     expect(screen.getByRole('button', { name: '关闭弹窗' })).toHaveFocus();
     await user.tab({ shift: true });
-    expect(screen.getByRole('button', { name: '保存备注' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: '保存笔记' })).toHaveFocus();
   });
 });

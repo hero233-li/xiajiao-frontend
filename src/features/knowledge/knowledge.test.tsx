@@ -361,7 +361,8 @@ describe('知识合集', () => {
     await loaded();
     await userEvent.clear(screen.getByRole('textbox', { name: '知识笔记' }));
     await userEvent.type(screen.getByRole('textbox', { name: '知识笔记' }), '切换前的草稿');
-    await userEvent.click(screen.getByRole('button', { name: /极限性质/ }));
+    await userEvent.click(screen.getByRole('button', { name: '返回模块列表' }));
+    await userEvent.click(await screen.findByRole('button', { name: /极限性质/ }));
     await waitFor(() => expect(writes[0]?.note).toBe('切换前的草稿'));
     await screen.findByRole('heading', { name: '极限性质' });
     expect(screen.getByRole('textbox', { name: '知识笔记' })).toHaveValue('');
@@ -378,9 +379,11 @@ describe('知识合集', () => {
     await userEvent.type(screen.getByRole('textbox', { name: '知识笔记' }), '需要保留的失败草稿');
     await userEvent.click(screen.getByRole('radio', { name: '3 · 掌握' }));
     await screen.findByText('保存失败');
-    await userEvent.click(screen.getByRole('button', { name: /极限性质/ }));
+    await userEvent.click(screen.getByRole('button', { name: '返回模块列表' }));
+    await userEvent.click(await screen.findByRole('button', { name: /极限性质/ }));
     await screen.findByRole('heading', { name: '极限性质' });
-    await userEvent.click(screen.getByRole('button', { name: /导数定义/ }));
+    await userEvent.click(screen.getByRole('button', { name: '返回模块列表' }));
+    await userEvent.click(await screen.findByRole('button', { name: /导数定义/ }));
     await waitFor(() =>
       expect(screen.getByRole('textbox', { name: '知识笔记' })).toHaveValue('需要保留的失败草稿'),
     );
@@ -442,7 +445,7 @@ describe('知识合集', () => {
   it('未选模块不显示返回按钮，知识合集只有二级标题且不写入掌握状态', async () => {
     mount(false);
     await screen.findByRole('button', { name: /导数定义/ });
-    expect(screen.getByRole('heading', { name: '知识合集' })).toHaveProperty('tagName', 'H2');
+    expect(screen.getByRole('heading', { name: '知识索引' })).toHaveProperty('tagName', 'H2');
     expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '返回模块列表' })).not.toBeInTheDocument();
     expect(writes).toHaveLength(0);

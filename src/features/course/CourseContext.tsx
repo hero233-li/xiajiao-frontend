@@ -66,11 +66,11 @@ export function CourseFrame({ children }: PropsWithChildren) {
   if (!course) return null;
   const countdown = dashboard.data?.countdowns.find((c) => c.courseId === course.id);
   const tabs = [
-    ['catalog', '学习目录'],
-    ['knowledge', '知识合集'],
-    ['practice', '刷题'],
-    ['exams', '历年试卷'],
-    ['notes', '备注'],
+    ['catalog', '阅读与进度'],
+    ['knowledge', '知识索引'],
+    ['practice', '练习与检测'],
+    ['exams', '真题与成绩'],
+    ['notes', '课程笔记'],
     ...(course.capabilities.manual ? [['manual', '实践手册']] : []),
   ].filter(
     ([path]) => path === 'notes' || course.capabilities[path as keyof Course['capabilities']],
@@ -84,28 +84,38 @@ export function CourseFrame({ children }: PropsWithChildren) {
         <header ref={head} className="course-frame-head">
           <Breadcrumb
             items={[
-              { label: '备考总览', to: '/zikao' },
-              { label: '我的科目', to: '/zikao/courses' },
+              { label: '今日学习', to: '/zikao' },
+              { label: '学习书架', to: '/zikao/courses' },
               { label: course.name },
             ]}
           />
-          <h1>{course.name}</h1>
-          <p className="secondary">
-            课程代码 {course.code}
-            {countdown && (
-              <>
-                {' '}
-                ·{' '}
-                {countdown.status === 'TODAY'
-                  ? '今天考试'
-                  : countdown.status === 'FINISHED'
-                    ? '考试已结束'
-                    : countdown.daysRemaining !== null
-                      ? `距考试 ${countdown.daysRemaining} 天`
-                      : '考试日期待确认'}
-              </>
-            )}
-          </p>
+          <div className="course-headline">
+            <div>
+              <h1>{course.name}</h1>
+              <p className="secondary">
+                课程代码 {course.code}
+                {countdown && (
+                  <>
+                    {' '}
+                    ·{' '}
+                    {countdown.status === 'TODAY'
+                      ? '今天考试'
+                      : countdown.status === 'FINISHED'
+                        ? '考试已结束'
+                        : countdown.daysRemaining !== null
+                          ? `距考试 ${countdown.daysRemaining} 天`
+                          : '考试日期待确认'}
+                  </>
+                )}
+              </p>
+            </div>
+            <div className="course-head-progress">
+              目录完成 {course.progress.percent}%<br />
+              <small>
+                {course.progress.completedItems} / {course.progress.totalItems} 项
+              </small>
+            </div>
+          </div>
           <nav aria-label="课程页面" className="course-tabs">
             {tabs.map(([path, title]) => (
               <NavLink key={path} to={`/zikao/course/${code}/${path}`}>

@@ -1,3 +1,4 @@
+import { Link } from '../features/cycle/navigation';
 import { useEffect, useId, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSearchParams } from '../features/cycle/navigation';
@@ -88,8 +89,18 @@ export function Component() {
     (courses.data?.some((course) => course.id === recentNoteCourse()) ? recentNoteCourse() : '');
   return (
     <div className="notes-page stack">
-      <h2>{code ? '课程备注' : '全部学习备注'}</h2>
-      <section className="card notes-filters" aria-label="筛选备注">
+      <header className="page-heading">
+        <div>
+          <p className="eyebrow">NOTEBOOK / 学习笔记</p>
+          <h1>{code ? '课程笔记' : '把理解留在这里。'}</h1>
+          <p className="secondary">记录易错点、思路与复习提示，随时回到相关课程。</p>
+        </div>
+        <Button disabled={!courses.data?.length || !ready} onClick={() => setEditor('new')}>
+          <Plus size={16} />
+          写一条笔记
+        </Button>
+      </header>
+      <section className="notes-filters" aria-label="筛选笔记">
         <label htmlFor={`${id}-search`}>
           <Search size={18} aria-hidden="true" /> 搜索正文
           <input
@@ -151,14 +162,6 @@ export function Component() {
             <span className="notes-help">请等待课程信息加载。</span>
           ) : null}
         </label>
-        <Button
-          disabled={!courses.data?.length || !ready}
-          disabledReason="课程列表暂不可用，请先加载课程信息。"
-          onClick={() => setEditor('new')}
-        >
-          <Plus size={20} aria-hidden="true" />
-          新建备注
-        </Button>
       </section>
       {courses.error ? (
         <ErrorState
@@ -193,7 +196,7 @@ export function Component() {
         />
       ) : tags.data?.tags.length === 0 ? (
         <div className="notes-help">
-          <p>当前范围还没有标签，可在备注正文中使用 #标签。</p>
+          <p>当前范围还没有标签，可在笔记正文中使用 #标签。</p>
           <Button
             variant="secondary"
             onClick={() => {
@@ -212,14 +215,14 @@ export function Component() {
           </Button>
         </div>
       )}
-      <section className="stack" aria-label="备注列表" aria-busy={ready && notes.isPending}>
+      <section className="note-ledger" aria-label="笔记列表" aria-busy={ready && notes.isPending}>
         {!ready && courses.isPending ? (
           <div className="card" role="status">
             正在加载课程信息…
           </div>
         ) : !ready ? null : notes.isPending ? (
           <div className="card" role="status">
-            正在加载备注…
+            正在加载笔记…
           </div>
         ) : notes.error ? (
           <ErrorState
@@ -230,8 +233,8 @@ export function Component() {
           />
         ) : notes.data.items.length === 0 ? (
           <EmptyState
-            message={filtered ? '没有符合条件的备注。' : '还没有备注，记下今天的学习收获吧。'}
-            actionLabel={filtered ? '清除筛选' : courses.data?.length ? '新建备注' : '重新加载课程'}
+            message={filtered ? '没有符合条件的笔记。' : '还没有笔记，记下今天的学习收获吧。'}
+            actionLabel={filtered ? '清除筛选' : courses.data?.length ? '新建笔记' : '重新加载课程'}
             onAction={
               filtered
                 ? clear
@@ -244,7 +247,7 @@ export function Component() {
           />
         ) : (
           notes.data.items.map((note) => (
-            <article className="card stack" key={note.id}>
+            <article className="note-entry" key={note.id}>
               <div className="row">
                 <h2 className="notes-title">
                   {courses.data?.find((course) => course.id === note.courseId)?.name ??
@@ -254,18 +257,26 @@ export function Component() {
                 <Button
                   variant="secondary"
                   onClick={() => setEditor(note)}
-                  aria-label={`编辑 ${formatShanghaiDate(note.noteDate)} 的备注`}
+                  aria-label={`编辑 ${formatShanghaiDate(note.noteDate)} 的笔记`}
                 >
                   <FilePenLine size={20} aria-hidden="true" />
                   编辑
                 </Button>
               </div>
+              {courses.data?.find((c) => c.id === note.courseId) && (
+                <Link
+                  className="note-return text-action"
+                  to={`/zikao/course/${courses.data.find((c) => c.id === note.courseId)!.code}/${courses.data.find((c) => c.id === note.courseId)!.capabilities.manual ? 'manual' : 'catalog'}`}
+                >
+                  回到相关学习内容 →
+                </Link>
+              )}
               <NoteContent
                 content={note.content}
                 tags={note.tags}
                 onTag={(value) => change('tag', value)}
               />
-              <div className="row" aria-label="备注标签">
+              <div className="row" aria-label="笔记标签">
                 {note.tags.map((value) => (
                   <Button
                     key={value}
@@ -282,7 +293,7 @@ export function Component() {
         )}
       </section>
       {ready && notes.data && notes.data.total > 0 && (
-        <nav className="row" aria-label="备注分页">
+        <nav className="row" aria-label="笔记分页">
           <span>
             第 {notes.data.page} 页 · 共 {notes.data.total} 条
           </span>
@@ -317,7 +328,7 @@ export function Component() {
           onClose={() => setEditor(null)}
           onSaved={() => {
             setEditor(null);
-            setNotice('备注已保存');
+            setNotice('笔记已保存');
           }}
         />
       )}

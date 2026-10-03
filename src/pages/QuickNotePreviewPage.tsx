@@ -6,7 +6,7 @@ export function Component() {
   const [params] = useSearchParams();
   return (
     <div className="notes-page stack">
-      <h1>快速备注独立测试页</h1>
+      <h1>快速笔记独立测试页</h1>
       <label htmlFor="quick-prefill">
         预填内容
         <textarea

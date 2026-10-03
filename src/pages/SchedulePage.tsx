@@ -1,3 +1,5 @@
+import { CreatePlan } from '../features/schedule/CreatePlan';
+import { CyclePicker } from '../features/cycle/CycleContext';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from '../features/cycle/navigation';
 import { AlertTriangle, ArrowDown, ArrowUp, CalendarDays, Check, Settings } from 'lucide-react';
@@ -63,7 +65,17 @@ export function SchedulePage() {
   const selected = params.get('planId') || plans.data?.items[0]?.id || '';
   return (
     <div className="schedule-page">
-      <h1>学习安排</h1>
+      <header className="page-heading">
+        <div>
+          <p className="eyebrow">PLAN / 学习计划</p>
+          <h1>把时间留给重点。</h1>
+          <p className="secondary">从今天的安排出发，处理逾期，逐步完成整个周期。</p>
+        </div>
+        <div className="stack">
+          <CyclePicker />
+          <CreatePlan />
+        </div>
+      </header>
       {cycle && !cycleId ? (
         <State
           loading={cycle.pending}
@@ -165,7 +177,6 @@ function PlanView({ plan, refreshing }: { plan: Plan; refreshing: boolean }) {
   const todayElement = useRef<HTMLElement>(null);
   const jumpRequested = useRef(false);
   const [jump, setJump] = useState(0);
-  const [weekCollapsed, setWeekCollapsed] = useState(false);
   const completion = useTaskCompletion(plan.id);
   const completionLock = useRef(false);
   const busy = completion.isPending;
@@ -206,7 +217,6 @@ function PlanView({ plan, refreshing }: { plan: Plan; refreshing: boolean }) {
   const todayWeek = plan.weeks.find((item) => item.startDate <= today && today <= item.endDate);
   function selectWeek(index: number) {
     setExpanded(false);
-    setWeekCollapsed(false);
     setParams(
       (previous) => {
         const next = new URLSearchParams(previous);
@@ -228,47 +238,6 @@ function PlanView({ plan, refreshing }: { plan: Plan; refreshing: boolean }) {
           查看计划设置
         </Button>
       </div>
-      <section className="card schedule-overview" aria-label="计划概览">
-        <ProgressBar label="计划完成度" value={plan.progress.percent} percentage />
-        <p className="schedule-muted">
-          按预计学习时长统计：已完成 {durationLabel(plan.progress.completedMinutes)} / 共{' '}
-          {durationLabel(plan.progress.totalEstimatedMinutes)}
-        </p>
-        <div className="schedule-metrics">
-          <p>
-            计划学习时长<strong>{durationLabel(plan.progress.totalEstimatedMinutes)}</strong>
-          </p>
-          <p>
-            已完成天数
-            <strong>
-              {plan.completedDayCount} / {plan.dayCount} 天（
-              {plan.dayCount ? Math.round((plan.completedDayCount / plan.dayCount) * 100) : 0}%）
-            </strong>
-          </p>
-        </div>
-        <details className="schedule-course-details">
-          <summary>课程目录完成度</summary>
-          {plan.courseSummaries.length ? (
-            <div className="schedule-course-progress">
-              {plan.courseSummaries.map((course) => (
-                <ProgressBar
-                  key={course.id}
-                  label={course.name}
-                  value={course.progress.percent}
-                  percentage
-                />
-              ))}
-            </div>
-          ) : (
-            <>
-              <p>暂无课程统计。</p>
-              <Link className="button button-secondary" to="/zikao/courses">
-                查看我的科目
-              </Link>
-            </>
-          )}
-        </details>
-      </section>
       <section className="schedule-today-summary" aria-label="今日任务摘要">
         <h2>今日任务</h2>
         <p>
@@ -335,89 +304,87 @@ function PlanView({ plan, refreshing }: { plan: Plan; refreshing: boolean }) {
         </div>
       )}
       {notice && <p role="status">{notice}</p>}
-      <div className="schedule-weeks" aria-label="按周浏览">
-        {plan.weeks.map((item) => (
-          <details
-            key={item.index}
-            className="schedule-week"
-            open={item.index === week?.index && !weekCollapsed}
-          >
-            <summary
-              onClick={(event) => {
-                event.preventDefault();
-                if (item.index === week?.index) setWeekCollapsed((value) => !value);
-                else selectWeek(item.index);
-              }}
+      <div className="schedule-workspace">
+        <nav className="schedule-weeks" aria-label="按周浏览">
+          {plan.weeks.map((item) => (
+            <button
+              key={item.index}
+              className="schedule-week-button"
+              aria-current={item.index === week?.index ? 'date' : undefined}
+              onClick={() => selectWeek(item.index)}
             >
+              <strong>第 {item.index} 周</strong>
               <span>
-                第 {item.index} 周 · {item.startDate} 至 {item.endDate}
+                {item.startDate} 至 {item.endDate}
               </span>
-              <span>
+              <small>
                 {item.startDate <= today && today <= item.endDate
                   ? '本周'
                   : item.endDate < today
                     ? '已过去'
                     : '未来'}{' '}
                 · {item.percent}%
-              </span>
-            </summary>
-            {item.index === week?.index && !weekCollapsed && (
-              <>
-                {!days.length ? (
-                  <State empty="这一周暂无每日安排。" />
-                ) : (
-                  <>
-                    {past.length > 0 && (
-                      <section className="schedule-past">
-                        <Button
-                          variant="secondary"
-                          aria-expanded={expanded}
-                          onClick={() => setExpanded((value) => !value)}
-                        >
-                          已过去 {past.length} 天 · {expanded ? '收起' : '展开'}
-                        </Button>
-                        <p>本计划逾期未完成约 {durationLabel(plan.overdueUncompletedMinutes)}</p>
-                      </section>
-                    )}
-                    <div className="schedule-days">
-                      {days
-                        .filter(
-                          (day) =>
-                            expanded ||
-                            day.day >= today ||
-                            day.segments.some(
-                              (segment) =>
-                                !plan.tasks.find((task) => task.id === segment.taskId)?.completed,
-                            ),
-                        )
-                        .map((day) => (
-                          <section
-                            key={day.day}
-                            ref={day.day === today ? todayElement : undefined}
-                            tabIndex={day.day === today ? -1 : undefined}
-                            className={`schedule-day ${day.day === today ? 'schedule-today' : ''} ${day.day < today && day.segments.some((segment) => !plan.tasks.find((task) => task.id === segment.taskId)?.completed) ? 'schedule-overdue-day' : ''}`}
-                            data-state={completion.isError ? 'error' : undefined}
-                            aria-busy={busy || undefined}
-                            aria-label={
-                              day.day === today ? '今天的安排' : `${dayLabel(day.day)}的安排`
-                            }
-                          >
-                            <DayCard
-                              day={day}
-                              plan={plan}
-                              today={day.day === today}
-                              busy={busy}
-                              save={save}
-                            />
-                          </section>
-                        ))}
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-          </details>
-        ))}
+              </small>
+            </button>
+          ))}
+        </nav>
+        <section className="schedule-agenda" aria-label="本周每日安排">
+          <div className="section-title">
+            <h2>第 {week?.index} 周安排</h2>
+            <span>
+              {week?.startDate} — {week?.endDate}
+            </span>
+          </div>
+          {!days.length ? (
+            <State empty="这一周暂无每日安排。" />
+          ) : (
+            <>
+              {past.length > 0 && (
+                <section className="schedule-past">
+                  <Button
+                    variant="secondary"
+                    aria-expanded={expanded}
+                    onClick={() => setExpanded((value) => !value)}
+                  >
+                    已过去 {past.length} 天 · {expanded ? '收起' : '展开'}
+                  </Button>
+                  <p>本计划逾期未完成约 {durationLabel(plan.overdueUncompletedMinutes)}</p>
+                </section>
+              )}
+              <div className="schedule-days">
+                {days
+                  .filter(
+                    (day) =>
+                      expanded ||
+                      day.day >= today ||
+                      day.segments.some(
+                        (segment) =>
+                          !plan.tasks.find((task) => task.id === segment.taskId)?.completed,
+                      ),
+                  )
+                  .map((day) => (
+                    <section
+                      key={day.day}
+                      ref={day.day === today ? todayElement : undefined}
+                      tabIndex={day.day === today ? -1 : undefined}
+                      className={`schedule-day ${day.day === today ? 'schedule-today' : ''} ${day.day < today && day.segments.some((segment) => !plan.tasks.find((task) => task.id === segment.taskId)?.completed) ? 'schedule-overdue-day' : ''}`}
+                      data-state={completion.isError ? 'error' : undefined}
+                      aria-busy={busy || undefined}
+                      aria-label={day.day === today ? '今天的安排' : `${dayLabel(day.day)}的安排`}
+                    >
+                      <DayCard
+                        day={day}
+                        plan={plan}
+                        today={day.day === today}
+                        busy={busy}
+                        save={save}
+                      />
+                    </section>
+                  ))}
+              </div>
+            </>
+          )}
+        </section>
       </div>
       {(plan.unscheduled.length > 0 || plan.awaitingDate.length > 0) && (
         <section className="card schedule-unplaced">
@@ -437,6 +404,50 @@ function PlanView({ plan, refreshing }: { plan: Plan; refreshing: boolean }) {
           ))}
         </section>
       )}
+      <details className="schedule-summary-details">
+        <summary>计划进度与统计</summary>
+        <section className="card schedule-overview" aria-label="计划概览">
+          <ProgressBar label="计划完成度" value={plan.progress.percent} percentage />
+          <p className="schedule-muted">
+            按预计学习时长统计：已完成 {durationLabel(plan.progress.completedMinutes)} / 共{' '}
+            {durationLabel(plan.progress.totalEstimatedMinutes)}
+          </p>
+          <div className="schedule-metrics">
+            <p>
+              计划学习时长<strong>{durationLabel(plan.progress.totalEstimatedMinutes)}</strong>
+            </p>
+            <p>
+              已完成天数
+              <strong>
+                {plan.completedDayCount} / {plan.dayCount} 天（
+                {plan.dayCount ? Math.round((plan.completedDayCount / plan.dayCount) * 100) : 0}%）
+              </strong>
+            </p>
+          </div>
+          <details className="schedule-course-details">
+            <summary>课程目录完成度</summary>
+            {plan.courseSummaries.length ? (
+              <div className="schedule-course-progress">
+                {plan.courseSummaries.map((course) => (
+                  <ProgressBar
+                    key={course.id}
+                    label={course.name}
+                    value={course.progress.percent}
+                    percentage
+                  />
+                ))}
+              </div>
+            ) : (
+              <>
+                <p>暂无课程统计。</p>
+                <Link className="button button-secondary" to="/zikao/courses">
+                  查看我的科目
+                </Link>
+              </>
+            )}
+          </details>
+        </section>
+      </details>
       <Modal open={settings} title="查看计划设置" onClose={() => setSettings(false)}>
         {settings && <SettingsView plan={plan} />}
       </Modal>

@@ -50,6 +50,7 @@ beforeEach(() => {
     })),
   };
   server.use(
+    http.get('/api/v1/courses/:id/enrollments/:cycle', () => response(null)),
     http.get('/api/v1/exams/cycles', () =>
       response({ items: [cycle], page: 1, size: 100, total: 1 }),
     ),
@@ -104,18 +105,18 @@ async function edit(name = names[0]) {
   await userEvent.click(within(card(name)).getByRole('button', { name: '修改考试时间' }));
   return screen.getByRole('dialog');
 }
-it('六科完整卡片无缴费内容和同页管理链接，实践科入口遵循能力', async () => {
+it('六科书目提供报考记录并遵循能力，实践科入口遵循能力', async () => {
   mount();
   await screen.findByRole('heading', { name: names[0] });
-  expect(document.title).toBe('我的科目 · 学习知途');
+  expect(document.title).toBe('学习书架 · 学习知途');
   expect(screen.getAllByRole('article')).toHaveLength(6);
-  expect(screen.queryByText(/缴费|付款/)).not.toBeInTheDocument();
+  await waitFor(()=>expect(screen.getAllByRole('button',{name:'报考记录'})).toHaveLength(6));
   expect(screen.queryByRole('link', { name: '管理' })).not.toBeInTheDocument();
   const practice = within(card(names[4]));
   expect(practice.queryByRole('link', { name: '章节练习' })).not.toBeInTheDocument();
-  expect(practice.queryByRole('link', { name: '历年试卷' })).not.toBeInTheDocument();
+  expect(practice.queryByRole('link', { name: '真题与成绩' })).not.toBeInTheDocument();
   expect(practice.getByRole('link', { name: '实践手册' })).toBeInTheDocument();
-  expect(practice.getByRole('link', { name: '备注' })).toHaveAttribute(
+  expect(practice.getByRole('link', { name: '课程笔记' })).toHaveAttribute(
     'href',
     '/zikao/course/13171/notes',
   );
@@ -144,11 +145,11 @@ it('主入口使用有效能力，无内容时不伪造课程入口', async () =
   };
   mount();
   await screen.findByRole('heading', { name: names[0] });
-  expect(within(card(names[0])).getByRole('link', { name: '进入课程' })).toHaveAttribute(
+  expect(within(card(names[0])).getByRole('link', { name: '开始学习' })).toHaveAttribute(
     'href',
     '/zikao/course/00023/manual',
   );
-  expect(within(card(names[1])).queryByRole('link', { name: '进入课程' })).not.toBeInTheDocument();
+  expect(within(card(names[1])).queryByRole('link', { name: '开始学习' })).not.toBeInTheDocument();
 });
 it('只修改本科时间，读取最新周期以保留其他安排，重新进入仍显示保存值', async () => {
   const router = mount();
@@ -270,7 +271,7 @@ it('切换周期保留课程链接与返回路径，错误和空数据可恢复'
   await screen.findByRole('heading', { name: names[0] });
   await userEvent.selectOptions(screen.getByLabelText('考试周期'), other.id);
   await screen.findByRole('heading', { name: names[0] });
-  expect(within(card(names[0])).getByRole('link', { name: '进入课程' })).toHaveAttribute(
+  expect(within(card(names[0])).getByRole('link', { name: '开始学习' })).toHaveAttribute(
     'href',
     `/zikao/course/00023/catalog?cycle=${cycleKey(other)}`,
   );
@@ -286,10 +287,10 @@ it('科目加载失败可重试，空周期有清晰说明', async () => {
     ),
   );
   mount();
-  await screen.findByText('科目加载失败，请重新加载。');
+  await screen.findByText('课程加载失败。');
   fail = false;
   await userEvent.click(screen.getByRole('button', { name: '重新加载' }));
-  await screen.findByText('当前周期暂无科目，可切换其他考试周期。');
+  await screen.findByText('本周期暂未开放课程。');
 });
 
 it('保存中重复提交不会重复写入，Escape 不关闭正在保存的弹窗', async () => {

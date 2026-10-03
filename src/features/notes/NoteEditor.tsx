@@ -80,7 +80,7 @@ export function NoteEditor({
   }, [unsaved]);
   const count = Array.from(draft.content).length;
   const reason = !draft.content.trim()
-    ? '请填写备注正文。'
+    ? '请填写笔记正文。'
     : count > 5000
       ? '正文不能超过 5000 字。'
       : !draft.courseId
@@ -118,7 +118,7 @@ export function NoteEditor({
   return (
     <Modal
       open
-      title={discard ? '放弃未保存的内容？' : quick ? '快速记一条' : note ? '编辑备注' : '新建备注'}
+      title={discard ? '放弃未保存的内容？' : quick ? '快速记一条' : note ? '编辑笔记' : '新建笔记'}
       onClose={close}
     >
       {discard ? (
@@ -153,7 +153,7 @@ export function NoteEditor({
           >
             <option value="">请选择课程</option>
             {note && !courses.some((course) => course.id === note.courseId) && (
-              <option value={note.courseId}>当前备注所属课程</option>
+              <option value={note.courseId}>当前笔记所属课程</option>
             )}
             {courses.map((course) => (
               <option value={course.id} key={course.id}>
@@ -163,7 +163,7 @@ export function NoteEditor({
           </select>
           {note && (
             <p id={`${id}-course-reason`} className="notes-help">
-              已有备注的课程不能修改。
+              已有笔记的课程不能修改。
             </p>
           )}
           {!quick && (
@@ -180,7 +180,7 @@ export function NoteEditor({
               />
             </>
           )}
-          <label htmlFor={`${id}-content`}>备注正文</label>
+          <label htmlFor={`${id}-content`}>笔记正文</label>
           <textarea
             ref={textarea}
             id={`${id}-content`}
@@ -197,7 +197,7 @@ export function NoteEditor({
           {error && (
             <p role="alert" className="status-error">
               保存失败：{error}，输入内容已保留。
-              {error.includes('冲突') && '请核对最新备注后再编辑。'}
+              {error.includes('冲突') && '请核对最新笔记后再编辑。'}
             </p>
           )}
           {mutation.isPending && <p role="status">正在保存，请稍候再关闭。</p>}
@@ -216,10 +216,10 @@ export function NoteEditor({
               disabled={!!reason}
               disabledReason={reason}
               loading={mutation.isPending}
-              loadingLabel="正在保存备注"
+              loadingLabel="正在保存笔记"
               error={error || undefined}
             >
-              {error ? '重试保存' : '保存备注'}
+              {error ? '重试保存' : '保存笔记'}
             </Button>
           </div>
         </form>

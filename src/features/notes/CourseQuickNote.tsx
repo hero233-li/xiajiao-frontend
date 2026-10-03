@@ -19,5 +19,11 @@ export default function CourseQuickNote({ code }: { code: string }) {
     window.addEventListener('practice:note-request', open);
     return () => window.removeEventListener('practice:note-request', open);
   }, [location.pathname]);
-  return <QuickNote defaultCourseCode={code} cycleId={search.get('cycleId') ?? undefined} openRequest={request} />;
+  return (
+    <QuickNote
+      defaultCourseCode={code}
+      cycleId={search.get('cycleId') ?? undefined}
+      openRequest={request}
+    />
+  );
 }

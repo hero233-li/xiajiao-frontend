@@ -1,38 +1,56 @@
 import { useEffect } from 'react';
-import { BookOpen } from 'lucide-react';
-import { Card } from '../components/Card';
-import { PageContainer } from '../components/PageContainer';
+import { BookOpen, Check } from 'lucide-react';
 import { LoginForm } from '../features/auth/LoginForm';
 import '../features/auth/login.css';
-
 export function Component() {
   useEffect(() => {
-    const previous = document.title;
     document.title = '登录 · 学习知途';
-    return () => {
-      document.title = previous;
-    };
   }, []);
-
   return (
     <main className="login-page" aria-labelledby="login-title">
-      <PageContainer className="login-container">
-        <Card className="login-panel">
-          <div className="login-brand">
-            <span className="login-brand-icon">
-              <BookOpen size={24} aria-hidden="true" />
-            </span>
-            <span>学习知途</span>
-          </div>
-          <header className="login-heading">
-            <h1 id="login-title">登录学习知途</h1>
-            <p className="login-intro">登录后继续备考</p>
-            <p className="secondary">查看学习进度、练习题目，记录每一步收获。</p>
-          </header>
-          <LoginForm />
-          <p className="login-footer secondary">登录成功后，将返回你刚才访问的页面。</p>
-        </Card>
-      </PageContainer>
+      <div className="login-story">
+        <div className="desk-brand">
+          <span className="brand-symbol">途</span>
+          <span>
+            学习知途<small>自考学习工作台</small>
+          </span>
+        </div>
+        <div>
+          <p className="eyebrow">LEARN WITH INTENTION</p>
+          <h2>
+            知识有来路。
+            <br />
+            努力有去处。
+          </h2>
+          <p>
+            让今天的任务、读过的内容和练过的题，
+            <br />
+            连成一条清晰的学习路径。
+          </p>
+          <ul>
+            <li>
+              <Check size={17} /> 从今日任务接着学习
+            </li>
+            <li>
+              <Check size={17} /> 阅读、练习与检测有序衔接
+            </li>
+            <li>
+              <Check size={17} /> 每一份进度与笔记妥善记录
+            </li>
+          </ul>
+        </div>
+        <p className="login-story-foot">学习知途 / 为每一天的学习而设计</p>
+      </div>
+      <section className="login-panel">
+        <BookOpen size={28} aria-hidden="true" />
+        <header className="login-heading">
+          <p className="eyebrow">欢迎回来</p>
+          <h1 id="login-title">登录学习知途</h1>
+          <p className="secondary">登录后，回到你的学习进度。</p>
+        </header>
+        <LoginForm />
+        <p className="login-footer secondary">登录成功后将返回刚才访问的页面。</p>
+      </section>
     </main>
   );
 }

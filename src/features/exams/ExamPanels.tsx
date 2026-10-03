@@ -54,9 +54,9 @@ export function UnlockSteps({ unlock: _unlock, practice }: { unlock: Unlock; pra
       <section className="exam-next">
         <Info size={20} aria-hidden="true" />
         <div>
-          <p>章节练习 → 章节检测（≥90 分）→ 模拟卷（≥80 分）→ 解锁真题。</p>
+          <p>章节练习 → 通过章节检测 → 通过模拟卷 → 解锁真题。</p>
           <p className="secondary">
-            完成章节练习后，可查看检测资格。
+            完成章节练习后，可查看检测资格；各次检测的通过线以试卷规则为准。
           </p>
         </div>
         <Link className="button button-primary" to={practice}>
@@ -97,7 +97,7 @@ export function PredictionPanel({ prediction }: { prediction: Prediction }) {
         <summary>预测怎么算？</summary>
         <p>
           至少 3 套，取近 60 天内最多最近 5
-          套，越近权重越高。只有完整作答、闭卷、未超时、做题前未看过本卷答案的记录才可能纳入。每套卷只取首条有效记录；首条有效记录过期后，不用后续记录替换。具体纳入与排除结果由后端计算。
+          套，越近权重越高。只有完整作答、闭卷、未超时、做题前未看过本卷答案的记录才可能纳入。每套卷只取首条有效记录；首条有效记录过期后，不用后续记录替换。每条记录会说明是否纳入及排除原因。
         </p>
       </details>
     </section>

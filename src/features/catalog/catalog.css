@@ -1,330 +1,207 @@
-.course-frame-catalog .course-frame-head h1 {
-  font-size: 26px;
-  margin: 6px 0;
-}
-.course-frame-catalog .course-frame-head {
-  padding-block: 8px;
-}
-.course-frame-catalog .course-frame-head > p {
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-.catalog-page {
-  --catalog-anchor-offset: calc(var(--course-head-height, 0px) + 16px);
-}
-.catalog-toolbar {
+.reading-workspace {
   display: grid;
-  grid-template-columns: minmax(200px, 0.8fr) minmax(0, 1.2fr);
-  gap: 24px;
-  padding-block: 16px 24px;
-  border-bottom: 1px solid var(--color-line);
-  margin-bottom: 24px;
-}
-.catalog-progress-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-.catalog-progress-label h3 {
-  font-size: 16px;
-  margin: 0;
-}
-.catalog-progress-label strong {
-  color: var(--color-primary);
-}
-.catalog-progress > p {
-  margin-block: 8px;
-}
-.catalog-continue {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-.catalog-continue > div {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.catalog-continue > span {
-  flex-shrink: 0;
-}
-.catalog-continue p {
-  margin: 0 0 6px;
-}
-.catalog-caption {
-  color: var(--color-secondary);
-  font-size: 14px;
-}
-.catalog-layout {
-  display: grid;
-  grid-template-columns: 248px minmax(0, 1fr);
-  gap: 24px;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 32px;
   align-items: start;
 }
-.catalog-nav {
+.reading-index {
+  max-height: calc(100dvh - 80px);
+  overflow: auto;
   position: sticky;
-  top: var(--catalog-anchor-offset);
-  max-height: calc(100dvh - var(--catalog-anchor-offset) - 16px);
-  overflow-y: auto;
-  padding: 8px;
+  top: 24px;
+  padding-right: 18px;
   border-right: 1px solid var(--color-line);
 }
-.catalog-nav h3 {
+.reading-index h3 {
   margin: 0;
-  padding: 8px;
-  font-size: 18px;
-}
-.catalog-nav a {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 12px 8px;
-  min-height: 44px;
-  text-decoration: none;
-  border-radius: var(--radius-normal);
-}
-.catalog-nav a span {
-  overflow-wrap: anywhere;
-}
-.catalog-nav a svg {
-  flex-shrink: 0;
-  margin-top: 3px;
-}
-.catalog-nav a:hover,
-.catalog-nav a[aria-current] {
-  background: var(--color-primary-soft);
-}
-.catalog-nav a[aria-current] {
-  font-weight: 700;
-  box-shadow: inset 4px 0 var(--color-primary);
-}
-.catalog-nav a:active {
-  background: var(--color-line);
-}
-.catalog-main {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-width: 0;
-}
-.catalog-select,
-.catalog-selected-chapter {
-  display: none;
-}
-.catalog-meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  color: var(--color-secondary);
   font-size: 14px;
 }
-.catalog-chapter,
-.catalog-item {
-  scroll-margin-top: var(--catalog-anchor-offset);
-}
-.catalog-chapter {
-  border-bottom: 1px solid var(--color-line);
-  padding-bottom: 20px;
-}
-.catalog-chapter:focus-visible,
-.catalog-item:focus-visible {
-  outline: none;
-}
-.catalog-chapter-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-.catalog-chapter-heading h3 {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-}
-.catalog-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  min-height: 44px;
-  padding: 8px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-normal);
-  background: transparent;
-  color: var(--color-ink);
-  text-align: left;
-}
-.catalog-toggle > svg {
-  flex-shrink: 0;
-}
-.catalog-toggle .catalog-chapter-title {
-  flex: 1;
-  min-width: 0;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  font-size: 18px;
-}
-.catalog-toggle .catalog-meta {
-  flex-shrink: 0;
-}
-.catalog-toggle:hover {
-  background: var(--color-primary-soft);
-}
-.catalog-toggle:active {
-  background: var(--color-line);
-}
-.catalog-chapter[data-state='error'] .catalog-toggle {
-  border-color: var(--color-danger);
-}
-.catalog-saved {
-  display: inline-flex;
-  gap: 4px;
-  color: var(--color-success);
-  font-size: 14px;
-  padding: 0 8px;
-}
-.catalog-items {
-  list-style: none;
-  padding: 0;
-  margin: 8px 0;
-}
-.catalog-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 16px 8px;
-  border-top: 1px solid var(--color-line);
-}
-.catalog-check {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 4px;
-  min-width: 56px;
-  min-height: 44px;
-  padding-top: 4px;
-  cursor: pointer;
-}
-.catalog-check-caption {
+.reading-count {
   font-size: 12px;
   color: var(--color-secondary);
+  margin: 10px 0 20px;
 }
-.catalog-check input {
-  width: 24px;
-  min-height: 24px;
-  height: 24px;
-  padding: 0;
-  accent-color: var(--color-primary);
+.reading-index details {
+  border-top: 1px solid var(--color-line);
+  padding: 10px 0;
+}
+.reading-index summary {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
   cursor: pointer;
+  font-size: 13px;
+  padding: 8px 0;
 }
-.catalog-item-complete input {
-  accent-color: var(--color-success);
+.reading-index summary > span:first-child {
+  font:
+    13px Georgia,
+    serif;
+  color: #8a9685;
 }
-.catalog-check input:disabled {
-  cursor: progress;
-}
-.catalog-item-content {
+.reading-index summary .math-text {
   flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
 }
-.catalog-item-content h4 {
-  font-size: 16px;
-  margin: 0 0 6px;
+.reading-index summary small {
+  font-size: 10px;
+  white-space: nowrap;
 }
-.catalog-item-content .catalog-caption {
-  margin-block: 4px;
+.reading-index ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
-.catalog-resource-type {
-  display: inline-block;
-  border-radius: 4px;
-  background: var(--color-primary-soft);
-  padding: 2px 8px;
-  font-size: 14px;
-  margin: 0 0 6px;
-}
-.catalog-resource-action {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  min-height: 44px;
-  width: fit-content;
-  margin-top: 4px;
-}
-.catalog-resource-action:hover {
-  background: var(--color-primary-soft);
-}
-.catalog-resource-download {
-  margin-top: 8px;
-}
-.catalog-item-complete .catalog-meta {
-  color: var(--color-success);
-}
-.catalog-bulk {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
-}
-.catalog-error {
+.reading-index li button {
+  border: 0;
+  background: transparent;
+  width: 100%;
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  color: var(--color-danger);
-  margin: 8px;
+  gap: 10px;
+  text-align: left;
+  padding: 10px 8px;
+  font-size: 12px;
+  color: var(--color-secondary);
+  border-radius: 3px;
 }
-.catalog-error svg {
+.reading-index li button[aria-current] {
+  background: #e6eddf;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.reading-item-state {
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 18px;
   flex-shrink: 0;
 }
-@media (max-width: 1023px) {
-  .catalog-layout {
-    grid-template-columns: minmax(0, 1fr);
+.reading-item-state > span {
+  width: 4px;
+  height: 4px;
+  background: #bdc4b8;
+  border-radius: 50%;
+}
+.reading-index details > .button {
+  font-size: 11px;
+  min-height: 36px;
+  margin-left: 10px;
+}
+.reading-sheet {
+  min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  padding: 36px 40px;
+  min-height: 520px;
+}
+.reading-sheet h2 {
+  font-family: var(--font-reading);
+  font-size: 28px;
+  line-height: 1.6;
+  margin-top: 12px;
+}
+.reading-chapter {
+  font-size: 13px;
+  color: var(--color-secondary);
+  margin: 24px 0 6px;
+}
+.reading-meta {
+  font-size: 12px;
+  color: var(--color-secondary);
+  border-bottom: 1px solid var(--color-line);
+  padding-bottom: 24px;
+}
+.reader-resource {
+  padding: 32px 0 40px;
+  font-size: 15px;
+  line-height: 1.8;
+  min-height: 180px;
+}
+.reader-resource > svg {
+  color: #81947b;
+  margin-bottom: 16px;
+}
+.reader-resource .secondary {
+  font-size: 13px;
+}
+.reading-related {
+  display: grid;
+  gap: 12px;
+  padding: 20px 0;
+  border-top: 1px solid var(--color-line);
+  font-size: 13px;
+}
+.reading-related a {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.reading-footer {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+.reading-footer > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.mobile-directory {
+  display: none;
+}
+@media (max-width: 760px) {
+  .reading-workspace {
+    display: block;
   }
-  .catalog-nav {
+  .reading-index {
+    display: none;
+    position: static;
+    max-height: none;
+    border: 0;
+    padding: 0;
+  }
+  .reading-sheet {
+    padding: 24px 20px;
+    min-height: 400px;
+  }
+  .reading-sheet h2 {
+    font-size: 24px;
+  }
+  .mobile-directory {
+    display: inline-flex;
+    margin-bottom: 20px;
+  }
+  .reading-workspace[data-show-list='true'] .reading-index {
+    display: block;
+  }
+  .reading-workspace[data-show-list='true'] .reading-sheet > *:not(.mobile-directory) {
     display: none;
   }
-  .catalog-select {
-    display: block;
+  .reading-workspace[data-show-list='true'] .reading-sheet {
+    padding: 16px 0;
+    min-height: 0;
+    border: 0;
+    background: transparent;
   }
-  .catalog-selected-chapter {
-    display: block;
-    overflow-wrap: anywhere;
-    margin: -12px 0 0;
+  .reading-index li button {
     font-size: 14px;
-    color: var(--color-secondary);
+    padding: 12px;
   }
-}
-@media (max-width: 767px) {
-  .catalog-toolbar {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
+  .reading-index summary {
+    font-size: 14px;
   }
-  .catalog-continue {
-    align-items: flex-start;
-    flex-wrap: wrap;
+  .reading-footer {
+    display: block;
   }
-  .catalog-main {
-    gap: 16px;
+  .reading-footer > .button {
+    width: 100%;
+    margin-bottom: 12px;
   }
-  .catalog-item {
-    gap: 8px;
-    padding-inline: 0;
+  .reading-footer > div {
+    justify-content: center;
   }
-  .catalog-bulk {
-    justify-content: flex-start;
-  }
-  .catalog-toggle {
-    flex-wrap: wrap;
-  }
-  .catalog-toggle .catalog-chapter-title {
-    flex-basis: calc(100% - 40px);
-  }
-}
-.catalog-main input,
-.catalog-main button,
-.catalog-main a {
-  scroll-margin-top: var(--catalog-anchor-offset);
 }

@@ -177,40 +177,7 @@ export default function ManualReader({ courseId }: { courseId: string }) {
     <div className="manual-layout">
       <nav className="manual-toc" aria-label="手册目录">
         <h2>手册目录</h2>
-        {index.headings.map((heading) => (
-          <a
-            href={`#${encodeURIComponent(heading.id)}`}
-            key={heading.id}
-            title={heading.text}
-            aria-current={active === heading.id ? 'location' : undefined}
-            style={{ paddingInlineStart: `${8 + Math.min((heading.depth ?? 1) - 1, 3) * 8}px` }}
-            onClick={(event) => {
-              event.preventDefault();
-              go(heading.id);
-            }}
-          >
-            {heading.text}
-          </a>
-        ))}
-      </nav>
-      <div className="manual-main">
-        <label className="manual-mobile-toc">
-          手册目录
-          <select
-            value={index.headings.some((heading) => heading.id === active) ? active : ''}
-            onChange={(event) => go(event.target.value)}
-          >
-            <option value="" disabled>
-              选择阅读章节
-            </option>
-            {index.headings.map((heading) => (
-              <option key={heading.id} value={heading.id}>
-                {heading.text}
-              </option>
-            ))}
-          </select>
-        </label>
-        <section className="card manual-search" aria-label="手册内搜索">
+        <section className="manual-search" aria-label="手册内搜索">
           <label htmlFor="manual-search">
             <Search size={18} aria-hidden="true" />
             搜索手册
@@ -250,6 +217,39 @@ export default function ManualReader({ courseId }: { courseId: string }) {
             </>
           )}
         </section>
+        {index.headings.map((heading) => (
+          <a
+            href={`#${encodeURIComponent(heading.id)}`}
+            key={heading.id}
+            title={heading.text}
+            aria-current={active === heading.id ? 'location' : undefined}
+            style={{ paddingInlineStart: `${8 + Math.min((heading.depth ?? 1) - 1, 3) * 8}px` }}
+            onClick={(event) => {
+              event.preventDefault();
+              go(heading.id);
+            }}
+          >
+            {heading.text}
+          </a>
+        ))}
+      </nav>
+      <div className="manual-main">
+        <label className="manual-mobile-toc">
+          手册目录
+          <select
+            value={index.headings.some((heading) => heading.id === active) ? active : ''}
+            onChange={(event) => go(event.target.value)}
+          >
+            <option value="" disabled>
+              选择阅读章节
+            </option>
+            {index.headings.map((heading) => (
+              <option key={heading.id} value={heading.id}>
+                {heading.text}
+              </option>
+            ))}
+          </select>
+        </label>
         {query.isError && (
           <section className="card" role="alert" data-state="error">
             <p>手册刷新失败，正在显示上次加载的内容。</p>
@@ -261,7 +261,7 @@ export default function ManualReader({ courseId }: { courseId: string }) {
         <div className="manual-body">
           {manual.sections.map((section) => (
             <section
-              className="card manual-section"
+              className="manual-section"
               key={section.chapterId}
               id={`manual-${section.chapterId}`}
               tabIndex={-1}

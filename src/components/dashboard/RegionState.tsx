@@ -5,7 +5,7 @@ export function RegionState({
   message,
   retry,
   href = '/zikao/courses',
-  action = '查看我的科目',
+  action = '查看学习书架',
 }: {
   kind: 'loading' | 'empty' | 'error';
   message: string;
@@ -16,21 +16,25 @@ export function RegionState({
   const Icon = kind === 'loading' ? LoaderCircle : kind === 'error' ? AlertCircle : Inbox;
   return (
     <div
-      className={`ov-state ov-state-${kind}`}
+      className={`desk-state desk-state-${kind}`}
       role={kind === 'error' ? 'alert' : 'status'}
       aria-live="polite"
     >
-      <Icon aria-hidden="true" className={kind === 'loading' ? 'ov-spin' : ''} />
-      <p>{message}</p>
-      {kind === 'error' ? (
-        <button className="ov-button ov-secondary" onClick={retry}>
-          重新加载
-        </button>
-      ) : kind === 'empty' ? (
-        <Link className="ov-button ov-secondary" to={href}>
-          {action}
-        </Link>
-      ) : null}
+      <Icon size={24} aria-hidden="true" className={kind === 'loading' ? 'spin' : ''} />
+      <div>
+        <p>{message}</p>
+        {kind === 'error' ? (
+          <button className="button button-secondary" onClick={retry}>
+            重新加载
+          </button>
+        ) : kind === 'empty' ? (
+          <Link className="button button-secondary" to={href}>
+            {action}
+          </Link>
+        ) : (
+          <small>内容就绪后会自动显示。</small>
+        )}
+      </div>
     </div>
   );
 }

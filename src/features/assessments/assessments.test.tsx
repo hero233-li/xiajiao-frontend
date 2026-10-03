@@ -28,17 +28,37 @@ function mount(path = `/zikao/course/00023/tests/session?cycleId=${cycle}`) {
   return render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[path]}>
-        <CycleProvider><Routes>
-          <Route path="/zikao/course/:code/tests/:testId" element={<Component />} />
-          <Route path="/zikao/course/:code/tests/:testId/result" element={<Component />} />
-        </Routes></CycleProvider>
+        <CycleProvider>
+          <Routes>
+            <Route path="/zikao/course/:code/tests/:testId" element={<Component />} />
+            <Route path="/zikao/course/:code/tests/:testId/result" element={<Component />} />
+          </Routes>
+        </CycleProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   );
 }
 beforeEach(() => {
   localStorage.clear();
-  server.use(http.get('/api/v1/exams/cycles', () => envelope({items:[{id:cycle,name:'测试周期',startDate:'2026-10-01',endDate:'2099-10-31',timezone:'Asia/Shanghai',courses:[]}],page:1,size:100,total:1})));
+  server.use(
+    http.get('/api/v1/exams/cycles', () =>
+      envelope({
+        items: [
+          {
+            id: cycle,
+            name: '测试周期',
+            startDate: '2026-10-01',
+            endDate: '2099-10-31',
+            timezone: 'Asia/Shanghai',
+            courses: [],
+          },
+        ],
+        page: 1,
+        size: 100,
+        total: 1,
+      }),
+    ),
+  );
   resultReads = 0;
   submissions = 0;
   saved = 0;
@@ -213,10 +233,13 @@ describe('检测作答与结果', () => {
     await user.click(screen.getByRole('button', { name: '重新加载' }));
     await screen.findByText('第 1 题 · 单选');
   });
-  it('开始前缺少规则时禁止创建计时会话', async () => {
-    mount(`/zikao/course/00023/tests/new?cycleId=${cycle}&kind=MOCK`);
-    await screen.findByText('模拟卷 · 开始前确认');
-    expect(screen.getByRole('button', { name: '开始作答' })).toBeDisabled();
+  it('章节检测新入口要求先核对章节资格，不擅自创建会话', async () => {
+    mount(`/zikao/course/00023/tests/new?cycleId=${cycle}&kind=CHAPTER`);
+    expect(await screen.findByRole('link', { name: '选择检测章节' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('mode=detect'),
+    );
+    expect(submissions).toBe(0);
   });
   it('已提交恢复结果；按后端 passed 展示而不按分数重判', async () => {
     session.status = 'SUBMITTED';
@@ -243,8 +266,9 @@ describe('检测作答与结果', () => {
       ),
     );
     await user.click(screen.getByRole('button', { name: '重新加载' }));
-    await screen.findByText('考点掌握情况');
-    expect(screen.getByRole('button', { name: '去练习薄弱考点' })).toBeDisabled();
+    await screen.findByText('题目回顾');
+    expect(screen.queryByRole('button', { name: '去练习薄弱考点' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '继续章节练习' })).toBeVisible();
   });
   it('界面倒计时归零时先同步服务端，未到期不自行判定交卷', async () => {
     session.serverTime = session.deadlineAt;

@@ -32,10 +32,14 @@ export function QuickNote(props: QuickNoteProps) {
   }, [saved]);
   return (
     <>
-      <Button className="notes-floating" aria-label="快速记一条" onClick={() => {
-        setContent(props.initialContent);
-        setOpen(true);
-      }}>
+      <Button
+        className="notes-floating"
+        aria-label="快速记一条"
+        onClick={() => {
+          setContent(props.initialContent);
+          setOpen(true);
+        }}
+      >
         <Plus aria-hidden="true" size={20} />
         快速记一条
       </Button>
@@ -53,7 +57,7 @@ export function QuickNote(props: QuickNoteProps) {
       {saved && (
         <div className="notes-quick-toast notes-success" role="status">
           <Check size={20} aria-hidden="true" />
-          备注已保存
+          笔记已保存
           <Button variant="ghost" aria-label="关闭保存提示" onClick={() => setSaved(false)}>
             关闭
           </Button>
@@ -96,7 +100,10 @@ function QuickPanel({
         )}
       </Modal>
     );
-  const preferred = defaultCourseId ?? courses.data.find(course => course.code === defaultCourseCode)?.id ?? recentNoteCourse();
+  const preferred =
+    defaultCourseId ??
+    courses.data.find((course) => course.code === defaultCourseCode)?.id ??
+    recentNoteCourse();
   return (
     <NoteEditor
       quick

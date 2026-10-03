@@ -81,6 +81,7 @@ function catalog(): Catalog {
   };
 }
 const server = setupServer(
+  http.get('/api/v1/courses/:id/learning-position', () => envelope(null)),
   http.get('/api/v1/catalog/courses/course-a/manual', () => envelope(manual)),
   http.get('/api/v1/catalog/courses/course-a', () => envelope(catalog())),
   http.put('/api/v1/catalog/courses/course-a/items/item-a/completion', async ({ request }) => {
@@ -245,11 +246,10 @@ describe('实践手册', () => {
     expect(lastWrite?.expectedRevision).toBe(2);
     expect(client.getQueryState(['course-progress', 'course-a'])?.isInvalidated).toBe(true);
     await userEvent.click(screen.getByRole('link', { name: '前往目录' }));
-    const catalogCheckbox = await screen.findByRole('checkbox', { name: '完成变量练习完成状态' });
-    expect(catalogCheckbox).toBeChecked();
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
-    await userEvent.click(catalogCheckbox);
-    await screen.findByText('已保存');
+    const cancel = await screen.findByRole('button', { name: '取消完成' });
+    expect(screen.getByText(/预计.*已完成/)).toBeVisible();
+    await userEvent.click(cancel);
+    await screen.findByText('已取消完成标记。');
     await userEvent.click(screen.getByRole('link', { name: '返回手册' }));
     await waitFor(() =>
       expect(screen.getByRole('checkbox', { name: '完成变量练习完成状态' })).not.toBeChecked(),

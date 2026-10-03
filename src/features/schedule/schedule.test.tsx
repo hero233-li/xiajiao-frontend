@@ -284,8 +284,10 @@ describe('学习安排', () => {
   it('初始概览可见，今天与逾期突出；跳到今天由用户触发', async () => {
     mount();
     const today = await ready();
-    expect(screen.getAllByRole('heading', { name: '学习安排' })).toHaveLength(1);
-    expect(screen.getByText(/第 1 周 ·/).closest('details')).toHaveAttribute('open');
+    expect(screen.getAllByRole('heading', { name: '把时间留给重点。' })).toHaveLength(1);
+    expect(screen.getByRole('button', { name: /第 1 周/ })).toHaveAttribute('aria-current', 'date');
+    expect(screen.getByText('1 / 35 天（3%）')).not.toBeVisible();
+    await userEvent.click(screen.getByText('计划进度与统计'));
     expect(screen.getByText('1 / 35 天（3%）')).toBeVisible();
     expect(HTMLElement.prototype.scrollIntoView).not.toHaveBeenCalled();
     await userEvent.setup().click(screen.getByRole('button', { name: '跳到今天' }));
@@ -306,7 +308,7 @@ describe('学习安排', () => {
     const user = userEvent.setup();
     const view = mount();
     await ready();
-    await user.click(screen.getByText(/第 5 周 ·/));
+    await user.click(screen.getByRole('button', { name: /第 5 周/ }));
     expect(view.router.state.location.search).toContain('week=5');
     const link = await screen.findByRole('link', { name: '进入历年试卷' });
     expect(link).toHaveAttribute('href', '/zikao/course/00023/exams');
@@ -314,7 +316,10 @@ describe('学习安排', () => {
     expect(await screen.findByRole('heading', { name: '历年试卷' })).toBeVisible();
     view.unmount();
     mount('/zikao/schedule?cycleId=cycle&week=5');
-    expect((await screen.findByText(/第 5 周 ·/)).closest('details')).toHaveAttribute('open');
+    expect(await screen.findByRole('button', { name: /第 5 周/ })).toHaveAttribute(
+      'aria-current',
+      'date',
+    );
   });
   it('从未来周跳回今天，且短任务以分钟显示', async () => {
     plan.days[4].segments[0].minutes = 2;
@@ -326,7 +331,10 @@ describe('学习安排', () => {
     const today = await ready();
     expect(within(today).getByText('2 分钟')).toBeVisible();
     expect(today).toHaveFocus();
-    expect(screen.getByText(/第 5 周 ·/).closest('details')).not.toHaveAttribute('open');
+    expect(screen.getByRole('button', { name: /第 5 周/ })).not.toHaveAttribute(
+      'aria-current',
+      'date',
+    );
   });
   it('链接指定其他周期的计划时不显示任务和修改入口', async () => {
     plan.config.cycleId = 'another-cycle';

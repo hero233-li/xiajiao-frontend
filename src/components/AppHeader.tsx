@@ -1,9 +1,71 @@
+import { useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { Link, NavLink } from '../features/cycle/navigation';
-import { BookOpen, LogOut } from 'lucide-react';
+import { Link } from '../features/cycle/navigation';
+import { BookOpen, CalendarCheck, PenLine, ScanLine, LogOut, Library } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from './Button';
+const destinations = [
+  ['/zikao', '今日', BookOpen],
+  ['/zikao/courses', '学习', Library],
+  ['/zikao/training', '练习与检测', ScanLine],
+  ['/zikao/schedule', '计划', CalendarCheck],
+  ['/zikao/notes', '笔记', PenLine],
+] as const;
 export function AppHeader() {
-  const auth = useAuth(); const [busy,setBusy] = useState(false);
-  return <header className="app-header"><div className="app-header-inner"><Link to="/" className="brand"><BookOpen aria-hidden="true" size={24} />学习知途</Link><nav className="header-nav" aria-label="主导航">{import.meta.env.DEV && <><NavLink to="/health">健康检查</NavLink><NavLink to="/components">公共组件</NavLink></>}<NavLink end to="/zikao">备考总览</NavLink><NavLink to="/zikao/courses">我的科目</NavLink><NavLink to="/zikao/schedule">学习安排</NavLink><NavLink to="/zikao/notes">学习备注</NavLink>{auth.user?.role === 'ADMIN' && <NavLink to="/admin">管理入口</NavLink>}</nav><details className="account-menu"><summary>{auth.user?.username ?? '我的账户'}</summary><div><Button variant="ghost" loading={busy} loadingLabel="正在退出" onClick={() => { setBusy(true); void auth.signOut().catch(() => undefined).finally(() => setBusy(false)); }}><LogOut aria-hidden="true" size={20} />退出</Button></div></details></div></header>;
+  const location = useLocation();
+  const active = (to: string) =>
+    to === '/zikao/courses'
+      ? location.pathname === to ||
+        /\/course\/[^/]+\/(catalog|knowledge|manual)/.test(location.pathname)
+      : to === '/zikao/training'
+        ? location.pathname === to ||
+          /\/course\/[^/]+\/(practice|tests|exams)/.test(location.pathname)
+        : to === '/zikao/notes'
+          ? location.pathname.endsWith('/notes')
+          : location.pathname === to;
+  const auth = useAuth();
+  const [busy, setBusy] = useState(false);
+  return (
+    <header className="desk-header">
+      <div className="desk-header-inner">
+        <Link to="/zikao" className="desk-brand">
+          <span className="brand-symbol">途</span>
+          <span>
+            学习知途<small>把每一步，学扎实</small>
+          </span>
+        </Link>
+        <nav className="desk-nav" aria-label="主导航">
+          {destinations.map(([to, label, Icon]) => (
+            <Link key={to} to={to} aria-current={active(to) ? 'page' : undefined}>
+              <Icon size={17} aria-hidden="true" />
+              <span>{label}</span>
+            </Link>
+          ))}
+        </nav>
+        <details className="desk-account">
+          <summary>
+            <span className="account-avatar">{auth.user?.username?.slice(0, 1).toUpperCase()}</span>
+            <span>{auth.user?.username}</span>
+          </summary>
+          <div>
+            <p className="secondary">当前账户</p>
+            <Button
+              variant="ghost"
+              loading={busy}
+              onClick={() => {
+                setBusy(true);
+                void auth
+                  .signOut()
+                  .catch(() => undefined)
+                  .finally(() => setBusy(false));
+              }}
+            >
+              <LogOut size={16} aria-hidden="true" />
+              退出登录
+            </Button>
+          </div>
+        </details>
+      </div>
+    </header>
+  );
 }

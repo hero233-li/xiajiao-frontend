@@ -59,6 +59,7 @@ describe('历年试卷与成绩', () => {
     mount();
     expect(screen.getByText('正在加载解锁信息…')).toBeInTheDocument();
     expect(await screen.findByText('暂无刷题成绩，完成试卷后可记录成绩。')).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole('button', { name: '趋势与分析' }));
     await userEvent.click(await screen.findByRole('button', { name: '重新加载成绩预测' }));
     expect(await screen.findByText('根据你的练习成绩估算，不代表正式成绩')).toBeInTheDocument();
   });
@@ -73,7 +74,7 @@ describe('历年试卷与成绩', () => {
     expect(screen.queryByRole('button', { name: '下载题目' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '记录成绩' })).not.toBeInTheDocument();
     expect(screen.queryByText(/练习次数/)).not.toBeInTheDocument();
-    expect(screen.queryByRole('navigation', {name:'真题解锁步骤'})).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: '真题解锁步骤' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '手动跳过' })).not.toBeInTheDocument();
   });
   it('窗口内二次确认跳过，成功后可撤销', async () => {
@@ -225,6 +226,7 @@ describe('历年试卷与成绩', () => {
       }),
     );
     mount();
+    await userEvent.click(await screen.findByRole('button', { name: '成绩与照片' }));
     await userEvent.click(await screen.findByRole('button', { name: '编辑成绩' }));
     const dialog = screen.getByRole('dialog', { name: '编辑试卷成绩' });
     expect(within(dialog).getByRole('combobox')).toBeDisabled();
