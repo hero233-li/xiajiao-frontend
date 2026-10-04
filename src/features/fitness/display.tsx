@@ -127,12 +127,33 @@ export function WeightChart({ days }: { days: Day[] }) {
     </div>
   );
 }
-export function ExerciseList({ rows }: { rows: Exercise[] }) {
+export function ExerciseList({
+  rows,
+  completion,
+}: {
+  rows: Exercise[];
+  completion?: {
+    checked: Set<string>;
+    disabled: boolean;
+    toggle: (exercise: Exercise, completed: boolean) => Promise<void>;
+  };
+}) {
   return rows.length ? (
     <ol className="record-ledger">
       {rows.map((e, i) => (
         <li key={i}>
           <div className="exercise-motion-heading">
+            {completion && (
+              <input
+                type="checkbox"
+                aria-label={`${e.name} 已完成`}
+                checked={completion.checked.has(e.id)}
+                disabled={completion.disabled}
+                onChange={(event) => {
+                  void completion.toggle(e, event.target.checked);
+                }}
+              />
+            )}
             <strong>{e.name}</strong>
             <ExerciseMotion exercise={e} />
           </div>

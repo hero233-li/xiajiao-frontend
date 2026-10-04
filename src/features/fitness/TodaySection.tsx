@@ -1,7 +1,9 @@
+import { MealTracker } from './MealTracker';
+import { TrainingChecklist } from './TrainingChecklist';
 import { Activity, Utensils } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { FitnessWorkspace } from '../../pages/FitnessPage';
-import { ExerciseList, MealList, State, status } from './display';
+import { State, status } from './display';
 import { trainingNames } from './Editor';
 import { QuickRecords } from './QuickRecords';
 export function TodaySection({ workspace: w }: { workspace: FitnessWorkspace }) {
@@ -45,7 +47,7 @@ export function TodaySection({ workspace: w }: { workspace: FitnessWorkspace }) 
             plan.rest ? (
               <p>休息日</p>
             ) : (
-              <ExerciseList rows={plan.exercises} />
+              <TrainingChecklist day={data} rows={plan.exercises} />
             )
           ) : (
             <p className="inline-empty">当天没有训练安排。</p>
@@ -56,7 +58,7 @@ export function TodaySection({ workspace: w }: { workspace: FitnessWorkspace }) 
             {data.records.training?.data ? (
               <>
                 <p className="record-status">{trainingNames[data.records.training.data.status]}</p>
-                <ExerciseList rows={data.records.training.data.exercises} />
+                <TrainingChecklist day={data} rows={data.records.training.data.exercises} />
               </>
             ) : (
               <p>尚未记录实际训练</p>
@@ -72,18 +74,7 @@ export function TodaySection({ workspace: w }: { workspace: FitnessWorkspace }) 
             </h2>
             <Link to={`/fitness/meals?date=${date}`}>计划与实际</Link>
           </div>
-          <h3>食谱计划</h3>
-          <MealList meal={data.records['meal-plan']?.data} nutrition={data.plannedNutrition} />
-          {action('meal-plan', data.records['meal-plan']?.data ? '编辑食谱' : '安排今日食谱')}
-          <div className="actual-record">
-            <h3>实际饮食</h3>
-            {data.records.meals?.data ? (
-              <MealList meal={data.records.meals.data} nutrition={data.nutrition} />
-            ) : (
-              <p>尚未记录实际饮食</p>
-            )}
-            {action('meals', data.records.meals?.data ? '修改实际饮食' : '记录实际饮食')}
-          </div>
+          <MealTracker key={date} day={data} />
         </section>
       </div>
       <section className="platform-section">

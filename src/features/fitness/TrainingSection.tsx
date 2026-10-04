@@ -1,10 +1,11 @@
+import { TrainingChecklist } from './TrainingChecklist';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { fitnessApi, localToday, shiftDate, type Models } from '../../api/fitness';
 import { Button } from '../../components/Button';
 import { trainingNames } from '../../features/fitness/Editor';
 
 import type { FitnessWorkspace } from '../../pages/FitnessPage';
-import { ExerciseList, State, weekday } from './display';
+import { State, weekday } from './display';
 
 export function TrainingSection({ workspace }: { workspace: FitnessWorkspace }) {
   const {
@@ -79,7 +80,11 @@ export function TrainingSection({ workspace }: { workspace: FitnessWorkspace }) 
           {data.rest ? (
             <p className="inline-empty">今天安排休息，可以照常打卡。</p>
           ) : (
-            <ExerciseList rows={data.records['training-plan']?.data?.exercises ?? []} />
+            <TrainingChecklist
+              key={`${date}-plan`}
+              day={data}
+              rows={data.records['training-plan']?.data?.exercises ?? []}
+            />
           )}
           <p>{data.records['training-plan']?.data?.note}</p>
           {data.records['training-plan']?.data && (
@@ -168,7 +173,11 @@ export function TrainingSection({ workspace }: { workspace: FitnessWorkspace }) 
               {mutation.error && (
                 <p role="alert">{mutation.error.message}。请重新加载当日记录后再修改。</p>
               )}
-              <ExerciseList rows={data.records.training.data.exercises} />
+              <TrainingChecklist
+                key={`${date}-actual`}
+                day={data}
+                rows={data.records.training.data.exercises}
+              />
               <p>{data.records.training.data.note}</p>
               <Button variant="ghost" onClick={() => remove(data.records.training!, '实际训练')}>
                 删除实际训练

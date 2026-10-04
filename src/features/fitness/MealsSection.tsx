@@ -2,7 +2,7 @@ import { localToday, shiftDate } from '../../api/fitness';
 import { Button } from '../../components/Button';
 
 import type { FitnessWorkspace } from '../../pages/FitnessPage';
-import { MealList } from './display';
+import { MealTracker } from './MealTracker';
 
 export function MealsSection({ workspace }: { workspace: FitnessWorkspace }) {
   const { date, setCopy, setDestination, setTemplateName, remove, data, action } = workspace;
@@ -13,9 +13,8 @@ export function MealsSection({ workspace }: { workspace: FitnessWorkspace }) {
         <section className="planning-column">
           <div className="section-title">
             <h2>计划吃什么</h2>
-            {action('meal-plan', '编辑食谱')}
           </div>
-          <MealList meal={data.records['meal-plan']?.data} nutrition={data.plannedNutrition} />
+          <MealTracker key={`${date}-plan`} day={data} kind="meal-plan" />
           {data.records['meal-plan']?.data && (
             <div className="row">
               <Button
@@ -52,16 +51,8 @@ export function MealsSection({ workspace }: { workspace: FitnessWorkspace }) {
         <section className="planning-column">
           <div className="section-title">
             <h2>实际吃了什么</h2>
-            {date <= localToday() && action('meals', '记录饮食')}
           </div>
-          <MealList meal={data.records.meals?.data} nutrition={data.nutrition} />
-          {date <= localToday() &&
-            data.records['meal-plan']?.data &&
-            action(
-              'meals',
-              '从计划复制为实际后修改',
-              structuredClone(data.records['meal-plan'].data),
-            )}
+          <MealTracker key={`${date}-actual`} day={data} />
           {data.records.meals?.data && (
             <Button variant="ghost" onClick={() => remove(data.records.meals!, '实际饮食')}>
               删除实际饮食

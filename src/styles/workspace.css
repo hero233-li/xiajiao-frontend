@@ -1156,3 +1156,29 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+.food-check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+.food-check-row input[type='checkbox'],
+.exercise-motion-heading input[type='checkbox'] {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 auto;
+  accent-color: var(--space-accent, #286653);
+}
+.food-check-row small {
+  display: inline;
+}
+.meal-tracker .meal-line {
+  padding-block: 1rem;
+  border-bottom: 1px solid var(--border, #dce3df);
+}
+.meal-tracker fieldset {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}

@@ -281,7 +281,15 @@ export function ExerciseFields({
     </div>
   );
 }
-export function FoodFields({ rows, onChange }: { rows: Food[]; onChange: (rows: Food[]) => void }) {
+export function FoodFields({
+  rows,
+  onChange,
+  mealType,
+}: {
+  rows: Food[];
+  onChange: (rows: Food[]) => void;
+  mealType?: Food['meal'];
+}) {
   const change = (i: number, patch: Partial<Food>) =>
     onChange(rows.map((r, n) => (n === i ? { ...r, ...patch } : r)));
   return (
@@ -294,6 +302,7 @@ export function FoodFields({ rows, onChange }: { rows: Food[]; onChange: (rows: 
               餐次
               <select
                 value={row.meal}
+                disabled={!!mealType}
                 onChange={(e) => change(i, { meal: e.target.value as Food['meal'] })}
               >
                 {Object.entries(mealNames).map(([v, n]) => (
@@ -381,7 +390,7 @@ export function FoodFields({ rows, onChange }: { rows: Food[]; onChange: (rows: 
           onChange([
             ...rows,
             {
-              meal: 'BREAKFAST',
+              meal: mealType ?? 'BREAKFAST',
               name: '',
               quantity: null,
               unit: null,
