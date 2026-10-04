@@ -1,3 +1,4 @@
+import { createUuid } from '../utils/uuid';
 import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from './http';
 import type {
@@ -120,7 +121,7 @@ export const fitnessApi = {
     data: Models[K],
     expectedRevision: number,
     expectedGoalRevision?: number,
-    idempotencyKey = crypto.randomUUID(),
+    idempotencyKey = createUuid(),
   ) =>
     request<Entry<K>>(
       `/records/${kind}/${key}`,
@@ -134,14 +135,14 @@ export const fitnessApi = {
     sourceKey: string,
     destination: string,
     expectedRevision: number,
-    key = crypto.randomUUID(),
+    key = createUuid(),
   ) =>
     request<Entry>('/copy', 'POST', { sourceKind, sourceKey, destination, expectedRevision }, key),
   generateWeek: (
     templateKey: string,
     monday: string,
     expectedRevisions: number[],
-    key = crypto.randomUUID(),
+    key = createUuid(),
   ) =>
     request<{ items: Entry[] }>(
       '/weeks/generate',
@@ -149,7 +150,7 @@ export const fitnessApi = {
       { templateKey, monday, expectedRevisions },
       key,
     ),
-  endGoal: (expectedGoalRevision: number, key = crypto.randomUUID()) =>
+  endGoal: (expectedGoalRevision: number, key = createUuid()) =>
     request('/goals/end', 'POST', { expectedGoalRevision }, key),
   delete: (entry: Entry) =>
     request<null>(`/records/${entry.kind}/${entry.key}?revision=${entry.revision}`, 'DELETE'),

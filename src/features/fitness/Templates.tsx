@@ -1,3 +1,4 @@
+import { createUuid } from '../../utils/uuid';
 import { useState } from 'react';
 import { UnsavedGuard } from './UnsavedGuard';
 import { Modal } from '../../components/Modal';
@@ -36,11 +37,11 @@ export function TemplateManager({
   const [active, setActive] = useState(0);
   const [message, setMessage] = useState('');
   const [dirty, setDirty] = useState(false);
-  const [saveKey, setSaveKey] = useState(() => crypto.randomUUID());
+  const [saveKey, setSaveKey] = useState(() => createUuid());
   const patch = (p: Partial<TemplateDraft>) => {
     setDraft((d) => ({ ...d!, ...p }));
     setDirty(true);
-    setSaveKey(crypto.randomUUID());
+    setSaveKey(createUuid());
   };
   const open = (e: Entry<TemplateKind>) => {
     setEntry(e);
@@ -61,7 +62,7 @@ export function TemplateManager({
     });
     setActive(0);
     setMessage('');
-    setSaveKey(crypto.randomUUID());
+    setSaveKey(createUuid());
   };
   const close = () => {
     if (!mutation.isPending && (!dirty || window.confirm('关闭模板编辑？尚未保存的改动会被放弃。')))
@@ -80,7 +81,7 @@ export function TemplateManager({
       meal: { foods: [], note: null },
     });
     setActive(0);
-    setSaveKey(crypto.randomUUID());
+    setSaveKey(createUuid());
   };
   const apply = async (e: Entry<TemplateKind>) => {
     setMessage('');

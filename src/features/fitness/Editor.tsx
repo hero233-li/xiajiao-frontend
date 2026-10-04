@@ -1,3 +1,4 @@
+import { createUuid } from '../../utils/uuid';
 import { useEffect, useState, useRef } from 'react';
 import { useBlocker, useBeforeUnload } from 'react-router-dom';
 import { Modal } from '../../components/Modal';
@@ -256,7 +257,7 @@ export function ExerciseFields({
           onChange([
             ...rows,
             {
-              id: crypto.randomUUID(),
+              id: createUuid(),
               name: '',
               type: 'STRENGTH',
               sets: null,
@@ -408,7 +409,7 @@ export function FitnessEditor({
     () => structuredClone(spec.initial ?? spec.entry?.data ?? defaults[spec.kind]) as Draft,
   );
   const [dirty, setDirty] = useState(false);
-  const [saveKey, setSaveKey] = useState(() => crypto.randomUUID());
+  const [saveKey, setSaveKey] = useState(() => createUuid());
   const [date, setDate] = useState(spec.key);
   const [entry, setEntry] = useState(spec.entry);
   const [checking, setChecking] = useState(false);
@@ -419,7 +420,7 @@ export function FitnessEditor({
   const patch = (p: Partial<Draft>) => {
     setDraft((d) => ({ ...d, ...p }));
     setDirty(true);
-    setSaveKey(crypto.randomUUID());
+    setSaveKey(createUuid());
   };
   const blocker = useBlocker(dirty);
   useEffect(() => {
@@ -443,7 +444,7 @@ export function FitnessEditor({
   const chooseDate = async (value: string) => {
     setDate(value);
     setCheckedDate('');
-    setSaveKey(crypto.randomUUID());
+    setSaveKey(createUuid());
     const requestId = ++dateRequest.current;
     if (!value) {
       setError('请选择记录日期');

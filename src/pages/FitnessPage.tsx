@@ -1,3 +1,4 @@
+import { createUuid } from '../utils/uuid';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import {
@@ -291,18 +292,18 @@ export function Component() {
   const [templateName, setTemplateName] = useState('');
   const [notice, setNotice] = useState('');
   const [copyDirty, setCopyDirty] = useState(false);
-  const [copyKey, setCopyKey] = useState(() => crypto.randomUUID());
+  const [copyKey, setCopyKey] = useState(() => createUuid());
   const [copyRevision, setCopyRevision] = useState<number | null>(null);
   useEffect(() => {
     setCopyDirty(false);
     setCopyRevision(null);
-    setCopyKey(crypto.randomUUID());
+    setCopyKey(createUuid());
   }, [copy]);
   const mutation = useFitnessMutation();
   const open = (kind: Editable, initial?: Models[Editable], entry?: Entry) =>
     setEdit({
       kind,
-      key: kind === 'goal' ? crypto.randomUUID() : date,
+      key: kind === 'goal' ? createUuid() : date,
       entry: entry ?? day.data?.records[kind],
       initial,
       goalRevision: summary.data?.goalRevision,
@@ -1032,7 +1033,7 @@ export function Component() {
                     setDestination(e.target.value);
                     setCopyDirty(true);
                     setCopyRevision(null);
-                    setCopyKey(crypto.randomUUID());
+                    setCopyKey(createUuid());
                   }}
                 />
               </label>
@@ -1046,7 +1047,7 @@ export function Component() {
                   onChange={(e) => {
                     setTemplateName(e.target.value);
                     setCopyDirty(true);
-                    setCopyKey(crypto.randomUUID());
+                    setCopyKey(createUuid());
                   }}
                 />
               </label>
