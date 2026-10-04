@@ -256,14 +256,14 @@ beforeEach(() => {
     ),
   );
 });
-function mount(url = '/zikao/schedule?cycleId=cycle') {
+function mount(url = '/study/schedule?cycleId=cycle') {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   const router = createMemoryRouter(
     [
-      { path: '/zikao/schedule', element: <SchedulePage /> },
-      { path: '/zikao/course/:code/exams', element: <h1>历年试卷</h1> },
+      { path: '/study/schedule', element: <SchedulePage /> },
+      { path: '/study/course/:code/exams', element: <h1>历年试卷</h1> },
     ],
     { initialEntries: [url] },
   );
@@ -311,11 +311,11 @@ describe('学习安排', () => {
     await user.click(screen.getByRole('button', { name: /第 5 周/ }));
     expect(view.router.state.location.search).toContain('week=5');
     const link = await screen.findByRole('link', { name: '进入历年试卷' });
-    expect(link).toHaveAttribute('href', '/zikao/course/00023/exams');
+    expect(link).toHaveAttribute('href', '/study/course/00023/exams');
     await user.click(link);
     expect(await screen.findByRole('heading', { name: '历年试卷' })).toBeVisible();
     view.unmount();
-    mount('/zikao/schedule?cycleId=cycle&week=5');
+    mount('/study/schedule?cycleId=cycle&week=5');
     expect(await screen.findByRole('button', { name: /第 5 周/ })).toHaveAttribute(
       'aria-current',
       'date',
@@ -324,7 +324,7 @@ describe('学习安排', () => {
   it('从未来周跳回今天，且短任务以分钟显示', async () => {
     plan.days[4].segments[0].minutes = 2;
     const user = userEvent.setup();
-    mount('/zikao/schedule?cycleId=cycle&week=5');
+    mount('/study/schedule?cycleId=cycle&week=5');
     await screen.findByRole('checkbox', { name: '任务paper' });
     expect(screen.queryByRole('region', { name: '今天的安排' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '跳到今天' }));
@@ -444,7 +444,7 @@ describe('学习安排', () => {
       within(screen.getByRole('region', { name: '今天的安排' })).getByRole('link', {
         name: '进入学习目录',
       }),
-    ).toHaveAttribute('href', '/zikao/course/00023/catalog?chapterId=chapter&itemId=today#chapter');
+    ).toHaveAttribute('href', '/study/course/00023/catalog?chapterId=chapter&itemId=today#chapter');
   });
   it('失败回滚并可重试；目录侧修改后重新进入计划读取同步状态', async () => {
     failCompletion = true;
@@ -472,7 +472,7 @@ describe('学习安排', () => {
   });
   it('第五周非目录任务无需条目修订号', async () => {
     const user = userEvent.setup();
-    mount('/zikao/schedule?cycleId=cycle&week=5');
+    mount('/study/schedule?cycleId=cycle&week=5');
     const checkbox = await screen.findByRole('checkbox', { name: '任务paper' });
     await user.click(checkbox);
     await waitFor(() => expect(checkbox).toBeEnabled());

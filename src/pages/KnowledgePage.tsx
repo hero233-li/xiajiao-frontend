@@ -408,7 +408,7 @@ function DetailContent({
           <Region
             empty="本模块暂无资源链接。"
             action="查看我的科目"
-            onAction={() => navigate('/zikao/courses')}
+            onAction={() => navigate('/study/courses')}
           />
         )}
       </section>
@@ -652,7 +652,7 @@ export function KnowledgePage() {
         <div>
           <h2>知识索引</h2>
         </div>
-        <Link className="button button-ghost" to="/zikao/courses">
+        <Link className="button button-ghost" to="/study/courses">
           我的科目
         </Link>
       </header>

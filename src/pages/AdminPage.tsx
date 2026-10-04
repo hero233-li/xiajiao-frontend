@@ -107,7 +107,7 @@ export function Component() {
           <h1>让学习内容准备就绪。</h1>
           <p>维护课程与资料，完成内容校验，再启用新版本。</p>
         </div>
-        <Link className="button button-secondary" to="/zikao">
+        <Link className="button button-secondary" to="/study">
           返回学习端
         </Link>
       </header>

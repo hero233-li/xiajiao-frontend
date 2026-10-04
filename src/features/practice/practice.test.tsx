@@ -142,7 +142,7 @@ beforeEach(() => {
   );
 });
 function mount(
-  path = '/zikao/course/00001/practice/chapter?cycleId=cycle',
+  path = '/study/course/00001/practice/chapter?cycleId=cycle',
   onNoteRequest?: (detail: unknown) => void,
 ) {
   const client = new QueryClient({
@@ -151,7 +151,7 @@ function mount(
   const router = createMemoryRouter(
     [
       {
-        path: '/zikao/course/:code/practice/:chapterId',
+        path: '/study/course/:code/practice/:chapterId',
         element: <PracticePage onNoteRequest={onNoteRequest} />,
       },
     ],
@@ -383,7 +383,7 @@ describe('专注做题页', () => {
       ),
     );
     const { router, client } = mount(
-      '/zikao/course/00001/practice/chapter?cycleId=cycle&filter=WRONG',
+      '/study/course/00001/practice/chapter?cycleId=cycle&filter=WRONG',
     );
     await ready();
     await userEvent.keyboard('b{Enter}');

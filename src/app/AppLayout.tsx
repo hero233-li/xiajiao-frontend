@@ -2,7 +2,7 @@ import { CycleProvider } from '../features/cycle/CycleContext';
 import { CourseFrame } from '../features/course/CourseContext';
 import { lazy, Suspense, useEffect } from 'react';
 import { Outlet, useMatch, useLocation } from 'react-router-dom';
-import { AppHeader } from '../components/AppHeader';
+
 const CourseQuickNote = lazy(() => import('../features/notes/CourseQuickNote'));
 export function AppLayout() {
   return (
@@ -40,15 +40,15 @@ function Layout() {
                         : '今日学习';
     document.title = `${path.startsWith('/admin') ? '管理工作台' : title} · 学习知途`;
   }, [location.pathname]);
-  const course = useMatch('/zikao/course/:code/*');
-  const chapter = useMatch('/zikao/course/:code/practice/:chapterId');
-  const test = useMatch('/zikao/course/:code/tests/*');
+  const course = useMatch('/study/course/:code/*');
+  const chapter = useMatch('/study/course/:code/practice/:chapterId');
+  const test = useMatch('/study/course/:code/tests/*');
   return (
     <>
       <a className="skip-link" href="#main-content">
         跳到主要内容
       </a>
-      <AppHeader />
+
       <main
         id="main-content"
         className={`desk-main ${chapter || test ? 'desk-focus' : ''}`}

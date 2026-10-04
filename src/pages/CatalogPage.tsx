@@ -15,7 +15,7 @@ export function CatalogPage() {
       <section className="state">
         <h1>课程目录</h1>
         <p>请先从备考总览选择考试周期和课程。</p>
-        <Link className="button button-primary" to="/zikao">
+        <Link className="button button-primary" to="/study">
           前往备考总览
         </Link>
       </section>
@@ -44,7 +44,7 @@ export function CatalogPage() {
           </Button>
         </section>
       )}
-      <h2>学习目录</h2>
+      <h2 className="reader-section-title">学习目录</h2>
       <CatalogPanel key={course.data!.id} courseId={course.data!.id} />
     </>
   );

@@ -6906,5 +6906,647 @@
     },
     "public": true,
     "errors": {}
+  },
+  {
+    "path": "/exams/courses/{courseId}/scores/{scoreId}/revisions",
+    "method": "get",
+    "operationId": "listScoreRevisions",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "items": [
+          {
+            "record": {
+              "id": "8fb9c580-e8ae-4cbc-b016-22d06557bee9",
+              "userId": "d0660b09-1efe-442f-9a1d-a96b54923f71",
+              "cycleId": "0ebdbbfe-d607-54b5-9c21-4e0adade5e4c",
+              "courseId": "afdac469-0fe4-5007-833c-51a71333967b",
+              "paperId": "c7c0da3f-82dc-42f9-8792-c002c2d5d938",
+              "paperKey": "00023:2001-03",
+              "practicedOn": "2026-10-03",
+              "score": 71,
+              "minutes": 120,
+              "limitMinutes": 150,
+              "complete": true,
+              "closedBook": true,
+              "answersSeenBefore": false,
+              "source": "MANUAL",
+              "note": "HTTP验证",
+              "createdAt": "2026-10-03T06:54:53.054257Z",
+              "updatedAt": "2026-10-03T06:54:53.116627Z",
+              "revision": 1
+            },
+            "captureKind": "REVISED",
+            "actorId": "d0660b09-1efe-442f-9a1d-a96b54923f71",
+            "capturedAt": "2026-10-03T06:54:53.117355Z"
+          },
+          {
+            "record": {
+              "id": "8fb9c580-e8ae-4cbc-b016-22d06557bee9",
+              "userId": "d0660b09-1efe-442f-9a1d-a96b54923f71",
+              "cycleId": "0ebdbbfe-d607-54b5-9c21-4e0adade5e4c",
+              "courseId": "afdac469-0fe4-5007-833c-51a71333967b",
+              "paperId": "c7c0da3f-82dc-42f9-8792-c002c2d5d938",
+              "paperKey": "00023:2001-03",
+              "practicedOn": "2026-10-03",
+              "score": 70,
+              "minutes": 120,
+              "limitMinutes": 150,
+              "complete": true,
+              "closedBook": true,
+              "answersSeenBefore": false,
+              "source": "MANUAL",
+              "note": "HTTP验证",
+              "createdAt": "2026-10-03T06:54:53.054257Z",
+              "updatedAt": "2026-10-03T06:54:53.054257Z",
+              "revision": 0
+            },
+            "captureKind": "CREATED",
+            "actorId": "d0660b09-1efe-442f-9a1d-a96b54923f71",
+            "capturedAt": "2026-10-03T06:54:53.055045Z"
+          }
+        ],
+        "page": 1,
+        "size": 20,
+        "total": 2
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/health/readiness",
+    "method": "get",
+    "operationId": "getReadiness",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "status": "UP",
+        "database": "UP"
+      },
+      "message": "ok"
+    },
+    "public": true,
+    "errors": {}
+  },
+  {
+    "path": "/grading/submissions",
+    "method": "get",
+    "operationId": "localGrading1",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": [],
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/submissions",
+    "method": "post",
+    "operationId": "localGrading2",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "courseId": "11111111-1111-4111-8111-111111111111",
+        "cycleId": "11111111-1111-4111-8111-111111111111",
+        "paperId": "11111111-1111-4111-8111-111111111111",
+        "revision": 0,
+        "pages": []
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/submissions/{id}",
+    "method": "get",
+    "operationId": "localGrading3",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "courseId": "11111111-1111-4111-8111-111111111111",
+        "cycleId": "11111111-1111-4111-8111-111111111111",
+        "paperId": "11111111-1111-4111-8111-111111111111",
+        "revision": 0,
+        "pages": []
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/submissions/{id}/pages",
+    "method": "post",
+    "operationId": "localGrading4",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "courseId": "11111111-1111-4111-8111-111111111111",
+        "cycleId": "11111111-1111-4111-8111-111111111111",
+        "paperId": "11111111-1111-4111-8111-111111111111",
+        "revision": 0,
+        "pages": []
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/submissions/{id}/pages",
+    "method": "put",
+    "operationId": "localGrading5",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "courseId": "11111111-1111-4111-8111-111111111111",
+        "cycleId": "11111111-1111-4111-8111-111111111111",
+        "paperId": "11111111-1111-4111-8111-111111111111",
+        "revision": 0,
+        "pages": []
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/submissions/{id}/pages/{file}",
+    "method": "delete",
+    "operationId": "localGrading6",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "courseId": "11111111-1111-4111-8111-111111111111",
+        "cycleId": "11111111-1111-4111-8111-111111111111",
+        "paperId": "11111111-1111-4111-8111-111111111111",
+        "revision": 0,
+        "pages": []
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/submissions/{id}/tasks",
+    "method": "post",
+    "operationId": "localGrading7",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "kind": "GRADE",
+        "state": "QUEUED",
+        "submissionId": null,
+        "rubricId": null,
+        "model": null,
+        "result": null,
+        "rubricDraft": null,
+        "scoreId": null,
+        "error": null,
+        "leaseUntil": null,
+        "workerOnline": false,
+        "workerReason": null
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/submissions/{id}/tasks",
+    "method": "get",
+    "operationId": "localGrading8",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": [],
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/tasks/{id}",
+    "method": "get",
+    "operationId": "localGrading11",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "kind": "GRADE",
+        "state": "QUEUED",
+        "submissionId": null,
+        "rubricId": null,
+        "model": null,
+        "result": null,
+        "rubricDraft": null,
+        "scoreId": null,
+        "error": null,
+        "leaseUntil": null,
+        "workerOnline": false,
+        "workerReason": null
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/tasks/{id}/review",
+    "method": "post",
+    "operationId": "localGrading12",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "kind": "GRADE",
+        "state": "QUEUED",
+        "submissionId": null,
+        "rubricId": null,
+        "model": null,
+        "result": null,
+        "rubricDraft": null,
+        "scoreId": null,
+        "error": null,
+        "leaseUntil": null,
+        "workerOnline": false,
+        "workerReason": null
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/rubrics",
+    "method": "get",
+    "operationId": "localGrading13",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": [],
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/rubrics",
+    "method": "post",
+    "operationId": "localGrading14",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "paperId": "11111111-1111-4111-8111-111111111111",
+        "version": 0,
+        "state": "DRAFT",
+        "document": {
+          "questions": [
+            {
+              "number": "示例",
+              "stem": "示例",
+              "referenceAnswer": "示例",
+              "maximum": 0.01,
+              "points": [
+                {
+                  "id": "示例",
+                  "description": "示例",
+                  "maximum": 0.01
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/rubrics/{id}",
+    "method": "put",
+    "operationId": "localGrading15",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "paperId": "11111111-1111-4111-8111-111111111111",
+        "version": 0,
+        "state": "DRAFT",
+        "document": {
+          "questions": [
+            {
+              "number": "示例",
+              "stem": "示例",
+              "referenceAnswer": "示例",
+              "maximum": 0.01,
+              "points": [
+                {
+                  "id": "示例",
+                  "description": "示例",
+                  "maximum": 0.01
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/rubrics/{id}/publish",
+    "method": "post",
+    "operationId": "localGrading16",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "paperId": "11111111-1111-4111-8111-111111111111",
+        "version": 0,
+        "state": "DRAFT",
+        "document": {
+          "questions": [
+            {
+              "number": "示例",
+              "stem": "示例",
+              "referenceAnswer": "示例",
+              "maximum": 0.01,
+              "points": [
+                {
+                  "id": "示例",
+                  "description": "示例",
+                  "maximum": 0.01
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/rubric-tasks",
+    "method": "post",
+    "operationId": "localGrading17",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "kind": "GRADE",
+        "state": "QUEUED",
+        "submissionId": null,
+        "rubricId": null,
+        "model": null,
+        "result": null,
+        "rubricDraft": null,
+        "scoreId": null,
+        "error": null,
+        "leaseUntil": null,
+        "workerOnline": false,
+        "workerReason": null
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/workers",
+    "method": "get",
+    "operationId": "localGrading18",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": [],
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/workers",
+    "method": "post",
+    "operationId": "localGrading19",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "token": "示例"
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/workers/{id}",
+    "method": "delete",
+    "operationId": "localGrading20",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": null,
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading-worker/heartbeat",
+    "method": "post",
+    "operationId": "localGrading21",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": null,
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading-worker/claim",
+    "method": "post",
+    "operationId": "localGrading22",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": null,
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading-worker/tasks/{id}/renew",
+    "method": "post",
+    "operationId": "localGrading23",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "taskId": "11111111-1111-4111-8111-111111111111",
+        "kind": "GRADE",
+        "leaseToken": "11111111-1111-4111-8111-111111111111",
+        "leaseUntil": "2026-10-03T00:00:00Z",
+        "deadline": "2026-10-03T00:00:00Z",
+        "inputs": {
+          "courseId": "11111111-1111-4111-8111-111111111111",
+          "cycleId": "11111111-1111-4111-8111-111111111111",
+          "practice": null,
+          "rubric": null,
+          "pages": []
+        }
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading-worker/tasks/{id}/materials/{file}",
+    "method": "get",
+    "operationId": "localGrading24",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "fileId": "11111111-1111-4111-8111-111111111111",
+        "pageNo": 0,
+        "mimeType": "示例",
+        "sha256": "示例",
+        "contentBase64": "示例"
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading-worker/tasks/{id}/result",
+    "method": "post",
+    "operationId": "localGrading25",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "kind": "GRADE",
+        "state": "QUEUED",
+        "submissionId": null,
+        "rubricId": null,
+        "model": null,
+        "result": null,
+        "rubricDraft": null,
+        "scoreId": null,
+        "error": null,
+        "leaseUntil": null,
+        "workerOnline": false,
+        "workerReason": null
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading-worker/tasks/{id}/failure",
+    "method": "post",
+    "operationId": "localGrading26",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "kind": "GRADE",
+        "state": "QUEUED",
+        "submissionId": null,
+        "rubricId": null,
+        "model": null,
+        "result": null,
+        "rubricDraft": null,
+        "scoreId": null,
+        "error": null,
+        "leaseUntil": null,
+        "workerOnline": false,
+        "workerReason": null
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/tasks/{id}/inputs",
+    "method": "get",
+    "operationId": "localGrading9",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "courseId": "11111111-1111-4111-8111-111111111111",
+        "cycleId": "11111111-1111-4111-8111-111111111111",
+        "practice": null,
+        "rubric": null,
+        "pages": []
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
+  },
+  {
+    "path": "/grading/tasks/{id}/materials/{file}",
+    "method": "get",
+    "operationId": "localGrading10",
+    "status": 200,
+    "example": {
+      "code": 0,
+      "data": {
+        "fileId": "11111111-1111-4111-8111-111111111111",
+        "pageNo": 0,
+        "mimeType": "示例",
+        "sha256": "示例",
+        "contentBase64": "示例"
+      },
+      "message": "ok"
+    },
+    "public": false,
+    "errors": {}
   }
 ]

@@ -121,11 +121,11 @@ function Destination() {
     </p>
   );
 }
-function mount(path = '/zikao?cycleId=cycle-1') {
+function mount(path = '/study?cycleId=cycle-1') {
   const router = createMemoryRouter(
     [
       {
-        path: '/zikao',
+        path: '/study',
         element: (
           <CycleProvider>
             <DashboardPage />
@@ -148,11 +148,11 @@ describe('今日学习工作台', () => {
   it('下一行动先于今日清单，书架保留真实课程顺序与进度', async () => {
     mount();
     await screen.findByRole('heading', { name: '完成今日计划条目' });
-    const shelf = screen.getAllByRole('link').filter((link) => link.className === 'book-entry');
+    const shelf = screen.getAllByRole('link').filter((link) => link.closest('.study-course-ledger') !== null);
     expect(shelf).toHaveLength(4);
     expect(shelf[0]).toHaveTextContent('测试理论课程');
     expect(shelf[0]).toHaveTextContent('8 / 20');
-    expect(shelf[2]).toHaveAttribute('href', '/zikao/course/00002/manual');
+    expect(shelf[2]).toHaveAttribute('href', '/study/course/00002/manual');
     expect(document.title).toBe('今日学习 · 学习知途');
   });
   it('建议采用后端结构化目标，保留前导零与题目定位', async () => {
@@ -192,11 +192,11 @@ describe('今日学习工作台', () => {
     mount();
     expect(await screen.findByRole('link', { name: '选择课程' })).toHaveAttribute(
       'href',
-      '/zikao/courses',
+      '/study/courses',
     );
     expect(screen.getByRole('link', { name: '建立学习计划' })).toHaveAttribute(
       'href',
-      '/zikao/schedule',
+      '/study/schedule',
     );
   });
   it('加载、业务错误与重试能恢复真正数据', async () => {
@@ -224,7 +224,7 @@ describe('今日学习工作台', () => {
     await screen.findByText('计划详情读取失败。');
     expect(screen.getByRole('link', { name: '开始这一项' })).toBeVisible();
     expect(
-      screen.getAllByRole('link').filter((link) => link.className === 'book-entry'),
+      screen.getAllByRole('link').filter((link) => link.closest('.study-course-ledger') !== null),
     ).toHaveLength(4);
   });
   it('日期使用后端上海日期，不按设备替换', async () => {
@@ -268,13 +268,13 @@ describe('今日学习工作台', () => {
   it('笔记与计划都有可导航的出口', async () => {
     mount();
     await screen.findByRole('heading', { name: '完成今日计划条目' });
-    expect(screen.getByRole('link', { name: '打开学习笔记' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '学习笔记' })).toHaveAttribute(
       'href',
-      '/zikao/notes',
+      '/study/notes',
     );
-    expect(screen.getByRole('link', { name: '调整安排' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '查看学习计划' })).toHaveAttribute(
       'href',
-      '/zikao/schedule',
+      '/study/schedule',
     );
   });
 });

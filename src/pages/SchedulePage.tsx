@@ -86,7 +86,7 @@ export function SchedulePage() {
           retry={cycle.retry}
           empty="请先选择考试周期，再查看学习安排。"
           action={
-            <Link className="button button-secondary" to="/zikao">
+            <Link className="button button-secondary" to="/study">
               返回备考总览
             </Link>
           }
@@ -101,10 +101,10 @@ export function SchedulePage() {
               empty="当前周期尚未生成学习计划。计划根据本周期的科目、学习内容与考试日期安排。"
               action={
                 <div className="schedule-actions">
-                  <Link className="button button-secondary" to="/zikao/courses">
+                  <Link className="button button-secondary" to="/study/courses">
                     查看我的科目
                   </Link>
-                  <Link className="button button-secondary" to="/zikao">
+                  <Link className="button button-secondary" to="/study">
                     返回备考总览
                   </Link>
                   <Button onClick={() => void plans.refetch()}>刷新计划列表</Button>
@@ -502,7 +502,7 @@ function PlanView({
             ) : (
               <>
                 <p>暂无课程统计。</p>
-                <Link className="button button-secondary" to="/zikao/courses">
+                <Link className="button button-secondary" to="/study/courses">
                   查看我的科目
                 </Link>
               </>
@@ -599,7 +599,7 @@ function DayCard({
       {!day.segments.length ? (
         <>
           <p>当天暂无学习任务。</p>
-          <Link className="button button-secondary" to="/zikao/courses">
+          <Link className="button button-secondary" to="/study/courses">
             查看我的科目
           </Link>
         </>

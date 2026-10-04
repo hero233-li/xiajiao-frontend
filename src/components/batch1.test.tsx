@@ -79,12 +79,12 @@ describe('批次 1 回归', () => {
     >[1];
     expect(
       cleanCycleTarget(
-        `/zikao/course/00023/catalog?cycleId=${selected.id}&itemId=item#chapter`,
+        `/study/course/00023/catalog?cycleId=${selected.id}&itemId=item#chapter`,
         state,
       ),
-    ).toBe('/zikao/course/00023/catalog?itemId=item#chapter');
-    const shared = cleanCycleTarget('/zikao', { ...state!, defaultId: 'other' });
-    expect(shared).toBe(`/zikao?cycle=${cycleKey(selected)}`);
+    ).toBe('/study/course/00023/catalog?itemId=item#chapter');
+    const shared = cleanCycleTarget('/study', { ...state!, defaultId: 'other' });
+    expect(shared).toBe(`/study?cycle=${cycleKey(selected)}`);
     expect(shared).not.toContain(selected.id);
   });
   it('用户文案不含开发占位词（生成客户端注释不属于用户文案）', () => {

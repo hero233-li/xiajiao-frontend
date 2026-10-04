@@ -23,7 +23,7 @@ function Location() {
   return <output data-testid="url">{useLocation().search}</output>;
 }
 function mount(
-  path = '/zikao/notes?cycleId=cycle',
+  path = '/study/notes?cycleId=cycle',
   quick?: { initialContent: string; defaultCourseId?: string },
 ) {
   const client = new QueryClient({
@@ -37,9 +37,9 @@ function mount(
           <QuickNote {...quick} cycleId="cycle" />
         ) : (
           <Routes>
-            <Route path="/zikao/notes" element={<NotesPage />} />
-            <Route path="/zikao/course/:code/notes" element={<NotesPage />} />
-            <Route path="/zikao/notes/quick-note-preview" element={<QuickPreview />} />
+            <Route path="/study/notes" element={<NotesPage />} />
+            <Route path="/study/course/:code/notes" element={<NotesPage />} />
+            <Route path="/study/notes/quick-note-preview" element={<QuickPreview />} />
           </Routes>
         )}
       </MemoryRouter>
@@ -99,14 +99,14 @@ describe('笔记页面', () => {
     await waitFor(() => expect(params.get('q')).toBe('极限'));
     const url = screen.getByTestId('url').textContent!;
     first.unmount();
-    mount(`/zikao/notes${url}`);
+    mount(`/study/notes${url}`);
     await screen.findByText(/复习极限/);
     expect(screen.getByRole('searchbox')).toHaveValue('极限');
     expect(params.get('q')).toBe('极限');
   });
   it('课程笔记预设当前课程，保存新笔记时采用当前课程和上海日期', async () => {
     const user = userEvent.setup();
-    mount(`/zikao/course/${course.code}/notes?cycleId=cycle`);
+    mount(`/study/course/${course.code}/notes?cycleId=cycle`);
     await waitFor(() => expect(params.get('courseId')).toBe(course.id));
     await user.click(screen.getByRole('button', { name: '写一条笔记' }));
     expect(within(screen.getByRole('dialog')).getByLabelText('课程')).toHaveValue(course.id);
@@ -188,7 +188,7 @@ describe('笔记页面', () => {
   it('没有笔记和没有匹配笔记使用不同空状态，清除筛选', async () => {
     server.use(http.get('*/api/v1/notes', () => ok({ items: [], page: 1, size: 20, total: 0 })));
     const user = userEvent.setup();
-    mount('/zikao/notes?cycleId=cycle&q=没有');
+    mount('/study/notes?cycleId=cycle&q=没有');
     await screen.findByText('没有符合条件的笔记。');
     await user.click(screen.getByRole('button', { name: '清除筛选' }));
     await screen.findByText('还没有笔记，记下今天的学习收获吧。');
@@ -234,7 +234,7 @@ describe('笔记页面', () => {
 describe('QuickNote 独立组件', () => {
   it('独立页面支持预填，保存仅含正文课程和默认日期，并显示 toast', async () => {
     const user = userEvent.setup();
-    mount('/zikao/notes', { initialContent: '复盘错题\n#高数', defaultCourseId: course.id });
+    mount('/study/notes', { initialContent: '复盘错题\n#高数', defaultCourseId: course.id });
     await user.click(screen.getByRole('button', { name: '快速记一条' }));
     await screen.findByLabelText('笔记正文');
     expect(screen.getByLabelText('笔记正文')).toHaveValue('复盘错题\n#高数');
@@ -249,7 +249,7 @@ describe('QuickNote 独立组件', () => {
   });
   it('独立测试路由可用，预填没有编辑也会确认放弃', async () => {
     const user = userEvent.setup();
-    mount(`/zikao/notes/quick-note-preview?cycleId=cycle&courseId=${course.id}`);
+    mount(`/study/notes/quick-note-preview?cycleId=cycle&courseId=${course.id}`);
     expect(screen.getByRole('heading', { name: '快速笔记独立测试页' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '快速记一条' }));
     await screen.findByLabelText('笔记正文');
@@ -259,7 +259,7 @@ describe('QuickNote 独立组件', () => {
   it('课程空状态和请求错误可重试', async () => {
     server.use(http.get('*/api/v1/courses', () => HttpResponse.error()));
     const user = userEvent.setup();
-    mount('/zikao/notes', { initialContent: '预填', defaultCourseId: course.id });
+    mount('/study/notes', { initialContent: '预填', defaultCourseId: course.id });
     await user.click(screen.getByRole('button', { name: '快速记一条' }));
     await screen.findByText('加载遇到问题');
     server.use(http.get('*/api/v1/courses', () => ok({ items: [], total: 0, page: 1, size: 100 })));
@@ -275,7 +275,7 @@ describe('QuickNote 独立组件', () => {
   it('QuickNote 保存失败保留预填及追加内容', async () => {
     server.use(http.post('*/api/v1/notes', () => HttpResponse.error()));
     const user = userEvent.setup();
-    mount('/zikao/notes', { initialContent: '错题预填', defaultCourseId: course.id });
+    mount('/study/notes', { initialContent: '错题预填', defaultCourseId: course.id });
     await user.click(screen.getByRole('button', { name: '快速记一条' }));
     await screen.findByLabelText('笔记正文');
     await user.type(screen.getByLabelText('笔记正文'), '补充');
@@ -287,7 +287,7 @@ describe('QuickNote 独立组件', () => {
   it('弹窗 Tab 循环保持焦点，最近保存的课程作为下一条默认值', async () => {
     localStorage.setItem('notes-recent-course:undefined', course.id);
     const user = userEvent.setup();
-    mount('/zikao/notes', { initialContent: '正文' });
+    mount('/study/notes', { initialContent: '正文' });
     await user.click(screen.getByRole('button', { name: '快速记一条' }));
     await screen.findByLabelText('笔记正文');
     expect(screen.getByLabelText('课程')).toHaveValue(course.id);

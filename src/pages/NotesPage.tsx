@@ -266,7 +266,7 @@ export function Component() {
               {courses.data?.find((c) => c.id === note.courseId) && (
                 <Link
                   className="note-return text-action"
-                  to={`/zikao/course/${courses.data.find((c) => c.id === note.courseId)!.code}/${courses.data.find((c) => c.id === note.courseId)!.capabilities.manual ? 'manual' : 'catalog'}`}
+                  to={`/study/course/${courses.data.find((c) => c.id === note.courseId)!.code}/${courses.data.find((c) => c.id === note.courseId)!.capabilities.manual ? 'manual' : 'catalog'}`}
                 >
                   回到相关学习内容 →
                 </Link>

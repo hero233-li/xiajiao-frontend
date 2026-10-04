@@ -48,7 +48,7 @@ export function Component() {
         <div className="shelf-list">
           {courses.data.items.map((course, i) => {
             const exam = cycle.selected?.courses.find((e) => e.courseId === course.id);
-            const base = `/zikao/course/${course.code}`;
+            const base = `/study/course/${course.code}`;
             const panes = [
               ['catalog', '阅读与进度'],
               ['knowledge', '知识索引'],

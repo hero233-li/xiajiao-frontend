@@ -29,11 +29,11 @@ function Page() {
     <>
       <CyclePicker />
       <p data-testid="selected">{cycle?.selected?.name}</p>
-      <Link to="/zikao/course/00023/catalog">课程</Link>
+      <Link to="/study/course/00023/catalog">课程</Link>
     </>
   );
 }
-function mount(path = '/zikao') {
+function mount(path = '/study') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createMemoryRouter(
     [
@@ -76,7 +76,7 @@ describe('周期上下文', () => {
     await waitFor(() => expect(router.state.location.search).toBe(`?cycle=${cycleKey(later)}`));
     expect(screen.getByRole('link', { name: '课程' })).toHaveAttribute(
       'href',
-      `/zikao/course/00023/catalog?cycle=${cycleKey(later)}`,
+      `/study/course/00023/catalog?cycle=${cycleKey(later)}`,
     );
     expect(localStorage.getItem('learning.exam-cycle')).toBe(later.id);
     await act(() => router.navigate(-1));
@@ -87,7 +87,7 @@ describe('周期上下文', () => {
   it('新会话恢复本地选择并转换旧 UUID 深链接', async () => {
     localStorage.setItem('learning.exam-cycle', later.id);
     handler([now, later]);
-    const router = mount(`/zikao?cycleId=${later.id}`);
+    const router = mount(`/study?cycleId=${later.id}`);
     await waitFor(() => expect(router.state.location.search).toBe(`?cycle=${cycleKey(later)}`));
     expect(screen.getByTestId('selected')).toHaveTextContent('另一周期');
   });

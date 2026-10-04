@@ -41,7 +41,7 @@ export function AssessmentGate({
           { silent: true, headers: { 'Idempotency-Key': key.current } },
         )
       ).data,
-    onSuccess: (session) => navigate(`/zikao/course/${code}/tests/${session.id}`),
+    onSuccess: (session) => navigate(`/study/course/${code}/tests/${session.id}`),
   });
   return (
     <section className="assessment-entry">
@@ -105,7 +105,7 @@ export function AssessmentGate({
                     </span>
                     <Link
                       className="text-action"
-                      to={`/zikao/course/${code}/tests/${session.id}${session.status === 'IN_PROGRESS' ? '' : '/result'}`}
+                      to={`/study/course/${code}/tests/${session.id}${session.status === 'IN_PROGRESS' ? '' : '/result'}`}
                     >
                       {session.status === 'IN_PROGRESS' ? '继续作答' : '查看结果'}
                     </Link>

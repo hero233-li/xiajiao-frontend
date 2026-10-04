@@ -44,7 +44,7 @@ export function Component() {
   if (search.get('chapterId')) context.set('chapterId', search.get('chapterId')!);
   const publicCycle = new URLSearchParams(location.search).get('cycle');
   if (publicCycle) context.set('cycle', publicCycle);
-  const back = `/zikao/course/${encodeURIComponent(code)}/practice${context.size ? `?${context}` : ''}${search.get('chapterId') ? `#practice-chapter-${encodeURIComponent(search.get('chapterId')!)}` : ''}`;
+  const back = `/study/course/${encodeURIComponent(code)}/practice${context.size ? `?${context}` : ''}${search.get('chapterId') ? `#practice-chapter-${encodeURIComponent(search.get('chapterId')!)}` : ''}`;
   if (!cycleId)
     return (
       <div className="assessment-page">
@@ -170,7 +170,7 @@ export function Component() {
       }}
       onComplete={() => {
         setCompleted(true);
-        navigate(`/zikao/course/${code}/tests/${testId}/result`, { replace: true });
+        navigate(`/study/course/${code}/tests/${testId}/result`, { replace: true });
       }}
     />
   );
@@ -614,7 +614,7 @@ function Result({
   code: string;
   cycleId: string;
 }) {
-  const practice = `/zikao/course/${code}/practice${session.chapterId ? `/${session.chapterId}` : ''}`;
+  const practice = `/study/course/${code}/practice${session.chapterId ? `/${session.chapterId}` : ''}`;
   return (
     <>
       <section className="result-score stack">
@@ -709,7 +709,7 @@ function Result({
       <div className="row">
         <Link
           className="button button-primary"
-          to={`/zikao/course/${code}/tests/new?kind=${session.kind}&chapterId=${session.chapterId ?? ''}`}
+          to={`/study/course/${code}/tests/new?kind=${session.kind}&chapterId=${session.chapterId ?? ''}`}
         >
           重新检测
         </Link>
@@ -722,7 +722,7 @@ function Result({
           <p>
             <Check aria-hidden="true" /> 真题已开放
           </p>
-          <Link className="button button-primary" to={`/zikao/course/${code}/exams`}>
+          <Link className="button button-primary" to={`/study/course/${code}/exams`}>
             查看历年真题
           </Link>
         </section>

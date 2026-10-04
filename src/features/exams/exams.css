@@ -408,6 +408,7 @@
 }
 
 .exam-note-action {
+  pointer-events: none;
   display: flex;
   justify-content: flex-end;
   margin-bottom: -34px;
@@ -415,6 +416,7 @@
   z-index: 1;
 }
 .exam-note-action .notes-floating {
+  pointer-events: auto;
   position: static;
   box-shadow: none;
   background: transparent;

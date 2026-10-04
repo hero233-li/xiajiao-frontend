@@ -7,21 +7,21 @@ import { sessionStore } from '../api/session';
 import { server } from '../mocks/server';
 const protectedPaths = [
   '/',
-  '/zikao',
-  '/zikao/courses',
-  '/zikao/schedule',
-  '/zikao/notes',
+  '/study',
+  '/study/courses',
+  '/study/schedule',
+  '/study/notes',
   ...['catalog', 'knowledge', 'practice', 'exams', 'notes', 'manual'].map(
-    (pane) => `/zikao/course/00023/${pane}`,
+    (pane) => `/study/course/00023/${pane}`,
   ),
-  '/zikao/course/00023/practice/9d632f9c-4bc7-4ab7-a725-f307df14a92e',
-  '/zikao/course/00023/tests/8375a115-2386-4c89-b9c1-45b61ef58349',
+  '/study/course/00023/practice/9d632f9c-4bc7-4ab7-a725-f307df14a92e',
+  '/study/course/00023/tests/8375a115-2386-4c89-b9c1-45b61ef58349',
   '/admin/example',
   '/health',
 ];
 it.each(protectedPaths)('未登录路由 %s 携带原地址跳转登录', async (path) => {
   const { router } = renderRoute(`${path}?cycleId=example#anchor`);
-  await screen.findByRole('heading', { name: '登录学习知途' });
+  await screen.findByRole('heading', { name: '欢迎回来' });
   expect(router.state.location.pathname).toBe('/login');
   expect(new URLSearchParams(router.state.location.search).get('redirect')).toBe(
     `${path}?cycleId=example#anchor`,
@@ -51,9 +51,9 @@ it('登录后回到稳定章节ID深链接', async () => {
       }),
     ),
   );
-  const path = '/zikao/course/00023/practice/b8816b55-e24a-5653-b1af-5c962d1b54f1#anchor';
+  const path = '/study/course/00023/practice/b8816b55-e24a-5653-b1af-5c962d1b54f1#anchor';
   const { router } = renderRoute(path);
-  await screen.findByRole('heading', { name: '登录学习知途' });
+  await screen.findByRole('heading', { name: '欢迎回来' });
   await userEvent.click(screen.getByRole('button', { name: '使用演示账号' }));
   await screen.findByRole('heading', { name: '函数与极限' });
   expect(
@@ -86,14 +86,14 @@ it('刷新失败后跳转登录并保留原地址', async () => {
     ),
   );
   const { router } = renderRoute('/health?source=example#check');
-  await screen.findByRole('heading', { name: '登录学习知途' });
+  await screen.findByRole('heading', { name: '欢迎回来' });
   expect(new URLSearchParams(router.state.location.search).get('redirect')).toBe(
     '/health?source=example#check',
   );
 });
 it('登录失败保持原地址并显示中文错误', async () => {
   const { router } = renderRoute('/login?redirect=%2Fhealth');
-  await screen.findByRole('heading', { name: '登录学习知途' });
+  await screen.findByRole('heading', { name: '欢迎回来' });
   await userEvent.type(screen.getByLabelText('用户名或邮箱'), 'wrong');
   await userEvent.type(screen.getByLabelText('密码'), 'wrong');
   await userEvent.click(screen.getByRole('button', { name: '登录' }));

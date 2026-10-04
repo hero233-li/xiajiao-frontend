@@ -375,7 +375,7 @@ export function ContentEditor({
         </div>
       </Modal>
       {release.state === 'PUBLISHED' && (
-        <Link className="button button-secondary" to="/zikao/schedule">
+        <Link className="button button-secondary" to="/study/schedule">
           返回学习计划预览
         </Link>
       )}

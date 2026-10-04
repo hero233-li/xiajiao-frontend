@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ArrowRight, Check, ExternalLink, BookOpen, ChevronLeft } from 'lucide-react';
+import { ArrowRight, Check, ExternalLink, BookOpen } from 'lucide-react';
 import { Link, useSearchParams } from '../cycle/navigation';
 import { getLearningPosition, saveLearningPosition } from '../../api/generated/courses/courses';
 import { downloadCourseResource } from '../../api/generated/catalog/catalog';
@@ -162,125 +162,81 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
     );
   if (!active) return <RegionState kind="empty" message="此课程暂未发布学习条目。" />;
   return (
-    <div className="reading-workspace" data-show-list={mobileList}>
-      <aside className="reading-index">
-        <div className="section-title">
-          <h3>课程目录</h3>
-          <span>{query.data!.courseProgress.percent}%</span>
-        </div>
-        <div className="progress-track">
-          <div
-            className="progress-fill"
-            style={{ width: `${query.data!.courseProgress.percent}%` }}
-          />
-        </div>
-        <p className="reading-count">
-          已完成 {query.data!.courseProgress.completedItems} / {items.length} 项
-        </p>
-        {query.data!.chapters.map((chapter, n) => (
-          <details key={chapter.id} open={chapter.id === active.chapter.id || undefined}>
-            <summary>
-              <span>{String(n + 1).padStart(2, '0')}</span>
-              <MathText text={chapter.title} />
-              <small>
-                {chapter.items.filter((i) => i.completed).length}/{chapter.items.length}
-              </small>
-            </summary>
-            <ol>
-              {chapter.items.map((item) => (
-                <li key={item.id}>
-                  <button
-                    aria-current={item.id === active.item.id ? 'true' : undefined}
-                    onClick={() => select(item.id)}
-                  >
-                    <span className="reading-item-state">
-                      {item.completed ? <Check size={13} /> : <span />}
-                    </span>
-                    <MathText text={item.title} />
-                  </button>
-                </li>
-              ))}
-            </ol>
-            <Button
-              variant="ghost"
-              disabled={completion.isPending || chapter.items.every((i) => i.completed)}
-              onClick={() => setBulk(chapter)}
-            >
-              本章全部标记完成
-            </Button>
-          </details>
-        ))}
-      </aside>
-      <article className="reading-sheet">
-        <button
-          className="mobile-directory button button-secondary"
+    <div className="study-reader">
+      <div className="reader-overview">
+        <span>
+          {query.data!.courseProgress.completedItems} / {items.length} 项已完成
+        </span>
+        <progress value={query.data!.courseProgress.percent} max={100} />
+        <strong>{query.data!.courseProgress.percent}%</strong>
+        <Button
+          variant="ghost"
+          className="reader-index-toggle"
           onClick={() => setMobileList(!mobileList)}
         >
-          <ChevronLeft size={16} />
           {mobileList ? '返回当前任务' : '展开目录'}
-        </button>
-        <p className="eyebrow">
-          READ / 第 {index + 1} 项，共 {items.length} 项
-        </p>
-        <p className="reading-chapter">
-          <MathText text={active.chapter.title} />
-        </p>
-        <h2>
-          <MathText text={active.item.title} />
-        </h2>
-        <p className="reading-meta">
-          预计 {active.item.estimatedMinutes} 分钟 · {active.item.completed ? '已完成' : '待学习'}
-        </p>
-        <Resource key={active.item.id} item={active.item} courseId={courseId} />
-        <nav className="reading-related" aria-label="关联学习内容">
-          {course?.capabilities.knowledge && (
-            <Link to={`/zikao/course/${course.code}/knowledge`}>
-              查看知识索引 <ArrowRight size={14} />
-            </Link>
-          )}
-          {course?.capabilities.manual && (
-            <Link to={`/zikao/course/${course.code}/manual`}>
-              阅读实践手册 <ArrowRight size={14} />
-            </Link>
-          )}
-          <Link to={`/zikao/course/${course?.code}/notes`}>
-            记录课程笔记 <ArrowRight size={14} />
-          </Link>
-        </nav>
-        {savePosition.isError && (
-          <p role="alert" className="status-error">
-            学习位置保存失败，进度标记仍可使用。
-            <Button variant="ghost" onClick={() => savePosition.mutate(active.item)}>
-              重试保存位置
+        </Button>
+      </div>
+      <div className="reader-columns" data-show-list={mobileList}>
+        <aside className="reader-directory" aria-label="课程目录">
+          <h3>课程目录</h3>
+          {query.data!.chapters.map((chapter, n) => (
+            <details key={chapter.id} open={chapter.id === active.chapter.id || undefined}>
+              <summary>
+                <span>{String(n + 1).padStart(2, '0')}</span>
+                <MathText text={chapter.title} />
+                <small>
+                  {chapter.items.filter((i) => i.completed).length}/{chapter.items.length}
+                </small>
+              </summary>
+              <ol>
+                {chapter.items.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      aria-current={item.id === active.item.id ? 'true' : undefined}
+                      onClick={() => select(item.id)}
+                    >
+                      <span className="reader-item-marker">
+                        {item.completed ? <Check size={13} /> : ''}
+                      </span>
+                      <MathText text={item.title} />
+                    </button>
+                  </li>
+                ))}
+              </ol>
+              <Button
+                variant="ghost"
+                disabled={completion.isPending || chapter.items.every((i) => i.completed)}
+                onClick={() => setBulk(chapter)}
+              >
+                本章全部标记完成
+              </Button>
+            </details>
+          ))}
+        </aside>
+        <article className="reader-document">
+          <header>
+            <p className="eyebrow">
+              READING / {index + 1} OF {items.length}
+            </p>
+            <h2>
+              <MathText text={active.item.title} />
+            </h2>
+            <div className="reader-document-meta">
+              <span>
+                <MathText text={active.chapter.title} />
+              </span>
+              <span>预计 {active.item.estimatedMinutes} 分钟</span>
+              <strong>{active.item.completed ? '已完成' : '待学习'}</strong>
+            </div>
+          </header>
+          <div className="reader-action-bar">
+            <Button
+              loading={completion.isPending}
+              onClick={() => void mark([active.item], true, true)}
+            >
+              完成并继续 <ArrowRight size={16} />
             </Button>
-          </p>
-        )}
-        {query.isError && (
-          <p role="alert">
-            最新目录读取失败。
-            <Button variant="ghost" onClick={() => void query.refetch()}>
-              重试
-            </Button>
-          </p>
-        )}
-        {completion.isError && (
-          <p role="alert" className="status-error">
-            {completion.error.message}，原进度已保留。请刷新后重试。
-          </p>
-        )}
-        {notice && (
-          <p role="status" className="status-success">
-            {notice}
-          </p>
-        )}
-        <footer className="reading-footer">
-          <Button
-            loading={completion.isPending}
-            onClick={() => void mark([active.item], true, true)}
-          >
-            完成并继续 <ArrowRight size={16} />
-          </Button>
-          <div>
             {active.item.completed && (
               <Button
                 variant="ghost"
@@ -295,12 +251,54 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
                 下一项
               </Button>
             )}
-            <Link className="text-action" to="/zikao">
-              回到今日
-            </Link>
+            <Link to="/study">回到今日</Link>
           </div>
-        </footer>
-      </article>
+          {notice && (
+            <p role="status" className="platform-notice">
+              {notice}
+            </p>
+          )}
+          {completion.isError && (
+            <p role="alert" className="status-error">
+              {completion.error.message}，原进度已保留。请刷新后重试。
+            </p>
+          )}
+          {query.isError && (
+            <p role="alert">
+              最新目录读取失败。
+              <Button variant="ghost" onClick={() => void query.refetch()}>
+                重试
+              </Button>
+            </p>
+          )}
+          {savePosition.isError && (
+            <p role="alert" className="status-error">
+              学习位置保存失败，进度标记仍可使用。
+              <Button variant="ghost" onClick={() => savePosition.mutate(active.item)}>
+                重试保存位置
+              </Button>
+            </p>
+          )}
+          <div className="reader-resource">
+            <Resource key={active.item.id} item={active.item} courseId={courseId} />
+          </div>
+          <nav className="reader-related" aria-label="关联学习内容">
+            {course?.capabilities.knowledge && (
+              <Link to={`/study/course/${course.code}/knowledge`}>
+                查看知识索引 <ArrowRight size={14} />
+              </Link>
+            )}
+            {course?.capabilities.manual && (
+              <Link to={`/study/course/${course.code}/manual`}>
+                阅读实践手册 <ArrowRight size={14} />
+              </Link>
+            )}
+            <Link to={`/study/course/${course?.code}/notes`}>
+              记录课程笔记 <ArrowRight size={14} />
+            </Link>
+          </nav>
+        </article>
+      </div>
       <Modal open={!!bulk} title="确认完成本章" onClose={() => setBulk(null)}>
         <p>
           将「{bulk?.title}」中 {bulk?.items.filter((i) => !i.completed).length}{' '}

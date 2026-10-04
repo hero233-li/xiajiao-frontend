@@ -64,7 +64,7 @@ export function PracticePage({
   const [params] = useSearchParams();
   const cycleId = params.get('cycleId') || '';
   const course = usePracticeCourse(code, cycleId);
-  const back = `/zikao/course/${encodeURIComponent(code)}/practice?${new URLSearchParams()}`;
+  const back = `/study/course/${encodeURIComponent(code)}/practice?${new URLSearchParams()}`;
   if (!cycleId)
     return (
       <Region

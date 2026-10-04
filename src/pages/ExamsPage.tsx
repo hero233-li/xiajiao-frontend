@@ -1,3 +1,4 @@
+import { GradingPanel } from '../features/grading/GradingPanel';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Link, useSearchParams } from '../features/cycle/navigation';
@@ -93,7 +94,7 @@ export function ExamContent({
   cycleId: string;
 }) {
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [view, setView] = useState<'papers' | 'records' | 'analysis'>('papers');
+  const [view, setView] = useState<'papers' | 'records' | 'analysis' | 'grading'>('papers');
   const [scorePage, setScorePage] = useState(1);
   const [historyPage, setHistoryPage] = useState(1);
   const data = useExamData(courseId, cycleId, historyOpen, scorePage, historyPage);
@@ -101,7 +102,7 @@ export function ExamContent({
   const [dialog, setDialog] = useState<{ paperId: string; record?: ScoreRecord }>();
   const [skipConfirm, setSkipConfirm] = useState(false);
   const [downloadError, setDownloadError] = useState('');
-  const practice = `/zikao/course/${code}/practice`;
+  const practice = `/study/course/${code}/practice`;
   const canWrite = data.unlock.isSuccess && !data.unlock.isError && data.unlock.data.canWriteScores;
   async function download(paper: Paper, part: 'QUESTION' | 'ANSWER') {
     if (!data.unlock.data?.canDownloadPapers || actions.download.isPending) return;
@@ -129,6 +130,7 @@ export function ExamContent({
             ['papers', '找真题'],
             ['records', '成绩与照片'],
             ['analysis', '趋势与分析'],
+            ['grading', '答卷批改'],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -140,6 +142,7 @@ export function ExamContent({
           </button>
         ))}
       </nav>
+      {view === 'grading' && <GradingPanel courseId={courseId} cycleId={cycleId} papers={data.papers.data ?? []} canWrite={canWrite} />}
       <div hidden={view !== 'papers'} className="exam-pane stack">
         <AsyncRegion query={data.unlock} label="解锁信息">
           {(unlock) => (

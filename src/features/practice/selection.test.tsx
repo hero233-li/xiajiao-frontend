@@ -141,9 +141,9 @@ function Destination() {
     </p>
   );
 }
-function mount(path = `/zikao/course/00023/practice?cycleId=${cycleId}`, withCycle = false) {
+function mount(path = `/study/course/00023/practice?cycleId=${cycleId}`, withCycle = false) {
   const routes = [
-    { path: '/zikao/course/:code/practice', element: <PracticeSelectionPage /> },
+    { path: '/study/course/:code/practice', element: <PracticeSelectionPage /> },
     { path: '*', element: <Destination /> },
   ];
   const router = createMemoryRouter(
@@ -214,13 +214,13 @@ describe('刷题章节选择', () => {
     const start = screen.getByRole('button', { name: '开始练习' });
     expect(start).toBeEnabled();
     await userEvent.click(start);
-    expect(router.state.location.pathname).toBe(`/zikao/course/00023/practice/${chapterId}`);
+    expect(router.state.location.pathname).toBe(`/study/course/00023/practice/${chapterId}`);
   });
   it('开始使用稳定 chapterId，内部链接不带周期 UUID', async () => {
     const router = mount();
     await screen.findByText('函数与极限');
     await userEvent.click(screen.getAllByRole('button', { name: '开始练习' })[0]);
-    expect(router.state.location.pathname).toBe(`/zikao/course/00023/practice/${chapterId}`);
+    expect(router.state.location.pathname).toBe(`/study/course/00023/practice/${chapterId}`);
     expect(router.state.location.search).not.toContain(cycleId);
     expect(router.state.location.pathname).not.toMatch(/ch\d+/);
   });
@@ -231,7 +231,7 @@ describe('刷题章节选择', () => {
     expect(router.state.location.search).toContain('mode=VARIANT');
     expect(screen.getByText('共 12 题，直接开始练习。')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: '开始真题变种' }));
-    expect(router.state.location.pathname).toBe('/zikao/course/00023/practice/variant');
+    expect(router.state.location.pathname).toBe('/study/course/00023/practice/variant');
   });
   it('错题按钮请求真实 WRONG 列表，并携带错题模式和题目 ID', async () => {
     let filter = '';
@@ -307,7 +307,7 @@ describe('刷题章节选择', () => {
         return HttpResponse.json({ code: 50001, data: null, message: '失败' }, { status: 500 });
       }),
     );
-    mount(`/zikao/course/00023/practice?cycleId=${cycleId}&filter=WRONG`);
+    mount(`/study/course/00023/practice?cycleId=${cycleId}&filter=WRONG`);
     await screen.findByText('正在加载错题');
     await screen.findByText('错题加载失败，请重试。');
     server.use(http.get(questionsUrl, () => ok({ items: [], page: 1, size: 20, total: 0 })));
@@ -533,7 +533,7 @@ describe('刷题章节选择', () => {
         return ok(course);
       }),
     );
-    mount('/zikao/course/00023/practice');
+    mount('/study/course/00023/practice');
     await screen.findByLabelText('考试周期');
     await userEvent.selectOptions(screen.getByLabelText('考试周期'), cycleId);
     await screen.findByText('函数与极限');
@@ -545,7 +545,7 @@ describe('刷题章节选择', () => {
         HttpResponse.json({ code: 50001, data: null, message: '失败' }, { status: 500 }),
       ),
     );
-    mount('/zikao/course/00023/practice');
+    mount('/study/course/00023/practice');
     await screen.findByText('考试周期加载失败，请重试。');
     server.use(
       http.get('/api/v1/exams/cycles', () => ok({ items: [], page: 1, size: 20, total: 0 })),

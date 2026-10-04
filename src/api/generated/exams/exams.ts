@@ -36,6 +36,8 @@ import type {
   ListLegacyHistoryResponse,
   ListPapersParams,
   ListPapersResponse,
+  ListScoreRevisionsParams,
+  ListScoreRevisionsResponse,
   ListScoresParams,
   ListScoresResponse,
   OverrideConfirm,
@@ -312,7 +314,7 @@ export const deleteScoreImage = (
       options);
     }
   /**
- * 不开放新的批改/补题任务。
+ * 历史归档只读；新批改使用 /grading，补题仍未开放。
 本人数据，身份来自JWT。
  * @summary 旧检测、批改和计划只读历史
  */
@@ -471,6 +473,20 @@ export const adminDecideLegacyPass = (
     },
       options);
     }
+  /**
+ * @summary 查看本人成绩修订快照（迁移基线及今后修订）
+ */
+export const listScoreRevisions = (
+    courseId: string,
+    scoreId: string,
+    params?: ListScoreRevisionsParams,
+ options?: SecondParameter<typeof apiRequest<ListScoreRevisionsResponse>>,) => {
+      return apiRequest<ListScoreRevisionsResponse>(
+      {url: `/api/v1/exams/courses/${courseId}/scores/${scoreId}/revisions`, method: 'GET',
+        params
+    },
+      options);
+    }
   export type ListCyclesResult = NonNullable<Awaited<ReturnType<typeof listCycles>>>
 export type GetCycleResult = NonNullable<Awaited<ReturnType<typeof getCycle>>>
 export type GetUnlockResult = NonNullable<Awaited<ReturnType<typeof getUnlock>>>
@@ -499,3 +515,4 @@ export type AdminUpdatePaperResult = NonNullable<Awaited<ReturnType<typeof admin
 export type AdminListLegacyPassReviewsResult = NonNullable<Awaited<ReturnType<typeof adminListLegacyPassReviews>>>
 export type AdminGetLegacyPassReviewResult = NonNullable<Awaited<ReturnType<typeof adminGetLegacyPassReview>>>
 export type AdminDecideLegacyPassResult = NonNullable<Awaited<ReturnType<typeof adminDecideLegacyPass>>>
+export type ListScoreRevisionsResult = NonNullable<Awaited<ReturnType<typeof listScoreRevisions>>>

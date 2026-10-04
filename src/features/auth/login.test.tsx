@@ -7,8 +7,8 @@ import { server } from '../../mocks/server';
 
 it('登录标题正确，空字段提示具体且聚焦第一个无效字段', async () => {
   renderRoute('/login');
-  await screen.findByRole('heading', { name: '登录学习知途' });
-  expect(document.title).toBe('登录 · 学习知途');
+  await screen.findByRole('heading', { name: '欢迎回来' });
+  expect(document.title).toBe('登录 · 知途个人管理平台');
   const username = screen.getByLabelText('用户名或邮箱');
   const password = screen.getByLabelText('密码');
   await userEvent.click(screen.getByRole('button', { name: '登录' }));
@@ -38,7 +38,7 @@ it('Enter 可提交，失败保留输入，pending 时多次提交仅发一个�
     }),
   );
   renderRoute('/login');
-  await screen.findByRole('heading', { name: '登录学习知途' });
+  await screen.findByRole('heading', { name: '欢迎回来' });
   const username = screen.getByLabelText('用户名或邮箱');
   const password = screen.getByLabelText('密码');
   await userEvent.type(username, 'learner');
@@ -62,7 +62,7 @@ it('Enter 可提交，失败保留输入，pending 时多次提交仅发一个�
 it('成功登录完整保留原深链接的查询参数和锚点', async () => {
   const target = '/health?source=login-check#service';
   const { router } = renderRoute(`/login?${new URLSearchParams({ redirect: target })}`);
-  await screen.findByRole('heading', { name: '登录学习知途' });
+  await screen.findByRole('heading', { name: '欢迎回来' });
   await userEvent.click(screen.getByRole('button', { name: '使用演示账号' }));
   await screen.findByRole('heading', { name: '工程健康检查' });
   expect(

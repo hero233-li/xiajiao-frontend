@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+import { createUuid } from '../utils/uuid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getCourseByCode } from './generated/courses/courses';
 import * as api from './generated/exams/exams';
@@ -125,6 +127,7 @@ export function useExamActions(courseId: string, cycleId: string) {
           ).data,
     onSettled: refresh,
   });
+  const pendingCreation = useRef<{ body: string; key: string }>();
   const save = useMutation({
     mutationFn: async (request: {
       body: ScoreWrite;
@@ -135,7 +138,15 @@ export function useExamActions(courseId: string, cycleId: string) {
         const body: ScoreUpdate = { ...fields, expectedRevision: request.record.revision };
         return (await api.updateScore(courseId, request.record.id, body, options)).data;
       }
-      return (await api.createScore(courseId, request.body, options)).data;
+      const serialized = JSON.stringify(request.body);
+      if (pendingCreation.current?.body !== serialized)
+        pendingCreation.current = { body: serialized, key: createUuid() };
+      const response = await api.createScore(courseId, request.body, {
+        ...options,
+        headers: { 'Idempotency-Key': pendingCreation.current.key },
+      });
+      pendingCreation.current = undefined;
+      return response.data;
     },
     onSettled: refresh,
   });
@@ -160,4 +171,13 @@ export function saveExamFile(result: FileDownload) {
   link.click();
   link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export function useScoreRevisions(courseId: string, scoreId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: ['exams', sessionStore.getSnapshot()?.user.id, courseId, 'revisions', scoreId],
+    enabled: enabled && !!scoreId,
+    queryFn: async ({ signal }) =>
+      (await api.listScoreRevisions(courseId, scoreId!, { page: 1, size: 100 }, { ...options, signal })).data,
+  });
 }

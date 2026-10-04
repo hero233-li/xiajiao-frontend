@@ -115,9 +115,9 @@ afterAll(() => server.close());
 function mount(selected = true, initialPath?: string) {
   const path =
     initialPath ||
-    `/zikao/course/00023/knowledge?cycleId=${cycleId}${selected ? `&moduleId=${moduleId}` : ''}`;
+    `/study/course/00023/knowledge?cycleId=${cycleId}${selected ? `&moduleId=${moduleId}` : ''}`;
   const router = createMemoryRouter(
-    [{ path: '/zikao/course/:code/knowledge', element: <KnowledgePage /> }],
+    [{ path: '/study/course/:code/knowledge', element: <KnowledgePage /> }],
     { initialEntries: [path], future: { v7_relativeSplatPath: true } },
   );
   const client = new QueryClient({
@@ -143,7 +143,7 @@ const pause = (ms: number) =>
 
 describe('知识合集', () => {
   it('列表与详情使用不含解答的生成类型；契约禁止例题解答字段', async () => {
-    const spec = parse(readFileSync('../docs/openapi.yaml', 'utf8'));
+    const spec = parse(readFileSync('docs/openapi.yaml', 'utf8'));
     expect(Object.keys(spec.components.schemas.KnowledgeExample.properties).sort()).toEqual([
       'id',
       'question',
@@ -262,7 +262,7 @@ describe('知识合集', () => {
     await loaded();
   });
   it('没有公式、例题和资源时各有说明及行动', async () => {
-    mount(true, `/zikao/course/00023/knowledge?cycleId=${cycleId}&moduleId=${secondId}`);
+    mount(true, `/study/course/00023/knowledge?cycleId=${cycleId}&moduleId=${secondId}`);
     await loaded();
     expect(screen.getByText('本模块暂无独立公式。')).toBeInTheDocument();
     expect(screen.getByText('本模块暂无例题。')).toBeInTheDocument();
@@ -468,7 +468,7 @@ describe('知识合集', () => {
     );
     const { router } = mount(
       false,
-      `/zikao/course/00023/knowledge?cycleId=${cycleId}&q=无结果&difficulty=5&page=2`,
+      `/study/course/00023/knowledge?cycleId=${cycleId}&q=无结果&difficulty=5&page=2`,
     );
     await screen.findByText('没有符合条件的知识模块。');
     await userEvent.click(screen.getAllByRole('button', { name: '清除筛选' }).at(-1)!);
@@ -483,7 +483,7 @@ describe('知识合集', () => {
     vi.spyOn(window, 'scrollY', 'get').mockReturnValue(480);
     const { router } = mount(
       false,
-      `/zikao/course/00023/knowledge?cycleId=${cycleId}&q=导数&difficulty=2`,
+      `/study/course/00023/knowledge?cycleId=${cycleId}&q=导数&difficulty=2`,
     );
     await screen.findByRole('button', { name: /导数定义/ });
     await userEvent.click(screen.getByRole('button', { name: /导数定义/ }));
@@ -513,7 +513,7 @@ describe('知识合集', () => {
     expect(button).toHaveAttribute('aria-expanded', 'false');
   });
   it('缺少周期时选择后加载课程', async () => {
-    const { router } = mount(false, '/zikao/course/00023/knowledge');
+    const { router } = mount(false, '/study/course/00023/knowledge');
     await screen.findByLabelText('考试周期');
     await userEvent.selectOptions(screen.getByLabelText('考试周期'), cycleId);
     await screen.findByRole('button', { name: /导数定义/ });

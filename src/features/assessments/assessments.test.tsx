@@ -21,7 +21,7 @@ let submissions: number;
 let saved: number;
 const envelope = (data: unknown) => HttpResponse.json({ code: 0, data, message: 'ok' });
 const cycle = 'cycle';
-function mount(path = `/zikao/course/00023/tests/session?cycleId=${cycle}`) {
+function mount(path = `/study/course/00023/tests/session?cycleId=${cycle}`) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -30,8 +30,8 @@ function mount(path = `/zikao/course/00023/tests/session?cycleId=${cycle}`) {
       <MemoryRouter initialEntries={[path]}>
         <CycleProvider>
           <Routes>
-            <Route path="/zikao/course/:code/tests/:testId" element={<Component />} />
-            <Route path="/zikao/course/:code/tests/:testId/result" element={<Component />} />
+            <Route path="/study/course/:code/tests/:testId" element={<Component />} />
+            <Route path="/study/course/:code/tests/:testId/result" element={<Component />} />
           </Routes>
         </CycleProvider>
       </MemoryRouter>
@@ -234,7 +234,7 @@ describe('检测作答与结果', () => {
     await screen.findByText('第 1 题 · 单选');
   });
   it('章节检测新入口要求先核对章节资格，不擅自创建会话', async () => {
-    mount(`/zikao/course/00023/tests/new?cycleId=${cycle}&kind=CHAPTER`);
+    mount(`/study/course/00023/tests/new?cycleId=${cycle}&kind=CHAPTER`);
     expect(await screen.findByRole('link', { name: '选择检测章节' })).toHaveAttribute(
       'href',
       expect.stringContaining('mode=detect'),
@@ -314,7 +314,7 @@ describe('检测作答与结果', () => {
     await screen.findByText('真题已开放');
     expect(screen.getByRole('link', { name: '查看历年真题' })).toHaveAttribute(
       'href',
-      '/zikao/course/00023/exams',
+      '/study/course/00023/exams',
     );
   });
   it('快速改选串行保存并使用上一次保存时间，最后选项保持选中', async () => {

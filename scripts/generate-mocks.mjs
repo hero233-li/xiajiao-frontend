@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { parse } from 'yaml';
-const spec = parse(await readFile('../docs/openapi.yaml', 'utf8'));
+const spec = parse(await readFile('docs/openapi.yaml', 'utf8'));
 const operations = [];
 for (const [path, item] of Object.entries(spec.paths)) {
   for (const [method, operation] of Object.entries(item)) {

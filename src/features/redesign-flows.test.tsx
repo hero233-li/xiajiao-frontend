@@ -46,7 +46,7 @@ function mount(element: React.ReactNode) {
         })
       }
     >
-      <MemoryRouter initialEntries={['/zikao/schedule']}>
+      <MemoryRouter initialEntries={['/study/schedule']}>
         {element}
         <Location />
       </MemoryRouter>
@@ -86,7 +86,7 @@ describe('新增的完整业务入口', () => {
     await user.click(screen.getByRole('button', { name: '应用到所有日期' }));
     await user.click(screen.getByRole('button', { name: '确认配置并创建' }));
     await waitFor(() =>
-      expect(screen.getByText('/zikao/schedule?planId=created')).toBeInTheDocument(),
+      expect(screen.getByText('/study/schedule?planId=created')).toBeInTheDocument(),
     );
     expect(body?.config).toMatchObject({
       name: '五周备考计划',
@@ -147,7 +147,7 @@ describe('新增的完整业务入口', () => {
     expect(body).toBeUndefined();
     await user.click(screen.getByRole('button', { name: '确认开始计时' }));
     await waitFor(() =>
-      expect(screen.getByText('/zikao/course/00023/tests/session-real')).toBeInTheDocument(),
+      expect(screen.getByText('/study/course/00023/tests/session-real')).toBeInTheDocument(),
     );
     expect(body).toEqual({ kind: 'MOCK', chapterId: null });
     expect(cycle).toBe('cycle');

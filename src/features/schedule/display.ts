@@ -31,7 +31,7 @@ export function taskHref(task: PlanTask, _cycleId?: string) {
       : task.kind === 'ITEM'
         ? 'catalog'
         : task.target.pane.toLowerCase();
-  return `/zikao/course/${encodeURIComponent(task.target.courseCode)}/${pane}?${params}${pane === 'catalog' && task.target.chapterId ? `#${encodeURIComponent(task.target.chapterId)}` : ''}`;
+  return `/study/course/${encodeURIComponent(task.target.courseCode)}/${pane}?${params}${pane === 'catalog' && task.target.chapterId ? `#${encodeURIComponent(task.target.chapterId)}` : ''}`;
 }
 
 export function durationLabel(minutes: number) {

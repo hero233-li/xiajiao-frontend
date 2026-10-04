@@ -4,7 +4,7 @@ export function RegionState({
   kind,
   message,
   retry,
-  href = '/zikao/courses',
+  href = '/study/courses',
   action = '查看学习书架',
 }: {
   kind: 'loading' | 'empty' | 'error';

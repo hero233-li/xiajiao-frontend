@@ -112,11 +112,11 @@ function mount(hash = '', page = false) {
   const router = createMemoryRouter(
     [
       {
-        path: '/zikao/course/:code/catalog',
+        path: '/study/course/:code/catalog',
         element: page ? <CatalogPage /> : <CatalogPanel courseId="course-a" />,
       },
     ],
-    { initialEntries: [`/zikao/course/00023/catalog?cycleId=cycle-a${hash}`] },
+    { initialEntries: [`/study/course/00023/catalog?cycleId=cycle-a${hash}`] },
   );
   render(
     <QueryClientProvider client={client}>
@@ -134,7 +134,7 @@ describe('任务式学习目录', () => {
       'noopener noreferrer',
     );
     expect(data.chapters[0].items[0].completed).toBe(false);
-    expect(screen.getByText('预计 20 分钟 · 待学习')).toBeVisible();
+    expect(document.querySelector('.reader-document-meta')).toHaveTextContent(/预计 20 分钟.*待学习/);
   });
   it('深链接以稳定 item ID 定位，保留周期', async () => {
     const { router } = mount('&itemId=item-c#stage-b');
@@ -256,7 +256,7 @@ describe('任务式学习目录', () => {
     await screen.findByText('此课程暂未发布学习条目。');
     expect(screen.getByRole('link', { name: '查看学习书架' })).toHaveAttribute(
       'href',
-      '/zikao/courses',
+      '/study/courses',
     );
   });
   it('失败重试恢复目录', async () => {

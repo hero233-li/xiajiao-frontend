@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ArrowRight, Check, Clock, CalendarDays } from 'lucide-react';
+import { ArrowRight, Check, CalendarDays } from 'lucide-react';
 import { CyclePicker, useCycle } from '../features/cycle/CycleContext';
 import { usePlan, useTaskCompletion } from '../api/schedule';
 import { Link, useSearchParams } from '../features/cycle/navigation';
@@ -74,7 +74,7 @@ function TodayTasks({ plan, date }: { plan: Plan; date: string }) {
       ) : (
         <p className="inline-empty">今天没有安排，选一门课程按自己的节奏学习。</p>
       )}
-      <Link className="text-action" to="/zikao/schedule">
+      <Link className="text-action" to="/study/schedule">
         查看整周安排 <ArrowRight size={15} />
       </Link>
     </section>
@@ -100,12 +100,12 @@ export function DashboardPage() {
       ? data.continueLearning
       : null);
   return (
-    <section className="desk-home">
+    <section className="study-workbench">
       <header className="page-heading">
         <div>
-          <p className="eyebrow">YOUR STUDY DESK / 今日学习</p>
-          <h1>从下一步开始。</h1>
-          <p className="secondary">{data?.localDate ?? '今天'} · 把注意力留给眼前这一项。</p>
+          <p className="eyebrow">STUDY / FOCUS ON THE NEXT STEP</p>
+          <h1>今日学习</h1>
+          <p className="secondary">{data?.localDate ?? '今天'} · 从一项明确的任务开始。</p>
         </div>
         <CyclePicker />
       </header>
@@ -125,162 +125,154 @@ export function DashboardPage() {
         />
       ) : (
         data && (
-          <div className="home-workspace">
-            <div className="home-primary">
-              <section className="next-study">
+          <>
+            <section className="study-focus-banner">
+              <div>
                 <p className="eyebrow">
-                  <span className="live-dot" />{' '}
-                  {data.todaySuggestion ? '下一项 · 来自今日计划' : '继续学习'}
+                  {data.todaySuggestion ? '今日计划 / 下一项' : '接着上次的位置'}
                 </p>
                 <h2>
                   {target ? <MathText text={target.title} /> : '选择一门课程，开始今天的学习'}
                 </h2>
                 <p>
                   {target
-                    ? data.courses.find((c) => c.code === target.target.courseCode)?.name ===
-                      target.title
-                      ? '接着上次阅读位置继续，或在目录中选择下一项。'
-                      : data.courses.find((c) => c.code === target.target.courseCode)?.name
-                    : '阅读、练习与复习，从这里接着往前。'}
+                    ? data.courses.find((c) => c.code === target.target.courseCode)?.name
+                    : '阅读、练习与复习，都从这里接着往前。'}
                 </p>
-                <div className="next-study-actions">
+                <div className="row">
                   <Link
                     className="button button-primary"
-                    to={target ? learningTargetPath(target.target) : '/zikao/courses'}
+                    to={target ? learningTargetPath(target.target) : '/study/courses'}
                   >
-                    {target ? '开始这一项' : '选择课程'}
-                    <ArrowRight size={18} />
+                    {target ? '开始这一项' : '选择课程'} <ArrowRight size={17} />
                   </Link>
-                  {data.todaySuggestion &&
-                    data.continueLearning &&
-                    learningTargetPath(data.todaySuggestion.target) !==
-                      learningTargetPath(data.continueLearning.target) && (
-                      <Link
-                        className="text-action"
-                        to={learningTargetPath(data.continueLearning.target)}
-                      >
+                  {data.continueLearning &&
+                    data.courses.some((c) => c.id === data.continueLearning?.courseId) && (
+                      <Link to={learningTargetPath(data.continueLearning.target)}>
                         回到上次位置
                       </Link>
                     )}
-                  <Link className="text-action" to="/zikao/schedule">
-                    调整安排
-                  </Link>
                 </div>
-              </section>
-              {plan.data && plan.data.config.cycleId === cycleId ? (
-                <TodayTasks plan={plan.data} date={data.localDate} />
-              ) : (
-                <section className="desk-section">
-                  <h2>今日清单</h2>
-                  {plan.isError ? (
-                    <RegionState
-                      kind="error"
-                      message="计划详情读取失败。"
-                      retry={() => void plan.refetch()}
-                    />
-                  ) : data.selectedPlanId ? (
-                    <p role="status">正在加载清单…</p>
-                  ) : (
-                    <>
-                      <p className="secondary">
-                        还没有学习计划。设置每日可用时间，让任务有明确的落点。
-                      </p>
-                      <Link className="button button-secondary" to="/zikao/schedule">
-                        建立学习计划
-                      </Link>
-                    </>
-                  )}
-                </section>
-              )}
-              <section className="desk-section">
-                <div className="section-title">
-                  <h2>我的学习书架</h2>
-                  <Link className="text-action" to="/zikao/courses">
-                    全部课程 <ArrowRight size={15} />
-                  </Link>
-                </div>
-                <div className="home-books">
-                  {data.courses.map((course, i) => (
-                    <Link
-                      key={course.id}
-                      className="book-entry"
-                      to={`/zikao/course/${course.code}/${course.capabilities.manual ? 'manual' : 'catalog'}`}
-                    >
-                      <span className="book-number">{String(i + 1).padStart(2, '0')}</span>
-                      <span>
-                        <strong>{course.name}</strong>
-                        <small>
-                          {course.progress.completedItems} / {course.progress.totalItems} 项完成
-                        </small>
-                      </span>
-                      <ArrowRight size={16} />
-                    </Link>
-                  ))}
-                </div>
-                {!data.courses.length && <p className="inline-empty">本周期尚未开放课程。</p>}
-              </section>
-            </div>
-            <aside className="home-context">
-              <section>
-                <p className="eyebrow">考试日历</p>
-                <h2>{cycle?.selected?.name}</h2>
-                <ul className="exam-agenda">
-                  {orderedExams(data).map((item) => (
-                    <li key={item.courseId}>
-                      <CalendarDays size={17} />
-                      <div>
-                        <strong>
-                          {data.courses.find((c) => c.id === item.courseId)?.name ??
-                            item.courseCode}
-                        </strong>
-                        <small>{item.examDate ? dateLabel(item.examDate) : '日期待确认'}</small>
-                      </div>
-                      <span>
-                        {item.status === 'TODAY'
-                          ? '今天'
-                          : item.status === 'FINISHED'
-                            ? '已结束'
-                            : item.daysRemaining !== null
-                              ? `${item.daysRemaining}天`
-                              : '待定'}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                {!data.countdowns.length && (
-                  <p className="inline-empty">考试日期公布后显示在这里。</p>
+              </div>
+              <div className="study-progress-summary">
+                <span>全部课程累计进度</span>
+                <strong>
+                  {data.overallProgress.percent}
+                  <small>%</small>
+                </strong>
+                <span>
+                  {data.overallProgress.completedItems} / {data.overallProgress.totalItems} 项
+                </span>
+                <p>每一步都有记录。</p>
+              </div>
+            </section>
+            <div className="study-workbench-grid">
+              <div>
+                {plan.data && plan.data.config.cycleId === cycleId ? (
+                  <TodayTasks plan={plan.data} date={data.localDate} />
+                ) : (
+                  <section className="platform-section">
+                    <div className="section-title">
+                      <h2>今日清单</h2>
+                      <Link to="/study/schedule">管理学习计划</Link>
+                    </div>
+                    {plan.isError ? (
+                      <RegionState
+                        kind="error"
+                        message="计划详情读取失败。"
+                        retry={() => void plan.refetch()}
+                      />
+                    ) : data.selectedPlanId ? (
+                      <p role="status">正在加载清单…</p>
+                    ) : (
+                      <>
+                        <p className="inline-empty">
+                          还没有学习计划。设置可用时间，让每个任务有明确的落点。
+                        </p>
+                        <Link className="button button-secondary" to="/study/schedule">
+                          建立学习计划
+                        </Link>
+                      </>
+                    )}
+                  </section>
                 )}
-              </section>
-              <section className="quiet-progress">
-                <p className="eyebrow">持续积累</p>
-                <p>
-                  <strong>{data.overallProgress.completedItems}</strong> /{' '}
-                  {data.overallProgress.totalItems} 项
-                </p>
-                <div className="progress-track">
-                  <div
-                    className="progress-fill"
-                    style={{ width: `${data.overallProgress.percent}%` }}
-                  />
+                <section className="platform-section">
+                  <div className="section-title">
+                    <h2>我的科目</h2>
+                    <Link to="/study/courses">管理科目</Link>
+                  </div>
+                  <div className="study-course-ledger">
+                    {data.courses.map((c, i) => (
+                      <Link
+                        key={c.id}
+                        to={`/study/course/${c.code}/${c.capabilities.manual ? 'manual' : 'catalog'}`}
+                      >
+                        <span className="course-order">{String(i + 1).padStart(2, '0')}</span>
+                        <div>
+                          <h3>{c.name}</h3>
+                          <p>
+                            {c.code} · {c.capabilities.manual ? '实践手册' : '阅读目录'}
+                          </p>
+                        </div>
+                        <div className="course-mini-progress">
+                          <span>
+                            {c.progress.completedItems} / {c.progress.totalItems}
+                          </span>
+                          <progress value={c.progress.percent} max={100} />
+                        </div>
+                        <ArrowRight size={17} />
+                      </Link>
+                    ))}
+                  </div>
+                  {!data.courses.length && <p className="inline-empty">本周期还没有开放课程。</p>}
+                </section>
+              </div>
+              <aside className="study-agenda">
+                <div className="section-title">
+                  <h2>考试日历</h2>
+                  <CalendarDays size={18} />
                 </div>
-                <small>已发布目录完成度 {data.overallProgress.percent}%</small>
-              </section>
-              <section className="desk-tip">
-                <Clock size={19} />
-                <p>
-                  完成阅读后标记进度。
-                  <br />
-                  练习成绩与阅读进度分别记录。
-                </p>
-              </section>
-              <Link className="text-action" to="/zikao/notes">
-                打开学习笔记 <ArrowRight size={15} />
-              </Link>
-            </aside>
-          </div>
+                <p className="secondary">{cycle?.selected?.name}</p>
+                {orderedExams(data).map((item) => (
+                  <div className="study-exam-line" key={item.courseId}>
+                    <div>
+                      <strong>
+                        {data.courses.find((c) => c.id === item.courseId)?.name ?? item.courseCode}
+                      </strong>
+                      <span>{item.examDate ? dateLabel(item.examDate) : '日期待确认'}</span>
+                    </div>
+                    <small>
+                      {item.status === 'TODAY'
+                        ? '今天'
+                        : item.status === 'FINISHED'
+                          ? '已结束'
+                          : item.daysRemaining != null
+                            ? `${item.daysRemaining} 天`
+                            : '—'}
+                    </small>
+                  </div>
+                ))}
+                {!data.countdowns.length && (
+                  <p className="inline-empty">报考科目后，在这里查看考试安排。</p>
+                )}
+                <div className="study-tools">
+                  <h3>学习工具</h3>
+                  <Link to="/study/training">
+                    练习与能力检测 <ArrowRight size={15} />
+                  </Link>
+                  <Link to="/study/notes">
+                    学习笔记 <ArrowRight size={15} />
+                  </Link>
+                  <Link to="/study/schedule">
+                    查看学习计划 <ArrowRight size={15} />
+                  </Link>
+                </div>
+              </aside>
+            </div>
+          </>
         )
       )}
     </section>
   );
 }
-export { DashboardPage as Component };
+export const Component = DashboardPage;

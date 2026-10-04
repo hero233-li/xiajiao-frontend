@@ -79,7 +79,7 @@ function mount(role: 'ADMIN' | 'USER' = 'ADMIN') {
   const router = createMemoryRouter(
     [
       {
-        path: '/zikao/courses',
+        path: '/study/courses',
         element: (
           <CycleProvider>
             <CoursesPage />
@@ -88,7 +88,7 @@ function mount(role: 'ADMIN' | 'USER' = 'ADMIN') {
       },
       { path: '*', element: <p>目标页面</p> },
     ],
-    { initialEntries: ['/zikao/courses'], future: { v7_relativeSplatPath: true } },
+    { initialEntries: ['/study/courses'], future: { v7_relativeSplatPath: true } },
   );
   render(
     <QueryClientProvider client={client}>
@@ -118,7 +118,7 @@ it('六科书目提供报考记录并遵循能力，实践科入口遵循能力'
   expect(practice.getByRole('link', { name: '实践手册' })).toBeInTheDocument();
   expect(practice.getByRole('link', { name: '课程笔记' })).toHaveAttribute(
     'href',
-    '/zikao/course/13171/notes',
+    '/study/course/13171/notes',
   );
 });
 it('普通账号只能查看时间，管理员可编辑，保持服务器权限规则', async () => {
@@ -147,7 +147,7 @@ it('主入口使用有效能力，无内容时不伪造课程入口', async () =
   await screen.findByRole('heading', { name: names[0] });
   expect(within(card(names[0])).getByRole('link', { name: '开始学习' })).toHaveAttribute(
     'href',
-    '/zikao/course/00023/manual',
+    '/study/course/00023/manual',
   );
   expect(within(card(names[1])).queryByRole('link', { name: '开始学习' })).not.toBeInTheDocument();
 });
@@ -177,7 +177,7 @@ it('只修改本科时间，读取最新周期以保留其他安排，重新进�
   expect(writes[0].courses).toHaveLength(6);
   expect(within(card(names[0])).getByText('10/25 14:30–17:00')).toBeInTheDocument();
   await act(() => router.navigate('/other'));
-  await act(() => router.navigate('/zikao/courses'));
+  await act(() => router.navigate('/study/courses'));
   await screen.findByRole('heading', { name: names[0] });
   expect(within(card(names[0])).getByText('10/25 14:30–17:00')).toBeInTheDocument();
 });
@@ -273,7 +273,7 @@ it('切换周期保留课程链接与返回路径，错误和空数据可恢复'
   await screen.findByRole('heading', { name: names[0] });
   expect(within(card(names[0])).getByRole('link', { name: '开始学习' })).toHaveAttribute(
     'href',
-    `/zikao/course/00023/catalog?cycle=${cycleKey(other)}`,
+    `/study/course/00023/catalog?cycle=${cycleKey(other)}`,
   );
   expect(router.state.location.search).toBe(`?cycle=${cycleKey(other)}`);
 });

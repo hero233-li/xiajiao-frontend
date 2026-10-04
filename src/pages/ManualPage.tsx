@@ -17,7 +17,7 @@ export function ManualPage() {
       <section className="state">
         <h1>实践手册</h1>
         <p>请从备考总览选择考试周期和课程。</p>
-        <Link className="button button-primary" to="/zikao">
+        <Link className="button button-primary" to="/study">
           前往备考总览
         </Link>
       </section>

@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import type { Paper, ScoreRecord, ScoreWrite } from '../../api/generated/models';
-import { useExamActions } from '../../api/exams';
+import { useExamActions, useScoreRevisions } from '../../api/exams';
 import { Modal } from '../../components/Modal';
 import { Button } from '../../components/Button';
 
@@ -20,6 +20,8 @@ export function ScoreDialog({
   onClose: () => void;
 }) {
   const { save, upload } = useExamActions(courseId, record?.cycleId ?? cycleId);
+  const [showRevisions, setShowRevisions] = useState(false);
+  const history = useScoreRevisions(courseId, record?.id, showRevisions);
   const [image, setImage] = useState<File>();
   const [imageError, setImageError] = useState('');
   const [error, setError] = useState('');
@@ -63,6 +65,20 @@ export function ScoreDialog({
     <Modal open title={record ? '编辑试卷成绩' : '录入试卷成绩'} onClose={onClose}>
       <form className="stack exam-form" onSubmit={(event) => void submit(event)}>
         <p>成绩仅为自报记录，图片仅用于存档，不创建批改任务。</p>
+        {record && (
+          <details onToggle={(event) => setShowRevisions(event.currentTarget.open)}>
+            <summary>查看成绩修订历史</summary>
+            {showRevisions && history.isPending && <p role="status">正在读取修订历史…</p>}
+            {history.isError && <p role="alert">修订历史读取失败，请关闭后重新展开。</p>}
+            {history.data && <ul>{history.data.items.map((entry) => (
+              <li key={entry.record.revision}>
+                版本 {entry.record.revision} · {entry.record.score} 分 · {entry.record.practicedOn}
+                {entry.captureKind === 'MIGRATION_BASELINE' ? '（迁移时保留的原始记录）' : entry.captureKind === 'CREATED' ? '（首次保存）' : '（修订）'}
+              </li>
+            ))}</ul>}
+            {history.data && history.data.total > history.data.items.length && <p>这里只显示最近100次修订，完整记录继续保存在系统中。</p>}
+          </details>
+        )}
         {savedId && <p role="status">成绩已保存。可重试图片上传，或关闭弹窗保留成绩。</p>}
         <fieldset disabled={busy || !!savedId} className="stack exam-fields">
           <legend className="sr-only">成绩信息</legend>

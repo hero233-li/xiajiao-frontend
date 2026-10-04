@@ -1,7 +1,7 @@
 import { defineConfig } from 'orval';
 export default defineConfig({
   xuexizhitu: {
-    input: { target: '../docs/openapi.yaml', override: { transformer: './scripts/normalize-openapi.mjs' } },
+    input: { target: './docs/openapi.yaml', override: { transformer: './scripts/normalize-openapi.mjs' } },
     output: {
       target: './src/api/generated/endpoints.ts',
       schemas: './src/api/generated/models',

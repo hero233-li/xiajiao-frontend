@@ -63,7 +63,7 @@ export function Component() {
                   .map((c) => (
                     <Link
                       key={c.id}
-                      to={`/zikao/course/${c.code}/${pane === 'detect' ? 'practice?mode=detect' : pane}`}
+                      to={`/study/course/${c.code}/${pane === 'detect' ? 'practice?mode=detect' : pane}`}
                     >
                       <strong>{c.name}</strong>
                       <ArrowRight size={16} />

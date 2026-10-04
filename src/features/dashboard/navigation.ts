@@ -9,7 +9,7 @@ export function learningTargetPath(target: Navigation, _cycleId?: string) {
     target.pane === 'PRACTICE' && target.chapterId
       ? `/${encodeURIComponent(target.chapterId)}`
       : '';
-  return `/zikao/course/${encodeURIComponent(target.courseCode)}/${target.pane.toLowerCase()}${chapter}?${query}`;
+  return `/study/course/${encodeURIComponent(target.courseCode)}/${target.pane.toLowerCase()}${chapter}?${query}`;
 }
 export function dateLabel(date: string) {
   return new Intl.DateTimeFormat('zh-CN', {

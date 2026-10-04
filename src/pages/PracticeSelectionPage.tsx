@@ -181,7 +181,7 @@ function AssessmentDialog({
           ? `?cycle=${cycleKey(selectedCycle)}`
           : '';
       navigate(
-        `/zikao/course/${encodeURIComponent(code)}/tests/${encodeURIComponent(session.id)}${cycleSearch}`,
+        `/study/course/${encodeURIComponent(code)}/tests/${encodeURIComponent(session.id)}${cycleSearch}`,
       );
     } catch {
       /* Button 展示后端错误，可用同一幂等键重试。 */
@@ -331,7 +331,7 @@ function WrongSelection({
               </p>
               <Link
                 className="button button-secondary"
-                to={`/zikao/course/${encodeURIComponent(code)}/practice/${encodeURIComponent(question.chapterId)}?filter=WRONG&questionId=${encodeURIComponent(question.id)}`}
+                to={`/study/course/${encodeURIComponent(code)}/practice/${encodeURIComponent(question.chapterId)}?filter=WRONG&questionId=${encodeURIComponent(question.id)}`}
               >
                 重做此题
               </Link>
@@ -476,7 +476,7 @@ function Selection({ overview, code }: { overview: PracticeOverview; code: strin
   const detection = search.get('mode') === 'detect';
   const [assessmentChapter, setAssessmentChapter] = useState<PracticeChapter | null>(null);
   const navigate = useNavigate();
-  const base = `/zikao/course/${encodeURIComponent(code)}/practice`;
+  const base = `/study/course/${encodeURIComponent(code)}/practice`;
   const cycleQuery = '';
   function chooseMode(next: 'CHAPTER' | 'VARIANT', filter?: 'WRONG') {
     const params = new URLSearchParams(search);
@@ -562,7 +562,7 @@ function Selection({ overview, code }: { overview: PracticeOverview; code: strin
         <State
           message="当前课程暂无已发布的刷题章节。"
           action="查看我的科目"
-          onAction={() => navigate('/zikao/courses')}
+          onAction={() => navigate('/study/courses')}
         />
       ) : (
         <section className="stack" aria-labelledby="chapters-title">
@@ -663,7 +663,7 @@ export function PracticeSelectionPage() {
         <div>
           <h2>练习与检测</h2>
         </div>
-        <Link className="button button-ghost" to="/zikao/courses">
+        <Link className="button button-ghost" to="/study/courses">
           <ChevronLeft size={20} aria-hidden="true" />
           我的科目
         </Link>

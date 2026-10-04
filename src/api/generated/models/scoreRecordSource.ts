@@ -9,4 +9,5 @@ export type ScoreRecordSource = typeof ScoreRecordSource[keyof typeof ScoreRecor
 export const ScoreRecordSource = {
   MANUAL: 'MANUAL',
   LEGACY: 'LEGACY',
+  CODEX: 'CODEX',
 } as const;

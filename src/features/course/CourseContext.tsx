@@ -46,7 +46,7 @@ export function CourseFrame({ children }: PropsWithChildren) {
               ? '找不到这个考试周期'
               : '暂无考试周期'}
         </h1>
-        <Link to="/zikao">返回备考总览</Link>
+        <Link to="/study">返回备考总览</Link>
       </section>
     );
   if (query.isError && !query.data)
@@ -58,7 +58,7 @@ export function CourseFrame({ children }: PropsWithChildren) {
             : '课程加载失败'}
         </h1>
         <p>请返回我的科目选择课程，或稍后重试。</p>
-        <Link to="/zikao/courses">我的科目</Link>
+        <Link to="/study/courses">我的科目</Link>
         <button onClick={() => void query.refetch()}>重试</button>
       </section>
     );
@@ -77,19 +77,16 @@ export function CourseFrame({ children }: PropsWithChildren) {
   );
   return (
     <CourseContext.Provider value={course}>
-      <div
-        ref={frame}
-        className={`course-frame ${location.pathname.endsWith('/catalog') ? 'course-frame-catalog' : ''}`}
-      >
-        <header ref={head} className="course-frame-head">
+      <div ref={frame} className="study-course-frame">
+        <header ref={head} className="study-course-heading">
           <Breadcrumb
             items={[
-              { label: '今日学习', to: '/zikao' },
-              { label: '学习书架', to: '/zikao/courses' },
+              { label: '今日学习', to: '/study' },
+              { label: '学习书架', to: '/study/courses' },
               { label: course.name },
             ]}
           />
-          <div className="course-headline">
+          <div className="study-course-title">
             <div>
               <h1>{course.name}</h1>
               <p className="secondary">
@@ -109,16 +106,16 @@ export function CourseFrame({ children }: PropsWithChildren) {
                 )}
               </p>
             </div>
-            <div className="course-head-progress">
+            <div className="study-course-meter">
               目录完成 {course.progress.percent}%<br />
               <small>
                 {course.progress.completedItems} / {course.progress.totalItems} 项
               </small>
             </div>
           </div>
-          <nav aria-label="课程页面" className="course-tabs">
+          <nav aria-label="课程页面" className="study-course-tabs">
             {tabs.map(([path, title]) => (
-              <NavLink key={path} to={`/zikao/course/${code}/${path}`}>
+              <NavLink key={path} to={`/study/course/${code}/${path}`}>
                 {title}
               </NavLink>
             ))}

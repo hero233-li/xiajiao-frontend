@@ -5,30 +5,34 @@ import { BookOpen, CalendarCheck, PenLine, ScanLine, LogOut, Library } from 'luc
 import { useAuth } from '../hooks/useAuth';
 import { Button } from './Button';
 const destinations = [
-  ['/zikao', '今日', BookOpen],
-  ['/zikao/courses', '学习', Library],
-  ['/zikao/training', '练习与检测', ScanLine],
-  ['/zikao/schedule', '计划', CalendarCheck],
-  ['/zikao/notes', '笔记', PenLine],
+  ['/study', '今日', BookOpen],
+  ['/study/courses', '学习', Library],
+  ['/study/training', '练习与检测', ScanLine],
+  ['/study/schedule', '计划', CalendarCheck],
+  ['/study/notes', '笔记', PenLine],
 ] as const;
 export function AppHeader() {
   const location = useLocation();
   const active = (to: string) =>
-    to === '/zikao/courses'
+    to === '/study/courses'
       ? location.pathname === to ||
         /\/course\/[^/]+\/(catalog|knowledge|manual)/.test(location.pathname)
-      : to === '/zikao/training'
+      : to === '/study/training'
         ? location.pathname === to ||
           /\/course\/[^/]+\/(practice|tests|exams)/.test(location.pathname)
-        : to === '/zikao/notes'
+        : to === '/study/notes'
           ? location.pathname.endsWith('/notes')
           : location.pathname === to;
   const auth = useAuth();
   const [busy, setBusy] = useState(false);
   return (
-    <header className={location.pathname.startsWith('/admin') ? 'desk-header desk-admin-header' : 'desk-header'}>
+    <header
+      className={
+        location.pathname.startsWith('/admin') ? 'desk-header desk-admin-header' : 'desk-header'
+      }
+    >
       <div className="desk-header-inner">
-        <Link to="/zikao" className="desk-brand">
+        <Link to="/study" className="desk-brand">
           <span className="brand-symbol">途</span>
           <span>
             学习知途<small>把每一步，学扎实</small>
