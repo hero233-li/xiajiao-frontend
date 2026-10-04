@@ -295,6 +295,42 @@ endpoint(
   },
 );
 endpoint(
+  '/api/v1/fitness/weeks/import',
+  'post',
+  '任意起始日期导入7天训练与食谱，14份计划同一事务保存，版本冲突整体回滚',
+  {
+    type: 'object',
+    properties: {
+      items: { type: 'array', items: ref('FitnessEntry'), minItems: 14, maxItems: 14 },
+    },
+  },
+  ['idempotency'],
+  {
+    type: 'object',
+    additionalProperties: false,
+    required: ['startDate', 'days'],
+    properties: {
+      startDate: { type: 'string', format: 'date' },
+      days: {
+        type: 'array',
+        minItems: 7,
+        maxItems: 7,
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['training', 'meals', 'expectedTrainingRevision', 'expectedMealRevision'],
+          properties: {
+            training: ref('TrainingPlan'),
+            meals: ref('Meals'),
+            expectedTrainingRevision: { type: 'integer', minimum: -1 },
+            expectedMealRevision: { type: 'integer', minimum: -1 },
+          },
+        },
+      },
+    },
+  },
+);
+endpoint(
   '/api/v1/fitness/weeks/generate',
   'post',
   '周模板生成7天安排，任一天冲突整体回滚',

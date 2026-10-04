@@ -798,6 +798,7 @@ body:has(.platform-shell) {
   padding-top: 8px;
 }
 .platform-form fieldset {
+  min-width: 0;
   border: 0;
   padding: 0;
   margin: 0;
@@ -1952,4 +1953,109 @@ body:has(.platform-shell) {
 .platform-shell progress::-moz-progress-bar {
   background: #6286b2;
   border-radius: 5px;
+}
+
+/* User-authored first-week schedule: editable before and after real persistence. */
+.first-week-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-left: 3px solid var(--fitness-accent, #19866b);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  background: #f0f7f4;
+}
+.first-week-entry h2 {
+  margin: 4px 0 8px;
+  font-size: 20px;
+}
+.first-week-entry p {
+  margin: 0;
+}
+.first-week-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin: 20px 0;
+}
+.first-week-tabs button {
+  flex: 1;
+  min-width: 88px;
+}
+.first-week-tabs small {
+  display: block;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.first-week-note {
+  line-height: 1.8;
+  white-space: pre-wrap;
+  padding: 16px;
+  background: #f5f7f8;
+  border-radius: 8px;
+}
+.first-week-steps {
+  padding-left: 26px;
+}
+.first-week-steps li {
+  padding: 16px 0 16px 8px;
+  border-bottom: 1px solid #e3e8ed;
+  line-height: 1.8;
+}
+.first-week-steps p {
+  margin: 6px 0 0;
+}
+.first-week-dose {
+  color: #176b55;
+  font-size: 14px;
+}
+.first-week-meals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.first-week-meals h4 {
+  margin: 16px 0;
+  font-size: 16px;
+}
+.first-week-food {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 12px;
+  border-bottom: 1px solid #e3e8ed;
+  padding: 12px 0;
+}
+.first-week-food span {
+  color: #5b6875;
+  font-size: 13px;
+}
+.first-week-food p {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.first-week-actions {
+  position: sticky;
+  bottom: -24px;
+  background: white;
+  padding: 16px 0;
+  border-top: 1px solid #e3e8ed;
+  z-index: 1;
+}
+@media (max-width: 640px) {
+  .first-week-entry {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
+  }
+  .first-week-meals {
+    grid-template-columns: 1fr;
+  }
+  .first-week-form .section-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }

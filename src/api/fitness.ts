@@ -86,6 +86,15 @@ export interface Page<T> {
   page: number;
   size: number;
 }
+export interface ImportWeek {
+  startDate: string;
+  days: {
+    training: TrainingPlan;
+    meals: Meals;
+    expectedTrainingRevision: number;
+    expectedMealRevision: number;
+  }[];
+}
 export interface Summary {
   goalRevision: number;
   sevenDayWeight: WeightWindow;
@@ -108,6 +117,8 @@ const request = async <T>(url: string, method = 'GET', data?: unknown, idempoten
     })
   ).data;
 export const fitnessApi = {
+  importWeek: (body: ImportWeek, key: string) =>
+    request<{ items: Entry[] }>('/weeks/import', 'POST', body, key),
   summary: () => request<Summary>('/summary'),
   day: (date: string) => request<Day>(`/days/${date}`),
   history: (from: string, to: string) => request<Day[]>(`/history?from=${from}&to=${to}`),

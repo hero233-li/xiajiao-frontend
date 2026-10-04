@@ -30,7 +30,11 @@ page.on('response', (r) => {
 page.on('dialog', (d) => d.accept());
 const shot = async (name) => {
   await page.waitForLoadState('networkidle');
-  await page.screenshot({ path: resolve(output, name + '.png'), fullPage: true });
+  await page.screenshot({
+    path: resolve(output, name + '.png'),
+    fullPage: (await page.getByRole('dialog').count()) === 0,
+    animations: 'disabled',
+  });
 };
 const dialog = () => page.getByRole('dialog');
 const save = async (name) => {
@@ -149,6 +153,52 @@ try {
   await dialog().getByLabel('备注 / 每日感受').fill('今天感觉良好（测试记录）');
   await save('保存每日打卡');
   await page.getByRole('button', { name: '修改今日打卡', exact: true }).waitFor();
+  // Import the actual user-supplied seven-day schedule, then edit both persisted plans.
+  await page.getByRole('button', { name: '查看与添加第一周计划', exact: true }).click();
+  const firstWeekDate = new Date(today + 'T12:00:00Z');
+  firstWeekDate.setUTCDate(firstWeekDate.getUTCDate() + 21);
+  const firstWeekStart = firstWeekDate.toISOString().slice(0, 10);
+  await dialog().getByLabel('Day 1 开始日期').fill(firstWeekStart);
+  await dialog().getByRole('button', { name: '修改当天训练', exact: true }).click();
+  await dialog().getByLabel('重量（kg）', { exact: true }).first().fill('22.5');
+  await dialog().getByRole('button', { name: '返回当天说明' }).click();
+  await shot('desktop-first-week-training');
+  await dialog().getByRole('button', { name: '三餐与加餐', exact: true }).click();
+  await dialog().getByRole('button', { name: '修改当天食谱', exact: true }).click();
+  await dialog().getByLabel('份量', { exact: true }).first().fill('3');
+  await dialog().getByRole('button', { name: '返回当天说明' }).click();
+  await shot('desktop-first-week-meals');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await shot('mobile-first-week-meals');
+  if (await dialog().evaluate((el) => el.scrollWidth > el.clientWidth))
+    throw new Error('First week mobile overflow');
+  await dialog()
+    .getByRole('button', { name: /^Day 7/ })
+    .click();
+  await dialog().getByRole('button', { name: '训练步骤', exact: true }).click();
+  await dialog()
+    .getByText(/默认保存为休息日/)
+    .waitFor();
+  await save('保存7天训练与食谱');
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByRole('link', { name: '查看 / 修改训练', exact: true }).click();
+  await page.getByRole('button', { name: '编辑安排', exact: true }).click();
+  if ((await dialog().getByLabel('重量（kg）', { exact: true }).first().inputValue()) !== '22.5')
+    throw new Error('Imported training edit missing');
+  await dialog().getByLabel('重量（kg）', { exact: true }).first().fill('23');
+  await save('保存训练安排');
+  await page.goto(`${url}/fitness/meals?date=${firstWeekStart}`);
+  await page.getByRole('button', { name: '编辑食谱', exact: true }).click();
+  if ((await dialog().getByLabel('份量', { exact: true }).first().inputValue()) !== '3')
+    throw new Error('Imported meal edit missing');
+  await dialog().getByLabel('份量', { exact: true }).first().fill('2.5');
+  await save('保存食谱计划');
+  await page.reload();
+  await page.getByRole('button', { name: '编辑食谱', exact: true }).click();
+  if ((await dialog().getByLabel('份量', { exact: true }).first().inputValue()) !== '2.5')
+    throw new Error('Edited meal did not persist');
+  await dialog().getByRole('button', { name: '取消', exact: true }).click();
+  await page.goto(url + '/fitness');
   await page
     .getByRole('button', { name: /饮水记录/ })
     .first()
@@ -229,6 +279,7 @@ try {
         refresh: true,
         relogin: true,
         userIsolation: true,
+        firstWeekImportEdit: true,
         errors,
         calls,
       },

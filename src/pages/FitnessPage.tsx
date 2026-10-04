@@ -32,6 +32,7 @@ import {
 } from '../api/fitness';
 import { UnsavedGuard } from '../features/fitness/UnsavedGuard';
 import { TemplateManager } from '../features/fitness/Templates';
+import { FirstWeekPlan } from '../features/fitness/FirstWeekPlan';
 import {
   FitnessEditor,
   goalNames,
@@ -375,6 +376,7 @@ export function Component() {
           {notice}
         </p>
       )}
+      {['today', 'training', 'meals'].includes(section) && <FirstWeekPlan />}
       <State
         loading={summary.isPending || day.isPending || history.isPending}
         error={summary.error || day.error || history.error || statistics.error}
