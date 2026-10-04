@@ -1,17 +1,9 @@
-import { AlertTriangle,ArrowDown,ArrowUp,Check } from 'lucide-react';
-import { useEffect,useRef,useState } from 'react';
-import type { Plan,RescheduleRequest } from '../../api/generated/models';
-import {
-useRescheduleConfirm,
-useReschedulePreview
-} from '../../api/schedule';
+import { AlertTriangle, ArrowDown, ArrowUp, Check } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import type { Plan, RescheduleRequest } from '../../api/generated/models';
+import { useRescheduleConfirm, useReschedulePreview } from '../../api/schedule';
 import { Button } from '../../components/Button';
-import {
-durationLabel,
-isWeekend,
-planDays,
-wholeHours
-} from './display';
+import { durationLabel, isWeekend, planDays, wholeHours } from './display';
 import './schedule.css';
 import { State } from './ScheduleState';
 
@@ -79,7 +71,7 @@ export function SettingsView({ plan }: { plan: Plan }) {
   return (
     <div className="schedule-dialog">
       <p role="note">
-        这里显示已保存的设置。调整日期、每日容量或科目顺序请使用“编辑当前计划”，预览确认后生成新版本。
+        这里显示已保存的设置，仅供查看。调整日期、每日容量或科目顺序请使用“编辑当前计划”，预览确认后生成新版本。
       </p>
       <dl className="schedule-settings-values">
         <div>

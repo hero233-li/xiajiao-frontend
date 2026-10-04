@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-CN">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>知途 · 前端改版对比</title
+  ><style>
+    body {
+      font:
+        16px/1.7 system-ui,
+        sans-serif;
+      color: #18243b;
+      background: #f4f5f7;
+      margin: 0;
+    }
+    main {
+      max-width: 1440px;
+      margin: auto;
+      padding: 32px;
+    }
+    h1 {
+      font-size: 28px;
+    }
+    h2 {
+      margin-top: 48px;
+    }
+    a {
+      color: #245bdd;
+    }
+    figure {
+      margin: 0;
+      background: white;
+      padding: 16px;
+      border: 1px solid #ced5e0;
+      min-width: 0;
+    }
+    figcaption {
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .mobile img {
+      max-width: 390px;
+      margin: auto;
+    }
+    .tablet img {
+      max-width: 768px;
+      margin: auto;
+    }
+    @media (max-width: 800px) {
+      main {
+        padding: 16px;
+      }
+      .pair {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <main>
+    <h1>知途：任务桌面改版</h1>
+    <p>真实本地接口与数据副本。基线与新界面均为浏览器截图。健身记录状态因验收写入有所不同。</p>
+    <p>
+      <a href="acceptance.md">验收记录与限制</a> · <a href="function-map.md">完整功能入口</a> ·
+      <a href="http://127.0.0.1:5175">打开本地新界面</a>
+    </p>
+    <section>
+      <h2>个人首页 · 桌面1440px</h2>
+      <div class="pair">
+        <figure>
+          <figcaption>改版前</figcaption>
+          <a href="screenshots/before-home-1440.jpg"
+            ><img
+              src="screenshots/before-home-1440.jpg"
+              alt="个人首页改版前桌面截图"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>改版后</figcaption>
+          <a href="screenshots/after-home-1440.jpg"
+            ><img src="screenshots/after-home-1440.jpg" alt="个人首页改版后桌面截图" loading="lazy"
+          /></a>
+        </figure>
+      </div>
+      <h3>手机390px</h3>
+      <div class="pair mobile">
+        <figure>
+          <figcaption>改版前</figcaption>
+          <a href="screenshots/before-home-390.jpg"
+            ><img src="screenshots/before-home-390.jpg" alt="个人首页改版前手机截图" loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>改版后</figcaption>
+          <a href="screenshots/after-home-390.jpg"
+            ><img src="screenshots/after-home-390.jpg" alt="个人首页改版后手机截图" loading="lazy"
+          /></a>
+        </figure>
+      </div>
+      <details class="tablet">
+        <summary>查看768px平板</summary>
+        <img src="screenshots/after-home-768.jpg" alt="个人首页平板截图" loading="lazy" />
+      </details>
+    </section>
+    <section>
+      <h2>自学阅读 · 桌面1440px</h2>
+      <div class="pair">
+        <figure>
+          <figcaption>改版前</figcaption>
+          <a href="screenshots/before-reading-1440.jpg"
+            ><img
+              src="screenshots/before-reading-1440.jpg"
+              alt="自学阅读改版前桌面截图"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>改版后</figcaption>
+          <a href="screenshots/after-reading-1440.jpg"
+            ><img
+              src="screenshots/after-reading-1440.jpg"
+              alt="自学阅读改版后桌面截图"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+      <h3>手机390px</h3>
+      <div class="pair mobile">
+        <figure>
+          <figcaption>改版前</figcaption>
+          <a href="screenshots/before-reading-390.jpg"
+            ><img
+              src="screenshots/before-reading-390.jpg"
+              alt="自学阅读改版前手机截图"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>改版后</figcaption>
+          <a href="screenshots/after-reading-390.jpg"
+            ><img
+              src="screenshots/after-reading-390.jpg"
+              alt="自学阅读改版后手机截图"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+      <details class="tablet">
+        <summary>查看768px平板</summary>
+        <img src="screenshots/after-reading-768.jpg" alt="自学阅读平板截图" loading="lazy" />
+      </details>
+    </section>
+    <section>
+      <h2>健身今天 · 桌面1440px</h2>
+      <div class="pair">
+        <figure>
+          <figcaption>改版前</figcaption>
+          <a href="screenshots/before-fitness-1440.jpg"
+            ><img
+              src="screenshots/before-fitness-1440.jpg"
+              alt="健身今天改版前桌面截图"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>改版后</figcaption>
+          <a href="screenshots/after-fitness-1440.jpg"
+            ><img
+              src="screenshots/after-fitness-1440.jpg"
+              alt="健身今天改版后桌面截图"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+      <h3>手机390px</h3>
+      <div class="pair mobile">
+        <figure>
+          <figcaption>改版前</figcaption>
+          <a href="screenshots/before-fitness-390.jpg"
+            ><img
+              src="screenshots/before-fitness-390.jpg"
+              alt="健身今天改版前手机截图"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>改版后</figcaption>
+          <a href="screenshots/after-fitness-390.jpg"
+            ><img
+              src="screenshots/after-fitness-390.jpg"
+              alt="健身今天改版后手机截图"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+      <details class="tablet">
+        <summary>查看768px平板</summary>
+        <img src="screenshots/after-fitness-768.jpg" alt="健身今天平板截图" loading="lazy" />
+      </details>
+    </section>
+    <section>
+      <h2>管理内容编辑 · 桌面1440px</h2>
+      <div class="pair">
+        <figure>
+          <figcaption>改版前</figcaption>
+          <a href="screenshots/before-admin-1440.jpg"
+            ><img
+              src="screenshots/before-admin-1440.jpg"
+              alt="管理内容编辑改版前桌面截图"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>改版后</figcaption>
+          <a href="screenshots/after-admin-1440.jpg"
+            ><img
+              src="screenshots/after-admin-1440.jpg"
+              alt="管理内容编辑改版后桌面截图"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+      <h3>手机390px</h3>
+      <div class="pair mobile">
+        <figure>
+          <figcaption>改版前</figcaption>
+          <a href="screenshots/before-admin-390.jpg"
+            ><img
+              src="screenshots/before-admin-390.jpg"
+              alt="管理内容编辑改版前手机截图"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>改版后</figcaption>
+          <a href="screenshots/after-admin-390.jpg"
+            ><img
+              src="screenshots/after-admin-390.jpg"
+              alt="管理内容编辑改版后手机截图"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+      <details class="tablet">
+        <summary>查看768px平板</summary>
+        <img src="screenshots/after-admin-768.jpg" alt="管理内容编辑平板截图" loading="lazy" />
+      </details>
+    </section>
+  </main>
+</html>

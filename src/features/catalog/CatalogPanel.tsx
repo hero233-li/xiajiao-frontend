@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ArrowRight, Check, ExternalLink, BookOpen } from 'lucide-react';
+import { ArrowRight, ExternalLink, BookOpen } from 'lucide-react';
 import { Link, useSearchParams } from '../cycle/navigation';
 import { getLearningPosition, saveLearningPosition } from '../../api/generated/courses/courses';
 import { downloadCourseResource } from '../../api/generated/catalog/catalog';
@@ -13,7 +13,6 @@ import { Button } from '../../components/Button';
 import { Modal } from '../../components/Modal';
 import { RegionState } from '../../components/dashboard/RegionState';
 import type { CatalogItem, CatalogChapter } from '../../api/generated/models';
-import './catalog.css';
 function Resource({ item, courseId }: { item: CatalogItem; courseId: string }) {
   const download = useMutation({
     mutationFn: async () =>
@@ -139,7 +138,7 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
     setNotice('');
   }
   async function mark(list: CatalogItem[], done: boolean, goNext = false) {
-    if (lock.current) return;
+    if (lock.current) return false;
     lock.current = true;
     try {
       await completion.mutateAsync(completionUpdates(list, done));
@@ -149,8 +148,9 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
         if (next) select(next.item.id);
         else setNotice('当前之后的条目都已完成。可以继续练习或回到今日任务。');
       }
+      return true;
     } catch {
-      /* 错误由 mutation 显示 */
+      return false;
     } finally {
       lock.current = false;
     }
@@ -162,32 +162,31 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
     );
   if (!active) return <RegionState kind="empty" message="此课程暂未发布学习条目。" />;
   return (
-    <div className="study-reader">
-      <div className="reader-overview">
-        <span>
-          {query.data!.courseProgress.completedItems} / {items.length} 项已完成
-        </span>
-        <progress value={query.data!.courseProgress.percent} max={100} />
-        <strong>{query.data!.courseProgress.percent}%</strong>
+    <section className="reading-workspace">
+      <header className="reading-command">
+        <div>
+          <span className="eyebrow">
+            阅读任务 {index + 1} / {items.length}
+          </span>
+          <span className="secondary">目录完成 {query.data!.courseProgress.percent}%</span>
+        </div>
         <Button
-          variant="ghost"
-          className="reader-index-toggle"
+          variant="secondary"
+          aria-expanded={mobileList}
           onClick={() => setMobileList(!mobileList)}
         >
-          {mobileList ? '返回当前任务' : '展开目录'}
+          {mobileList ? '收起课程目录' : '选择章节与条目'}
         </Button>
-      </div>
-      <div className="reader-columns" data-show-list={mobileList}>
-        <aside className="reader-directory" aria-label="课程目录">
-          <h3>课程目录</h3>
+      </header>
+      {mobileList && (
+        <nav className="reading-outline" aria-label="课程目录">
           {query.data!.chapters.map((chapter, n) => (
             <details key={chapter.id} open={chapter.id === active.chapter.id || undefined}>
               <summary>
-                <span>{String(n + 1).padStart(2, '0')}</span>
-                <MathText text={chapter.title} />
-                <small>
+                {String(n + 1).padStart(2, '0')} · <MathText text={chapter.title} />
+                <span>
                   {chapter.items.filter((i) => i.completed).length}/{chapter.items.length}
-                </small>
+                </span>
               </summary>
               <ol>
                 {chapter.items.map((item) => (
@@ -196,9 +195,7 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
                       aria-current={item.id === active.item.id ? 'true' : undefined}
                       onClick={() => select(item.id)}
                     >
-                      <span className="reader-item-marker">
-                        {item.completed ? <Check size={13} /> : ''}
-                      </span>
+                      <span>{item.completed ? '✓' : '○'}</span>
                       <MathText text={item.title} />
                     </button>
                   </li>
@@ -213,29 +210,48 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
               </Button>
             </details>
           ))}
-        </aside>
-        <article className="reader-document">
-          <header>
-            <p className="eyebrow">
-              READING / {index + 1} OF {items.length}
-            </p>
-            <h2>
-              <MathText text={active.item.title} />
-            </h2>
-            <div className="reader-document-meta">
-              <span>
-                <MathText text={active.chapter.title} />
-              </span>
-              <span>预计 {active.item.estimatedMinutes} 分钟</span>
-              <strong>{active.item.completed ? '已完成' : '待学习'}</strong>
-            </div>
-          </header>
-          <div className="reader-action-bar">
+        </nav>
+      )}
+      <article className="reading-stage">
+        <header>
+          <p className="secondary">
+            <MathText text={active.chapter.title} />
+          </p>
+          <h1>
+            <MathText text={active.item.title} />
+          </h1>
+          <div className="reading-metadata">
+            <span>预计 {active.item.estimatedMinutes} 分钟</span>
+            <strong>{active.item.completed ? '已完成' : '待学习'}</strong>
+          </div>
+        </header>
+        <Resource key={active.item.id} item={active.item} courseId={courseId} />
+        {notice && (
+          <p role="status" className="platform-notice">
+            {notice}
+          </p>
+        )}
+        {completion.error && (
+          <p role="alert">{completion.error.message}。原进度已保留，请重试保存。</p>
+        )}
+        {query.error && (
+          <p role="alert">
+            最新目录读取失败。<Button onClick={() => query.refetch()}>重试目录</Button>
+          </p>
+        )}
+        {savePosition.error && (
+          <p role="alert">
+            学习位置未保存，进度仍可记录。
+            <Button onClick={() => savePosition.mutate(active.item)}>重试保存位置</Button>
+          </p>
+        )}
+        <footer className="reading-next">
+          <div>
             <Button
               loading={completion.isPending}
               onClick={() => void mark([active.item], true, true)}
             >
-              完成并继续 <ArrowRight size={16} />
+              完成并继续 <ArrowRight size={18} />
             </Button>
             {active.item.completed && (
               <Button
@@ -247,82 +263,51 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
               </Button>
             )}
             {index + 1 < items.length && (
-              <Button variant="ghost" onClick={() => select(items[index + 1].item.id)}>
+              <Button variant="secondary" onClick={() => select(items[index + 1].item.id)}>
                 下一项
               </Button>
             )}
-            <Link to="/study">回到今日</Link>
           </div>
-          {notice && (
-            <p role="status" className="platform-notice">
-              {notice}
-            </p>
+          <Link to="/study">回到今日任务</Link>
+        </footer>
+        <nav className="reading-related" aria-label="关联学习内容">
+          {course?.capabilities.knowledge && (
+            <Link to={`/study/course/${course.code}/knowledge`}>查看知识索引 →</Link>
           )}
-          {completion.isError && (
-            <p role="alert" className="status-error">
-              {completion.error.message}，原进度已保留。请刷新后重试。
-            </p>
+          {course?.capabilities.practice && (
+            <Link to={`/study/course/${course.code}/practice`}>进入练习与检测 →</Link>
           )}
-          {query.isError && (
-            <p role="alert">
-              最新目录读取失败。
-              <Button variant="ghost" onClick={() => void query.refetch()}>
-                重试
-              </Button>
-            </p>
+          {course?.capabilities.manual && (
+            <Link to={`/study/course/${course.code}/manual`}>阅读实践手册 →</Link>
           )}
-          {savePosition.isError && (
-            <p role="alert" className="status-error">
-              学习位置保存失败，进度标记仍可使用。
-              <Button variant="ghost" onClick={() => savePosition.mutate(active.item)}>
-                重试保存位置
-              </Button>
-            </p>
-          )}
-          <div className="reader-resource">
-            <Resource key={active.item.id} item={active.item} courseId={courseId} />
-          </div>
-          <nav className="reader-related" aria-label="关联学习内容">
-            {course?.capabilities.knowledge && (
-              <Link to={`/study/course/${course.code}/knowledge`}>
-                查看知识索引 <ArrowRight size={14} />
-              </Link>
-            )}
-            {course?.capabilities.manual && (
-              <Link to={`/study/course/${course.code}/manual`}>
-                阅读实践手册 <ArrowRight size={14} />
-              </Link>
-            )}
-            <Link to={`/study/course/${course?.code}/notes`}>
-              记录课程笔记 <ArrowRight size={14} />
-            </Link>
-          </nav>
-        </article>
-      </div>
+          <Link to={`/study/course/${course?.code}/notes`}>记录课程笔记 →</Link>
+        </nav>
+      </article>
       <Modal open={!!bulk} title="确认完成本章" onClose={() => setBulk(null)}>
         <p>
           将「{bulk?.title}」中 {bulk?.items.filter((i) => !i.completed).length}{' '}
-          项标记完成。关联计划会同步，之后可逐项取消。
+          项标记完成，关联计划会同步，可逐项取消。
         </p>
         <div className="modal-actions">
           <Button variant="secondary" onClick={() => setBulk(null)}>
             取消
           </Button>
           <Button
+            loading={completion.isPending}
             onClick={() => {
-              if (bulk) {
+              if (bulk)
                 void mark(
                   bulk.items.filter((i) => !i.completed),
                   true,
-                );
-                setBulk(null);
-              }
+                ).then((saved) => {
+                  if (saved) setBulk(null);
+                });
             }}
           >
             确认完成
           </Button>
         </div>
       </Modal>
-    </div>
+    </section>
   );
 }

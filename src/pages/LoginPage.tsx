@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BookOpen, Activity, ArrowUpRight } from 'lucide-react';
+import { BookOpen, Activity } from 'lucide-react';
 import { LoginForm } from '../features/auth/LoginForm';
 import '../styles/platform.css';
 import '../features/auth/login.css';
@@ -8,50 +8,39 @@ export function Component() {
     document.title = '登录 · 知途个人管理平台';
   }, []);
   return (
-    <main className="platform-login">
-      <section className="platform-login-intro">
-        <div className="platform-logo">
-          <span>途</span>
-          <strong>
-            知途<small>个人管理平台</small>
-          </strong>
-        </div>
-        <div>
-          <p className="eyebrow">YOUR SPACE, YOUR PACE</p>
-          <h2>
-            让每一天，
-            <br />
-            有自己的节奏。
-          </h2>
-          <p>
-            学习、训练和日常记录。
-            <br />
-            给重要的事，留一个有序的空间。
-          </p>
-          <div className="login-spaces">
-            <span>
-              <BookOpen size={19} />
-              自学空间
-              <ArrowUpRight size={16} />
-            </span>
-            <span>
-              <Activity size={19} />
-              健身空间
-              <ArrowUpRight size={16} />
-            </span>
+    <main className="login-desk">
+      <header className="login-brand">
+        <span>途</span>
+        <strong>
+          知途 <small>个人管理平台</small>
+        </strong>
+      </header>
+      <div className="login-body">
+        <section className="login-introduction">
+          <p className="eyebrow">学习与生活的任务桌面</p>
+          <h2>学习与生活，一处管理。</h2>
+          <p>继续学习，记录训练，回看自己的进展。</p>
+          <div className="login-capabilities">
+            <div>
+              <BookOpen size={22} />
+              <strong>自学</strong>
+              <span>课程 · 练习 · 学习计划</span>
+            </div>
+            <div>
+              <Activity size={22} />
+              <strong>健身</strong>
+              <span>训练 · 饮食 · 日常记录</span>
+            </div>
           </div>
-        </div>
-        <small>知途 / 记录每一步，留给自己看</small>
-      </section>
-      <section className="platform-login-form">
-        <div>
-          <p className="eyebrow">WELCOME BACK</p>
+        </section>
+        <section className="login-entry" aria-labelledby="login-title">
+          <p className="eyebrow">个人账号</p>
           <h1 id="login-title">欢迎回来</h1>
-          <p className="secondary">登录你的个人空间。</p>
+          <p className="secondary">登录后继续你的任务和记录。</p>
           <LoginForm />
-          <p className="login-footer secondary">一个账号，继续学习，也照顾生活。</p>
-        </div>
-      </section>
+        </section>
+      </div>
+      <footer>知途个人管理平台</footer>
     </main>
   );
 }

@@ -1,28 +1,26 @@
-import { ExerciseMotion } from './motion/ExerciseMotion';
-import {
-Check
-} from 'lucide-react';
+import { Check } from 'lucide-react';
 import { type ReactNode } from 'react';
 import {
-localToday,
-shiftDate,
-useFitnessStats,
-type Day,
-type Entry,
-type Exercise,
-type Kind,
-type Meals,
-type Models,
-type Nutrition as NutritionData
+  localToday,
+  shiftDate,
+  useFitnessStats,
+  type Day,
+  type Entry,
+  type Exercise,
+  type Kind,
+  type Meals,
+  type Models,
+  type Nutrition as NutritionData,
 } from '../../api/fitness';
 import { Button } from '../../components/Button';
 import {
-exerciseNames,
-mealNames,
-titles,
-trainingNames,
-type Editable
+  exerciseNames,
+  mealNames,
+  titles,
+  trainingNames,
+  type Editable,
 } from '../../features/fitness/Editor';
+import { ExerciseMotion } from './motion/ExerciseMotion';
 export const weekday = (date: string) =>
   new Date(`${date}T12:00:00Z`).toLocaleDateString('zh-CN', {
     weekday: 'short',
@@ -134,7 +132,10 @@ export function ExerciseList({ rows }: { rows: Exercise[] }) {
     <ol className="record-ledger">
       {rows.map((e, i) => (
         <li key={i}>
-          <div className="exercise-motion-heading"><strong>{e.name}</strong><ExerciseMotion exercise={e} /></div>
+          <div className="exercise-motion-heading">
+            <strong>{e.name}</strong>
+            <ExerciseMotion exercise={e} />
+          </div>
           <span>
             {exerciseNames[e.type]}
             {e.sets != null ? ` · ${e.sets}组` : ''}

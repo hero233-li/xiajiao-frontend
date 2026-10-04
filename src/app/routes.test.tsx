@@ -73,7 +73,7 @@ it('普通用户无法访问管理入口', async () => {
 it('管理员可以访问真实管理工作台', async () => {
   await startDemoSession();
   renderRoute('/admin/content');
-  expect(await screen.findByRole('heading', { name: '让学习内容准备就绪。' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: '管理员工作台' })).toBeInTheDocument();
 });
 it('刷新失败后跳转登录并保留原地址', async () => {
   await startDemoSession();

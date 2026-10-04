@@ -447,7 +447,7 @@ function ModuleDetail({
         </Button>
       )}
       {!moduleId ? (
-        <p className="kh-placeholder">选择左侧模块，查看知识说明、公式、例题和学习笔记。</p>
+        <p className="kh-placeholder">选择知识模块，查看说明、公式、例题和学习笔记。</p>
       ) : detail.isPending ? (
         <Region loading="正在加载模块详情" />
       ) : detail.isError ? (
@@ -640,11 +640,7 @@ export function KnowledgePage() {
   const cycleId = search.get('cycleId') || '';
   const course = useKnowledgeCourse(code, cycleId);
   useEffect(() => {
-    const previous = document.title;
-    document.title = `知识索引${course.data?.name ? ` · ${course.data.name}` : ''} · 学习知途`;
-    return () => {
-      document.title = previous;
-    };
+    document.title = '知识索引 · 知途个人管理平台';
   }, [course.data?.name]);
   return (
     <div className="kh-page">

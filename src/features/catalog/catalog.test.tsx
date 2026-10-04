@@ -134,7 +134,7 @@ describe('任务式学习目录', () => {
       'noopener noreferrer',
     );
     expect(data.chapters[0].items[0].completed).toBe(false);
-    expect(document.querySelector('.reader-document-meta')).toHaveTextContent(/预计 20 分钟.*待学习/);
+    expect(document.querySelector('.reading-metadata')).toHaveTextContent(/预计 20 分钟.*待学习/);
   });
   it('深链接以稳定 item ID 定位，保留周期', async () => {
     const { router } = mount('&itemId=item-c#stage-b');
@@ -157,7 +157,8 @@ describe('任务式学习目录', () => {
         });
       }),
     );
-    const { router } = mount();
+    const { router, client } = mount();
+    client.setQueryData(['personal-home'], { study: { title: '集合基础' } });
     await screen.findByRole('heading', { name: '集合基础' });
     await userEvent.click(screen.getByRole('button', { name: '完成并继续' }));
     await screen.findByRole('heading', { name: '逻辑运算' });
@@ -165,6 +166,7 @@ describe('任务式学习目录', () => {
     expect(writes[0]).toMatchObject({ completed: true, expectedRevision: 2 });
     expect(writes[0].clientMutationId).toMatch(/^[0-9a-f-]{36}$/);
     expect(router.state.location.search).toContain('itemId=item-b');
+    expect(client.getQueryState(['personal-home'])?.isInvalidated).toBe(true);
   });
   it('冲突保留当前任务，读取最新修订号后可重试', async () => {
     let requests = 0;
@@ -225,9 +227,13 @@ describe('任务式学习目录', () => {
     );
     mount();
     await screen.findByRole('heading', { name: '集合基础' });
+    if (!screen.queryByRole('navigation', { name: '课程目录' }))
+      await userEvent.click(screen.getByRole('button', { name: '选择章节与条目' }));
     await userEvent.click(screen.getAllByRole('button', { name: '本章全部标记完成' })[0]);
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '取消' }));
     expect(writes).toHaveLength(0);
+    if (!screen.queryByRole('navigation', { name: '课程目录' }))
+      await userEvent.click(screen.getByRole('button', { name: '选择章节与条目' }));
     await userEvent.click(screen.getAllByRole('button', { name: '本章全部标记完成' })[0]);
     await userEvent.click(
       within(screen.getByRole('dialog')).getByRole('button', { name: '确认完成' }),

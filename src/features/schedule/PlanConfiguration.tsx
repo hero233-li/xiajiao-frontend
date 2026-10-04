@@ -1,15 +1,15 @@
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { ArrowDown,ArrowUp,Pencil,Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowDown, ArrowUp, Pencil, Plus } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { listCourses } from '../../api/generated/courses/courses';
-import type { Course,Plan,PlanConfig } from '../../api/generated/models';
+import type { Course, Plan, PlanConfig } from '../../api/generated/models';
 import { createPlan } from '../../api/generated/schedule/schedule';
-import { useRescheduleConfirm,useReschedulePreview } from '../../api/schedule';
+import { useRescheduleConfirm, useReschedulePreview } from '../../api/schedule';
 import { Button } from '../../components/Button';
 import { Modal } from '../../components/Modal';
 import { useCycle } from '../cycle/CycleContext';
 import { useSearchParams } from '../cycle/navigation';
-import { dayLabel,durationLabel } from './display';
+import { dayLabel, durationLabel } from './display';
 
 export function offsetDate(day: string, offset: number) {
   return new Date(Date.parse(day) + offset * 86400000).toISOString().slice(0, 10);
@@ -38,7 +38,7 @@ function initialConfig(cycleId: string, courses: Course[], start: string, plan?:
 }
 export function PlanConfiguration({ plan }: { plan?: Plan }) {
   const cycle = useCycle();
-  const [, setParams] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const client = useQueryClient();
   const cycleId = plan?.config.cycleId ?? cycle?.cycleId;
   const courses = useQuery({
@@ -48,6 +48,36 @@ export function PlanConfiguration({ plan }: { plan?: Plan }) {
       (await listCourses({ cycleId: cycleId!, size: 100 }, { silent: true })).data,
   });
   const [draft, setDraft] = useState<PlanConfig | null>(null);
+  const requested = params.get('create') === '1' && !plan;
+  const open = useCallback(() => {
+    if (!cycleId || !courses.data?.items.length) return;
+    const dates = cycle?.selected?.courses
+      ?.filter((c) =>
+        courses.data!.items.some(
+          (course) => course.id === c.courseId && course.courseType === 'THEORY',
+        ),
+      )
+      .map((c) => c.examDate)
+      .filter((date): date is string => !!date)
+      .sort();
+    const start =
+      plan?.config.startDate ??
+      (dates?.[0] ? offsetDate(dates[0], -35) : cycle?.selected?.startDate);
+    if (start) setDraft(initialConfig(cycleId!, courses.data!.items, start, plan));
+  }, [cycleId, courses.data, cycle?.selected, plan]);
+  useEffect(() => {
+    if (requested && courses.data?.items.length && cycleId) {
+      open();
+      setParams(
+        (previous) => {
+          const next = new URLSearchParams(previous);
+          next.delete('create');
+          return next;
+        },
+        { replace: true },
+      );
+    }
+  }, [requested, courses.data, cycleId, open, setParams]);
   return (
     <>
       <Button
@@ -55,19 +85,7 @@ export function PlanConfiguration({ plan }: { plan?: Plan }) {
         variant="secondary"
         disabled={!cycleId || !courses.data?.items.length}
         onClick={() => {
-          const dates = cycle?.selected?.courses
-            ?.filter((c) =>
-              courses.data!.items.some(
-                (course) => course.id === c.courseId && course.courseType === 'THEORY',
-              ),
-            )
-            .map((c) => c.examDate)
-            .filter((date): date is string => !!date)
-            .sort();
-          const start =
-            plan?.config.startDate ??
-            (dates?.[0] ? offsetDate(dates[0], -35) : cycle?.selected?.startDate);
-          if (start) setDraft(initialConfig(cycleId!, courses.data!.items, start, plan));
+          open();
         }}
       >
         {plan ? <Pencil size={16} /> : <Plus size={16} />} {plan ? '编辑当前计划' : '新建计划'}

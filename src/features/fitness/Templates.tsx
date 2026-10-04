@@ -1,21 +1,25 @@
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-fitnessApi,
-shiftDate,
-useFitnessList,
-useFitnessMutation,
-type Day,
-type Entry,
-type Meals,
-type Models,
-type TrainingPlan,
+  fitnessApi,
+  shiftDate,
+  useFitnessList,
+  useFitnessMutation,
+  useFitnessHistory,
+  type Day,
+  type Entry,
+  type Meals,
+  type Models,
+  type TrainingPlan,
 } from '../../api/fitness';
 import { Button } from '../../components/Button';
 import { useConfirmation } from '../../components/ConfirmationProvider';
 import { Modal } from '../../components/Modal';
 import { createUuid } from '../../utils/uuid';
-import { ExerciseFields,FoodFields } from './Editor';
+import { EditorPageFrame, ExerciseFields, FoodFields } from './Editor';
 import { UnsavedGuard } from './UnsavedGuard';
+import { flushSync } from 'react-dom';
 type TemplateKind = 'training-template' | 'meal-template' | 'week-template';
 interface TemplateDraft {
   name: string;
@@ -26,12 +30,25 @@ export function TemplateManager({
   kind,
   date,
   days,
+  page = false,
 }: {
   kind: TemplateKind;
   date: string;
   days?: Day[];
+  page?: boolean;
 }) {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const editKey = params.get('key');
+  const creating = page && kind === 'week-template' && params.get('create') === '1';
+  const week = useFitnessHistory(date, shiftDate(date, 6), creating);
+  const Wrapper = page ? EditorPageFrame : Modal;
   const query = useFitnessList(kind);
+  const detail = useQuery({
+    queryKey: ['fitness-template-edit', kind, editKey],
+    enabled: page && !!editKey,
+    queryFn: () => fitnessApi.get(kind, editKey!),
+  });
   const confirm = useConfirmation();
   const mutation = useFitnessMutation();
   const [entry, setEntry] = useState<Entry<TemplateKind> | null>(null);
@@ -45,7 +62,7 @@ export function TemplateManager({
     setDirty(true);
     setSaveKey(createUuid());
   };
-  const open = (e: Entry<TemplateKind>) => {
+  const open = useCallback((e: Entry<TemplateKind>) => {
     setEntry(e);
     setDirty(false);
     const data = e.data!;
@@ -65,26 +82,31 @@ export function TemplateManager({
     setActive(0);
     setMessage('');
     setSaveKey(createUuid());
-  };
+  }, []);
+  useEffect(() => {
+    if (page && detail.data && !draft) open(detail.data);
+  }, [page, detail.data, open, draft]);
   const close = async () => {
-    if (!mutation.isPending && (!dirty || await confirm('关闭模板编辑？尚未保存的改动会被放弃。')))
-      setDraft(null);
-  };
-  const createWeek = () => {
-    if (!days || days.length !== 7 || days.some((d) => !d.records['training-plan']?.data)) {
-      setMessage('请先为这一周的7天分别安排训练或休息，再保存周模板。');
-      return;
+    if (
+      !mutation.isPending &&
+      (!dirty || (await confirm('关闭模板编辑？尚未保存的改动会被放弃。')))
+    ) {
+      flushSync(() => {
+        setDirty(false);
+        setDraft(null);
+      });
+      if (page) navigate(`/fitness/templates?date=${date}`);
     }
-    setEntry(null);
-    setDirty(false);
+  };
+  useEffect(() => {
+    if (!creating || !week.data || draft) return;
+    if (week.data.length !== 7 || week.data.some((d) => !d.records['training-plan']?.data)) return;
     setDraft({
       name: '',
-      plans: days.map((d) => structuredClone(d.records['training-plan']!.data!)),
+      plans: week.data.map((d) => structuredClone(d.records['training-plan']!.data!)),
       meal: { foods: [], note: null },
     });
-    setActive(0);
-    setSaveKey(createUuid());
-  };
+  }, [creating, week.data, draft]);
   const apply = async (e: Entry<TemplateKind>) => {
     setMessage('');
     try {
@@ -92,7 +114,7 @@ export function TemplateManager({
         const current = await fitnessApi.history(date, shiftDate(date, 6));
         if (
           current.some((d) => d.records['training-plan']?.data) &&
-          !await confirm(`为 ${date} 起的7天生成安排，会覆盖已有计划；实际记录保留。确定继续？`)
+          !(await confirm(`为 ${date} 起的7天生成安排，会覆盖已有计划；实际记录保留。确定继续？`))
         )
           return;
         await mutation.mutateAsync(() =>
@@ -105,7 +127,10 @@ export function TemplateManager({
       } else {
         const destination = kind === 'training-template' ? 'training-plan' : 'meal-plan';
         const existing = await fitnessApi.get(destination, date);
-        if (existing?.data && !await confirm(`${date} 已有计划，确定用此模板覆盖？实际记录保留。`))
+        if (
+          existing?.data &&
+          !(await confirm(`${date} 已有计划，确定用此模板覆盖？实际记录保留。`))
+        )
           return;
         await mutation.mutateAsync(() =>
           fitnessApi.copy(kind, e.key, date, existing?.revision ?? -1),
@@ -118,90 +143,137 @@ export function TemplateManager({
   };
   return (
     <section className="platform-section">
-      <div className="section-title">
-        <h2>
-          {kind === 'week-template'
-            ? '个人周训练模板'
-            : kind === 'training-template'
-              ? '个人训练模板'
-              : '个人食谱模板'}
-        </h2>
-        {kind === 'week-template' && (
-          <Button variant="secondary" onClick={createWeek}>
-            当前周存为模板
-          </Button>
-        )}
-      </div>
-      {message && !draft && (
-        <p role="status" className="platform-notice">
-          {message}
-        </p>
-      )}
-      {query.isPending ? (
-        <p role="status">正在读取模板…</p>
-      ) : query.error ? (
-        <div role="alert">
-          <p>{query.error.message}</p>
-          <Button onClick={() => query.refetch()}>重新读取模板</Button>
-        </div>
-      ) : (
+      {!page && (
         <>
-          {query.data?.length ? (
-            query.data.map(
-              (e) =>
-                e.data && (
-                  <div key={e.key} className="template-row">
-                    <div>
-                      <strong>{e.data.name}</strong>
-                      <small>个人维护 · 复制为独立快照</small>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      loading={mutation.isPending}
-                      onClick={() => void apply(e)}
-                    >
-                      应用到 {date}
-                      {kind === 'week-template' ? ' 起的一周' : ''}
-                    </Button>
-                    <Button variant="ghost" onClick={() => open(e)}>
-                      编辑模板
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      disabled={mutation.isPending}
-                      onClick={async () => {
-                        if (
-                          await confirm(
-                            `确定删除模板“${e.data!.name}”？已生成的日期安排和实际记录会保留。`,
-                          )
-                        )
-                          void mutation
-                            .mutateAsync(() => fitnessApi.delete(e))
-                            .catch((error) => setMessage(error.message));
-                      }}
-                    >
-                      删除模板
-                    </Button>
-                  </div>
-                ),
-            )
-          ) : (
-            <p className="inline-empty">
-              还没有模板。
+          <div className="section-title">
+            <h2>
               {kind === 'week-template'
-                ? '安排完整一周后，可保存为周模板。'
-                : '编辑日期计划后，可存为模板反复使用。'}
+                ? '个人周训练模板'
+                : kind === 'training-template'
+                  ? '个人训练模板'
+                  : '个人食谱模板'}
+            </h2>
+            {kind === 'week-template' && (
+              <Button
+                variant="secondary"
+                disabled={
+                  !days || days.length !== 7 || days.some((d) => !d.records['training-plan']?.data)
+                }
+                disabledReason="先安排这一周7天的训练或休息，再保存模板"
+                onClick={() =>
+                  navigate(`/fitness/template-edit/week-template?date=${date}&create=1`)
+                }
+              >
+                当前周存为模板
+              </Button>
+            )}
+          </div>
+          {message && !draft && (
+            <p role="status" className="platform-notice">
+              {message}
             </p>
           )}
-          {query.hasMore && (
-            <Button variant="ghost" onClick={() => query.loadMore()}>
-              加载更多模板
-            </Button>
+          {query.isPending ? (
+            <p role="status">正在读取模板…</p>
+          ) : query.error ? (
+            <div role="alert">
+              <p>{query.error.message}</p>
+              <Button onClick={() => query.refetch()}>重新读取模板</Button>
+            </div>
+          ) : (
+            <>
+              {query.data?.length ? (
+                query.data.map(
+                  (e) =>
+                    e.data && (
+                      <div key={e.key} className="template-row">
+                        <div>
+                          <strong>{e.data.name}</strong>
+                          <small>个人维护 · 复制为独立快照</small>
+                        </div>
+                        <Button
+                          variant="secondary"
+                          loading={mutation.isPending}
+                          onClick={() => void apply(e)}
+                        >
+                          应用到 {date}
+                          {kind === 'week-template' ? ' 起的一周' : ''}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() =>
+                            navigate(
+                              `/fitness/template-edit/${kind}?key=${encodeURIComponent(e.key)}&date=${date}`,
+                            )
+                          }
+                        >
+                          编辑模板
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          disabled={mutation.isPending}
+                          onClick={async () => {
+                            if (
+                              await confirm(
+                                `确定删除模板“${e.data!.name}”？已生成的日期安排和实际记录会保留。`,
+                              )
+                            )
+                              void mutation
+                                .mutateAsync(() => fitnessApi.delete(e))
+                                .catch((error) => setMessage(error.message));
+                          }}
+                        >
+                          删除模板
+                        </Button>
+                      </div>
+                    ),
+                )
+              ) : (
+                <p className="inline-empty">
+                  还没有模板。
+                  {kind === 'week-template'
+                    ? '安排完整一周后，可保存为周模板。'
+                    : '编辑日期计划后，可存为模板反复使用。'}
+                </p>
+              )}
+              {query.hasMore && (
+                <Button variant="ghost" onClick={() => query.loadMore()}>
+                  加载更多模板
+                </Button>
+              )}
+            </>
           )}
         </>
       )}
+      {page && !draft && (
+        <div className="stack">
+          <p role="status">
+            {creating
+              ? week.error
+                ? week.error.message
+                : week.isPending
+                  ? '正在读取本周安排…'
+                  : '请先为这一周7天分别安排训练或休息，再保存周模板。'
+              : detail.error
+                ? detail.error.message
+                : detail.isPending
+                  ? '正在读取模板…'
+                  : '未找到模板，请返回模板库重新选择。'}
+          </p>
+          <div className="row">
+            {(creating ? week.error : detail.error) && (
+              <Button onClick={() => void (creating ? week.refetch() : detail.refetch())}>
+                重新读取模板
+              </Button>
+            )}
+            <Button variant="secondary" onClick={() => navigate(`/fitness/templates?date=${date}`)}>
+              返回模板库
+            </Button>
+          </div>
+        </div>
+      )}
       {draft && (
-        <Modal open title={entry ? '编辑个人模板' : '保存周训练模板'} onClose={close}>
+        <Wrapper open title={entry ? '编辑个人模板' : '保存周训练模板'} onClose={close}>
           <form
             className="platform-form"
             onSubmit={(e) => {
@@ -217,7 +289,11 @@ export function TemplateManager({
                   fitnessApi.save(kind, key, data, entry?.revision ?? -1, undefined, saveKey),
                 )
                 .then(() => {
-                  setDraft(null);
+                  flushSync(() => {
+                    setDirty(false);
+                    setDraft(null);
+                  });
+                  if (page) navigate(`/fitness/templates?date=${date}`);
                   setMessage('模板已保存，过去的安排和实际记录保持不变。');
                 })
                 .catch((error) => setMessage(error.message));
@@ -304,7 +380,7 @@ export function TemplateManager({
               </Button>
             </div>
           </form>
-        </Modal>
+        </Wrapper>
       )}
     </section>
   );

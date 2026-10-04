@@ -5,7 +5,10 @@ import { http, HttpResponse } from 'msw';
 import { server } from '../../mocks/server';
 import { renderRoute, startDemoSession } from '../../test/helpers';
 import operations from '../../mocks/generated.json';
-const dashboard = operations.find((x) => x.operationId === 'getDashboard')!.example.data as unknown as {cycle: {id:string;name:string;startDate:string;endDate:string;timezone:string}};
+const dashboard = operations.find((x) => x.operationId === 'getDashboard')!.example
+  .data as unknown as {
+  cycle: { id: string; name: string; startDate: string; endDate: string; timezone: string };
+};
 const cycle = dashboard.cycle;
 beforeEach(() => {
   localStorage.clear();
@@ -23,8 +26,11 @@ it('课程框架保留五位代码，标签支持前进后退', async () => {
   await startDemoSession();
   const { router } = renderRoute('/study/course/00023/catalog');
   const tabs = await screen.findByRole('navigation', { name: '课程页面' });
-  expect(await screen.findByText('课程代码 00023', { exact: false })).toBeInTheDocument();
-  expect(screen.getByRole('navigation', { name: '面包屑' })).toBeInTheDocument();
+  expect(await screen.findByText('00023 · 已完成', { exact: false })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: '← 课程清单' })).toHaveAttribute(
+    'href',
+    '/study/courses',
+  );
   expect(within(tabs).getAllByRole('link')).toHaveLength(5);
   await userEvent.click(within(tabs).getByRole('link', { name: '真题与成绩' }));
   await waitFor(() => expect(router.state.location.pathname).toBe('/study/course/00023/exams'));
@@ -36,7 +42,7 @@ it('课程框架保留五位代码，标签支持前进后退', async () => {
   await waitFor(() =>
     expect(
       within(screen.getByRole('navigation', { name: '课程页面' })).getByRole('link', {
-        name: '阅读与进度',
+        name: '阅读',
       }),
     ).toHaveAttribute('aria-current', 'page'),
   );

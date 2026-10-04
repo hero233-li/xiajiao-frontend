@@ -1,23 +1,28 @@
-import { ExerciseMotion } from './motion/ExerciseMotion';
-import { useRef,useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-fitnessApi,
-localToday,
-shiftDate,
-useFitnessMutation,
-type ImportWeek,
+  fitnessApi,
+  localToday,
+  shiftDate,
+  useFitnessMutation,
+  type ImportWeek,
 } from '../../api/fitness';
 import { Button } from '../../components/Button';
 import { useConfirmation } from '../../components/ConfirmationProvider';
 import { Modal } from '../../components/Modal';
 import { createUuid } from '../../utils/uuid';
-import { ExerciseFields,FoodFields,mealNames } from './Editor';
-import { createFirstWeek,type FirstWeekDay } from './first-week';
+import { EditorPageFrame, ExerciseFields, FoodFields, mealNames } from './Editor';
+import { createFirstWeek, type FirstWeekDay } from './first-week';
+import { ExerciseMotion } from './motion/ExerciseMotion';
 import { UnsavedGuard } from './UnsavedGuard';
 
-export function FirstWeekPlan() {
-  const [draft, setDraft] = useState<FirstWeekDay[] | null>(null);
+export function FirstWeekPlan({ page = false }: { page?: boolean }) {
+  const navigate = useNavigate();
+  const Wrapper = page ? EditorPageFrame : Modal;
+  const [draft, setDraft] = useState<FirstWeekDay[] | null>(() =>
+    page ? createFirstWeek() : null,
+  );
   const [startDate, setStartDate] = useState(() => shiftDate(localToday(), 1));
   const [active, setActive] = useState(0);
   const [view, setView] = useState<'training' | 'meals'>('training');
@@ -40,9 +45,14 @@ export function FirstWeekPlan() {
   const close = async () => {
     if (
       !mutation.isPending &&
-      (!dirty || await confirm('离开第一周计划？尚未保存的修改会被放弃。'))
-    )
-      setDraft(null);
+      (!dirty || (await confirm('离开第一周计划？尚未保存的修改会被放弃。')))
+    ) {
+      flushSync(() => {
+        setDraft(null);
+        setDirty(false);
+      });
+      if (page) navigate('/fitness/templates');
+    }
   };
   const save = async () => {
     if (!draft) return;
@@ -56,9 +66,9 @@ export function FirstWeekPlan() {
           );
           if (
             occupied.length &&
-            !await confirm(
+            !(await confirm(
               `${occupied.map((d) => d.date).join('、')} 已有训练或食谱计划。确定用当前第一周内容覆盖这7天的计划？实际训练、饮食、体重和打卡会保留。`,
-            )
+            ))
           )
             return false;
           attempt.current = {
@@ -76,8 +86,11 @@ export function FirstWeekPlan() {
         }
         const response = await fitnessApi.importWeek(attempt.current.body, attempt.current.key);
         setSaved(startDate);
-        setDraft(null);
-        setDirty(false);
+        flushSync(() => {
+          setDraft(null);
+          setDirty(false);
+        });
+        if (page) navigate(`/fitness/training?date=${startDate}`);
         return response;
       });
     } catch (error) {
@@ -90,29 +103,32 @@ export function FirstWeekPlan() {
   const day = draft?.[active];
   return (
     <>
-      <section className="first-week-entry">
-        <div>
-          <p className="eyebrow">你的第一周</p>
-          <h2>训练 + 三餐，按天执行</h2>
-          <p className="secondary">
-            已整理你提供的7天内容。选择开始日期，按需要修改后存入个人计划。
-          </p>
-        </div>
-        <Button
-          variant="secondary"
-          onClick={async () => {
-            setDraft(createFirstWeek());
-            setActive(0);
-            setView('training');
-            setEditing(false);
-            setDirty(false);
-            setMessage('');
-            attempt.current = null;
-          }}
-        >
-          查看与添加第一周计划
-        </Button>
-      </section>
+      {!page && (
+        <section className="first-week-entry">
+          <div>
+            <p className="eyebrow">你的第一周</p>
+            <h2>训练 + 三餐，按天执行</h2>
+            <p className="secondary">
+              已整理你提供的7天内容。选择开始日期，按需要修改后存入个人计划。
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            onClick={async () => {
+              navigate('/fitness/first-week');
+              setDraft(createFirstWeek());
+              setActive(0);
+              setView('training');
+              setEditing(false);
+              setDirty(false);
+              setMessage('');
+              attempt.current = null;
+            }}
+          >
+            查看与添加第一周计划
+          </Button>
+        </section>
+      )}
       {saved && (
         <p role="status" className="platform-notice">
           已保存 {saved} 至 {shiftDate(saved, 6)} 的训练与食谱。
@@ -121,7 +137,7 @@ export function FirstWeekPlan() {
         </p>
       )}
       {draft && day && (
-        <Modal open title="第一周训练与食谱" onClose={close}>
+        <Wrapper open title="第一周训练与食谱" onClose={close}>
           <form
             className="platform-form first-week-form"
             onSubmit={(e) => {
@@ -239,7 +255,10 @@ export function FirstWeekPlan() {
                         <ol className="first-week-steps">
                           {day.training.exercises.map((item) => (
                             <li key={item.id}>
-                              <div className="exercise-motion-heading"><strong>{item.name}</strong><ExerciseMotion exercise={item} /></div>
+                              <div className="exercise-motion-heading">
+                                <strong>{item.name}</strong>
+                                <ExerciseMotion exercise={item} />
+                              </div>
                               <p className="first-week-dose">
                                 {item.type === 'STRENGTH'
                                   ? `${item.sets ?? '—'}组${item.reps ? ` × ${item.reps}次` : ' · 次数/保持时间见说明'}${item.kg != null ? ` · ${item.kg}kg` : ' · 重量见说明或自行填写'}`
@@ -316,7 +335,7 @@ export function FirstWeekPlan() {
               </Button>
             </div>
           </form>
-        </Modal>
+        </Wrapper>
       )}
     </>
   );

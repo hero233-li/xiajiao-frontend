@@ -175,64 +175,67 @@ export default function ManualReader({ courseId }: { courseId: string }) {
     );
   return (
     <div className="manual-layout">
-      <nav className="manual-toc" aria-label="手册目录">
-        <h2>手册目录</h2>
-        <section className="manual-search" aria-label="手册内搜索">
-          <label htmlFor="manual-search">
-            <Search size={18} aria-hidden="true" />
-            搜索手册
-          </label>
-          <input
-            id="manual-search"
-            type="search"
-            placeholder="输入关键词"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          {needle && (
-            <>
-              <p role="status">找到 {results.length} 处匹配内容</p>
-              {results.length ? (
-                <ul>
-                  {results.map((result) => (
-                    <li key={result.id}>
-                      <button
-                        className="manual-result"
-                        title={result.text}
-                        onClick={() => go(result.id)}
-                      >
-                        {result.text}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <>
-                  <p>没有找到匹配内容，请尝试其他关键词。</p>
-                  <Button variant="secondary" onClick={() => setSearch('')}>
-                    清空搜索
-                  </Button>
-                </>
-              )}
-            </>
-          )}
-        </section>
-        {index.headings.map((heading) => (
-          <a
-            href={`#${encodeURIComponent(heading.id)}`}
-            key={heading.id}
-            title={heading.text}
-            aria-current={active === heading.id ? 'location' : undefined}
-            style={{ paddingInlineStart: `${8 + Math.min((heading.depth ?? 1) - 1, 3) * 8}px` }}
-            onClick={(event) => {
-              event.preventDefault();
-              go(heading.id);
-            }}
-          >
-            {heading.text}
-          </a>
-        ))}
-      </nav>
+      <details className="manual-directory">
+        <summary>章节目录与全文搜索</summary>
+        <nav className="manual-toc" aria-label="手册目录">
+          <h2>手册目录</h2>
+          <section className="manual-search" aria-label="手册内搜索">
+            <label htmlFor="manual-search">
+              <Search size={18} aria-hidden="true" />
+              搜索手册
+            </label>
+            <input
+              id="manual-search"
+              type="search"
+              placeholder="输入关键词"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+            {needle && (
+              <>
+                <p role="status">找到 {results.length} 处匹配内容</p>
+                {results.length ? (
+                  <ul>
+                    {results.map((result) => (
+                      <li key={result.id}>
+                        <button
+                          className="manual-result"
+                          title={result.text}
+                          onClick={() => go(result.id)}
+                        >
+                          {result.text}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <>
+                    <p>没有找到匹配内容，请尝试其他关键词。</p>
+                    <Button variant="secondary" onClick={() => setSearch('')}>
+                      清空搜索
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
+          </section>
+          {index.headings.map((heading) => (
+            <a
+              href={`#${encodeURIComponent(heading.id)}`}
+              key={heading.id}
+              title={heading.text}
+              aria-current={active === heading.id ? 'location' : undefined}
+              style={{ paddingInlineStart: `${8 + Math.min((heading.depth ?? 1) - 1, 3) * 8}px` }}
+              onClick={(event) => {
+                event.preventDefault();
+                go(heading.id);
+              }}
+            >
+              {heading.text}
+            </a>
+          ))}
+        </nav>
+      </details>
       <div className="manual-main">
         <label className="manual-mobile-toc">
           手册目录

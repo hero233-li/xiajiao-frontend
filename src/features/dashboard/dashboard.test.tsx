@@ -108,7 +108,14 @@ const planHandler = http.get('/api/v1/schedule/plans/:id', () =>
 const dashboardHandler = http.get('/api/v1/dashboard', () =>
   HttpResponse.json({ code: 0, message: 'ok', data: fixture }),
 );
-const server = setupServer(cyclesHandler, dashboardHandler, planHandler);
+const server = setupServer(
+  cyclesHandler,
+  dashboardHandler,
+  planHandler,
+  http.get('/api/v1/practice/courses/:id/questions', () =>
+    HttpResponse.json({ code: 0, message: 'ok', data: { items: [], page: 1, size: 20, total: 0 } }),
+  ),
+);
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
@@ -148,12 +155,14 @@ describe('今日学习工作台', () => {
   it('下一行动先于今日清单，书架保留真实课程顺序与进度', async () => {
     mount();
     await screen.findByRole('heading', { name: '完成今日计划条目' });
-    const shelf = screen.getAllByRole('link').filter((link) => link.closest('.study-course-ledger') !== null);
+    const shelf = screen
+      .getAllByRole('link')
+      .filter((link) => link.closest('.study-course-ledger') !== null);
     expect(shelf).toHaveLength(4);
     expect(shelf[0]).toHaveTextContent('测试理论课程');
     expect(shelf[0]).toHaveTextContent('8 / 20');
     expect(shelf[2]).toHaveAttribute('href', '/study/course/00002/manual');
-    expect(document.title).toBe('今日学习 · 学习知途');
+    expect(document.title).toBe('今日学习 · 知途个人管理平台');
   });
   it('建议采用后端结构化目标，保留前导零与题目定位', async () => {
     mount();
@@ -196,7 +205,7 @@ describe('今日学习工作台', () => {
     );
     expect(screen.getByRole('link', { name: '建立学习计划' })).toHaveAttribute(
       'href',
-      '/study/schedule',
+      '/study/schedule?create=1',
     );
   });
   it('加载、业务错误与重试能恢复真正数据', async () => {
@@ -268,10 +277,7 @@ describe('今日学习工作台', () => {
   it('笔记与计划都有可导航的出口', async () => {
     mount();
     await screen.findByRole('heading', { name: '完成今日计划条目' });
-    expect(screen.getByRole('link', { name: '学习笔记' })).toHaveAttribute(
-      'href',
-      '/study/notes',
-    );
+    expect(screen.getByRole('link', { name: '学习笔记' })).toHaveAttribute('href', '/study/notes');
     expect(screen.getByRole('link', { name: '查看学习计划' })).toHaveAttribute(
       'href',
       '/study/schedule',

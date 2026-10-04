@@ -4,35 +4,9 @@
   max-height: 260px;
 }
 .weight-chart text {
-  fill: #8795a1;
-  font: 10px sans-serif;
+  fill: var(--color-secondary);
+  font: 14px var(--font-sans);
 }
-.period-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0 0 25px;
-  font-size: 14px;
-  gap: 10px;
-}
-.week-plan {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0 0 26px;
-}
-.week-plan button {
-  background: #fff;
-  border: 1px solid var(--platform-border);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-  padding: 16px 12px;
-  gap: 7px;
-  color: #697d72;
-}
-.week-plan button.selected,
 .record-calendar button.selected {
   outline: 2px solid var(--space-accent);
   outline-offset: -2px;
@@ -44,13 +18,6 @@
 .week-plan strong {
   font-size: 17px;
   color: #3b5548;
-}
-.week-plan small {
-  font-size: 14px;
-}
-.week-plan em {
-  font-style: normal;
-  font-size: 14px;
 }
 .template-row {
   display: flex;
@@ -103,7 +70,7 @@
   font-size: 14px;
 }
 .record-calendar small {
-  font-size: 9px;
+  font-size: 14px;
 }
 .weight-table > div {
   display: grid;
@@ -113,24 +80,6 @@
   padding: 14px 0;
   border-top: 1px solid #e6ebee;
   font-size: 14px;
-}
-.history-metrics {
-  display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
-  gap: 25px;
-  border-bottom: 1px solid var(--platform-border);
-  padding: 0 4px 25px;
-  margin-bottom: 24px;
-}
-.history-metrics span {
-  font-size: 14px;
-  color: #879299;
-}
-.history-metrics strong {
-  display: block;
-  font-size: 30px;
-  line-height: 1.8;
-  color: #3d5e4e;
 }
 .history-metrics .training-counts {
   font-size: 22px;
@@ -211,18 +160,6 @@
   color: #627483;
   margin-bottom: 17px;
 }
-.platform-form input,
-.platform-form select,
-.platform-form textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ccd7df;
-  background: #fff;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #293f52;
-  min-width: 0;
-}
 .platform-form .check-field {
   flex-direction: row;
   align-items: center;
@@ -239,13 +176,6 @@
 }
 .full-field {
   grid-column: 1/-1;
-}
-.editor-rows fieldset {
-  border: 1px solid #dce3e7;
-  padding: 18px;
-  margin: 16px 0;
-  background: #fafcfd;
-  border-radius: 6px;
 }
 .editor-rows legend {
   font-size: 14px;
@@ -278,49 +208,11 @@
   margin: 15px 0;
 }
 
-
-
-
-
-
 :root[data-compact='true'] .platform-section {
   padding: 18px 22px;
 }
 :root[data-compact='true'] .record-ledger li {
   padding: 8px 0;
-}
-
-
-.platform-login {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 1.05fr 1fr;
-  background: #fff;
-  color: #263b52;
-}
-.platform-login-intro {
-  padding: 48px 11%;
-  background: #edf2f8;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 60px;
-}
-.platform-login-intro h2 {
-  font-size: 43px;
-  line-height: 1.5;
-  margin: 20px 0;
-  color: #3e5877;
-  letter-spacing: 1px;
-}
-.platform-login-intro p {
-  color: #8b9caf;
-  font-size: 14px;
-  line-height: 2;
-}
-.platform-login-intro > small {
-  font-size: 14px;
-  color: #95a3b3;
 }
 .login-spaces {
   display: flex;
@@ -334,118 +226,12 @@
   font-size: 14px;
   color: #6b839d;
 }
-.platform-login-form {
-  display: grid;
-  place-items: center;
-  padding: 50px;
-}
-.platform-login-form > div {
-  width: 100%;
-  max-width: 350px;
-}
-.platform-login-form h1 {
-  font-size: 29px;
-  margin: 15px 0 10px;
-}
-.platform-login-form > div > p.secondary {
-  font-size: 14px;
-  margin-bottom: 30px;
-}
-.platform-login-form .button {
-  background: #355f91;
-  border-color: #355f91;
-  border-radius: 6px;
-}
-.platform-login-form .login-footer {
-  margin-top: 28px;
-  font-size: 14px;
-}
-.platform-login .eyebrow {
-  font-size: 14px;
-}
-@media (max-width: 1000px) {
-  .study-workbench-grid {
-    gap: 20px;
-    grid-template-columns: minmax(0, 2fr) minmax(175px, 1fr);
-  }
-  .study-focus-banner {
-    padding: 24px;
-  }
-  .study-progress-summary {
-    padding-left: 20px;
-  }
-  .study-focus-banner h2 {
-    font-size: 20px;
-  }
-  .platform-login-intro {
-    padding: 35px 9%;
-  }
-  .platform-login-intro h2 {
-    font-size: 34px;
-  }
-}
 @media (max-width: 760px) {
-  .study-focus-banner {
-    padding: 22px 20px;
-    grid-template-columns: 2fr 1fr;
-    gap: 18px;
-  }
-  .study-focus-banner h2 {
-    font-size: 18px;
-  }
-  .study-progress-summary {
-    padding-left: 15px;
-    font-size: 9px;
-  }
-  .study-progress-summary strong {
-    font-size: 28px;
-  }
   .study-focus-banner p {
     font-size: 14px;
   }
-  .study-workbench-grid {
-    grid-template-columns: 1fr;
-  }
-  .study-agenda {
-    padding: 5px 2px 20px;
-  }
   .study-course-ledger > a {
     gap: 11px;
-  }
-  .study-course-ledger h3 {
-    font-size: 14px;
-  }
-  .course-mini-progress,
-  .course-mini-progress progress {
-    width: 55px;
-  }
-  .platform-login {
-    grid-template-columns: 1fr;
-  }
-  .platform-login-intro {
-    padding: 25px 25px 30px;
-    gap: 10px;
-  }
-  .platform-login-intro .platform-logo {
-    margin-bottom: 15px;
-  }
-  .platform-login-intro h2 {
-    font-size: 27px;
-    margin: 12px 0;
-  }
-  .platform-login-intro > small,
-  .platform-login-intro .login-spaces {
-    display: none;
-  }
-  .platform-login-intro p {
-    font-size: 14px;
-  }
-  .platform-login-form {
-    padding: 32px 25px 45px;
-    place-items: start center;
-  }
-  .platform-login-form h1 {
-    font-size: 25px;
   }
 }
 .study-course-heading {
@@ -620,12 +406,6 @@
 .reader-action-bar > a {
   margin-left: auto;
 }
-.reader-resource {
-  padding: 24px 0;
-  min-height: 240px;
-  font-size: 14px;
-  line-height: 1.9;
-}
 .reader-resource h3 {
   font-family: var(--font-sans);
 }
@@ -643,18 +423,6 @@
   gap: 6px;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 @media (max-width: 1000px) {
   .reader-columns {
     grid-template-columns: 200px minmax(0, 1fr);
@@ -667,7 +435,6 @@
     margin: 20px -22px 0;
     padding: 12px 22px;
   }
-  
 }
 @media (max-width: 760px) {
   .study-course-title h1 {
@@ -713,9 +480,6 @@
   .reader-document-meta {
     font-size: 9px;
   }
-  .reader-resource {
-    min-height: 180px;
-  }
   .reader-related {
     gap: 15px;
   }
@@ -726,14 +490,6 @@
   .study-course-heading .breadcrumb {
     font-size: 14px;
   }
-  
-  
-}
-.date-control {
-  white-space: nowrap;
-}
-.page-heading h1 {
-  overflow-wrap: anywhere;
 }
 
 /* User-authored first-week schedule: editable before and after real persistence. */
@@ -826,6 +582,9 @@
   z-index: 1;
 }
 @media (max-width: 640px) {
+  .record-calendar small {
+    display: none;
+  }
   .first-week-entry {
     align-items: stretch;
     flex-direction: column;

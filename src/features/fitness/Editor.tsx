@@ -1,28 +1,29 @@
-import { ExerciseMotion } from './motion/ExerciseMotion';
-import { useRef,useState } from 'react';
+import { useRef, useState } from 'react';
 import {
-fitnessApi,
-localToday,
-useFitnessMutation,
-type Checkin,
-type Entry,
-type Exercise,
-type Food,
-type Goal,
-type Kind,
-type Meals,
-type Models,
-type Profile,
-type Training,
-type TrainingPlan,
-type Water,
-type Weight,
+  fitnessApi,
+  localToday,
+  useFitnessMutation,
+  type Checkin,
+  type Entry,
+  type Exercise,
+  type Food,
+  type Goal,
+  type Kind,
+  type Meals,
+  type Models,
+  type Profile,
+  type Training,
+  type TrainingPlan,
+  type Water,
+  type Weight,
 } from '../../api/fitness';
 import { Button } from '../../components/Button';
 import { useConfirmation } from '../../components/ConfirmationProvider';
 import { Modal } from '../../components/Modal';
 import { createUuid } from '../../utils/uuid';
+import { ExerciseMotion } from './motion/ExerciseMotion';
 import { UnsavedGuard } from './UnsavedGuard';
+import { flushSync } from 'react-dom';
 export const goalNames = { LOSE: '减重', GAIN: '增重', MAINTAIN: '维持' };
 export const trainingNames = {
   COMPLETED: '完成',
@@ -429,7 +430,10 @@ export function FitnessEditor({
   };
   const confirm = useConfirmation();
   const close = async () => {
-    if (!mutation.isPending && (!dirty || await confirm('当前内容尚未保存，确定放弃？'))) onClose();
+    if (!mutation.isPending && (!dirty || (await confirm('当前内容尚未保存，确定放弃？')))) {
+      flushSync(() => setDirty(false));
+      onClose();
+    }
   };
   const daily = !['goal', 'profile'].includes(spec.kind);
   const actual = !['training-plan', 'meal-plan'].includes(spec.kind);
@@ -479,7 +483,7 @@ export function FitnessEditor({
               ),
             )
             .then(() => {
-              setDirty(false);
+              flushSync(() => setDirty(false));
               onClose();
               onSaved?.();
             })
@@ -593,7 +597,8 @@ export function FitnessEditor({
           {spec.kind === 'training' && (
             <label>
               训练状态
-              <select required
+              <select
+                required
                 value={draft.status || ''}
                 onChange={(e) =>
                   patch({
@@ -602,7 +607,9 @@ export function FitnessEditor({
                   })
                 }
               >
-                <option value="" disabled>请选择实际训练状态</option>
+                <option value="" disabled>
+                  请选择实际训练状态
+                </option>
                 {Object.entries(trainingNames).map(([v, n]) => (
                   <option key={v} value={v}>
                     {n}
@@ -735,4 +742,29 @@ export function FitnessEditor({
   );
 }
 
-function EditorPageFrame({title, children, onClose}: {title:string;children:React.ReactNode;open:boolean;onClose:()=>void}) {return <section className="editor-page"><header className="page-heading"><div><p className="eyebrow">健身 / 编辑记录</p><h1>{title}</h1><p>保存后返回所选日期。失败时输入保留。</p></div><Button variant="secondary" onClick={onClose}>返回</Button></header>{children}</section>;}
+export function EditorPageFrame({
+  title,
+  children,
+  onClose,
+}: {
+  title: string;
+  children: React.ReactNode;
+  open: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <section className="editor-page">
+      <header className="page-heading">
+        <div>
+          <p className="eyebrow">健身 / 编辑记录</p>
+          <h1>{title}</h1>
+          <p>保存后返回所选日期。失败时输入保留。</p>
+        </div>
+        <Button variant="secondary" onClick={onClose}>
+          返回
+        </Button>
+      </header>
+      {children}
+    </section>
+  );
+}

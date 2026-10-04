@@ -1,0 +1,212 @@
+.study-focus-banner {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px;
+  background: #eaf0ff;
+  border: 1px solid #cbd8f5;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+.study-focus-banner h2 {
+  font-size: 26px;
+}
+.study-progress-summary {
+  display: grid;
+  align-content: center;
+  min-width: 150px;
+}
+.study-progress-summary strong {
+  font-size: 38px;
+}
+.study-progress-summary span,
+.study-progress-summary p {
+  font-size: 14px;
+  color: #46556b;
+}
+.study-workbench-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 24px;
+}
+.study-agenda {
+  padding: 24px;
+  background: white;
+  border: 1px solid var(--platform-border);
+  border-radius: 10px;
+  align-self: start;
+}
+.study-exam-line {
+  padding: 14px 0;
+  border-top: 1px solid var(--platform-border);
+}
+.study-exam-line > div {
+  display: grid;
+  gap: 4px;
+}
+.study-exam-line span {
+  color: #536174;
+  font-size: 14px;
+}
+.study-tools {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  border-top: 1px solid var(--platform-border);
+  padding-top: 20px;
+}
+.study-tools a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.study-course-ledger > a {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--platform-border);
+}
+.study-course-ledger h3 {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+.study-course-ledger p {
+  font-size: 14px;
+  color: #536174;
+  margin: 0;
+}
+.course-mini-progress {
+  margin-left: auto;
+  font-size: 14px;
+}
+.course-mini-progress progress {
+  display: block;
+  width: 90px;
+}
+.course-order {
+  color: #536174;
+  font-size: 14px;
+}
+
+.quick-records.quick-weight {
+  grid-template-columns: 1fr;
+  max-width: 600px;
+}
+.quick-weight > form {
+  border-right: 0;
+}
+.quick-weight > form label {
+  max-width: 300px;
+}
+
+.home-action-desk {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 24px;
+  margin: 24px 0;
+}
+.home-action-desk > section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-top: 3px solid var(--color-primary);
+  padding: 24px;
+  min-width: 0;
+}
+.home-action-desk .home-fitness-action {
+  border-top-color: #146951;
+}
+.home-action-desk header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  color: var(--color-primary);
+}
+.home-fitness-action header {
+  color: #146951;
+}
+.home-action-desk header h2 {
+  font-size: 16px;
+  margin: 0;
+  flex: 1;
+}
+.home-action-desk header span {
+  font-size: 14px;
+  color: var(--color-secondary);
+}
+.home-action-desk h3 {
+  font-size: 24px;
+  line-height: 1.5;
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
+.home-action-desk p {
+  color: var(--color-secondary);
+  min-height: 52px;
+  line-height: 1.7;
+  margin: 0 0 20px;
+}
+.home-main-action {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.home-main-action .button {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+}
+.home-action-desk nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  border-top: 1px solid var(--color-line);
+  padding-top: 12px;
+}
+.home-action-desk nav a,
+.home-space-strip a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 14px;
+}
+.home-space-strip {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--color-line);
+  padding: 16px 0;
+}
+.home-space-strip strong {
+  color: var(--color-secondary);
+  font-size: 14px;
+}
+@media (max-width: 800px) {
+  .home-action-desk {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .home-action-desk > section {
+    padding: 20px;
+  }
+  .home-action-desk header {
+    margin-bottom: 16px;
+  }
+  .home-action-desk h3 {
+    font-size: 22px;
+  }
+  .home-action-desk p {
+    min-height: 0;
+  }
+  .home-space-strip {
+    gap: 8px 20px;
+  }
+  .home-space-strip strong {
+    width: 100%;
+  }
+}

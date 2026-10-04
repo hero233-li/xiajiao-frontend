@@ -91,7 +91,7 @@ export function Component() {
     <div className="notes-page stack">
       <header className="page-heading">
         <div>
-          <p className="eyebrow">NOTEBOOK / 学习笔记</p>
+          <p className="eyebrow">学习笔记</p>
           <h1>{code ? '课程笔记' : '把理解留在这里。'}</h1>
           <p className="secondary">记录易错点、思路与复习提示，随时回到相关课程。</p>
         </div>
@@ -271,11 +271,14 @@ export function Component() {
                   回到相关学习内容 →
                 </Link>
               )}
-              <NoteContent
-                content={note.content}
-                tags={note.tags}
-                onTag={(value) => change('tag', value)}
-              />
+              <details className="note-reading">
+                <summary>阅读笔记</summary>
+                <NoteContent
+                  content={note.content}
+                  tags={note.tags}
+                  onTag={(value) => change('tag', value)}
+                />
+              </details>
               <div className="row" aria-label="笔记标签">
                 {note.tags.map((value) => (
                   <Button

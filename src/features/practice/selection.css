@@ -18,7 +18,7 @@
   margin-top: 20px;
 }
 .selection-summary > summary {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-secondary);
   cursor: pointer;
 }
@@ -30,7 +30,7 @@
   margin: 0;
 }
 .selection-stats dt {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-secondary);
 }
 .selection-stats dd {
@@ -38,7 +38,7 @@
   font-size: 20px;
 }
 .selection-count {
-  font-size: 12px;
+  font-size: 14px;
   margin: 4px 0;
   color: var(--color-secondary);
 }
@@ -69,7 +69,7 @@
   color: var(--color-secondary);
   border-bottom: 2px solid transparent;
   padding: 12px 18px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .selection-modes .button[aria-pressed='true'] {
   border-bottom-color: var(--color-primary);
@@ -121,17 +121,17 @@
   display: flex;
   gap: 12px;
   align-items: center;
-  font-size: 12px;
+  font-size: 14px;
 }
 .selection-status {
   display: flex;
   align-items: center;
   gap: 6px;
   margin: 0;
-  font-size: 12px;
+  font-size: 14px;
 }
 .selection-rules {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-secondary);
 }
 .selection-rules summary {
@@ -194,7 +194,7 @@
   border: 1px solid #d4decb;
 }
 .mock-entry p {
-  font-size: 13px;
+  font-size: 14px;
 }
 .mock-entry h3 {
   font-size: 19px;
@@ -203,7 +203,7 @@
   align-self: center;
 }
 .mock-entry > div:last-child .secondary {
-  font-size: 12px;
+  font-size: 14px;
   margin: 8px 0 0;
 }
 .assessment-history {
@@ -268,7 +268,7 @@
     font-size: 16px;
   }
   .selection-modes .button {
-    font-size: 12px;
+    font-size: 14px;
     padding: 10px;
   }
   .selection-stats {

@@ -22,14 +22,14 @@ export function Component() {
       (await listCourses({ cycleId: cycle!.cycleId!, size: 100 }, { signal, silent: true })).data,
   });
   useEffect(() => {
-    document.title = '学习书架 · 学习知途';
+    document.title = '我的科目 · 知途个人管理平台';
   }, []);
   return (
     <section>
       <header className="page-heading">
         <div>
-          <p className="eyebrow">LIBRARY / 学习书架</p>
-          <h1>让知识连成体系。</h1>
+          <p className="eyebrow">学习书架</p>
+          <h1>我的课程</h1>
           <p className="secondary">选一门课程，阅读内容、练习巩固，或回到你的笔记。</p>
         </div>
         <CyclePicker />
@@ -45,7 +45,7 @@ export function Component() {
       ) : !courses.data?.items.length ? (
         <RegionState kind="empty" message="本周期暂未开放课程。" />
       ) : (
-        <div className="shelf-list">
+        <div className="course-roster">
           {courses.data.items.map((course, i) => {
             const exam = cycle.selected?.courses.find((e) => e.courseId === course.id);
             const base = `/study/course/${course.code}`;
@@ -60,16 +60,16 @@ export function Component() {
             return (
               <article
                 key={course.id}
-                className="shelf-course"
+                className="course-roster-row"
                 aria-labelledby={`course-${course.id}`}
               >
-                <span className="shelf-index">{String(i + 1).padStart(2, '0')}</span>
+                <span className="course-roster-number">{String(i + 1).padStart(2, '0')}</span>
                 <div>
                   <p className="eyebrow">
                     {course.code} / {course.courseType === 'THEORY' ? '理论课程' : '实践课程'}
                   </p>
                   <h2 id={`course-${course.id}`}>{course.name}</h2>
-                  <p className="shelf-meta">
+                  <p className="course-exam-date">
                     {exam?.examDate
                       ? `${dateLabel(exam.examDate)} ${exam.startsAt?.slice(0, 5) ?? '时间待确认'}${exam.endsAt ? `–${exam.endsAt.slice(0, 5)}` : ''}`
                       : '考试日期待确认'}{' '}
@@ -83,17 +83,20 @@ export function Component() {
                       </button>
                     )}
                   </p>
-                  <nav className="shelf-links" aria-label={`${course.name}学习入口`}>
-                    {available.map(([pane, label]) => (
-                      <Link key={pane} to={`${base}/${pane}`}>
-                        {label}
-                      </Link>
-                    ))}
-                    <Link to={`${base}/notes`}>课程笔记</Link>
-                  </nav>
+                  <details className="course-resources">
+                    <summary>学习入口与资料</summary>
+                    <nav className="course-resource-links" aria-label={`${course.name}学习入口`}>
+                      {available.map(([pane, label]) => (
+                        <Link key={pane} to={`${base}/${pane}`}>
+                          {label}
+                        </Link>
+                      ))}
+                      <Link to={`${base}/notes`}>课程笔记</Link>
+                    </nav>
+                  </details>
                   <EnrollmentControls courseId={course.id} cycleId={cycle.cycleId!} />
                 </div>
-                <div className="shelf-status">
+                <div className="course-roster-progress">
                   <strong>目录完成 {course.progress.percent}%</strong>
                   <div className="progress-track">
                     <div

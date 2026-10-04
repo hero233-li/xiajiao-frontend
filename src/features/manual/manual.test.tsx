@@ -247,7 +247,7 @@ describe('实践手册', () => {
     expect(client.getQueryState(['course-progress', 'course-a'])?.isInvalidated).toBe(true);
     await userEvent.click(screen.getByRole('link', { name: '前往目录' }));
     const cancel = await screen.findByRole('button', { name: '取消完成' });
-    expect(document.querySelector('.reader-document-meta')).toHaveTextContent(/预计.*已完成/);
+    expect(document.querySelector('.reading-metadata')).toHaveTextContent(/预计.*已完成/);
     await userEvent.click(cancel);
     await screen.findByText('已取消完成标记。');
     await userEvent.click(screen.getByRole('link', { name: '返回手册' }));

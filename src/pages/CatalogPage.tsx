@@ -44,7 +44,6 @@ export function CatalogPage() {
           </Button>
         </section>
       )}
-      <h2 className="reader-section-title">学习目录</h2>
       <CatalogPanel key={course.data!.id} courseId={course.data!.id} />
     </>
   );

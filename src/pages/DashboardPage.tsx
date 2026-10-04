@@ -92,7 +92,7 @@ export function DashboardPage() {
   );
   const plan = usePlan(query.data?.selectedPlanId ?? '');
   useEffect(() => {
-    document.title = '今日学习 · 学习知途';
+    document.title = '今日学习 · 知途个人管理平台';
   }, []);
   const data = query.data;
   const target =
@@ -104,7 +104,7 @@ export function DashboardPage() {
     <section className="study-workbench">
       <header className="page-heading">
         <div>
-          <p className="eyebrow">STUDY / FOCUS ON THE NEXT STEP</p>
+          <p className="eyebrow">自学空间</p>
           <h1>今日学习</h1>
           <p className="secondary">{data?.localDate ?? '今天'} · 从一项明确的任务开始。</p>
         </div>
@@ -148,6 +148,9 @@ export function DashboardPage() {
                     {target ? '开始这一项' : '选择课程'} <ArrowRight size={17} />
                   </Link>
                   {data.continueLearning &&
+                    target &&
+                    learningTargetPath(data.continueLearning.target) !==
+                      learningTargetPath(target.target) &&
                     data.courses.some((c) => c.id === data.continueLearning?.courseId) && (
                       <Link to={learningTargetPath(data.continueLearning.target)}>
                         回到上次位置
@@ -164,7 +167,6 @@ export function DashboardPage() {
                 <span>
                   {data.overallProgress.completedItems} / {data.overallProgress.totalItems} 项
                 </span>
-                <p>每一步都有记录。</p>
               </div>
             </section>
             <div className="study-workbench-grid">
@@ -190,14 +192,14 @@ export function DashboardPage() {
                         <p className="inline-empty">
                           还没有学习计划。设置可用时间，让每个任务有明确的落点。
                         </p>
-                        <Link className="button button-secondary" to="/study/schedule">
+                        <Link className="button button-secondary" to="/study/schedule?create=1">
                           建立学习计划
                         </Link>
                       </>
                     )}
                   </section>
                 )}
-                <WeakItems courses={data.courses}/>
+                <WeakItems courses={data.courses} />
                 <section className="platform-section">
                   <div className="section-title">
                     <h2>我的科目</h2>

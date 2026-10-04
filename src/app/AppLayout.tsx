@@ -18,10 +18,6 @@ function Layout() {
   const test = useMatch('/study/course/:code/tests/*');
   return (
     <>
-      <a className="skip-link" href="#main-content">
-        跳到主要内容
-      </a>
-
       <main
         id="main-content"
         className={`desk-main ${chapter || test ? 'desk-focus' : ''}`}

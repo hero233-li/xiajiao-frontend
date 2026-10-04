@@ -1,12 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { getPlanRevision } from '../api/generated/schedule/schedule';
-import {
-usePlan,
-usePlans
-} from '../api/schedule';
+import { usePlan, usePlans } from '../api/schedule';
 import { Button } from '../components/Button';
-import { CyclePicker,useCycle } from '../features/cycle/CycleContext';
-import { Link,useSearchParams } from '../features/cycle/navigation';
+import { CyclePicker, useCycle } from '../features/cycle/CycleContext';
+import { Link, useSearchParams } from '../features/cycle/navigation';
 import { CreatePlan } from '../features/schedule/CreatePlan';
 import '../features/schedule/schedule.css';
 
@@ -22,8 +19,8 @@ export function SchedulePage() {
     <div className="schedule-page">
       <header className="page-heading">
         <div>
-          <p className="eyebrow">PLAN / 学习计划</p>
-          <h1>把时间留给重点。</h1>
+          <p className="eyebrow">学习计划</p>
+          <h1>学习计划</h1>
           <p className="secondary">从今天的安排出发，处理逾期，逐步完成整个周期。</p>
         </div>
         <div className="stack">

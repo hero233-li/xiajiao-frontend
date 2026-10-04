@@ -1,3 +1,4 @@
+import { useConfirmation } from '../../components/ConfirmationProvider';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '../cycle/navigation';
@@ -32,6 +33,7 @@ export function ContentEditor({
   setDirty: (v: boolean) => void;
 }) {
   const client = useQueryClient();
+  const confirmAction = useConfirmation();
   const form = useRef<HTMLFormElement>(null);
   const base = `/admin/courses/${courseId}/releases/${release.id}`;
   const query = useQuery({
@@ -64,6 +66,7 @@ export function ContentEditor({
   }, [dirty, setDirty]);
   const data = { ...query.data, ...edits };
   function change(value: Row) {
+    if (!editable) return;
     setUndo((prev) => [...prev.slice(-19), structuredClone(edits)]);
     setEdits((prev) => ({ ...prev, [section]: value }));
     setValidation(undefined);
@@ -157,7 +160,7 @@ export function ContentEditor({
     );
   return (
     <section className="admin-editor">
-      <div className="admin-version-banner">
+      <div className="version-command">
         <div>
           <strong>
             版本 {release.versionNo} · {editable ? '草稿' : '已发布 · 只读'}
@@ -211,8 +214,8 @@ export function ContentEditor({
           <Button
             type="button"
             variant="secondary"
-            onClick={() => {
-              if (window.confirm('重新读取会放弃尚未保存的修改。继续？'))
+            onClick={async () => {
+              if (await confirmAction('重新读取会放弃尚未保存的修改。继续？'))
                 void run(async () => {
                   setEdits({});
                   setUndo([]);
@@ -260,74 +263,90 @@ export function ContentEditor({
           ))}
         </section>
       )}
-      <nav className="admin-section-nav" aria-label="版本编辑分区">
-        {sectionKeys.map((k) => (
-          <button
-            type="button"
-            key={k}
-            aria-current={section === k ? 'page' : undefined}
-            onClick={() => setSection(k)}
-          >
-            {titles[k]}
-            {edits[k] ? ' · 未保存' : ''}
-          </button>
-        ))}
-      </nav>
-      {editable && undo.length > 0 && (
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => {
-            setEdits(undo.at(-1)!);
-            setUndo(undo.slice(0, -1));
-            setValidation(undefined);
-          }}
-        >
-          撤销上一步修改
-        </Button>
-      )}
-      <form
-        ref={form}
-        onSubmit={(e) => {
-          e.preventDefault();
-          void run(async () => {
-            await metadata();
-            await save();
-            setValidation(undefined);
-            setSuccess('完整内容已保存。');
-          }, '保存');
-        }}
-      >
-        <fieldset className="admin-fields" disabled={!editable || !!busy}>
-          {section === 'task-templates' ? (
-            <TemplateEditor
-              templates={(data[section].templates ?? []) as unknown as TaskTemplate[]}
-              resources={resources}
-              onChange={(templates) => change({ templates: templates as unknown as Json })}
-            />
-          ) : (
-            <Fields
-              name={sectionSchemas[section]}
-              value={
-                section === 'assessment-policy'
-                  ? pick('AssessmentPolicyWrite', data[section])
-                  : data[section]
-              }
-              choices={choices}
-              disabled={!editable || !!busy}
-              onChange={(v) => change(v as Row)}
-            />
+      <div className="content-workbench">
+        <aside className="content-index">
+          <h3>版本内容</h3>
+          <nav className="admin-section-nav" aria-label="版本编辑分区">
+            {sectionKeys.map((k) => (
+              <button
+                type="button"
+                key={k}
+                aria-current={section === k ? 'page' : undefined}
+                onClick={() => setSection(k)}
+              >
+                {titles[k]}
+                {edits[k] ? ' · 未保存' : ''}
+              </button>
+            ))}
+          </nav>
+        </aside>
+        <div className="content-form-area">
+          <header className="content-section-heading">
+            <h2>{titles[section]}</h2>
+            <p>{editable ? '编辑后保存草稿，再校验并发布。' : '此版本已发布，内容只读。'}</p>
+          </header>
+          {editable && undo.length > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setEdits(undo.at(-1)!);
+                setUndo(undo.slice(0, -1));
+                setValidation(undefined);
+              }}
+            >
+              撤销上一步修改
+            </Button>
           )}
-        </fieldset>
-        {editable && (
-          <Button type="submit" disabled={!!busy || !dirty}>
-            保存当前修改
-          </Button>
-        )}
-      </form>
-      {!editable && (
-        <p className="secondary">已发布内容不能原地修改。请返回版本列表，基于该版本创建草稿。</p>
-      )}
+          <form
+            ref={form}
+            onSubmit={(e) => {
+              e.preventDefault();
+              void run(async () => {
+                await metadata();
+                await save();
+                setValidation(undefined);
+                setSuccess('完整内容已保存。');
+              }, '保存');
+            }}
+          >
+            <fieldset className="admin-fields" disabled={!!busy}>
+              {section === 'task-templates' ? (
+                <fieldset disabled={!editable}>
+                  <TemplateEditor
+                    templates={(data[section].templates ?? []) as unknown as TaskTemplate[]}
+                    resources={resources}
+                    onChange={(templates) => change({ templates: templates as unknown as Json })}
+                  />
+                </fieldset>
+              ) : (
+                <Fields
+                  name={sectionSchemas[section]}
+                  value={
+                    section === 'assessment-policy'
+                      ? pick('AssessmentPolicyWrite', data[section])
+                      : data[section]
+                  }
+                  choices={choices}
+                  disabled={!!busy}
+                  readOnly={!editable}
+                  onChange={(v) => change(v as Row)}
+                />
+              )}
+            </fieldset>
+            {editable && (
+              <Button type="submit" disabled={!!busy || !dirty}>
+                保存当前修改
+              </Button>
+            )}
+          </form>
+          {!editable && (
+            <p className="secondary">
+              已发布内容不能原地修改。请返回版本列表，基于该版本创建草稿。
+            </p>
+          )}
+        </div>
+      </div>
       <Modal
         open={publishOpen}
         title={`发布版本 ${release.versionNo}`}
@@ -424,125 +443,129 @@ export function TemplateEditor({
       {!templates.length && (
         <p className="admin-empty">此版本暂无任务。新增 REVIEW 并填写名称和预计分钟数后保存。</p>
       )}
-      <div className="admin-table-scroll">
-        <table className="admin-table admin-template-table">
-          <thead>
-            <tr>
-              <th>任务类型</th>
-              <th>任务名称</th>
-              <th>预计分钟</th>
-              <th>关联资料</th>
-              <th>排序与删除</th>
-            </tr>
-          </thead>
-          <tbody>
-            {templates.map((t, i) => (
-              <tr key={t.id}>
-                <td>
-                  <label>
-                    <span className="sr-only">任务类型</span>
-                    <select
-                      aria-label={`任务${i + 1}类型`}
-                      value={t.kind}
+      {!!templates.length && (
+        <div className="admin-table-scroll">
+          <table className="admin-table admin-template-table">
+            <thead>
+              <tr>
+                <th>任务类型</th>
+                <th>任务名称</th>
+                <th>预计分钟</th>
+                <th>关联资料</th>
+                <th>排序与删除</th>
+              </tr>
+            </thead>
+            <tbody>
+              {templates.map((t, i) => (
+                <tr key={t.id}>
+                  <td data-label="任务类型">
+                    <label>
+                      <span className="sr-only">任务类型</span>
+                      <select
+                        aria-label={`任务${i + 1}类型`}
+                        value={t.kind}
+                        onChange={(e) =>
+                          update(t.id, { kind: e.target.value as TaskTemplate['kind'] })
+                        }
+                      >
+                        <option value="REVIEW">REVIEW · 复习</option>
+                        <option value="PAPER">PAPER · 真题</option>
+                      </select>
+                    </label>
+                  </td>
+                  <td data-label="任务名称">
+                    <label>
+                      <span className="sr-only">任务名称</span>
+                      <input
+                        aria-label={`任务${i + 1}名称`}
+                        required
+                        maxLength={500}
+                        value={t.title}
+                        onChange={(e) => update(t.id, { title: e.target.value })}
+                      />
+                    </label>
+                  </td>
+                  <td data-label="预计分钟">
+                    <input
+                      aria-label={`任务${i + 1}预计分钟`}
+                      type="number"
+                      required
+                      min={1}
+                      step={1}
+                      value={t.estimatedMinutes ?? ''}
                       onChange={(e) =>
-                        update(t.id, { kind: e.target.value as TaskTemplate['kind'] })
+                        update(t.id, {
+                          estimatedMinutes:
+                            e.target.value === ''
+                              ? (null as unknown as number)
+                              : Number(e.target.value),
+                        })
+                      }
+                    />
+                  </td>
+                  <td data-label="关联资料">
+                    <select
+                      aria-label={`任务${i + 1}资料`}
+                      value={t.resource ? JSON.stringify(t.resource) : ''}
+                      onChange={(e) =>
+                        update(t.id, {
+                          resource: e.target.value
+                            ? (JSON.parse(e.target.value) as Resource)
+                            : null,
+                        })
                       }
                     >
-                      <option value="REVIEW">REVIEW · 复习</option>
-                      <option value="PAPER">PAPER · 真题</option>
+                      <option value="">不关联资料</option>
+                      {resources.map((r) => (
+                        <option key={JSON.stringify(r)} value={JSON.stringify(r)}>
+                          {r.label}
+                        </option>
+                      ))}
                     </select>
-                  </label>
-                </td>
-                <td>
-                  <label>
-                    <span className="sr-only">任务名称</span>
-                    <input
-                      aria-label={`任务${i + 1}名称`}
-                      required
-                      maxLength={500}
-                      value={t.title}
-                      onChange={(e) => update(t.id, { title: e.target.value })}
-                    />
-                  </label>
-                </td>
-                <td>
-                  <input
-                    aria-label={`任务${i + 1}预计分钟`}
-                    type="number"
-                    required
-                    min={1}
-                    step={1}
-                    value={t.estimatedMinutes ?? ''}
-                    onChange={(e) =>
-                      update(t.id, {
-                        estimatedMinutes:
-                          e.target.value === ''
-                            ? (null as unknown as number)
-                            : Number(e.target.value),
-                      })
-                    }
-                  />
-                </td>
-                <td>
-                  <select
-                    aria-label={`任务${i + 1}资料`}
-                    value={t.resource ? JSON.stringify(t.resource) : ''}
-                    onChange={(e) =>
-                      update(t.id, {
-                        resource: e.target.value ? (JSON.parse(e.target.value) as Resource) : null,
-                      })
-                    }
-                  >
-                    <option value="">不关联资料</option>
-                    {resources.map((r) => (
-                      <option key={JSON.stringify(r)} value={JSON.stringify(r)}>
-                        {r.label}
-                      </option>
-                    ))}
-                  </select>
-                  {t.resource && (
-                    <small>
-                      {t.resource.kind === 'FILE' ? '受控文件' : '已有学习链接'} ·{' '}
-                      {t.resource.label}
-                    </small>
-                  )}
-                </td>
-                <td>
-                  <div className="admin-actions">
-                    <button
-                      type="button"
-                      aria-label={`上移任务${i + 1}`}
-                      disabled={i === 0}
-                      onClick={() => {
-                        const r = [...templates];
-                        [r[i - 1], r[i]] = [r[i], r[i - 1]];
-                        onChange(r.map((v, n) => ({ ...v, sortOrder: n })));
-                      }}
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`下移任务${i + 1}`}
-                      disabled={i === templates.length - 1}
-                      onClick={() => {
-                        const r = [...templates];
-                        [r[i + 1], r[i]] = [r[i], r[i + 1]];
-                        onChange(r.map((v, n) => ({ ...v, sortOrder: n })));
-                      }}
-                    >
-                      ↓
-                    </button>
-                    <button type="button" onClick={() => setDeleted(t)}>
-                      删除
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                    {t.resource && (
+                      <small>
+                        {t.resource.kind === 'FILE' ? '受控文件' : '已有学习链接'} ·{' '}
+                        {t.resource.label}
+                      </small>
+                    )}
+                  </td>
+                  <td data-label="排序与删除">
+                    <div className="admin-actions">
+                      <button
+                        type="button"
+                        aria-label={`上移任务${i + 1}`}
+                        disabled={i === 0}
+                        onClick={() => {
+                          const r = [...templates];
+                          [r[i - 1], r[i]] = [r[i], r[i - 1]];
+                          onChange(r.map((v, n) => ({ ...v, sortOrder: n })));
+                        }}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`下移任务${i + 1}`}
+                        disabled={i === templates.length - 1}
+                        onClick={() => {
+                          const r = [...templates];
+                          [r[i + 1], r[i]] = [r[i], r[i + 1]];
+                          onChange(r.map((v, n) => ({ ...v, sortOrder: n })));
+                        }}
+                      >
+                        ↓
+                      </button>
+                      <button type="button" onClick={() => setDeleted(t)}>
+                        删除
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       <Modal open={!!deleted} title="删除此任务？" onClose={() => setDeleted(undefined)}>
         <p>
           将从当前草稿清单移除「{deleted?.title || '未命名任务'}

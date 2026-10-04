@@ -201,10 +201,13 @@ export function useFitnessMutation() {
   return useMutation({
     mutationFn: async (action: () => Promise<unknown>) => action(),
     onSuccess: async () => {
-      await Promise.all([
-        client.invalidateQueries({ queryKey: ['fitness'] }),
-        client.invalidateQueries({ queryKey: ['personal-home'] }),
-      ]);
+      // Only the current date must synchronize before another write. Secondary failures cannot hold a save open.
+      void client.invalidateQueries({
+        queryKey: ['fitness'],
+        predicate: (q) => q.queryKey[1] !== 'day',
+      });
+      void client.invalidateQueries({ queryKey: ['personal-home'] });
+      await client.invalidateQueries({ queryKey: ['fitness', 'day'] });
     },
   });
 }

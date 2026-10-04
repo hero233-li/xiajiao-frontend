@@ -1,3 +1,4 @@
+import { useConfirmation } from '../../components/ConfirmationProvider';
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LocalRubric } from '../../api/generated/models';
@@ -15,6 +16,7 @@ export function Rubrics({
   setDirty: (v: boolean) => void;
 }) {
   const client = useQueryClient();
+  const confirm = useConfirmation();
   const papers = useQuery({
     queryKey: ['admin-rubric-papers', courseId, cycleId],
     enabled: !!courseId,
@@ -56,8 +58,8 @@ export function Rubrics({
       setBusy(false);
     }
   }
-  const close = () => {
-    if (!busy && (!editing || window.confirm('放弃未提交的评分标准修改？'))) edit(undefined);
+  const close = async () => {
+    if (!busy && (!editing || (await confirm('放弃未提交的评分标准修改？')))) edit(undefined);
   };
   return (
     <section className="admin-operations">

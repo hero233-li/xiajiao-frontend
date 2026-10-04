@@ -1,3 +1,4 @@
+import { useConfirmation } from '../../components/ConfirmationProvider';
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ExamCycle, FileMetadata } from '../../api/generated/models';
@@ -75,6 +76,7 @@ export function Operations({
   courseId: string;
 }) {
   const client = useQueryClient();
+  const confirm = useConfirmation();
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState('');
   const [editing, setEditing] = useState<{
@@ -389,7 +391,7 @@ export function Operations({
               {rows.map((row) => (
                 <tr key={String(row.id ?? (row.summary as Row)?.id)}>
                   {columns[mode].map((k) => (
-                    <td key={k}>
+                    <td key={k} data-label={labels[k]}>
                       {k === 'details' ? (
                         <details>
                           <summary>查看详情</summary>
@@ -402,7 +404,7 @@ export function Operations({
                     </td>
                   ))}
                   {!['audit', 'files'].includes(mode) && (
-                    <td>
+                    <td data-label="操作">
                       {mode === 'alerts' ? (
                         <Button
                           type="button"
@@ -495,8 +497,8 @@ export function Operations({
       <Modal
         open={!!editing}
         title={editing?.title ?? ''}
-        onClose={() => {
-          if (!busy && window.confirm('关闭编辑？尚未提交的修改将丢弃。')) setEditing(undefined);
+        onClose={async () => {
+          if (!busy && (await confirm('关闭编辑？尚未提交的修改将丢弃。'))) setEditing(undefined);
         }}
       >
         {editing && (

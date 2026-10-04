@@ -278,13 +278,16 @@ function mount(url = '/study/schedule?cycleId=cycle') {
   };
 }
 async function ready() {
-  return screen.findByRole('region', { name: '今天的安排' });
+  const today = await screen.findByRole('region', { name: '今天的安排' });
+  const calendar = document.querySelector<HTMLDetailsElement>('.schedule-calendar-view');
+  if (calendar && !calendar.open) await userEvent.click(screen.getByText('按周查看每日安排'));
+  return today;
 }
 describe('学习安排', () => {
   it('初始概览可见，今天与逾期突出；跳到今天由用户触发', async () => {
     mount();
     const today = await ready();
-    expect(screen.getAllByRole('heading', { name: '把时间留给重点。' })).toHaveLength(1);
+    expect(screen.getAllByRole('heading', { name: '学习计划' })).toHaveLength(1);
     expect(screen.getByRole('button', { name: /第 1 周/ })).toHaveAttribute('aria-current', 'date');
     expect(screen.getByText('1 / 35 天（3%）')).not.toBeVisible();
     await userEvent.click(screen.getByText('计划进度与统计'));
@@ -608,7 +611,9 @@ describe('学习安排', () => {
     plan.days = [];
     server.use(http.get('/api/v1/schedule/plans/plan', () => ok(plan)));
     await user.click(screen.getByRole('button', { name: '重新加载' }));
-    expect(await screen.findByText('这一周暂无每日安排。')).toBeVisible();
+    await screen.findByText('这一周暂无每日安排。');
+    await userEvent.click(screen.getByText('按周查看每日安排'));
+    expect(screen.getByText('这一周暂无每日安排。')).toBeVisible();
     expect(screen.getByRole('button', { name: '查看计划设置' })).toBeVisible();
   });
 });
@@ -681,7 +686,7 @@ describe('完整计划配置编辑', () => {
     const link = within(today).getByRole('link', { name: '进入学习目录' });
     expect(link).toBeVisible();
     expect(link).toHaveClass('schedule-task-entry');
-    expect(link.closest('details')).toBeNull();
+    expect(link.closest('details')).toHaveClass('schedule-calendar-view');
   });
   it('旧版本保持只读且保留学习入口', async () => {
     const old = structuredClone(plan);

@@ -198,9 +198,6 @@ export function PaperGroups({
       (yearFilter === 'all' || p.paperMonth.startsWith(yearFilter)) &&
       (!withAnswers || !!p.answerFile || p.questionFile.containsAnswers),
   );
-  const sources = [
-    ...new Set(filtered.map((p) => (p.sourceCourseCode === code ? null : p.sourceCourseCode))),
-  ].sort((a, b) => (a === null ? -1 : b === null ? 1 : a.localeCompare(b)));
   return (
     <div className="exam-library">
       <div className="exam-library-tools">
@@ -246,106 +243,83 @@ export function PaperGroups({
           </Button>
         </p>
       )}
-      {sources.map((source) => {
-        const matching = filtered.filter(
-          (p) => (p.sourceCourseCode === code ? null : p.sourceCourseCode) === source,
-        );
-        const years = [...new Set(matching.map((p) => p.paperMonth.slice(0, 4)))].sort().reverse();
-        return (
-          <section className="exam-source" key={source ?? 'current'}>
-            {source && <h3>补充资料 · 来源课程代码 {source}</h3>}
-            {years.map((year) => (
-              <section
-                key={year}
-                className="exam-year"
-                aria-label={`${source ? source + '来源 · ' : ''}${year}年试卷`}
-              >
-                <h4>
-                  {year}
-                  <small>年</small>
-                </h4>
-                <div className="exam-paper-list">
-                  {matching
-                    .filter((p) => p.paperMonth.startsWith(year))
-                    .sort((a, b) => b.paperMonth.localeCompare(a.paperMonth))
-                    .map((paper) => (
-                      <article className="exam-paper" key={paper.id}>
-                        <div className="exam-paper-title">
-                          <FileText size={20} aria-hidden="true" />
-                          <div>
-                            <strong>{Number(paper.paperMonth.slice(5))} 月试卷</strong>
-                            <p>
-                              {paper.questionPages === null
-                                ? '题目页数未提供'
-                                : `${paper.questionPages} 页题目`}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="exam-paper-answer">
-                          {paper.answerFile ? (
-                            <>
-                              <span>独立答案</span>
-                              <small>
-                                {paper.answerPages === null
-                                  ? '页数未提供'
-                                  : `${paper.answerPages} 页`}
-                              </small>
-                            </>
-                          ) : paper.questionFile.containsAnswers ? (
-                            <span className="status-warning">题目含答案</span>
-                          ) : (
-                            <span className="secondary">暂无答案</span>
-                          )}
-                          {paper.answerFile &&
-                            (paper.questionFile.containsAnswers ||
-                              paper.answerFile.containsAnswers) && (
-                              <small className="status-warning">资料含答案</small>
-                            )}
-                        </div>
-                        <div className="exam-paper-actions">
-                          {unlock?.canDownloadPapers ? (
-                            <>
-                              <Button
-                                variant="secondary"
-                                loading={
-                                  downloading?.id === paper.id && downloading.part === 'QUESTION'
-                                }
-                                onClick={() => onDownload(paper, 'QUESTION')}
-                              >
-                                下载题目
-                              </Button>
-                              {paper.answerFile && (
-                                <Button
-                                  variant="ghost"
-                                  loading={
-                                    downloading?.id === paper.id && downloading.part === 'ANSWER'
-                                  }
-                                  onClick={() => onDownload(paper, 'ANSWER')}
-                                >
-                                  下载答案
-                                </Button>
-                              )}
-                            </>
-                          ) : (
-                            <span className="exam-download-state">
-                              <LockKeyhole size={14} aria-hidden="true" />
-                              {unlock ? '未开放下载' : '下载权限暂不可用'}
-                            </span>
-                          )}
-                          {unlock?.canWriteScores && (
-                            <Button variant="ghost" onClick={() => onRecord(paper)}>
-                              记录成绩
-                            </Button>
-                          )}
-                        </div>
-                      </article>
-                    ))}
+      <div className="paper-register">
+        {filtered
+          .slice()
+          .sort(
+            (a, b) =>
+              b.paperMonth.localeCompare(a.paperMonth) ||
+              (a.sourceCourseCode ?? code).localeCompare(b.sourceCourseCode ?? code),
+          )
+          .map((paper) => (
+            <article className="exam-paper" key={paper.id}>
+              <div className="exam-paper-title">
+                <FileText size={20} aria-hidden="true" />
+                <div>
+                  <strong>{paper.paperMonth} · 试卷</strong>
+                  {paper.sourceCourseCode && paper.sourceCourseCode !== code && (
+                    <p>补充资料 · 来源课程代码 {paper.sourceCourseCode}</p>
+                  )}
+                  <p>
+                    {paper.questionPages === null
+                      ? '题目页数未提供'
+                      : `${paper.questionPages} 页题目`}
+                  </p>
                 </div>
-              </section>
-            ))}
-          </section>
-        );
-      })}
+              </div>
+              <div className="exam-paper-answer">
+                {paper.answerFile ? (
+                  <>
+                    <span>独立答案</span>
+                    <small>
+                      {paper.answerPages === null ? '页数未提供' : `${paper.answerPages} 页`}
+                    </small>
+                  </>
+                ) : paper.questionFile.containsAnswers ? (
+                  <span className="status-warning">题目含答案</span>
+                ) : (
+                  <span className="secondary">暂无答案</span>
+                )}
+                {paper.answerFile &&
+                  (paper.questionFile.containsAnswers || paper.answerFile.containsAnswers) && (
+                    <small className="status-warning">资料含答案</small>
+                  )}
+              </div>
+              <div className="exam-paper-actions">
+                {unlock?.canDownloadPapers ? (
+                  <>
+                    <Button
+                      variant="secondary"
+                      loading={downloading?.id === paper.id && downloading.part === 'QUESTION'}
+                      onClick={() => onDownload(paper, 'QUESTION')}
+                    >
+                      下载题目
+                    </Button>
+                    {paper.answerFile && (
+                      <Button
+                        variant="ghost"
+                        loading={downloading?.id === paper.id && downloading.part === 'ANSWER'}
+                        onClick={() => onDownload(paper, 'ANSWER')}
+                      >
+                        下载答案
+                      </Button>
+                    )}
+                  </>
+                ) : (
+                  <span className="exam-download-state">
+                    <LockKeyhole size={14} aria-hidden="true" />
+                    {unlock ? '未开放下载' : '下载权限暂不可用'}
+                  </span>
+                )}
+                {unlock?.canWriteScores && (
+                  <Button variant="ghost" onClick={() => onRecord(paper)}>
+                    记录成绩
+                  </Button>
+                )}
+              </div>
+            </article>
+          ))}
+      </div>
     </div>
   );
 }

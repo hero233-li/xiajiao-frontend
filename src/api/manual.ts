@@ -103,6 +103,7 @@ export function useManualCompletion(courseId: string) {
               'dashboard',
               'home',
               'home-aggregate',
+              'personal-home',
               'schedule',
               'plan',
               'plans',

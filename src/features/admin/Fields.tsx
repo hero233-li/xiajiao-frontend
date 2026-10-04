@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import definitions from './contracts.json';
 import { createUuid } from '../../utils/uuid';
 import type { Json, Row } from './api';
@@ -19,6 +19,7 @@ export interface Schema {
   allOf?: Schema[];
   oneOf?: Schema[];
 }
+const ReadOnly = createContext(false);
 const schemas = definitions as Record<string, Schema>;
 export function schema(name: string) {
   return resolve(schemas[name] ?? { type: 'object' });
@@ -154,24 +155,28 @@ export function Fields({
   onChange,
   choices = {},
   disabled = false,
+  readOnly = false,
 }: {
   name: string;
   value: Json;
   onChange: (v: Json) => void;
   choices?: Choices;
   disabled?: boolean;
+  readOnly?: boolean;
 }) {
   return (
-    <fieldset className="admin-fields" disabled={disabled}>
-      <Field
-        definition={schema(name)}
-        value={value}
-        change={onChange}
-        choices={choices}
-        label=""
-        field=""
-      />
-    </fieldset>
+    <ReadOnly.Provider value={readOnly}>
+      <fieldset className="admin-fields" disabled={disabled}>
+        <Field
+          definition={schema(name)}
+          value={value}
+          change={onChange}
+          choices={choices}
+          label=""
+          field=""
+        />
+      </fieldset>
+    </ReadOnly.Provider>
   );
 }
 function Field({
@@ -191,6 +196,7 @@ function Field({
   field: string;
   required?: boolean;
 }) {
+  const readOnly = useContext(ReadOnly);
   const s = resolve(definition);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -198,7 +204,11 @@ function Field({
     return (
       <div className="admin-null">
         <span>{label} · 未设置</span>
-        <button type="button" onClick={() => change(initial({ ...s, nullable: false }))}>
+        <button
+          type="button"
+          disabled={readOnly}
+          onClick={() => change(initial({ ...s, nullable: false }))}
+        >
           设置{label}
         </button>
       </div>
@@ -211,7 +221,7 @@ function Field({
           <h4>
             {label}
             {s.nullable && (
-              <button type="button" onClick={() => change(null)}>
+              <button type="button" disabled={readOnly} onClick={() => change(null)}>
                 取消设置
               </button>
             )}
@@ -252,6 +262,7 @@ function Field({
           </strong>
           <button
             type="button"
+            disabled={readOnly}
             onClick={() => {
               const next = initial(s.items ?? {});
               change([
@@ -351,6 +362,7 @@ function Field({
       <label>
         {label}
         <select
+          disabled={readOnly}
           aria-label={label}
           required={required && !s.nullable}
           value={value === null ? '' : String(value)}
@@ -390,6 +402,7 @@ function Field({
       {label}
       {long ? (
         <textarea
+          readOnly={readOnly}
           value={String(value ?? '')}
           rows={5}
           required={required && !s.nullable}
@@ -398,6 +411,7 @@ function Field({
         />
       ) : (
         <input
+          readOnly={readOnly}
           type={numeric ? 'number' : s.format === 'date' ? 'date' : 'text'}
           value={value === null ? '' : String(value)}
           required={required && !s.nullable}
@@ -448,6 +462,7 @@ function ArrayRow({
   remove: () => void;
   move: (d: number) => void;
 }) {
+  const readOnly = useContext(ReadOnly);
   const r = typeof value === 'object' && value && !Array.isArray(value) ? value : {};
   const [expanded, setExpanded] = useState(
     !r.title && !r.name && !r.stem && !r.question && !r.description && !r.number,
@@ -455,13 +470,23 @@ function ArrayRow({
   return (
     <div className="admin-array-row">
       <div className="admin-row-tools">
-        <button type="button" aria-label={`上移${label}${index + 1}`} onClick={() => move(-1)}>
+        <button
+          type="button"
+          disabled={readOnly}
+          aria-label={`上移${label}${index + 1}`}
+          onClick={() => move(-1)}
+        >
           ↑
         </button>
-        <button type="button" aria-label={`下移${label}${index + 1}`} onClick={() => move(1)}>
+        <button
+          type="button"
+          disabled={readOnly}
+          aria-label={`下移${label}${index + 1}`}
+          onClick={() => move(1)}
+        >
           ↓
         </button>
-        <button type="button" onClick={remove}>
+        <button type="button" disabled={readOnly} onClick={remove}>
           移除{label}
           {index + 1}
         </button>

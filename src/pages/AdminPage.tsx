@@ -103,7 +103,7 @@ export function Component() {
     <div className="admin-workspace">
       <header className="admin-heading">
         <div>
-          <p className="eyebrow">ADMIN / 管理工作台</p>
+          <p className="eyebrow">管理工作台</p>
           <h1>管理员工作台</h1>
           <p>维护课程与资料，完成内容校验，再启用新版本。</p>
         </div>
@@ -111,12 +111,16 @@ export function Component() {
           返回学习端
         </Link>
       </header>
-      <section className="admin-workflow" aria-label="发布流程">
-        <div><span>01</span><strong>维护课程</strong><p>选择课程与当前版本</p></div>
-        <div><span>02</span><strong>编辑草稿</strong><p>{dirty ? '有未保存修改，请先保存' : '已保存内容保留在原版本'}</p></div>
-        <div><span>03</span><strong>校验与发布</strong><p>处理阻断问题后启用版本</p></div>
-      </section>
-      <label className="admin-mode-picker">管理任务<select value={mode} onChange={e => choose('view', e.target.value)}>{modes.map(([key,label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+      <label className="admin-mode-picker">
+        管理任务
+        <select value={mode} onChange={(e) => choose('view', e.target.value)}>
+          {modes.map(([key, label]) => (
+            <option key={key} value={key}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
       <div className="admin-context">
         <label>
           考试周期
@@ -175,7 +179,8 @@ export function Component() {
         </section>
       ) : mode === 'content' ? (
         <>
-          <section className="admin-coverage">
+          <details className="admin-coverage">
+            <summary>已发布复习任务覆盖 · 计划前置条件</summary>
             <h2>五周计划 · 已发布复习任务覆盖</h2>
             <p>后端当前规则要求每门所选理论课存在 REVIEW 模板；PAPER 不替代复习任务。</p>
             {coverage.isPending ? (
@@ -203,7 +208,7 @@ export function Component() {
                 ))}
               </div>
             )}
-          </section>
+          </details>
           <div className="admin-editor-heading">
             <div>
               <h2>{course?.name ?? '请选择课程'} · 内容版本</h2>

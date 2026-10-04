@@ -103,6 +103,7 @@ export function useTaskCompletion(planId: string) {
             'dashboard',
             'home',
             'home-aggregate',
+            'personal-home',
           ].includes(String(query.queryKey[0])),
       });
     },
@@ -126,9 +127,15 @@ export function useRescheduleConfirm(planId: string) {
     onSuccess: async () => {
       await client.invalidateQueries({
         predicate: (query) =>
-          ['plan', 'plans', 'schedule', 'dashboard', 'home', 'home-aggregate'].includes(
-            String(query.queryKey[0]),
-          ),
+          [
+            'plan',
+            'plans',
+            'schedule',
+            'dashboard',
+            'home',
+            'home-aggregate',
+            'personal-home',
+          ].includes(String(query.queryKey[0])),
       });
     },
   });

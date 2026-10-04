@@ -3,9 +3,7 @@ import { useLocation, useParams } from 'react-router-dom';
 import { NavLink, Link } from '../cycle/navigation';
 import { useCycle } from '../cycle/CycleContext';
 import { useCatalogCourse } from '../../api/catalog';
-import { useDashboard } from '../../api/dashboard';
 import type { Course } from '../../api/generated/models';
-import { Breadcrumb } from '../../components/Breadcrumb';
 import { ApiError } from '../../api/errors';
 const CourseContext = createContext<Course | null>(null);
 export const useCourse = () => useContext(CourseContext);
@@ -16,7 +14,6 @@ export function CourseFrame({ children }: PropsWithChildren) {
   const head = useRef<HTMLElement>(null);
   const cycle = useCycle();
   const query = useCatalogCourse(code, cycle?.cycleId ?? '');
-  const dashboard = useDashboard(cycle?.cycleId ? { cycleId: cycle.cycleId } : undefined);
   useEffect(() => {
     if (!head.current || !frame.current) return;
     const measure = () =>
@@ -64,63 +61,39 @@ export function CourseFrame({ children }: PropsWithChildren) {
     );
   const course = query.data;
   if (!course) return null;
-  const countdown = dashboard.data?.countdowns.find((c) => c.courseId === course.id);
   const tabs = [
-    ['catalog', '阅读与进度'],
-    ['knowledge', '知识索引'],
+    ['catalog', '阅读'],
+    ['knowledge', '知识'],
     ['practice', '练习与检测'],
     ['exams', '真题与成绩'],
-    ['notes', '课程笔记'],
-    ...(course.capabilities.manual ? [['manual', '实践手册']] : []),
+    ['notes', '笔记'],
+    ['manual', '手册'],
   ].filter(
     ([path]) => path === 'notes' || course.capabilities[path as keyof Course['capabilities']],
   );
   return (
     <CourseContext.Provider value={course}>
-      <div ref={frame} className="study-course-frame">
-        <header ref={head} className="study-course-heading">
-          <Breadcrumb
-            items={[
-              { label: '今日学习', to: '/study' },
-              { label: '学习书架', to: '/study/courses' },
-              { label: course.name },
-            ]}
-          />
-          <div className="study-course-title">
-            <div>
-              <h1>{course.name}</h1>
-              <p className="secondary">
-                课程代码 {course.code}
-                {countdown && (
-                  <>
-                    {' '}
-                    ·{' '}
-                    {countdown.status === 'TODAY'
-                      ? '今天考试'
-                      : countdown.status === 'FINISHED'
-                        ? '考试已结束'
-                        : countdown.daysRemaining !== null
-                          ? `距考试 ${countdown.daysRemaining} 天`
-                          : '考试日期待确认'}
-                  </>
-                )}
-              </p>
-            </div>
-            <div className="study-course-meter">
-              目录完成 {course.progress.percent}%<br />
-              <small>
-                {course.progress.completedItems} / {course.progress.totalItems} 项
-              </small>
-            </div>
+      <div ref={frame} className="course-workspace">
+        <header ref={head} className="course-context-row">
+          <Link to="/study/courses" className="course-back">
+            ← 课程清单
+          </Link>
+          <div>
+            <strong>{course.name}</strong>
+            <span>
+              {course.code} · 已完成 {course.progress.completedItems} / {course.progress.totalItems}{' '}
+              项
+            </span>
           </div>
-          <nav aria-label="课程页面" className="study-course-tabs">
-            {tabs.map(([path, title]) => (
-              <NavLink key={path} to={`/study/course/${code}/${path}`}>
-                {title}
-              </NavLink>
-            ))}
-          </nav>
+          <progress aria-label="课程完成度" value={course.progress.percent} max={100} />
         </header>
+        <nav className="course-tools" aria-label="课程页面">
+          {tabs.map(([path, title]) => (
+            <NavLink key={path} to={`/study/course/${code}/${path}`}>
+              {title}
+            </NavLink>
+          ))}
+        </nav>
         {children}
       </div>
     </CourseContext.Provider>

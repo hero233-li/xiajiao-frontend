@@ -5,7 +5,7 @@
 }
 .assessment-attempt {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 210px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px 28px;
 }
 .assessment-toolbar {
@@ -32,7 +32,7 @@
   gap: 24px;
   align-items: center;
   flex: 1;
-  font-size: 12px;
+  font-size: 14px;
   flex-wrap: wrap;
 }
 .assessment-timer {
@@ -44,12 +44,12 @@
   font-variant-numeric: tabular-nums;
 }
 .assessment-sync {
-  font-size: 11px;
+  font-size: 14px;
   color: var(--color-secondary);
 }
 .assessment-rules {
   grid-column: 1/-1;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-secondary);
   border-bottom: 1px solid var(--color-line);
   padding-bottom: 16px;
@@ -67,13 +67,13 @@
   min-width: 0;
   padding: 28px 32px;
   border-radius: 0;
-  border-top: 3px solid #b7c6ab;
+  border-top: 3px solid var(--color-primary);
 }
 .assessment-question .row {
   justify-content: space-between;
 }
 .assessment-question-title {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-secondary);
   margin: 0;
   scroll-margin-top: calc(var(--assessment-toolbar-height, 150px) + 16px);
@@ -82,8 +82,8 @@
   outline: none;
 }
 .assessment-question > .row .button {
-  font-size: 11px;
-  min-height: 32px;
+  font-size: 14px;
+  min-height: 44px;
   padding: 4px 8px;
 }
 .assessment-question > .row svg {
@@ -106,7 +106,7 @@
   min-width: 0;
 }
 .assessment-options legend {
-  font-size: 11px;
+  font-size: 14px;
   padding: 0 0 12px;
 }
 .assessment-option {
@@ -152,29 +152,28 @@
   padding-top: 20px;
 }
 .assessment-desktop-panel {
-  grid-column: 2;
-  grid-row: 3;
-  position: sticky;
-  top: 180px;
+  grid-column: 1;
+  grid-row: auto;
+  position: static;
   align-self: start;
 }
 .assessment-desktop-panel h2 {
   font-size: 14px;
 }
 .assessment-desktop-panel p {
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.8;
 }
 .assessment-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
   gap: 8px;
 }
 .assessment-grid .button {
   width: 100%;
   padding: 5px;
-  min-height: 38px;
-  font-size: 11px;
+  min-height: 44px;
+  font-size: 14px;
   gap: 4px;
 }
 .assessment-grid .button svg {
@@ -205,7 +204,7 @@
   position: sticky;
   bottom: 16px;
   z-index: 30;
-  font-size: 12px;
+  font-size: 14px;
 }
 .assessment-submitbar .button-reason {
   display: none;
@@ -230,7 +229,7 @@
   color: var(--color-primary);
 }
 .result-score p {
-  font-size: 13px;
+  font-size: 14px;
 }
 .result-next {
   padding: 24px 0;
@@ -243,7 +242,7 @@
   font-size: 14px;
 }
 .result-next .secondary {
-  font-size: 12px;
+  font-size: 14px;
 }
 .result-review {
   padding: 28px 32px;
@@ -255,7 +254,7 @@
   font-size: 15px;
 }
 .result-review p {
-  font-size: 13px;
+  font-size: 14px;
 }
 .result-review .assessment-stem {
   font-size: 19px;
@@ -302,7 +301,7 @@ body:has(.assessment-attempt) .notes-floating {
   }
   .assessment-submitbar {
     bottom: 72px;
-    font-size: 11px;
+    font-size: 14px;
     padding: 12px;
     background: var(--color-surface);
     border: 1px solid var(--color-line);

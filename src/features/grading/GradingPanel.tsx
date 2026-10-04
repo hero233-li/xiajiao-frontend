@@ -1,3 +1,4 @@
+import { useConfirmation } from '../../components/ConfirmationProvider';
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../components/Button';
@@ -44,6 +45,7 @@ export function GradingPanel({
   canWrite: boolean;
 }) {
   const client = useQueryClient();
+  const confirm = useConfirmation();
   const [paperId, setPaperId] = useState(papers[0]?.id ?? '');
   const [selected, setSelected] = useState<Submission>();
   const [taskId, setTaskId] = useState('');
@@ -127,215 +129,249 @@ export function GradingPanel({
   }
   const published = rubrics.data?.some((r) => r.state === 'PUBLISHED');
   return (
-    <section className="card stack" aria-label="答卷批改">
-      <h2>本地 Codex 答卷批改</h2>
+    <section className="grading-desk" aria-label="答卷批改">
+      <header className="grading-command">
+        <div>
+          <p className="eyebrow">答卷 · 任务 · 结果</p>
+          <h2>答卷批改</h2>
+        </div>
+        <span className="grading-worker-status">
+          {workers.data?.some((w) => w.online && !w.paused && !w.revoked)
+            ? 'Mac 工作程序在线'
+            : workers.isPending
+              ? '检查工作程序…'
+              : workers.isError
+                ? '工作程序状态未知'
+                : 'Mac 工作程序离线'}
+        </span>
+      </header>
       <p>
         服务器保存答卷，Mac
         在线后自动领取。评分标准必须先人工核对并发布；有疑问的结果不会直接计入成绩。
       </p>
       {error && <p role="alert">{error}</p>}
-      {(submissions.error || rubrics.error || task.error || workers.error) && (
-        <p role="alert">查询失败，请检查连接并重试。</p>
-      )}
-      <label>
-        试卷
-        <select
-          aria-label="批改试卷"
-          value={paperId}
-          onChange={(e) => {
-            setPaperId(e.target.value);
-            setSelected(undefined);
-            setTaskId('');
-            setRubric(undefined);
-          }}
-        >
-          {papers.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.paperMonth} · {p.paperKey}
-            </option>
-          ))}
-        </select>
-      </label>
-      {!canWrite && <p>当前周期的成绩写入尚未解锁。解锁后可上传答卷并申请批改。</p>}
-      <Button
-        disabled={busy || !canWrite || !paperId}
-        onClick={() =>
-          void act(async () => {
-            await saved(
-              await request<Submission>('POST', '/submissions', { courseId, cycleId, paperId }),
-            );
-            setTaskId('');
-          })
-        }
-      >
-        新建独立答卷
-      </Button>
-      <label>
-        已有答卷
-        <select
-          aria-label="已有答卷"
-          value={selected?.id ?? ''}
-          onChange={(e) => {
-            const s = submissions.data?.find((s) => s.id === e.target.value);
-            setSelected(s);
-            setTaskId('');
-          }}
-        >
-          <option value="">请选择</option>
-          {submissions.data
-            ?.filter((s) => s.paperId === paperId)
-            .map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.id.slice(0, 8)} · {s.pages.length}页 · 版本{s.revision}
+      {[
+        ['答卷', submissions],
+        ['评分标准', rubrics],
+        ['任务', task],
+        ['Mac 工作程序', workers],
+      ].map(([label, q]) => {
+        const query = q as typeof workers;
+        return query.isError ? (
+          <div className="platform-state" role="alert" key={String(label)}>
+            <p>{String(label)}读取失败。其他已加载内容仍可使用。</p>
+            <Button onClick={() => void query.refetch()}>重新读取{String(label)}</Button>
+          </div>
+        ) : null;
+      })}
+      <section className="grading-materials">
+        <h3>1 · 准备答卷</h3>
+        <label>
+          试卷
+          <select
+            aria-label="批改试卷"
+            value={paperId}
+            onChange={(e) => {
+              setPaperId(e.target.value);
+              setSelected(undefined);
+              setTaskId('');
+              setRubric(undefined);
+            }}
+          >
+            {papers.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.paperMonth} · {p.paperKey}
               </option>
             ))}
-        </select>
-      </label>
-      {selected && (
-        <>
-          <label>
-            添加JPG/PNG答题照片（最多20张，每张8MB）
-            <input
-              aria-label="添加答题照片"
-              type="file"
-              accept="image/png,image/jpeg"
-              multiple
-              disabled={busy || !canWrite}
-              onChange={(e) => {
-                const files = Array.from(e.target.files ?? []);
-                e.target.value = '';
-                void act(async () => {
-                  let s = selected;
-                  for (const file of files) {
-                    const form = new FormData();
-                    form.append('file', file);
-                    s = await request<Submission>('POST', `/submissions/${s.id}/pages`, form, {
-                      expectedRevision: s.revision,
-                    });
-                    setSelected(s);
-                  }
-                  await saved(s);
-                });
-              }}
-            />
-          </label>
-          <ol>
-            {selected.pages.map((p, i) => (
-              <li key={p.fileId}>
-                {p.pageNo}. {p.name}{' '}
-                <Button
-                  variant="secondary"
-                  disabled={busy || i === 0 || !canWrite}
-                  onClick={() =>
-                    void act(async () => {
-                      const ids = selected.pages.map((p) => p.fileId);
-                      [ids[i - 1], ids[i]] = [ids[i], ids[i - 1]];
-                      await saved(
-                        await request<Submission>('PUT', `/submissions/${selected.id}/pages`, {
-                          expectedRevision: selected.revision,
-                          fileIds: ids,
-                        }),
-                      );
-                    })
-                  }
-                >
-                  上移
-                </Button>{' '}
-                <Button
-                  variant="secondary"
-                  disabled={busy || !canWrite}
-                  onClick={() =>
-                    void act(async () => {
-                      await saved(
-                        await request<Submission>(
-                          'DELETE',
-                          `/submissions/${selected.id}/pages/${p.fileId}`,
-                          undefined,
-                          { expectedRevision: selected.revision },
-                        ),
-                      );
-                    })
-                  }
-                >
-                  移除
-                </Button>
-              </li>
-            ))}
-          </ol>
-          <label>
-            练习日期
-            <input
-              aria-label="批改练习日期"
-              type="date"
-              value={practice.practicedOn}
-              onChange={(e) => setPractice({ ...practice, practicedOn: e.target.value })}
-            />
-          </label>
-          <label>
-            实际用时（分钟）
-            <input
-              type="number"
-              min={1}
-              max={1440}
-              value={practice.minutes}
-              onChange={(e) => setPractice({ ...practice, minutes: Number(e.target.value) })}
-            />
-          </label>
-          <label>
-            试卷限时（分钟）
-            <input
-              type="number"
-              min={1}
-              max={1440}
-              value={practice.limitMinutes}
-              onChange={(e) => setPractice({ ...practice, limitMinutes: Number(e.target.value) })}
-            />
-          </label>
-          {(
-            [
-              ['complete', '完整作答'],
-              ['closedBook', '闭卷作答'],
-              ['answersSeenBefore', '作答前已看答案'],
-            ] as const
-          ).map(([key, label]) => (
-            <label key={key}>
-              <input
-                type="checkbox"
-                checked={practice[key]}
-                onChange={(e) => setPractice({ ...practice, [key]: e.target.checked })}
-              />
-              {label}
-            </label>
-          ))}
-          {!published && (
-            <p role="status">没有已发布评分标准。请管理员核对并发布该试卷的评分标准后再申请。</p>
-          )}
-          <Button
-            disabled={busy || !canWrite || !published || !selected.pages.length}
-            onClick={() =>
-              void act(async () => {
-                const t = await request<GradingTask>('POST', `/submissions/${selected.id}/tasks`, {
-                  ...practice,
-                  expectedRevision: selected.revision,
-                });
-                setTaskId(t.id);
-                await tasks.refetch();
-              })
-            }
+          </select>
+        </label>
+        {!canWrite && <p>当前周期的成绩写入尚未解锁。解锁后可上传答卷并申请批改。</p>}
+        <Button
+          disabled={busy || !canWrite || !paperId}
+          onClick={() =>
+            void act(async () => {
+              await saved(
+                await request<Submission>('POST', '/submissions', { courseId, cycleId, paperId }),
+              );
+              setTaskId('');
+            })
+          }
+        >
+          新建独立答卷
+        </Button>
+        <label>
+          已有答卷
+          <select
+            aria-label="已有答卷"
+            value={selected?.id ?? ''}
+            onChange={(e) => {
+              const s = submissions.data?.find((s) => s.id === e.target.value);
+              setSelected(s);
+              setTaskId('');
+            }}
           >
-            申请批改
-          </Button>
-          <p>申请后固定图片、页序和评分标准版本。修改材料后重新申请。</p>
-          {tasks.data?.map((t) => (
-            <Button key={t.id} variant="secondary" onClick={() => setTaskId(t.id)}>
-              {states[t.state]} · {t.id.slice(0, 8)}
+            <option value="">请选择</option>
+            {submissions.data
+              ?.filter((s) => s.paperId === paperId)
+              .map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.id.slice(0, 8)} · {s.pages.length}页 · 版本{s.revision}
+                </option>
+              ))}
+          </select>
+        </label>
+        {selected && (
+          <>
+            <label>
+              添加JPG/PNG答题照片（最多20张，每张8MB）
+              <input
+                aria-label="添加答题照片"
+                type="file"
+                accept="image/png,image/jpeg"
+                multiple
+                disabled={busy || !canWrite}
+                onChange={(e) => {
+                  const files = Array.from(e.target.files ?? []);
+                  e.target.value = '';
+                  void act(async () => {
+                    let s = selected;
+                    for (const file of files) {
+                      const form = new FormData();
+                      form.append('file', file);
+                      s = await request<Submission>('POST', `/submissions/${s.id}/pages`, form, {
+                        expectedRevision: s.revision,
+                      });
+                      setSelected(s);
+                    }
+                    await saved(s);
+                  });
+                }}
+              />
+            </label>
+            <ol>
+              {selected.pages.map((p, i) => (
+                <li key={p.fileId}>
+                  {p.pageNo}. {p.name}{' '}
+                  <Button
+                    variant="secondary"
+                    disabled={busy || i === 0 || !canWrite}
+                    onClick={() =>
+                      void act(async () => {
+                        const ids = selected.pages.map((p) => p.fileId);
+                        [ids[i - 1], ids[i]] = [ids[i], ids[i - 1]];
+                        await saved(
+                          await request<Submission>('PUT', `/submissions/${selected.id}/pages`, {
+                            expectedRevision: selected.revision,
+                            fileIds: ids,
+                          }),
+                        );
+                      })
+                    }
+                  >
+                    上移
+                  </Button>{' '}
+                  <Button
+                    variant="secondary"
+                    disabled={busy || !canWrite}
+                    onClick={() =>
+                      void act(async () => {
+                        if (!(await confirm(`移除第 ${p.pageNo} 页答题照片？已有批改快照保留。`)))
+                          return;
+                        await saved(
+                          await request<Submission>(
+                            'DELETE',
+                            `/submissions/${selected.id}/pages/${p.fileId}`,
+                            undefined,
+                            { expectedRevision: selected.revision },
+                          ),
+                        );
+                      })
+                    }
+                  >
+                    移除
+                  </Button>
+                </li>
+              ))}
+            </ol>
+            <label>
+              练习日期
+              <input
+                aria-label="批改练习日期"
+                type="date"
+                value={practice.practicedOn}
+                onChange={(e) => setPractice({ ...practice, practicedOn: e.target.value })}
+              />
+            </label>
+            <label>
+              实际用时（分钟）
+              <input
+                type="number"
+                min={1}
+                max={1440}
+                value={practice.minutes}
+                onChange={(e) => setPractice({ ...practice, minutes: Number(e.target.value) })}
+              />
+            </label>
+            <label>
+              试卷限时（分钟）
+              <input
+                type="number"
+                min={1}
+                max={1440}
+                value={practice.limitMinutes}
+                onChange={(e) => setPractice({ ...practice, limitMinutes: Number(e.target.value) })}
+              />
+            </label>
+            {(
+              [
+                ['complete', '完整作答'],
+                ['closedBook', '闭卷作答'],
+                ['answersSeenBefore', '作答前已看答案'],
+              ] as const
+            ).map(([key, label]) => (
+              <label key={key}>
+                <input
+                  type="checkbox"
+                  checked={practice[key]}
+                  onChange={(e) => setPractice({ ...practice, [key]: e.target.checked })}
+                />
+                {label}
+              </label>
+            ))}
+            {!published && (
+              <p role="status">没有已发布评分标准。请管理员核对并发布该试卷的评分标准后再申请。</p>
+            )}
+            <Button
+              disabled={busy || !canWrite || !published || !selected.pages.length}
+              onClick={() =>
+                void act(async () => {
+                  const t = await request<GradingTask>(
+                    'POST',
+                    `/submissions/${selected.id}/tasks`,
+                    {
+                      ...practice,
+                      expectedRevision: selected.revision,
+                    },
+                  );
+                  setTaskId(t.id);
+                  await tasks.refetch();
+                })
+              }
+            >
+              申请批改
             </Button>
-          ))}
-        </>
-      )}
+            <p>申请后固定图片、页序和评分标准版本。修改材料后重新申请。</p>
+            {tasks.data?.map((t) => (
+              <Button key={t.id} variant="secondary" onClick={() => setTaskId(t.id)}>
+                {states[t.state]} · {t.id.slice(0, 8)}
+              </Button>
+            ))}
+          </>
+        )}
+      </section>
       {task.data && (
-        <section className="stack" aria-live="polite">
-          <h3>{states[task.data.state]}</h3>
+        <section className="grading-result stack" aria-live="polite">
+          <h3>2 · {states[task.data.state]}</h3>
           {!task.data.workerOnline && !terminal(task.data) && <p>{task.data.workerReason}</p>}
           {task.data.error && <p>{task.data.error}</p>}
           {task.data.kind === 'GRADE' && <TaskImages taskId={task.data.id} />}
@@ -613,6 +649,12 @@ export function GradingPanel({
                   disabled={busy}
                   onClick={() =>
                     void act(async () => {
+                      if (
+                        !(await confirm(
+                          `撤销 ${w.label} 的工作程序凭证？该设备将不能继续领取任务。`,
+                        ))
+                      )
+                        return;
                       await request('DELETE', `/workers/${w.id}`);
                       await workers.refetch();
                     })

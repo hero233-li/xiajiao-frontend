@@ -226,6 +226,30 @@ function PracticeSession({
               </Button>
             </div>
           )}
+
+          {sequence.isPending || sequence.isError ? (
+            <Region
+              loading={sequence.isPending}
+              error={sequence.error}
+              retry={() => void sequence.refetch()}
+            />
+          ) : !current ? (
+            <Region
+              empty="当前筛选下没有题目。"
+              action={<Button onClick={() => changeFilter('ALL')}>查看全部题目</Button>}
+            />
+          ) : (
+            <Question
+              key={current.revisionId}
+              courseId={courseId}
+              questionId={current.id}
+              result={results[current.revisionId]}
+              onResult={record}
+              onNoteRequest={onNoteRequest}
+              previous={index > 0 ? () => setPosition(items[index - 1].id) : undefined}
+              next={index < items.length - 1 ? () => setPosition(items[index + 1].id) : undefined}
+            />
+          )}
           <details className="practice-tools">
             <summary>
               练习工具 ·{' '}
@@ -252,29 +276,6 @@ function PracticeSession({
               键盘 A–D 选择 · Enter 提交，提交后 Enter 下一题 · ← → 切题；输入备注时不触发。
             </p>
           </details>
-          {sequence.isPending || sequence.isError ? (
-            <Region
-              loading={sequence.isPending}
-              error={sequence.error}
-              retry={() => void sequence.refetch()}
-            />
-          ) : !current ? (
-            <Region
-              empty="当前筛选下没有题目。"
-              action={<Button onClick={() => changeFilter('ALL')}>查看全部题目</Button>}
-            />
-          ) : (
-            <Question
-              key={current.revisionId}
-              courseId={courseId}
-              questionId={current.id}
-              result={results[current.revisionId]}
-              onResult={record}
-              onNoteRequest={onNoteRequest}
-              previous={index > 0 ? () => setPosition(items[index - 1].id) : undefined}
-              next={index < items.length - 1 ? () => setPosition(items[index + 1].id) : undefined}
-            />
-          )}
           {notice && (
             <aside className="practice-notice" role="status">
               <Check size={20} aria-hidden="true" />
@@ -592,6 +593,45 @@ function QuestionCard({
             请先选择一个答案
           </p>
         )}
+        <nav ref={navigationRef} className="practice-navigation" aria-label="作答与切换题目">
+          <Button
+            variant="secondary"
+            onClick={previous}
+            disabled={!previous || answer.isPending}
+            disabledReason={answer.isPending ? '正在提交，请稍候' : '已经是第一题'}
+          >
+            <ArrowLeft size={20} aria-hidden="true" />
+            上一题
+          </Button>
+          {!submitted ? (
+            <Button
+              disabled={selected === null}
+              disabledReason="选择选项后即可提交"
+              loading={answer.isPending}
+              loadingLabel="正在确认结果"
+              onClick={submit}
+            >
+              {answer.isPending
+                ? '提交中'
+                : answer.isError || attempt.current
+                  ? '重试提交'
+                  : '提交答案'}
+            </Button>
+          ) : (
+            <Button variant="secondary" disabled disabledReason="可查看本题反馈">
+              已提交
+            </Button>
+          )}
+          <Button
+            variant={submitted ? 'primary' : 'secondary'}
+            onClick={next}
+            disabled={!next || answer.isPending}
+            disabledReason={answer.isPending ? '正在提交，请稍候' : '已经是最后一题'}
+          >
+            下一题
+            <ArrowRight size={20} aria-hidden="true" />
+          </Button>
+        </nav>
         <div className="practice-actions">
           <Button
             variant="secondary"
@@ -676,45 +716,6 @@ function QuestionCard({
           </section>
         )}
       </article>
-      <nav ref={navigationRef} className="practice-navigation" aria-label="作答与切换题目">
-        <Button
-          variant="secondary"
-          onClick={previous}
-          disabled={!previous || answer.isPending}
-          disabledReason={answer.isPending ? '正在提交，请稍候' : '已经是第一题'}
-        >
-          <ArrowLeft size={20} aria-hidden="true" />
-          上一题
-        </Button>
-        {!submitted ? (
-          <Button
-            disabled={selected === null}
-            disabledReason="选择选项后即可提交"
-            loading={answer.isPending}
-            loadingLabel="正在确认结果"
-            onClick={submit}
-          >
-            {answer.isPending
-              ? '提交中'
-              : answer.isError || attempt.current
-                ? '重试提交'
-                : '提交答案'}
-          </Button>
-        ) : (
-          <Button variant="secondary" disabled disabledReason="可查看本题反馈">
-            已提交
-          </Button>
-        )}
-        <Button
-          variant={submitted ? 'primary' : 'secondary'}
-          onClick={next}
-          disabled={!next || answer.isPending}
-          disabledReason={answer.isPending ? '正在提交，请稍候' : '已经是最后一题'}
-        >
-          下一题
-          <ArrowRight size={20} aria-hidden="true" />
-        </Button>
-      </nav>
     </>
   );
 }

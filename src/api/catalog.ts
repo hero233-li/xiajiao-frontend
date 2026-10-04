@@ -100,6 +100,7 @@ export function useCatalogCompletion(courseId: string) {
               'dashboard',
               'home',
               'home-aggregate',
+              'personal-home',
               'schedule',
               'plan',
               'plans',

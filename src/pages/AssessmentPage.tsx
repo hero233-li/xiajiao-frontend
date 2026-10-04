@@ -97,7 +97,7 @@ export function Component() {
       <div className="assessment-page stack">
         <header className="page-heading">
           <div>
-            <p className="eyebrow">ASSESS / 检测准备</p>
+            <p className="eyebrow">检测准备</p>
             <h1>{course.data.name}</h1>
             <p className="secondary">先核对条件与计时规则，再进入独立作答。</p>
           </div>
@@ -555,13 +555,13 @@ function Attempt({
           </div>
         </section>
       )}
-      <section className="assessment-desktop-panel">
-        <h2>题号面板</h2>
-        <p className="secondary">绿框为当前题 · ✓ 已答 · ○ 未答 · ⚑ 标记待查</p>
+      <details className="assessment-desktop-panel">
+        <summary>题号面板 · 跳题与待查</summary>
+        <p className="secondary">边框为当前题 · ✓ 已答 · ○ 未答 · ⚑ 标记待查</p>
         {grid}
-      </section>
+      </details>
       <Modal open={drawer} title="题号面板" onClose={() => setDrawer(false)}>
-        <p>✓ 已答 · ○ 未答 · ⚑ 标记待查；绿框为当前题。</p>
+        <p>✓ 已答 · ○ 未答 · ⚑ 标记待查；边框为当前题。</p>
         {grid}
       </Modal>
       <footer className="assessment-submitbar">
@@ -634,7 +634,7 @@ function Result({
         <p>交卷时间：{formatShanghaiDate(result.submittedAt)}（上海时间）</p>
       </section>
       <section className="result-next">
-        <p className="eyebrow">NEXT / 接下来</p>
+        <p className="eyebrow">接下来</p>
         <h2>
           {result.passed
             ? '保持节奏，继续下一阶段。'
