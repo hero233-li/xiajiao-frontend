@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
   BookOpen,
@@ -14,24 +14,31 @@ import { useEffect, useState } from 'react';
 import '../styles/platform.css';
 export function PlatformLayout() {
   const auth = useAuth();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const navigate = useNavigate();
+  const [more, setMore] = useState(false);
   const [busy, setBusy] = useState(false);
   const profile = useFitnessList('profile').data?.[0]?.data;
   const space = pathname.startsWith('/fitness')
     ? 'fitness'
-    : pathname.startsWith('/study') || pathname.startsWith('/admin')
+    : pathname.startsWith('/admin')
+      ? 'admin'
+      : pathname.startsWith('/study')
       ? 'study'
       : 'home';
   const links =
     space === 'fitness'
       ? [
           ['/fitness', '今天'],
-          ['/fitness/goals', '目标'],
-          ['/fitness/training', '训练计划'],
+          ['/fitness/training', '训练'],
           ['/fitness/meals', '食谱与饮食'],
           ['/fitness/weight', '体重'],
-          ['/fitness/history', '打卡与历史'],
+          ['/fitness/goals', '目标'],
+          ['/fitness/templates', '模板库'],
+          ['/fitness/history', '历史'],
         ]
+      : space === 'admin'
+        ? [['/admin?view=content', '草稿与发布'], ['/admin?view=courses', '课程维护'], ['/admin?view=rubrics', '评分标准'], ['/admin?view=files', '文件资料'], ['/admin?view=reviews', '审核'], ['/admin?view=audit', '审计记录']]
       : space === 'study'
         ? [
             ['/study', '今日学习'],
@@ -47,10 +54,23 @@ export function PlatformLayout() {
   useEffect(() => {
     document.documentElement.dataset.space = space;
     document.documentElement.dataset.compact = String(profile?.compact ?? false);
-    return () => {
+  return () => {
       delete document.documentElement.dataset.space;
     };
   }, [space, profile?.compact]);
+    const currentLabel = space === 'admin'
+    ? (links.find(([to]) => new URLSearchParams(to.split('?')[1]).get('view') === new URLSearchParams(search).get('view'))?.[1] ?? '草稿与发布')
+    : (links.filter(([to]) => pathname === to || pathname.startsWith(to + '/')).at(-1)?.[1] ?? (pathname === '/settings' ? '账号设置' : pathname.includes('/fitness/edit/') ? '编辑记录' : '学习任务'));
+  const spaceLabel = {home:'个人中心', study:'自学空间', fitness:'健身空间', admin:'管理工作台'}[space];
+  useEffect(() => {
+    document.title = `${currentLabel} · 知途个人管理平台`;
+    setMore(false);
+    window.scrollTo({top:0, behavior:'instant'});
+    requestAnimationFrame(() => document.getElementById('main-content')?.focus({preventScroll:true}));
+  }, [pathname, search, currentLabel]);
+  const item = (to: string, label: string) => space === 'admin'
+    ? <Link key={to} to={to} className={label === currentLabel ? 'active' : ''} aria-current={label === currentLabel ? 'page' : undefined}>{label}</Link>
+    : <NavLink key={to} to={to} end={to === '/' || to === '/study' || to === '/fitness'}>{label}</NavLink>;
   return (
     <div className="platform-shell">
       <aside className="platform-rail">
@@ -79,13 +99,9 @@ export function PlatformLayout() {
         </div>
         {space !== 'home' && (
           <>
-            <p className="nav-caption">{space === 'fitness' ? '健身管理' : '自学管理'}</p>
+            <p className="nav-caption">{spaceLabel}</p>
             <nav aria-label="空间导航">
-              {links.map(([to, label]) => (
-                <NavLink key={to} to={to} end={to === '/fitness' || to === '/study'}>
-                  {label}
-                </NavLink>
-              ))}
+              {links.map(([to, label]) => item(to, label))}
             </nav>
           </>
         )}
@@ -123,40 +139,36 @@ export function PlatformLayout() {
               aria-label="切换空间"
               value={space}
               onChange={(e) => {
-                window.location.assign(e.target.value === 'home' ? '/' : `/${e.target.value}`);
+                navigate(e.target.value === 'home' ? '/' : `/${e.target.value}`);
               }}
             >
               <option value="home">个人首页</option>
               <option value="study">自学空间</option>
               <option value="fitness">健身空间</option>
+              {auth.user?.role === 'ADMIN' && <option value="admin">管理工作台</option>}
             </select>
           </div>
-          <span className="platform-context">
-            {space === 'fitness'
-              ? '健身空间 / 日常记录'
-              : space === 'study'
-                ? '自学空间 / 持续积累'
-                : '个人首页 / 有序生活'}
-          </span>
+          <span className="platform-context">{spaceLabel} <span aria-hidden="true"> / </span> <strong>{currentLabel}</strong></span>
           <Link to="/settings" className="platform-user">
             <span>{(profile?.displayName || auth.user?.username || '途').slice(0, 1)}</span>
             {profile?.displayName || auth.user?.username}
           </Link>
         </header>
-        <nav className="mobile-tabs" aria-label="手机导航">
-          {links.map(([to, label]) => (
-            <NavLink key={to} to={to} end={to === '/' || to === '/fitness' || to === '/study'}>
-              {label}
-            </NavLink>
-          ))}
-          {auth.user?.role === 'ADMIN' && <NavLink to="/admin">管理</NavLink>}
+        <nav className="mobile-tabs" aria-label="手机主导航">
+          {links.slice(0, 3).map(([to, label]) => item(to, label))}
+          <button aria-expanded={more} onClick={() => setMore(!more)}>更多</button>
         </nav>
+        {more && <nav className="mobile-more" aria-label="更多入口">
+          {links.slice(3).map(([to, label]) => item(to, label))}
+          <Link to="/settings">账号设置</Link>
+          {auth.user?.role === 'ADMIN' && space !== 'admin' && <Link to="/admin">管理工作台</Link>}
+        </nav>}
         <a className="skip-link" href="#main-content">
           跳到主要内容
         </a>
         <Outlet />
         <footer className="platform-foot">
-          知途 · 记录每一步，留给自己看 <Link to="/">返回个人首页</Link>
+          知途个人管理平台 <Link to="/">返回个人首页</Link>
         </footer>
       </div>
     </div>

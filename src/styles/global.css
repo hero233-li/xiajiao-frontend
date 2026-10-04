@@ -49,7 +49,7 @@ h4 {
   font-size: 15px;
 }
 small {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-secondary);
 }
 svg {
@@ -147,7 +147,7 @@ select {
 .button-reason,
 .button-error {
   display: block;
-  font-size: 12px;
+  font-size: 14px;
   margin-top: 6px;
   white-space: normal;
 }
@@ -231,7 +231,7 @@ th {
   border-bottom: 1px solid var(--color-line);
 }
 th {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-secondary);
   font-weight: 600;
 }
@@ -249,7 +249,7 @@ th {
   display: flex;
   justify-content: space-between;
   margin-bottom: 8px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .tabs-list {
   display: flex;
@@ -350,7 +350,7 @@ th {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .math-text {
   overflow-wrap: anywhere;
@@ -423,7 +423,7 @@ th {
 .desk-brand small {
   display: block;
   font-weight: 400;
-  font-size: 10px;
+  font-size: 14px;
   letter-spacing: 1.6px;
   line-height: 1.5;
   margin-top: 2px;
@@ -455,7 +455,7 @@ th {
 .desk-account {
   position: relative;
   margin-left: auto;
-  font-size: 12px;
+  font-size: 14px;
 }
 .desk-account summary {
   display: flex;
@@ -505,7 +505,7 @@ th {
   margin-bottom: 10px;
 }
 .eyebrow {
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 1.7px;
   text-transform: uppercase;
@@ -516,19 +516,19 @@ th {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .cycle-switcher select {
   width: auto;
   max-width: 240px;
-  font-size: 13px;
+  font-size: 14px;
   background: transparent;
 }
 .text-action {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 .section-title {
@@ -543,7 +543,7 @@ th {
   margin: 0;
 }
 .section-title > span {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-secondary);
 }
 .inline-empty {
@@ -574,7 +574,7 @@ th {
   margin: 16px 0 8px;
 }
 .next-study > p:not(.eyebrow) {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-secondary);
 }
 .live-dot {
@@ -699,14 +699,14 @@ th {
   flex: 1;
 }
 .exam-agenda strong {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
 }
 .exam-agenda small {
   display: block;
 }
 .exam-agenda li > span {
-  font-size: 12px;
+  font-size: 14px;
   white-space: nowrap;
   color: var(--color-warning);
 }
@@ -730,7 +730,7 @@ th {
   margin: 16px 0 24px;
   padding: 16px 0;
   border-top: 1px solid var(--color-line);
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-secondary);
 }
 .course-frame-head {
@@ -747,10 +747,10 @@ th {
   font-size: 26px;
 }
 .course-headline p {
-  font-size: 12px;
+  font-size: 14px;
 }
 .course-head-progress {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-secondary);
   text-align: right;
 }
@@ -765,7 +765,7 @@ th {
   white-space: nowrap;
   border-bottom: 2px solid transparent;
   color: var(--color-secondary);
-  font-size: 13px;
+  font-size: 14px;
 }
 .course-tabs a.active {
   color: var(--color-primary);
@@ -809,7 +809,7 @@ th {
   font-size: 21px;
 }
 .shelf-meta {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-secondary);
 }
 .shelf-links {
@@ -817,11 +817,11 @@ th {
   flex-wrap: wrap;
   gap: 8px 22px;
   margin-top: 16px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .shelf-status {
   align-self: start;
-  font-size: 12px;
+  font-size: 14px;
 }
 .shelf-status .button {
   margin-top: 16px;
@@ -858,7 +858,7 @@ th {
   font-size: 14px;
 }
 .training-option a span {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-secondary);
 }
 @media (max-width: 1020px) {
@@ -917,7 +917,7 @@ th {
     justify-content: center;
     gap: 2px;
     border: 0;
-    font-size: 10px;
+    font-size: 14px;
     padding: 4px 8px;
   }
   .desk-nav a[aria-current] {
@@ -938,7 +938,7 @@ th {
     margin-bottom: 24px;
   }
   .page-heading .secondary {
-    font-size: 12px;
+    font-size: 14px;
   }
   .home-workspace {
     display: flex;
@@ -999,7 +999,7 @@ th {
     font-size: 22px;
   }
   .course-head-progress {
-    font-size: 11px;
+    font-size: 14px;
     flex-shrink: 0;
   }
   .course-tabs {
@@ -1066,7 +1066,7 @@ th {
   margin-top: 14px;
 }
 .enrollment-line .button {
-  font-size: 11px;
+  font-size: 14px;
   padding: 4px 8px;
   min-height: 32px;
 }

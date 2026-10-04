@@ -1,20 +1,21 @@
-import { createUuid } from '../../utils/uuid';
 import { useState } from 'react';
-import { UnsavedGuard } from './UnsavedGuard';
-import { Modal } from '../../components/Modal';
-import { Button } from '../../components/Button';
 import {
-  fitnessApi,
-  useFitnessList,
-  useFitnessMutation,
-  type Entry,
-  type TrainingPlan,
-  type Meals,
-  type Day,
-  type Models,
-  shiftDate,
+fitnessApi,
+shiftDate,
+useFitnessList,
+useFitnessMutation,
+type Day,
+type Entry,
+type Meals,
+type Models,
+type TrainingPlan,
 } from '../../api/fitness';
-import { ExerciseFields, FoodFields } from './Editor';
+import { Button } from '../../components/Button';
+import { useConfirmation } from '../../components/ConfirmationProvider';
+import { Modal } from '../../components/Modal';
+import { createUuid } from '../../utils/uuid';
+import { ExerciseFields,FoodFields } from './Editor';
+import { UnsavedGuard } from './UnsavedGuard';
 type TemplateKind = 'training-template' | 'meal-template' | 'week-template';
 interface TemplateDraft {
   name: string;
@@ -31,6 +32,7 @@ export function TemplateManager({
   days?: Day[];
 }) {
   const query = useFitnessList(kind);
+  const confirm = useConfirmation();
   const mutation = useFitnessMutation();
   const [entry, setEntry] = useState<Entry<TemplateKind> | null>(null);
   const [draft, setDraft] = useState<TemplateDraft | null>(null);
@@ -64,8 +66,8 @@ export function TemplateManager({
     setMessage('');
     setSaveKey(createUuid());
   };
-  const close = () => {
-    if (!mutation.isPending && (!dirty || window.confirm('关闭模板编辑？尚未保存的改动会被放弃。')))
+  const close = async () => {
+    if (!mutation.isPending && (!dirty || await confirm('关闭模板编辑？尚未保存的改动会被放弃。')))
       setDraft(null);
   };
   const createWeek = () => {
@@ -90,7 +92,7 @@ export function TemplateManager({
         const current = await fitnessApi.history(date, shiftDate(date, 6));
         if (
           current.some((d) => d.records['training-plan']?.data) &&
-          !window.confirm(`为 ${date} 起的7天生成安排，会覆盖已有计划；实际记录保留。确定继续？`)
+          !await confirm(`为 ${date} 起的7天生成安排，会覆盖已有计划；实际记录保留。确定继续？`)
         )
           return;
         await mutation.mutateAsync(() =>
@@ -103,7 +105,7 @@ export function TemplateManager({
       } else {
         const destination = kind === 'training-template' ? 'training-plan' : 'meal-plan';
         const existing = await fitnessApi.get(destination, date);
-        if (existing?.data && !window.confirm(`${date} 已有计划，确定用此模板覆盖？实际记录保留。`))
+        if (existing?.data && !await confirm(`${date} 已有计划，确定用此模板覆盖？实际记录保留。`))
           return;
         await mutation.mutateAsync(() =>
           fitnessApi.copy(kind, e.key, date, existing?.revision ?? -1),
@@ -167,9 +169,9 @@ export function TemplateManager({
                     <Button
                       variant="ghost"
                       disabled={mutation.isPending}
-                      onClick={() => {
+                      onClick={async () => {
                         if (
-                          window.confirm(
+                          await confirm(
                             `确定删除模板“${e.data!.name}”？已生成的日期安排和实际记录会保留。`,
                           )
                         )

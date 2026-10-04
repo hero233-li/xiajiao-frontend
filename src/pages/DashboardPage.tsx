@@ -1,3 +1,4 @@
+import { WeakItems } from '../features/dashboard/WeakItems';
 import { useEffect, useRef } from 'react';
 import { ArrowRight, Check, CalendarDays } from 'lucide-react';
 import { CyclePicker, useCycle } from '../features/cycle/CycleContext';
@@ -72,7 +73,7 @@ function TodayTasks({ plan, date }: { plan: Plan; date: string }) {
           ))}
         </ol>
       ) : (
-        <p className="inline-empty">今天没有安排，选一门课程按自己的节奏学习。</p>
+        <p className="inline-empty">今天没有安排。可以创建或调整学习计划，为任务安排时间。</p>
       )}
       <Link className="text-action" to="/study/schedule">
         查看整周安排 <ArrowRight size={15} />
@@ -196,6 +197,7 @@ export function DashboardPage() {
                     )}
                   </section>
                 )}
+                <WeakItems courses={data.courses}/>
                 <section className="platform-section">
                   <div className="section-title">
                     <h2>我的科目</h2>

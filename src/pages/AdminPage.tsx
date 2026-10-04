@@ -104,24 +104,19 @@ export function Component() {
       <header className="admin-heading">
         <div>
           <p className="eyebrow">ADMIN / 管理工作台</p>
-          <h1>让学习内容准备就绪。</h1>
+          <h1>管理员工作台</h1>
           <p>维护课程与资料，完成内容校验，再启用新版本。</p>
         </div>
         <Link className="button button-secondary" to="/study">
           返回学习端
         </Link>
       </header>
-      <nav className="admin-nav" aria-label="管理任务">
-        {modes.map(([key, label]) => (
-          <Link
-            key={key}
-            to={`/admin?${new URLSearchParams({ ...Object.fromEntries(search), view: key })}`}
-            aria-current={mode === key ? 'page' : undefined}
-          >
-            {label}
-          </Link>
-        ))}
-      </nav>
+      <section className="admin-workflow" aria-label="发布流程">
+        <div><span>01</span><strong>维护课程</strong><p>选择课程与当前版本</p></div>
+        <div><span>02</span><strong>编辑草稿</strong><p>{dirty ? '有未保存修改，请先保存' : '已保存内容保留在原版本'}</p></div>
+        <div><span>03</span><strong>校验与发布</strong><p>处理阻断问题后启用版本</p></div>
+      </section>
+      <label className="admin-mode-picker">管理任务<select value={mode} onChange={e => choose('view', e.target.value)}>{modes.map(([key,label]) => <option key={key} value={key}>{label}</option>)}</select></label>
       <div className="admin-context">
         <label>
           考试周期

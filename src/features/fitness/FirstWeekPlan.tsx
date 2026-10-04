@@ -1,17 +1,19 @@
-import { useRef, useState } from 'react';
+import { ExerciseMotion } from './motion/ExerciseMotion';
+import { useRef,useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '../../components/Button';
-import { Modal } from '../../components/Modal';
 import {
-  fitnessApi,
-  localToday,
-  shiftDate,
-  useFitnessMutation,
-  type ImportWeek,
+fitnessApi,
+localToday,
+shiftDate,
+useFitnessMutation,
+type ImportWeek,
 } from '../../api/fitness';
+import { Button } from '../../components/Button';
+import { useConfirmation } from '../../components/ConfirmationProvider';
+import { Modal } from '../../components/Modal';
 import { createUuid } from '../../utils/uuid';
-import { createFirstWeek, type FirstWeekDay } from './first-week';
-import { ExerciseFields, FoodFields, mealNames } from './Editor';
+import { ExerciseFields,FoodFields,mealNames } from './Editor';
+import { createFirstWeek,type FirstWeekDay } from './first-week';
 import { UnsavedGuard } from './UnsavedGuard';
 
 export function FirstWeekPlan() {
@@ -25,6 +27,7 @@ export function FirstWeekPlan() {
   const [saved, setSaved] = useState<string | null>(null);
   const attempt = useRef<{ key: string; body: ImportWeek } | null>(null);
   const mutation = useFitnessMutation();
+  const confirm = useConfirmation();
   const changed = () => {
     setDirty(true);
     attempt.current = null;
@@ -34,10 +37,10 @@ export function FirstWeekPlan() {
     setDraft((rows) => rows!.map((row, i) => (i === active ? { ...row, ...value } : row)));
     changed();
   };
-  const close = () => {
+  const close = async () => {
     if (
       !mutation.isPending &&
-      (!dirty || window.confirm('离开第一周计划？尚未保存的修改会被放弃。'))
+      (!dirty || await confirm('离开第一周计划？尚未保存的修改会被放弃。'))
     )
       setDraft(null);
   };
@@ -53,7 +56,7 @@ export function FirstWeekPlan() {
           );
           if (
             occupied.length &&
-            !window.confirm(
+            !await confirm(
               `${occupied.map((d) => d.date).join('、')} 已有训练或食谱计划。确定用当前第一周内容覆盖这7天的计划？实际训练、饮食、体重和打卡会保留。`,
             )
           )
@@ -97,7 +100,7 @@ export function FirstWeekPlan() {
         </div>
         <Button
           variant="secondary"
-          onClick={() => {
+          onClick={async () => {
             setDraft(createFirstWeek());
             setActive(0);
             setView('training');
@@ -150,7 +153,7 @@ export function FirstWeekPlan() {
                     type="button"
                     key={i}
                     aria-pressed={active === i}
-                    onClick={() => {
+                    onClick={async () => {
                       setActive(i);
                       setEditing(false);
                     }}
@@ -168,7 +171,7 @@ export function FirstWeekPlan() {
                   <Button
                     variant={view === 'training' ? 'primary' : 'ghost'}
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       setView('training');
                       setEditing(false);
                     }}
@@ -178,7 +181,7 @@ export function FirstWeekPlan() {
                   <Button
                     variant={view === 'meals' ? 'primary' : 'ghost'}
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       setView('meals');
                       setEditing(false);
                     }}
@@ -236,7 +239,7 @@ export function FirstWeekPlan() {
                         <ol className="first-week-steps">
                           {day.training.exercises.map((item) => (
                             <li key={item.id}>
-                              <strong>{item.name}</strong>
+                              <div className="exercise-motion-heading"><strong>{item.name}</strong><ExerciseMotion exercise={item} /></div>
                               <p className="first-week-dose">
                                 {item.type === 'STRENGTH'
                                   ? `${item.sets ?? '—'}组${item.reps ? ` × ${item.reps}次` : ' · 次数/保持时间见说明'}${item.kg != null ? ` · ${item.kg}kg` : ' · 重量见说明或自行填写'}`

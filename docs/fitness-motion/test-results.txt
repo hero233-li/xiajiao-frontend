@@ -1,0 +1,13 @@
+
+> xuexizhitu-frontend-foundation@0.0.1 test
+> vitest run --project foundation src/features/fitness/motion src/features/fitness/first-week.test.ts
+
+
+ RUN  v5.0.3 /Users/huagu/IDEA/自考/xiajiao/repo/frontend
+
+
+ Test Files  3 passed (3)
+      Tests  12 passed (12)
+   Start at  11:53:14
+   Duration  2.00s (environment 34%, setup 27%, tests 22%, transform 13%, import 4%)
+

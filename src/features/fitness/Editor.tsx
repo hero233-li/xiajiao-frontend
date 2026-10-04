@@ -1,26 +1,28 @@
-import { createUuid } from '../../utils/uuid';
-import { useEffect, useState, useRef } from 'react';
-import { useBlocker, useBeforeUnload } from 'react-router-dom';
-import { Modal } from '../../components/Modal';
-import { Button } from '../../components/Button';
+import { ExerciseMotion } from './motion/ExerciseMotion';
+import { useRef,useState } from 'react';
 import {
-  fitnessApi,
-  useFitnessMutation,
-  localToday,
-  type Kind,
-  type Models,
-  type Entry,
-  type Exercise,
-  type Food,
-  type Goal,
-  type Weight,
-  type TrainingPlan,
-  type Training,
-  type Meals,
-  type Checkin,
-  type Water,
-  type Profile,
+fitnessApi,
+localToday,
+useFitnessMutation,
+type Checkin,
+type Entry,
+type Exercise,
+type Food,
+type Goal,
+type Kind,
+type Meals,
+type Models,
+type Profile,
+type Training,
+type TrainingPlan,
+type Water,
+type Weight,
 } from '../../api/fitness';
+import { Button } from '../../components/Button';
+import { useConfirmation } from '../../components/ConfirmationProvider';
+import { Modal } from '../../components/Modal';
+import { createUuid } from '../../utils/uuid';
+import { UnsavedGuard } from './UnsavedGuard';
 export const goalNames = { LOSE: '减重', GAIN: '增重', MAINTAIN: '维持' };
 export const trainingNames = {
   COMPLETED: '完成',
@@ -55,7 +57,7 @@ const defaults: Record<Editable, unknown> = {
   },
   weight: { kg: null, note: null },
   'training-plan': { rest: false, exercises: [], note: null },
-  training: { status: 'COMPLETED', exercises: [], note: null, planSnapshot: null },
+  training: { status: '', exercises: [], note: null, planSnapshot: null },
   'meal-plan': { foods: [], note: null },
   meals: { foods: [], note: null },
   checkin: { sleepHours: null, feeling: null, note: null },
@@ -121,6 +123,7 @@ export function ExerciseFields({
       {rows.map((row, i) => (
         <fieldset key={i}>
           <legend>项目 {i + 1}</legend>
+          <ExerciseMotion exercise={row} />
           <div className="form-grid">
             <label>
               动作名称
@@ -400,7 +403,9 @@ export function FitnessEditor({
   spec,
   onClose,
   onSaved,
+  page = false,
 }: {
+  page?: boolean;
   spec: EditSpec;
   onClose: () => void;
   onSaved?: () => void;
@@ -422,22 +427,9 @@ export function FitnessEditor({
     setDirty(true);
     setSaveKey(createUuid());
   };
-  const blocker = useBlocker(dirty);
-  useEffect(() => {
-    if (blocker.state === 'blocked') {
-      if (window.confirm('表单尚未保存，确定离开？')) blocker.proceed();
-      else blocker.reset();
-    }
-  }, [blocker]);
-  useBeforeUnload((e) => {
-    if (dirty) {
-      e.preventDefault();
-      e.returnValue = '';
-    }
-  });
-  const close = () => {
-    if (!mutation.isPending && (!dirty || window.confirm('当前内容尚未保存，确定放弃？')))
-      onClose();
+  const confirm = useConfirmation();
+  const close = async () => {
+    if (!mutation.isPending && (!dirty || await confirm('当前内容尚未保存，确定放弃？'))) onClose();
   };
   const daily = !['goal', 'profile'].includes(spec.kind);
   const actual = !['training-plan', 'meal-plan'].includes(spec.kind);
@@ -464,8 +456,10 @@ export function FitnessEditor({
       if (requestId === dateRequest.current) setChecking(false);
     }
   };
+  const Wrapper = page ? EditorPageFrame : Modal;
   return (
-    <Modal open title={`${entry?.data ? '修改' : '创建'}${titles[spec.kind]}`} onClose={close}>
+    <Wrapper open title={`${entry?.data ? '修改' : '创建'}${titles[spec.kind]}`} onClose={close}>
+      <UnsavedGuard dirty={dirty} />
       <form
         className="platform-form"
         onSubmit={(e) => {
@@ -599,8 +593,8 @@ export function FitnessEditor({
           {spec.kind === 'training' && (
             <label>
               训练状态
-              <select
-                value={draft.status}
+              <select required
+                value={draft.status || ''}
                 onChange={(e) =>
                   patch({
                     status: e.target.value as Training['status'],
@@ -608,6 +602,7 @@ export function FitnessEditor({
                   })
                 }
               >
+                <option value="" disabled>请选择实际训练状态</option>
                 {Object.entries(trainingNames).map(([v, n]) => (
                   <option key={v} value={v}>
                     {n}
@@ -736,6 +731,8 @@ export function FitnessEditor({
           </Button>
         </div>
       </form>
-    </Modal>
+    </Wrapper>
   );
 }
+
+function EditorPageFrame({title, children, onClose}: {title:string;children:React.ReactNode;open:boolean;onClose:()=>void}) {return <section className="editor-page"><header className="page-heading"><div><p className="eyebrow">健身 / 编辑记录</p><h1>{title}</h1><p>保存后返回所选日期。失败时输入保留。</p></div><Button variant="secondary" onClick={onClose}>返回</Button></header>{children}</section>;}

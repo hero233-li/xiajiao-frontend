@@ -1,5 +1,5 @@
+import type { Exercise,Food,Meals,TrainingPlan } from '../../api/fitness';
 import { createUuid } from '../../utils/uuid';
-import type { Exercise, Food, Meals, TrainingPlan } from '../../api/fitness';
 
 // User supplied content, never actual records or an inferred nutrition database.
 export interface FirstWeekDay {

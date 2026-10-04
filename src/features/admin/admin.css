@@ -16,7 +16,7 @@
   margin: 5px 0 10px;
 }
 .admin-heading p {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-secondary);
 }
 .admin-nav {
@@ -29,7 +29,7 @@
 }
 .admin-nav a {
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: 14px;
   border-radius: 4px;
   color: var(--color-secondary);
 }
@@ -48,7 +48,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .admin-context select {
   width: auto;
@@ -61,7 +61,7 @@
   background: var(--color-surface);
   color: var(--color-primary);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
 }
 .admin-workspace button:disabled {
   opacity: 0.55;
@@ -78,7 +78,7 @@
   margin: 0 0 8px;
 }
 .admin-coverage p {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-secondary);
 }
 .admin-coverage > div {
@@ -94,7 +94,7 @@
   min-width: 180px;
 }
 .admin-coverage button span {
-  font-size: 11px;
+  font-size: 14px;
 }
 .admin-editor-heading {
   display: flex;
@@ -109,7 +109,7 @@
   margin: 0 0 8px;
 }
 .admin-editor-heading p {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-secondary);
   margin: 0;
 }
@@ -145,7 +145,7 @@
 }
 .admin-version-banner small {
   display: block;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-secondary);
   margin-top: 5px;
 }
@@ -156,7 +156,7 @@
   gap: 8px;
 }
 .admin-actions .button {
-  font-size: 12px;
+  font-size: 14px;
   min-height: 34px;
   padding: 6px 12px;
 }
@@ -192,7 +192,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 12px;
+  font-size: 14px;
   min-width: 0;
   margin-bottom: 12px;
 }
@@ -209,7 +209,7 @@
   resize: vertical;
 }
 .admin-identity {
-  font-size: 11px;
+  font-size: 14px;
   color: var(--color-secondary);
   overflow-wrap: anywhere;
 }
@@ -248,7 +248,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .admin-table-scroll {
   overflow: auto;
@@ -258,12 +258,12 @@
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 14px;
   text-align: left;
 }
 .admin-table th {
   color: var(--color-secondary);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   background: #edf0e9;
   padding: 10px 12px;
@@ -291,7 +291,7 @@
 }
 .admin-table td small {
   display: block;
-  font-size: 11px;
+  font-size: 14px;
   margin-top: 8px;
 }
 .admin-validation {
@@ -303,7 +303,7 @@
   font-size: 16px;
 }
 .admin-validation p {
-  font-size: 12px;
+  font-size: 14px;
 }
 .admin-validation button {
   display: block;
@@ -317,11 +317,11 @@
 .admin-error {
   color: #964536;
   padding: 12px 0;
-  font-size: 13px;
+  font-size: 14px;
 }
 .admin-success {
   color: var(--color-primary);
-  font-size: 13px;
+  font-size: 14px;
 }
 .admin-warning {
   color: #946b30;
@@ -329,11 +329,11 @@
 .admin-empty {
   padding: 24px 0;
   color: var(--color-secondary);
-  font-size: 13px;
+  font-size: 14px;
 }
 .admin-filter {
   display: block;
-  font-size: 12px;
+  font-size: 14px;
   max-width: 430px;
   margin: 20px 0;
 }
@@ -350,7 +350,7 @@
   margin-bottom: 20px;
 }
 .admin-upload label {
-  font-size: 12px;
+  font-size: 14px;
 }
 .admin-upload input,
 .admin-upload select {
@@ -465,7 +465,7 @@
 .admin-version-banner .button-reason {
   max-width: 180px;
   margin-top: 5px;
-  font-size: 11px;
+  font-size: 14px;
 }
 .admin-template-table input,
 .admin-template-table select {
@@ -500,5 +500,5 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   max-width: 280px;
-  font-size: 11px;
+  font-size: 14px;
 }

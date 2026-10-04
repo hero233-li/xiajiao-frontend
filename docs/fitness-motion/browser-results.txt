@@ -1,0 +1,6 @@
+Half-speed timing verified: normal bar y=151.2, half-speed y=46.5 after 1.8s.
+desktop 1440×1100: static list, playback, pause, restart, slow toggle, reduced-motion changes, keyboard trap / focus restore, width and 44px controls passed
+desktop: nested first-week modal and independent no-save preview passed
+mobile 390×844: static list, playback, pause, restart, slow toggle, reduced-motion changes, keyboard trap / focus restore, width and 44px controls passed
+mobile: nested first-week modal and independent no-save preview passed
+Zero API writes; zero browser runtime errors. Browser API responses are temporary fixtures, not production records.

@@ -1,0 +1,164 @@
+
+> xuexizhitu-frontend-foundation@0.0.1 build
+> npm run typecheck && vite build
+
+
+> xuexizhitu-frontend-foundation@0.0.1 typecheck
+> tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json
+
+vite v8.3.2 building client environment for production...
+transforming...
+✓ 2630 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                         1.23 kB │ gzip:  0.50 kB
+dist/assets/KaTeX_Size3-Regular-CTq5MqoE.woff           4.42 kB
+dist/assets/KaTeX_Size4-Regular-Dl5lxZxV.woff2          4.92 kB
+dist/assets/KaTeX_Size2-Regular-Dy4dx90m.woff2          5.20 kB
+dist/assets/KaTeX_Size1-Regular-mCD8mA8B.woff2          5.46 kB
+dist/assets/KaTeX_Size4-Regular-BF-4gkZK.woff           5.98 kB
+dist/assets/KaTeX_Size2-Regular-oD1tc_U0.woff           6.18 kB
+dist/assets/KaTeX_Size1-Regular-C195tn64.woff           6.49 kB
+dist/assets/KaTeX_Caligraphic-Regular-Di6jR-x-.woff2    6.90 kB
+dist/assets/KaTeX_Caligraphic-Bold-Dq_IR9rO.woff2       6.91 kB
+dist/assets/KaTeX_Size3-Regular-DgpXs0kz.ttf            7.58 kB
+dist/assets/KaTeX_Caligraphic-Regular-CTRA-rTL.woff     7.65 kB
+dist/assets/KaTeX_Caligraphic-Bold-BEiXGLvX.woff        7.71 kB
+dist/assets/KaTeX_Script-Regular-D3wIWfF6.woff2         9.64 kB
+dist/assets/KaTeX_SansSerif-Regular-DDBCnlJ7.woff2     10.34 kB
+dist/assets/KaTeX_Size4-Regular-DWFBv043.ttf           10.36 kB
+dist/assets/KaTeX_Script-Regular-D5yQViql.woff         10.58 kB
+dist/assets/KaTeX_Fraktur-Regular-CTYiF6lA.woff2       11.31 kB
+dist/assets/KaTeX_Fraktur-Bold-CL6g_b3V.woff2          11.34 kB
+dist/assets/KaTeX_Size2-Regular-B7gKUWhC.ttf           11.50 kB
+dist/assets/KaTeX_SansSerif-Italic-C3H0VqGB.woff2      12.02 kB
+dist/assets/KaTeX_SansSerif-Bold-D1sUS0GD.woff2        12.21 kB
+dist/assets/KaTeX_Size1-Regular-Dbsnue_I.ttf           12.22 kB
+dist/assets/KaTeX_SansSerif-Regular-CS6fqUqJ.woff      12.31 kB
+dist/assets/KaTeX_Caligraphic-Regular-wX97UBjC.ttf     12.34 kB
+dist/assets/KaTeX_Caligraphic-Bold-ATXxdsX0.ttf        12.36 kB
+dist/assets/KaTeX_Fraktur-Regular-Dxdc4cR9.woff        13.20 kB
+dist/assets/KaTeX_Fraktur-Bold-BsDP51OF.woff           13.29 kB
+dist/assets/KaTeX_Typewriter-Regular-CO6r4hn1.woff2    13.56 kB
+dist/assets/KaTeX_SansSerif-Italic-DN2j7dab.woff       14.11 kB
+dist/assets/KaTeX_SansSerif-Bold-DbIhKOiC.woff         14.40 kB
+dist/assets/KaTeX_Typewriter-Regular-C0xS9mPB.woff     16.02 kB
+dist/assets/KaTeX_Math-BoldItalic-CZnvNsCZ.woff2       16.40 kB
+dist/assets/KaTeX_Math-Italic-t53AETM-.woff2           16.44 kB
+dist/assets/KaTeX_Script-Regular-C5JkGWo-.ttf          16.64 kB
+dist/assets/KaTeX_Main-BoldItalic-DxDJ3AOS.woff2       16.78 kB
+dist/assets/KaTeX_Main-Italic-NWA7e6Wa.woff2           16.98 kB
+dist/assets/KaTeX_Math-BoldItalic-iY-2wyZ7.woff        18.66 kB
+dist/assets/KaTeX_Math-Italic-DA0__PXp.woff            18.74 kB
+dist/assets/KaTeX_Main-BoldItalic-SpSLRI95.woff        19.41 kB
+dist/assets/KaTeX_SansSerif-Regular-BNo7hRIc.ttf       19.43 kB
+dist/assets/KaTeX_Fraktur-Regular-CB_wures.ttf         19.57 kB
+dist/assets/KaTeX_Fraktur-Bold-BdnERNNW.ttf            19.58 kB
+dist/assets/KaTeX_Main-Italic-BMLOBm91.woff            19.67 kB
+dist/assets/KaTeX_SansSerif-Italic-YYjJ1zSn.ttf        22.36 kB
+dist/assets/KaTeX_SansSerif-Bold-CFMepnvq.ttf          24.50 kB
+dist/assets/KaTeX_Main-Bold-Cx986IdX.woff2             25.32 kB
+dist/assets/KaTeX_Main-Regular-B22Nviop.woff2          26.27 kB
+dist/assets/KaTeX_Typewriter-Regular-D3Ib7_Hf.ttf      27.55 kB
+dist/assets/KaTeX_AMS-Regular-BQhdFMY1.woff2           28.07 kB
+dist/assets/KaTeX_Main-Bold-Jm3AIy58.woff              29.91 kB
+dist/assets/KaTeX_Main-Regular-Dr94JaBh.woff           30.77 kB
+dist/assets/KaTeX_Math-BoldItalic-B3XSjfu4.ttf         31.19 kB
+dist/assets/KaTeX_Math-Italic-flOr_0UB.ttf             31.30 kB
+dist/assets/KaTeX_Main-BoldItalic-DzxPMmG6.ttf         32.96 kB
+dist/assets/KaTeX_AMS-Regular-DMm9YOAa.woff            33.51 kB
+dist/assets/KaTeX_Main-Italic-3WenGoN9.ttf             33.58 kB
+dist/assets/KaTeX_Main-Bold-waoOVXN0.ttf               51.33 kB
+dist/assets/KaTeX_Main-Regular-ypZvNtVU.ttf            53.58 kB
+dist/assets/KaTeX_AMS-Regular-DRggAlZN.ttf             63.63 kB
+dist/assets/LoginPage-De6Zo1U9.css                      1.77 kB │ gzip:  0.71 kB
+dist/assets/NoteEditor-DKL4TonJ.css                     2.35 kB │ gzip:  0.84 kB
+dist/assets/Editor--OFn5o-m.css                         2.42 kB │ gzip:  0.77 kB
+dist/assets/CatalogPage-CV33whKW.css                    3.10 kB │ gzip:  1.02 kB
+dist/assets/PracticeSelectionPage-DVeIPZJQ.css          4.21 kB │ gzip:  1.13 kB
+dist/assets/KnowledgePage-CH5w4vUG.css                  4.57 kB │ gzip:  1.32 kB
+dist/assets/ManualReader-DV-IQT3A.css                   4.72 kB │ gzip:  1.39 kB
+dist/assets/PracticePage-DL7Sg2Q9.css                   4.98 kB │ gzip:  1.33 kB
+dist/assets/AssessmentPage-CysLlAvi.css                 5.09 kB │ gzip:  1.43 kB
+dist/assets/ExamsPage-CZXDlZPV.css                      6.36 kB │ gzip:  1.64 kB
+dist/assets/SchedulePage-Df6gzW7d.css                   7.37 kB │ gzip:  1.69 kB
+dist/assets/AdminPage-w13S14ha.css                      7.60 kB │ gzip:  1.77 kB
+dist/assets/katex-Ngnvt50Q.css                         29.80 kB │ gzip:  7.97 kB
+dist/assets/index-Db-ZAqdZ.css                         48.87 kB │ gzip: 10.45 kB
+dist/assets/check-Z789-01S.js                           0.16 kB │ gzip:  0.16 kB
+dist/assets/chevron-left-Bg4803MI.js                    0.16 kB │ gzip:  0.16 kB
+dist/assets/plus-8b7Xdd5A.js                            0.19 kB │ gzip:  0.17 kB
+dist/assets/x-G9atjWvt.js                               0.19 kB │ gzip:  0.17 kB
+dist/assets/arrow-left-BfmY09wy.js                      0.20 kB │ gzip:  0.18 kB
+dist/assets/arrow-right-BCwmSAGb.js                     0.20 kB │ gzip:  0.18 kB
+dist/assets/search-zZCxdfDz.js                          0.21 kB │ gzip:  0.19 kB
+dist/assets/rotate-ccw-CdHMd-S8.js                      0.23 kB │ gzip:  0.21 kB
+dist/assets/circle-check-BTTXp2BA.js                    0.24 kB │ gzip:  0.20 kB
+dist/assets/external-link-BE95rFC_.js                   0.28 kB │ gzip:  0.22 kB
+dist/assets/lock-keyhole-Bdf_sLKG.js                    0.29 kB │ gzip:  0.24 kB
+dist/assets/pencil-BYFHYDvx.js                          0.31 kB │ gzip:  0.24 kB
+dist/assets/triangle-alert-BxB0eLon.js                  0.32 kB │ gzip:  0.25 kB
+dist/assets/RouteRoot-CpL4JRUK.js                       0.35 kB │ gzip:  0.30 kB
+dist/assets/NotFoundPage-C8eRB2I9.js                    0.39 kB │ gzip:  0.33 kB
+dist/assets/uuid-C60zPFC4.js                            0.46 kB │ gzip:  0.36 kB
+dist/assets/calendar-days-C9ukk730.js                   0.52 kB │ gzip:  0.29 kB
+dist/assets/date-D9pVnJjT.js                            0.53 kB │ gzip:  0.37 kB
+dist/assets/ErrorState-gV86tSgw.js                      0.57 kB │ gzip:  0.41 kB
+dist/assets/json-PmyKWHmm.js                            0.58 kB │ gzip:  0.41 kB
+dist/assets/jsx-runtime-CriDp1zE.js                     0.66 kB │ gzip:  0.43 kB
+dist/assets/courses-CMfUYQbL.js                         0.70 kB │ gzip:  0.28 kB
+dist/assets/navigation-Ct1UogZH.js                      0.82 kB │ gzip:  0.49 kB
+dist/assets/RegionState-CWbBpFis.js                     0.85 kB │ gzip:  0.53 kB
+dist/assets/Card-w7cq31UF.js                            0.87 kB │ gzip:  0.49 kB
+dist/assets/Button-qDWtACg_.js                          0.94 kB │ gzip:  0.56 kB
+dist/assets/MathText-BPcnZqwG.js                        0.99 kB │ gzip:  0.62 kB
+dist/assets/catalog-CqDUCozH.js                         0.99 kB │ gzip:  0.33 kB
+dist/assets/MathText-DpP9hJYQ.js                        1.00 kB │ gzip:  0.55 kB
+dist/assets/practice-B0DeD02D.js                        1.38 kB │ gzip:  0.36 kB
+dist/assets/practice-selection-CAvRjnSh.js              1.41 kB │ gzip:  0.66 kB
+dist/assets/xml-COl5yFSC.js                             1.86 kB │ gzip:  0.76 kB
+dist/assets/CourseQuickNote-BU5T8nFq.js                 2.54 kB │ gzip:  1.26 kB
+dist/assets/SettingsPage-CA25qrFz.js                    2.60 kB │ gzip:  1.21 kB
+dist/assets/java-Dde-Wnb4.js                            2.72 kB │ gzip:  1.21 kB
+dist/assets/ManualPage-CH4Z8sXw.js                      2.74 kB │ gzip:  1.20 kB
+dist/assets/bash-LmRjUKlR.js                            2.83 kB │ gzip:  1.56 kB
+dist/assets/schedule-gqTmAJXz.js                        3.12 kB │ gzip:  1.26 kB
+dist/assets/TrainingPage-CMpiL2Iy.js                    3.27 kB │ gzip:  1.72 kB
+dist/assets/python-gHmu6VPG.js                          3.31 kB │ gzip:  1.48 kB
+dist/assets/exams-BhVgK-o4.js                           3.37 kB │ gzip:  1.31 kB
+dist/assets/PersonalPage-D2A1at7A.js                    3.38 kB │ gzip:  1.38 kB
+dist/assets/AssessmentGate-cdfjYlsn.js                  4.30 kB │ gzip:  2.06 kB
+dist/assets/c-DBVbJFpC.js                               4.53 kB │ gzip:  2.03 kB
+dist/assets/LoginPage-BjAH9B--.js                       4.63 kB │ gzip:  1.91 kB
+dist/assets/sql-DWRKyvJ-.js                             5.56 kB │ gzip:  2.40 kB
+dist/assets/cpp-N2d8M7Nc.js                             5.58 kB │ gzip:  2.52 kB
+dist/assets/useMutation-DRa6Ufv_.js                     5.71 kB │ gzip:  1.82 kB
+dist/assets/NoteEditor-KvvZx6aG.js                      5.83 kB │ gzip:  2.65 kB
+dist/assets/javascript-8AmHuH5O.js                      6.35 kB │ gzip:  2.61 kB
+dist/assets/navigation-ZDb9Chqi.js                      6.45 kB │ gzip:  2.67 kB
+dist/assets/react-CYoUnH_4.js                           7.16 kB │ gzip:  2.83 kB
+dist/assets/typescript-CxkPLmSc.js                      7.60 kB │ gzip:  3.08 kB
+dist/assets/NotesPage-DZfpgvMf.js                       8.31 kB │ gzip:  3.38 kB
+dist/assets/DashboardPage-Bai30Pxd.js                   8.81 kB │ gzip:  3.18 kB
+dist/assets/CatalogPage-DeuongCC.js                     9.07 kB │ gzip:  3.57 kB
+dist/assets/CoursesPage-DKtnOJga.js                    10.31 kB │ gzip:  4.03 kB
+dist/assets/css-D8M8GYaw.js                            12.03 kB │ gzip:  4.30 kB
+dist/assets/ManualReader-BY9PwLNh.js                   15.38 kB │ gzip:  5.66 kB
+dist/assets/PracticeSelectionPage-CXeARgjQ.js          15.99 kB │ gzip:  4.88 kB
+dist/assets/PracticePage-C92RZrvo.js                   16.77 kB │ gzip:  6.30 kB
+dist/assets/KnowledgePage-DMl-uzts.js                  19.41 kB │ gzip:  6.53 kB
+dist/assets/AssessmentPage-BnBgZvjI.js                 22.20 kB │ gzip:  7.71 kB
+dist/assets/highlight-D9cdxHSW.js                      23.64 kB │ gzip:  9.11 kB
+dist/assets/SchedulePage-CjKHHFbL.js                   35.89 kB │ gzip: 11.04 kB
+dist/assets/ExamsPage-CI1J-mWa.js                      37.09 kB │ gzip: 11.91 kB
+dist/assets/index-CvA7g2t5.js                          38.93 kB │ gzip: 13.84 kB
+dist/assets/FitnessPage-BGjQJlxv.js                    52.67 kB │ gzip: 16.73 kB
+dist/assets/AdminPage-gaDk4BFc.js                      59.22 kB │ gzip: 17.49 kB
+dist/assets/loader-circle-BWx9TLyu.js                  60.99 kB │ gzip: 20.71 kB
+dist/assets/Editor-BDKHG6Ae.js                         66.69 kB │ gzip: 19.04 kB
+dist/assets/lib-CJKoPL8z.js                           160.12 kB │ gzip: 47.51 kB
+dist/assets/http-BcVHS4jc.js                          217.99 kB │ gzip: 73.11 kB
+dist/assets/MathRenderer-D6o8XYNF.js                  259.50 kB │ gzip: 77.73 kB
+dist/assets/rehype-katex-IwNxS0sH.js                  267.79 kB │ gzip: 80.87 kB
+
+✓ built in 517ms

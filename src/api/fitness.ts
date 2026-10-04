@@ -170,14 +170,16 @@ export const useFitnessSummary = () =>
   useQuery({ queryKey: ['fitness', 'summary'], queryFn: fitnessApi.summary });
 export const useFitnessDay = (date: string) =>
   useQuery({ queryKey: ['fitness', 'day', date], queryFn: () => fitnessApi.day(date) });
-export const useFitnessHistory = (from: string, to: string) =>
+export const useFitnessHistory = (from: string, to: string, enabled = true) =>
   useQuery({
     queryKey: ['fitness', 'history', from, to],
+    enabled,
     queryFn: () => fitnessApi.history(from, to),
   });
-export const useFitnessStats = (from: string, to: string) =>
+export const useFitnessStats = (from: string, to: string, enabled = true) =>
   useQuery({
     queryKey: ['fitness', 'stats', from, to],
+    enabled,
     queryFn: () => fitnessApi.statistics(from, to),
   });
 export function useFitnessList<K extends Kind>(kind: K) {
