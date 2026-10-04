@@ -1182,3 +1182,10 @@
   padding: 0;
   min-width: 0;
 }
+
+.training-workspace,
+.meal-workspace {
+  background: white;
+  border-top: 2px solid var(--space-accent);
+  margin-bottom: 24px;
+}

@@ -66,7 +66,7 @@ export function MealTracker({ day, kind = 'meals' }: { day: Day; kind?: 'meals' 
       {editor?.dirty && <UnsavedGuard dirty />}
       <p className="help">
         {actual
-          ? '勾选表示已吃，并保存为实际饮食；取消勾选移除对应记录。每餐可单独编辑和保存。'
+          ? '吃完一项勾选一项，进度自动保存。每餐可单独编辑和保存。'
           : '每餐食谱可以单独编辑和保存。'}
       </p>
       {Object.entries(mealNames).map(([type, name]) => {
@@ -99,7 +99,7 @@ export function MealTracker({ day, kind = 'meals' }: { day: Day; kind?: 'meals' 
                   });
                 }}
               >
-                {actual ? (recorded.length ? `编辑${name}` : `记录${name}`) : `编辑${name}食谱`}
+                {actual ? `编辑${name}` : `编辑${name}食谱`}
               </Button>
             </div>
             {editor?.meal === meal ? (

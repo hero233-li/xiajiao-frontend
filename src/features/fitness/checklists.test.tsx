@@ -16,6 +16,9 @@ import {
 import { ConfirmationProvider } from '../../components/ConfirmationProvider';
 import { MealTracker } from './MealTracker';
 import { TrainingChecklist } from './TrainingChecklist';
+import { TrainingSection } from './TrainingSection';
+import { MealsSection } from './MealsSection';
+import type { FitnessWorkspace } from '../../pages/FitnessPage';
 
 const ok = (data: unknown) => HttpResponse.json({ code: 0, message: '成功', data });
 const food = (name: string, meal: Food['meal']): Food => ({
@@ -158,7 +161,7 @@ describe('按餐保存和逐项完成进度', () => {
     const state = setup();
     state.mount();
     const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: '记录早餐' }));
+    await user.click(await screen.findByRole('button', { name: '编辑早餐' }));
     const field = within(screen.getByRole('region', { name: '早餐' })).getByRole('textbox', {
       name: '食物名称',
     });
@@ -227,7 +230,7 @@ describe('按餐保存和逐项完成进度', () => {
     const state = setup();
     state.mount();
     const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: '记录早餐' }));
+    await user.click(await screen.findByRole('button', { name: '编辑早餐' }));
     const field = within(screen.getByRole('region', { name: '早餐' })).getByRole('textbox', {
       name: '食物名称',
     });
@@ -236,5 +239,68 @@ describe('按餐保存和逐项完成进度', () => {
     await user.click(await screen.findByRole('button', { name: '取消，保留内容' }));
     expect(field).toHaveValue('鸡蛋加餐');
     expect(state.writes()).toBe(0);
+  });
+});
+
+describe('健身页面只展示一份清单', () => {
+  function mountSection(day: Day, training: boolean) {
+    const workspace = {
+      date: day.date,
+      data: day,
+      start: day.date,
+      history: { isPending: false, error: null, refetch: () => undefined, data: [day] },
+      action: () => null,
+    } as unknown as FitnessWorkspace;
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ConfirmationProvider>
+          {training ? (
+            <TrainingSection workspace={workspace} />
+          ) : (
+            <MealsSection workspace={workspace} />
+          )}
+        </ConfirmationProvider>
+      </QueryClientProvider>,
+    );
+  }
+  it('已有完成记录时训练仍只展示一次，保留勾选和修改后的重量', () => {
+    const { day } = setup();
+    day.records.training = {
+      kind: 'training',
+      key: day.date,
+      revision: 0,
+      data: {
+        status: 'PARTIAL',
+        note: null,
+        planSnapshot: day.records['training-plan']!.data!,
+        exercises: day.records['training-plan']!.data!.exercises.map((row, index) => ({
+          ...row,
+          kg: 25,
+          completed: index === 0,
+        })),
+      },
+    };
+    mountSection(day, true);
+    expect(screen.getAllByRole('checkbox')).toHaveLength(2);
+    expect(screen.getByRole('checkbox', { name: '腿举 已完成' })).toBeChecked();
+    expect(screen.getAllByText(/25kg/)).toHaveLength(2);
+    expect(screen.queryByText('实际训练')).not.toBeInTheDocument();
+    expect(screen.queryByText('记录实际')).not.toBeInTheDocument();
+  });
+  it('饮食每餐只展示一次，并在同一份食谱中保留已吃状态', () => {
+    const { day } = setup();
+    day.records.meals = {
+      kind: 'meals',
+      key: day.date,
+      revision: 0,
+      data: { foods: [food('鸡蛋', 'BREAKFAST')], note: null },
+    };
+    mountSection(day, false);
+    expect(screen.getAllByRole('region', { name: '早餐' })).toHaveLength(1);
+    expect(screen.getAllByRole('checkbox')).toHaveLength(3);
+    expect(screen.getByRole('checkbox', { name: '早餐：鸡蛋 已吃' })).toBeChecked();
+    expect(screen.getByRole('button', { name: '编辑早餐' })).toBeInTheDocument();
+    expect(screen.queryByText('计划吃什么')).not.toBeInTheDocument();
+    expect(screen.queryByText('实际吃了什么')).not.toBeInTheDocument();
   });
 });

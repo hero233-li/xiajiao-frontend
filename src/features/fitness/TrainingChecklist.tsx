@@ -8,6 +8,16 @@ import {
 } from '../../api/fitness';
 import { ExerciseList } from './display';
 
+// Keep one list, preserving edited weights and any additional completed exercises.
+export function trainingRows(day: Day): Exercise[] {
+  const planned = day.records['training-plan']?.data?.exercises ?? [];
+  const recorded = day.records.training?.data?.exercises ?? [];
+  return [
+    ...planned.map((row) => recorded.find((item) => item.id === row.id) ?? row),
+    ...recorded.filter((row) => !planned.some((item) => item.id === row.id)),
+  ];
+}
+
 export function TrainingChecklist({ day, rows }: { day: Day; rows: Exercise[] }) {
   const mutation = useFitnessMutation();
   const [error, setError] = useState('');
@@ -50,7 +60,7 @@ export function TrainingChecklist({ day, rows }: { day: Day; rows: Exercise[] })
   };
   return (
     <>
-      <p className="help">勾选保存实际完成进度，全部计划动作完成后才标记整次训练完成。</p>
+      <p className="help">完成一项勾选一项，进度自动保存。</p>
       <ExerciseList
         rows={rows}
         completion={{ checked, disabled: mutation.isPending || day.date > localToday(), toggle }}

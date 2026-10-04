@@ -1,6 +1,6 @@
-import { TrainingChecklist } from './TrainingChecklist';
+import { TrainingChecklist, trainingRows } from './TrainingChecklist';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { fitnessApi, localToday, shiftDate, type Models } from '../../api/fitness';
+import { shiftDate } from '../../api/fitness';
 import { Button } from '../../components/Button';
 import { trainingNames } from '../../features/fitness/Editor';
 
@@ -8,19 +8,8 @@ import type { FitnessWorkspace } from '../../pages/FitnessPage';
 import { State, weekday } from './display';
 
 export function TrainingSection({ workspace }: { workspace: FitnessWorkspace }) {
-  const {
-    mutation,
-    date,
-    setDate,
-    start,
-    history,
-    setCopy,
-    setDestination,
-    setTemplateName,
-    remove,
-    data,
-    action,
-  } = workspace;
+  const { date, setDate, start, history, setCopy, setDestination, setTemplateName, data, action } =
+    workspace;
   if (!data) return null;
   return (
     <>
@@ -71,22 +60,18 @@ export function TrainingSection({ workspace }: { workspace: FitnessWorkspace }) 
           </button>
         ))}
       </div>
-      <div className="planning-workspace">
+      <div className="training-workspace">
         <section className="planning-column">
           <div className="section-title">
-            <h2>计划 · {date}</h2>
-            {action('training-plan', '编辑安排')}
+            <h2>训练 · {date}</h2>
+            {action('training-plan', '编辑训练')}
           </div>
-          {data.rest ? (
+          {data.rest && !trainingRows(data).length ? (
             <p className="inline-empty">今天安排休息，可以照常打卡。</p>
           ) : (
-            <TrainingChecklist
-              key={`${date}-plan`}
-              day={data}
-              rows={data.records['training-plan']?.data?.exercises ?? []}
-            />
+            <TrainingChecklist key={`${date}-plan`} day={data} rows={trainingRows(data)} />
           )}
-          <p>{data.records['training-plan']?.data?.note}</p>
+          <p>{data.records.training?.data?.note ?? data.records['training-plan']?.data?.note}</p>
           {data.records['training-plan']?.data && (
             <div className="row">
               <Button
@@ -118,73 +103,6 @@ export function TrainingSection({ workspace }: { workspace: FitnessWorkspace }) 
                 存为训练模板
               </Button>
             </div>
-          )}
-        </section>
-        <section className="planning-column">
-          <div className="section-title">
-            <h2>实际训练</h2>
-            {date <= localToday() &&
-              action(
-                'training',
-                '记录实际',
-                data.records.training?.data ?? {
-                  status: '' as Models['training']['status'],
-                  exercises: (data.records['training-plan']?.data?.exercises ?? []).map((e) => ({
-                    ...e,
-                    completed: false,
-                  })),
-                  note: null,
-                  planSnapshot: null,
-                },
-              )}
-          </div>
-          {data.records.training?.data ? (
-            <>
-              <label className="training-state-control">
-                实际状态
-                <select
-                  aria-label="实际训练状态"
-                  value={data.records.training.data.status}
-                  disabled={mutation.isPending}
-                  onChange={(e) => {
-                    const entry = data.records.training!;
-                    void mutation
-                      .mutateAsync(() =>
-                        fitnessApi.save(
-                          'training',
-                          date,
-                          {
-                            ...entry.data!,
-                            status: e.target.value as Models['training']['status'],
-                          },
-                          entry.revision,
-                        ),
-                      )
-                      .catch(() => undefined);
-                  }}
-                >
-                  {Object.entries(trainingNames).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {mutation.error && (
-                <p role="alert">{mutation.error.message}。请重新加载当日记录后再修改。</p>
-              )}
-              <TrainingChecklist
-                key={`${date}-actual`}
-                day={data}
-                rows={data.records.training.data.exercises}
-              />
-              <p>{data.records.training.data.note}</p>
-              <Button variant="ghost" onClick={() => remove(data.records.training!, '实际训练')}>
-                删除实际训练
-              </Button>
-            </>
-          ) : (
-            <p className="inline-empty">尚未记录。实际数据可在计划基础上修改，不会改变计划。</p>
           )}
         </section>
       </div>

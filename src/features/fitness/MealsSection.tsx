@@ -5,16 +5,16 @@ import type { FitnessWorkspace } from '../../pages/FitnessPage';
 import { MealTracker } from './MealTracker';
 
 export function MealsSection({ workspace }: { workspace: FitnessWorkspace }) {
-  const { date, setCopy, setDestination, setTemplateName, remove, data, action } = workspace;
+  const { date, setCopy, setDestination, setTemplateName, data, action } = workspace;
   if (!data) return null;
   return (
     <>
-      <div className="planning-workspace">
+      <div className="meal-workspace">
         <section className="planning-column">
           <div className="section-title">
-            <h2>计划吃什么</h2>
+            <h2>当天食谱</h2>
           </div>
-          <MealTracker key={`${date}-plan`} day={data} kind="meal-plan" />
+          <MealTracker key={date} day={data} />
           {data.records['meal-plan']?.data && (
             <div className="row">
               <Button
@@ -46,17 +46,6 @@ export function MealsSection({ workspace }: { workspace: FitnessWorkspace }) {
                 存为食谱模板
               </Button>
             </div>
-          )}
-        </section>
-        <section className="planning-column">
-          <div className="section-title">
-            <h2>实际吃了什么</h2>
-          </div>
-          <MealTracker key={`${date}-actual`} day={data} />
-          {data.records.meals?.data && (
-            <Button variant="ghost" onClick={() => remove(data.records.meals!, '实际饮食')}>
-              删除实际饮食
-            </Button>
           )}
         </section>
       </div>

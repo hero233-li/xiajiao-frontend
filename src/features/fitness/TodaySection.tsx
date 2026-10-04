@@ -1,15 +1,15 @@
 import { MealTracker } from './MealTracker';
-import { TrainingChecklist } from './TrainingChecklist';
+import { TrainingChecklist, trainingRows } from './TrainingChecklist';
 import { Activity, Utensils } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { FitnessWorkspace } from '../../pages/FitnessPage';
 import { State, status } from './display';
-import { trainingNames } from './Editor';
 import { QuickRecords } from './QuickRecords';
 export function TodaySection({ workspace: w }: { workspace: FitnessWorkspace }) {
   const { data, date, setDate, summary, action } = w;
   if (!data) return null;
   const plan = data.records['training-plan']?.data;
+  const exercises = trainingRows(data);
   return (
     <>
       <div className="day-command">
@@ -42,29 +42,15 @@ export function TodaySection({ workspace: w }: { workspace: FitnessWorkspace }) 
             </h2>
             <Link to={`/fitness/training?date=${date}`}>周计划与记录</Link>
           </div>
-          <h3>计划</h3>
-          {plan ? (
-            plan.rest ? (
-              <p>休息日</p>
-            ) : (
-              <TrainingChecklist day={data} rows={plan.exercises} />
-            )
+
+          {plan?.rest && !exercises.length ? (
+            <p>休息日</p>
+          ) : exercises.length ? (
+            <TrainingChecklist day={data} rows={exercises} />
           ) : (
             <p className="inline-empty">当天没有训练安排。</p>
           )}
-          {action('training-plan', plan ? '编辑安排' : '创建训练安排')}
-          <div className="actual-record">
-            <h3>实际记录</h3>
-            {data.records.training?.data ? (
-              <>
-                <p className="record-status">{trainingNames[data.records.training.data.status]}</p>
-                <TrainingChecklist day={data} rows={data.records.training.data.exercises} />
-              </>
-            ) : (
-              <p>尚未记录实际训练</p>
-            )}
-            {action('training', data.records.training?.data ? '修改实际训练' : '记录实际训练')}
-          </div>
+          {action('training-plan', plan ? '编辑训练' : '创建训练')}
         </section>
         <section className="platform-section">
           <div className="section-title">
@@ -72,7 +58,7 @@ export function TodaySection({ workspace: w }: { workspace: FitnessWorkspace }) 
               <Utensils size={20} />
               饮食
             </h2>
-            <Link to={`/fitness/meals?date=${date}`}>计划与实际</Link>
+            <Link to={`/fitness/meals?date=${date}`}>查看食谱</Link>
           </div>
           <MealTracker key={date} day={data} />
         </section>
