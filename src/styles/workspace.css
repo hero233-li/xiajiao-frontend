@@ -231,13 +231,6 @@
   letter-spacing: 0;
   margin-bottom: 6px;
 }
-.home-date {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  color: #526076;
-  font-size: 14px;
-}
 .section-title {
   display: flex;
   align-items: center;
@@ -1188,4 +1181,305 @@
   background: white;
   border-top: 2px solid var(--space-accent);
   margin-bottom: 24px;
+}
+
+/* Daily training: a compact week strip and a readable execution desk. */
+.training-page {
+  --training-green: #256451;
+  --training-soft: #edf5f1;
+}
+.training-page .period-toolbar {
+  margin: 0 0 16px;
+  padding: 14px 18px;
+  background: white;
+  border: 1px solid #e2e9e5;
+  border-radius: 16px;
+}
+.training-page .training-week {
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  margin-bottom: 24px;
+}
+.training-page .training-week button {
+  border: 1px solid #e0e7e3;
+  border-radius: 14px;
+  padding: 16px 10px;
+  background: white;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.training-page .training-week button.selected {
+  background: #256451;
+  color: white;
+  border-color: #256451;
+  box-shadow: 0 5px 14px #25645120;
+}
+.training-page .training-week button.selected :is(span, small, em) {
+  color: #e2f0e9;
+}
+.training-page .training-week button strong {
+  font-size: 24px;
+  margin: 5px 0;
+}
+.training-page .training-week button em {
+  font-style: normal;
+  font-size: 11px;
+}
+.training-overview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.training-overview > div {
+  display: flex;
+  gap: 14px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #e2e9e5;
+  border-radius: 16px;
+  align-items: flex-start;
+}
+.training-overview svg {
+  color: #256451;
+  margin-top: 3px;
+}
+.training-overview span {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+  color: #66776f;
+}
+.training-overview strong {
+  font-size: 23px;
+  color: #243b31;
+  font-weight: 650;
+}
+.training-overview strong small {
+  font-size: 13px;
+  font-weight: 400;
+}
+.training-page .training-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  background: transparent;
+  border: 0;
+  align-items: start;
+}
+.training-dashboard > .planning-column {
+  padding: 24px;
+  background: white;
+  border: 1px solid #e2e9e5;
+  border-radius: 20px;
+  min-width: 0;
+}
+.training-eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: #63796d;
+}
+.training-dashboard h2 {
+  margin-top: 6px;
+  font-size: 23px;
+}
+.training-page .record-ledger {
+  list-style: none;
+  padding: 0;
+  counter-reset: none;
+  display: grid;
+  gap: 14px;
+}
+.training-page .record-ledger > li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 8px 12px;
+  padding: 18px;
+  border: 1px solid #e3eae6;
+  border-radius: 14px;
+  background: #fcfdfc;
+}
+.training-page .record-ledger > li::before {
+  display: none;
+}
+.exercise-step {
+  display: none;
+}
+.training-page .exercise-step {
+  display: grid;
+  place-items: center;
+  grid-row: 1 / 4;
+  align-self: start;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #eaf3ee;
+  color: #256451;
+  font-size: 12px;
+  font-weight: 700;
+}
+.training-page .exercise-motion-heading {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.training-page .exercise-motion-heading strong {
+  font-size: 16px;
+  flex: 1;
+  min-width: 120px;
+  line-height: 1.5;
+}
+.training-page .record-ledger > li > span:not(.exercise-step) {
+  grid-column: 2;
+  color: #256451;
+  font-size: 13px;
+  font-weight: 600;
+}
+.training-page .exercise-instructions {
+  grid-column: 2;
+  font-size: 13px;
+  color: #596b61;
+  line-height: 1.85;
+  display: grid;
+  gap: 4px;
+}
+.training-page .exercise-complete {
+  background: #f1f7f3 !important;
+  border-color: #bdd7c9 !important;
+}
+.training-guidance {
+  padding: 24px;
+  border: 1px solid #dce8df;
+  border-radius: 20px;
+  background: #edf5f0;
+  min-width: 0;
+}
+.training-guidance h3 {
+  font-size: 16px;
+  color: #284d3b;
+  margin: 0 0 16px;
+}
+.training-guidance p {
+  font-size: 13px;
+  color: #4f685b;
+  line-height: 1.85;
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
+.training-guidance details {
+  border-top: 1px solid #d4e3d9;
+  padding: 14px 0 0;
+  margin-top: 14px;
+}
+.training-guidance summary,
+.training-plan-tools summary {
+  cursor: pointer;
+  color: #365b46;
+  font-size: 13px;
+}
+.training-guidance details p {
+  margin-top: 12px;
+}
+.training-plan-tools {
+  margin-top: 22px;
+  border-top: 1px solid #e3eae6;
+  padding-top: 16px;
+}
+.training-plan-tools .row {
+  margin-top: 12px;
+}
+@media (max-width: 1000px) {
+  .training-page .training-dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .training-page .training-week {
+    display: flex;
+    overflow-x: auto;
+    padding: 3px 1px 10px;
+  }
+  .training-page .training-week button {
+    flex: 0 0 92px;
+  }
+  .training-overview {
+    gap: 8px;
+  }
+  .training-overview > div {
+    padding: 12px 10px;
+    gap: 8px;
+  }
+  .training-overview svg {
+    display: none;
+  }
+  .training-overview strong {
+    font-size: 17px;
+  }
+  .training-overview strong small {
+    font-size: 11px;
+  }
+  .training-page .period-toolbar {
+    padding: 10px 6px;
+  }
+  .training-page .period-toolbar strong {
+    font-size: 12px;
+  }
+  .training-dashboard > .planning-column,
+  .training-guidance {
+    padding: 16px;
+  }
+  .training-page .record-ledger > li {
+    padding: 14px 10px;
+    gap: 8px;
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+  .training-page .exercise-step {
+    width: 26px;
+    height: 28px;
+  }
+}
+.training-page .training-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.training-page .training-week button {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  min-width: 0;
+  text-align: center;
+}
+.training-page .training-week button.selected strong {
+  color: white;
+}
+.training-page .period-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+@media (max-width: 600px) {
+  .training-page .training-week {
+    display: flex;
+  }
+}
+
+.weight-series-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.weight-series-grid .quick-weight {
+  display: block;
+  min-width: 0;
+}
+.weight-series-grid .platform-section {
+  min-width: 0;
+}
+@media (max-width: 750px) {
+  .weight-series-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
 }

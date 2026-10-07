@@ -1,0 +1,148 @@
+{
+  "realHttp": true,
+  "businessDataMutated": false,
+  "preferencesRestored": true,
+  "results": [
+    {
+      "name": "收藏、隐藏与刷新持久化",
+      "passed": true
+    },
+    {
+      "name": "排序刷新持久化",
+      "passed": true
+    },
+    {
+      "name": "重新登录后偏好保留",
+      "passed": true
+    },
+    {
+      "name": "未上线空间无可执行入口",
+      "passed": true
+    },
+    {
+      "name": "最近访问恢复日期，切换面板键盘关闭与焦点恢复",
+      "passed": true
+    },
+    {
+      "name": "未保存输入阻止切换，取消后保留输入",
+      "passed": true
+    },
+    {
+      "name": "学习摘要故障隔离（明确的故障注入）",
+      "passed": true
+    },
+    {
+      "name": "旧学习链接、阅读、题库与真题批改入口",
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/study/course/00023/catalog",
+      "width": 390,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/study/course/00023/practice",
+      "width": 390,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/study/course/00023/exams",
+      "width": 390,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/fitness/edit/training-plan",
+      "width": 390,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/admin?view=courses",
+      "width": 390,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/admin?view=bank",
+      "width": 390,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/study/course/00023/catalog",
+      "width": 768,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/study/course/00023/practice",
+      "width": 768,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/study/course/00023/exams",
+      "width": 768,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/fitness/edit/training-plan",
+      "width": 768,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/admin?view=courses",
+      "width": 768,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/admin?view=bank",
+      "width": 768,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/study/course/00023/catalog",
+      "width": 1440,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/study/course/00023/practice",
+      "width": 1440,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/study/course/00023/exams",
+      "width": 1440,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/fitness/edit/training-plan",
+      "width": 1440,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/admin?view=courses",
+      "width": 1440,
+      "passed": true
+    },
+    {
+      "name": "核心页面响应式",
+      "path": "/admin?view=bank",
+      "width": 1440,
+      "passed": true
+    }
+  ],
+  "errors": []
+}

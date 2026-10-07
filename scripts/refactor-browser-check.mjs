@@ -22,7 +22,8 @@ try {
   await page.getByRole('button', { name: '登录', exact: true }).click();
   await page.waitForURL(u => u.pathname !== '/login');
   await page.goto(`${url}/zikao/course/00023/catalog?cycleId=${cycle}`);
-  await page.getByRole('heading', { name: '学习目录', exact: true }).waitFor();
+  await page.getByRole('button', { name: '选择章节与条目', exact: true }).waitFor();
+  await page.getByRole('button', { name: '完成并继续', exact: true }).waitFor();
   await page.screenshot({ path: resolve(output, 'catalog.png'), fullPage: true });
   await page.goto(`${url}/zikao/course/00023/exams?cycleId=${cycle}`);
   await page.getByRole('heading', { name: '历年试卷', exact: true }).waitFor();

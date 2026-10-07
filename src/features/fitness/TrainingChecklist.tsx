@@ -60,7 +60,11 @@ export function TrainingChecklist({ day, rows }: { day: Day; rows: Exercise[] })
   };
   return (
     <>
-      <p className="help">完成一项勾选一项，进度自动保存。</p>
+      <p className="help">
+        {day.date > localToday()
+          ? '当天开始后可逐项勾选；现在可以查看动作和安排。'
+          : '完成一项勾选一项，进度自动保存。'}
+      </p>
       <ExerciseList
         rows={rows}
         completion={{ checked, disabled: mutation.isPending || day.date > localToday(), toggle }}

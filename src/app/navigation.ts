@@ -1,4 +1,5 @@
 export const adminNavigation = [
+  ['bank', '题库重建与审查'],
   ['content', '草稿与发布'],
   ['courses', '课程维护'],
   ['cycles', '考试周期'],
@@ -41,6 +42,8 @@ export function routeTitle(path: string, search: string) {
       {
         '/': '个人首页',
         '/settings': '账号设置',
+        '/spaces': '空间目录',
+        '/today': '今日任务',
         '/study': '今日学习',
         '/study/courses': '我的科目',
         '/study/schedule': '学习计划',
@@ -56,30 +59,4 @@ export function routeTitle(path: string, search: string) {
       } as Record<string, string>
     )[path] ?? '知途'
   );
-}
-export function spaceNavigation(space: string) {
-  if (space === 'admin')
-    return adminNavigation.map(([key, title]) => [`/admin?view=${key}`, title]);
-  if (space === 'study')
-    return [
-      ['/study', '今日'],
-      ['/study/courses', '课程'],
-      ['/study/schedule', '计划'],
-      ['/study/training', '练习与检测'],
-      ['/study/notes', '笔记'],
-    ];
-  if (space === 'fitness')
-    return [
-      ['/fitness', '今天'],
-      ['/fitness/training', '训练'],
-      ['/fitness/meals', '饮食'],
-      ['/fitness/weight', '体重'],
-      ['/fitness/history', '历史'],
-      ['/fitness/goals', '目标'],
-      ['/fitness/templates', '模板库'],
-    ];
-  return [
-    ['/', '今日行动'],
-    ['/settings', '账号设置'],
-  ];
 }

@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   fitnessApi,
-  localToday,
   shiftDate,
   useFitnessMutation,
+  useFitnessHistory,
   type ImportWeek,
 } from '../../api/fitness';
 import { Button } from '../../components/Button';
@@ -13,17 +13,22 @@ import { useConfirmation } from '../../components/ConfirmationProvider';
 import { Modal } from '../../components/Modal';
 import { createUuid } from '../../utils/uuid';
 import { EditorPageFrame, ExerciseFields, FoodFields, mealNames } from './Editor';
-import { createFirstWeek, type FirstWeekDay } from './first-week';
+import { createFirstWeek, firstWeekStartDate, type FirstWeekDay } from './first-week';
 import { ExerciseMotion } from './motion/ExerciseMotion';
-import { UnsavedGuard } from './UnsavedGuard';
+import { UnsavedGuard } from '../../components/UnsavedGuard';
 
 export function FirstWeekPlan({ page = false }: { page?: boolean }) {
   const navigate = useNavigate();
   const Wrapper = page ? EditorPageFrame : Modal;
-  const [draft, setDraft] = useState<FirstWeekDay[] | null>(() =>
-    page ? createFirstWeek() : null,
-  );
-  const [startDate, setStartDate] = useState(() => shiftDate(localToday(), 1));
+  const [draft, setDraft] = useState<FirstWeekDay[] | null>(null);
+  const [startDate, setStartDate] = useState(firstWeekStartDate);
+  const source = useFitnessHistory(firstWeekStartDate, shiftDate(firstWeekStartDate, 6), page);
+  useEffect(() => {
+    if (source.data) {
+      const saved = createFirstWeek(source.data);
+      if (saved.length === 7) setDraft((current) => current ?? saved);
+    }
+  }, [source.data]);
   const [active, setActive] = useState(0);
   const [view, setView] = useState<'training' | 'meals'>('training');
   const [editing, setEditing] = useState(false);
@@ -109,14 +114,13 @@ export function FirstWeekPlan({ page = false }: { page?: boolean }) {
             <p className="eyebrow">你的第一周</p>
             <h2>训练 + 三餐，按天执行</h2>
             <p className="secondary">
-              已整理你提供的7天内容。选择开始日期，按需要修改后存入个人计划。
+              查看账号中已保存的第一周训练、三餐与加餐，以及采购、记录和复盘说明。
             </p>
           </div>
           <Button
             variant="secondary"
             onClick={async () => {
               navigate('/fitness/first-week');
-              setDraft(createFirstWeek());
               setActive(0);
               setView('training');
               setEditing(false);
@@ -125,9 +129,18 @@ export function FirstWeekPlan({ page = false }: { page?: boolean }) {
               attempt.current = null;
             }}
           >
-            查看与添加第一周计划
+            查看第一周计划
           </Button>
         </section>
+      )}
+      {page && !draft && (
+        <p role={source.error ? 'alert' : 'status'}>
+          {source.isPending
+            ? '正在读取已保存的第一周计划…'
+            : source.error
+              ? '读取失败，请重新打开页面。'
+              : '第一周尚未保存完整的7天训练与食谱，请先在日期计划中补齐。'}
+        </p>
       )}
       {saved && (
         <p role="status" className="platform-notice">
@@ -161,8 +174,14 @@ export function FirstWeekPlan({ page = false }: { page?: boolean }) {
                 />
               </label>
               <p className="secondary">
-                仅保存计划，不自动生成实际记录或打卡。内容来自你提供的文本；范围保留在说明中，未提供的重量、份量与营养可留空。
+                这里读取账号中已保存的第一周安排。长期目标不作为一周目标；第二周等实际记录后再调整。修改并保存只更新计划，不生成实际记录或打卡。
               </p>
+              <details className="planning-column">
+                <summary>查看采购、备餐与每日记录说明</summary>
+                <p className="first-week-note">{draft[0].meals.note}</p>
+                <h3>第7天复盘</h3>
+                <p className="first-week-note">{draft[6].training.note}</p>
+              </details>
               <div className="week-template-tabs first-week-tabs">
                 {draft.map((d, i) => (
                   <button

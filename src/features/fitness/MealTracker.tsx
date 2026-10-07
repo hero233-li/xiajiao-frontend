@@ -5,7 +5,7 @@ import { useConfirmation } from '../../components/ConfirmationProvider';
 import { FoodFields, mealNames } from './Editor';
 import { Nutrition } from './display';
 import { foodOccurrence, matchingFoodIndex, replaceMeal, toggleFood } from './meal-progress';
-import { UnsavedGuard } from './UnsavedGuard';
+import { UnsavedGuard } from '../../components/UnsavedGuard';
 
 export function MealTracker({ day, kind = 'meals' }: { day: Day; kind?: 'meals' | 'meal-plan' }) {
   const mutation = useFitnessMutation();

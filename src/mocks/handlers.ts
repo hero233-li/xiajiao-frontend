@@ -38,5 +38,19 @@ export const handlers = [
     };
     return http[operation.method as 'get' | 'post' | 'put' | 'patch' | 'delete'](pattern(operation.path),resolver);
   }),
+  // Rebuild demo intentionally stays unpublished; it is not reviewed learning content.
+  http.get(pattern('/bank/courses/{course}/overview'), ({ request, params }) => {
+    if (!authorized(request)) return failure(401,40101,'请先登录或令牌已失效');
+    const prior = operations.find(op => op.operationId === 'getPracticeOverview')?.example.data as { chapters?: { chapterId: string; title: string }[] } | undefined;
+    const chapters = (prior?.chapters ?? []).map(ch => ({ chapter_id: ch.chapterId, title: ch.title, required: true,
+      points: [{ point_key: `demo:${ch.chapterId}`, chapter_id: ch.chapterId, title: '演示考点', scope_verified: false,
+        legacy_ids: [], scope_evidence: '演示内容，不可发布', levels: Object.fromEntries(['simple','middle','hard'].map(level => [level, { available: 0, target: 10, completed: 0, correct: 0, passed: false, currentRate: 0 }])) }],
+      simpleMissing: 1, middleMissing: 1, middleUnlocked: false, hardUnlocked: false, chapterAssessmentUnlocked: false, passed: false,
+      blockReasons: ['新版题库尚未完成质量复核和发布'] }));
+    return ok({ version: { id: 'demo-bank', course_id: params.course, version_no: 1, state: 'DRAFT', revision: 0 }, published: false,
+      chapters, papers: [], canApplyMock: false, missingChapterIds: chapters.map(ch => ch.chapter_id), mockBlockReasons: ['新版题库尚未发布'],
+      canReadPapers: false, examBlockReasons: ['演示内容尚未取得有效模拟资格'], unlockSources: [], qualifications: [], legacyQualifications: [] });
+  }),
+  http.get(pattern('/bank/courses/{course}/sessions'), ({ request }) => authorized(request) ? ok([]) : failure(401,40101,'请先登录或令牌已失效')),
   http.all('*/api/v1/*',() => failure(404,40401,'接口不存在')),
 ];

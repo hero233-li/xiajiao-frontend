@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-05",
+  "run": "five-class-focused-compatibility-rerun",
+  "tests": 42,
+  "allPassed": true,
+  "classes": [
+    {
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "class": "ReviewedBankMySqlIT"
+    },
+    {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "class": "BankUpgradeMySqlIT"
+    },
+    {
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "class": "PracticeMySqlIT"
+    },
+    {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "class": "BackendMySqlIT"
+    },
+    {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "class": "RefactorHttpMySqlIT"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import { BankExamReasons } from '../features/bank/BankExamReasons';
 import { GradingPanel } from '../features/grading/GradingPanel';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -78,6 +79,7 @@ function ExamCourse({ code, cycleId }: { code: string; cycleId: string }) {
     <AsyncRegion query={course} label="课程">
       {(data) => (
         <>
+          <BankExamReasons courseId={data.id} cycleId={cycleId} />
           <ExamContent courseId={data.id} code={code} cycleId={cycleId} />
         </>
       )}

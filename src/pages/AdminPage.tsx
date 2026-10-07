@@ -1,5 +1,7 @@
+import { UnsavedGuard } from '../components/UnsavedGuard';
+import { BankAdmin } from '../features/bank/BankAdmin';
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useSearchParams, useBlocker } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import type { ExamCycle, ContentRelease, TaskTemplate } from '../api/generated/models';
 import { all, request, message, courseDirectory } from '../features/admin/api';
@@ -10,6 +12,7 @@ import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import '../features/admin/admin.css';
 const modes = [
+  ['bank', '题库重建与审查'],
   ['content', '内容发布'],
   ['courses', '课程维护'],
   ['cycles', '考试周期'],
@@ -26,7 +29,6 @@ export function Component() {
   const mode = search.get('view') ?? 'content';
   const [dirty, updateDirty] = useState(false);
   const setDirty = useCallback((v: boolean) => updateDirty(v), []);
-  const blocker = useBlocker(dirty);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   useEffect(() => {
@@ -56,7 +58,7 @@ export function Component() {
     queryFn: () => courseDirectory(),
   });
   const courseId = search.get('courseId') ?? courses.data?.[0]?.id ?? '';
-  const course = courses.data?.find((c) => c.id === courseId);
+  const course = courses.data?.find((c) => c.id === courseId) ?? directory.data?.find((c) => c.id === courseId);
   const releases = useQuery({
     queryKey: ['admin-releases', courseId],
     enabled: !!courseId && mode === 'content',
@@ -144,6 +146,11 @@ export function Component() {
               value={courseId}
               onChange={(e) => choose('courseId', e.target.value)}
             >
+              {courseId && !courses.data?.some((c) => c.id === courseId) && (
+                <option value={courseId}>
+                  {course ? `${course.code} · ${course.name}` : '当前链接指定的课程'}（不在当前周期课程列表）
+                </option>
+              )}
               {courses.data?.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.code} · {c.name}
@@ -169,6 +176,8 @@ export function Component() {
       )}
       {cycles.isPending || (!!cycleId && courses.isPending) ? (
         <p role="status">正在加载课程与考试周期…</p>
+      ) : mode === 'bank' && courseId ? (
+        <BankAdmin key={courseId} courseId={courseId} />
       ) : mode === 'content' && !courseId ? (
         <section>
           <h2>此周期尚未关联课程</h2>
@@ -308,33 +317,7 @@ export function Component() {
           courseId={courseId}
         />
       )}
-      <Modal
-        open={blocker.state === 'blocked'}
-        title="有未保存的修改"
-        onClose={() => blocker.state === 'blocked' && blocker.reset()}
-      >
-        <p>离开会丢弃尚未保存的修改。已保存的草稿和已发布内容不会改变。</p>
-        <div className="modal-actions">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => blocker.state === 'blocked' && blocker.reset()}
-          >
-            继续编辑
-          </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              if (blocker.state === 'blocked') {
-                updateDirty(false);
-                blocker.proceed();
-              }
-            }}
-          >
-            放弃未保存修改并离开
-          </Button>
-        </div>
-      </Modal>
+      <UnsavedGuard dirty={dirty} />
     </div>
   );
 }

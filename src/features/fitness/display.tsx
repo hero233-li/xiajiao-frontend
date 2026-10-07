@@ -56,15 +56,25 @@ export function State({
     );
   return <>{children}</>;
 }
-export function WeightChart({ days }: { days: Day[] }) {
+export function WeightChart({
+  days,
+  kind = 'weight',
+}: {
+  days: Day[];
+  kind?: 'weight' | 'weight2';
+}) {
   const endDate =
     (days.at(-1)?.date ?? localToday()) > localToday()
       ? localToday()
       : (days.at(-1)?.date ?? localToday());
   const stats = useFitnessStats(shiftDate(endDate, -6), endDate);
   const values = days.flatMap((d, i) =>
-    d.records.weight?.data ? [{ i, date: d.date, value: d.records.weight.data.kg }] : [],
+    d.records[kind]?.data ? [{ i, date: d.date, value: d.records[kind]!.data!.kg }] : [],
   );
+  const weekValues = values.filter((v) => v.date >= shiftDate(endDate, -6) && v.date <= endDate);
+  const secondMean = weekValues.length
+    ? weekValues.reduce((sum, v) => sum + v.value, 0) / weekValues.length
+    : null;
   if (!values.length)
     return <p className="inline-empty">还没有体重记录。记录后，这里会显示真实变化。</p>;
   const min = Math.min(...values.map((d) => d.value)) - 0.5,
@@ -115,13 +125,17 @@ export function WeightChart({ days }: { days: Day[] }) {
       </svg>
       <p className="help">
         每日实测 · kg · 缺失日期保留缺口。
-        {stats.isPending
-          ? '正在读取7天均值…'
-          : stats.error
-            ? '7天均值暂不可用'
-            : stats.data?.sevenDayWeight.mean != null
-              ? `截至 ${stats.data.sevenDayWeight.to} 的7天均值 ${stats.data.sevenDayWeight.mean.toFixed(3)} kg · ${stats.data.sevenDayWeight.samples} 个真实样本。`
-              : '近7天没有记录，均值未知。'}
+        {kind === 'weight2'
+          ? secondMean != null
+            ? `截至 ${endDate} 的7天均值 ${secondMean.toFixed(3)} kg · ${weekValues.length} 个体重2真实样本。`
+            : '近7天没有体重2记录，均值未知。'
+          : stats.isPending
+            ? '正在读取7天均值…'
+            : stats.error
+              ? '7天均值暂不可用'
+              : stats.data?.sevenDayWeight.mean != null
+                ? `截至 ${stats.data.sevenDayWeight.to} 的7天均值 ${stats.data.sevenDayWeight.mean.toFixed(3)} kg · ${stats.data.sevenDayWeight.samples} 个真实样本。`
+                : '近7天没有记录，均值未知。'}
         日常波动不代表目标失败。
       </p>
     </div>
@@ -141,7 +155,10 @@ export function ExerciseList({
   return rows.length ? (
     <ol className="record-ledger">
       {rows.map((e, i) => (
-        <li key={i}>
+        <li key={e.id} className={completion?.checked.has(e.id) ? 'exercise-complete' : ''}>
+          <span className="exercise-step" aria-hidden="true">
+            {String(i + 1).padStart(2, '0')}
+          </span>
           <div className="exercise-motion-heading">
             {completion && (
               <input
@@ -165,7 +182,16 @@ export function ExerciseList({
             {e.minutes != null ? ` · ${e.minutes}分钟` : ''}
             {e.km != null ? ` · ${e.km}km` : ''}
           </span>
-          {e.note && <small>{e.note}</small>}
+          {e.note && (
+            <small className="exercise-instructions">
+              {e.note
+                .split(/(?<=[；])/)
+                .filter(Boolean)
+                .map((line, index) => (
+                  <span key={index}>{line}</span>
+                ))}
+            </small>
+          )}
         </li>
       ))}
     </ol>
@@ -288,7 +314,8 @@ export function Calendar({
               )}
               {d.rest ? ' 休' : ''}
             </span>
-            <small>{d.records.weight?.data ? `${d.records.weight.data.kg}kg` : ''}</small>
+            <small>{d.records.weight?.data ? `体重1：${d.records.weight.data.kg}kg` : ''}</small>
+            {d.records.weight2?.data && <small>体重2：{d.records.weight2.data.kg}kg</small>}
           </button>
         ))}
       </div>
@@ -312,9 +339,10 @@ export function DayDetails({
         {day.rest && <span>休息日</span>}
         <span>训练 {present(day, 'training') ? '已记录' : '未记录'}</span>
         <span>饮食 {present(day, 'meals') ? '已记录' : '未记录'}</span>
-        <span>体重 {present(day, 'weight') ? '已记录' : '未记录'}</span>
+        <span>体重1 {present(day, 'weight') ? '已记录' : '未记录'}</span>
+        <span>体重2 {present(day, 'weight2') ? '已记录' : '未记录'}</span>
       </div>
-      {(['weight', 'training', 'meals', 'water', 'checkin'] as const).map((kind) => {
+      {(['weight', 'weight2', 'training', 'meals', 'water', 'checkin'] as const).map((kind) => {
         const e = records[kind];
         return (
           <div className="detail-row" key={kind}>
@@ -322,9 +350,9 @@ export function DayDetails({
               <h3>{titles[kind]}</h3>
               {e?.data ? (
                 <>
-                  {kind === 'weight' && (
+                  {(kind === 'weight' || kind === 'weight2') && (
                     <p>
-                      {records.weight!.data!.kg} kg · {records.weight!.data!.note}
+                      {records[kind]!.data!.kg} kg · {records[kind]!.data!.note}
                     </p>
                   )}
                   {kind === 'training' && (

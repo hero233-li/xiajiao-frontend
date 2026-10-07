@@ -2,8 +2,17 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { fitnessApi, localToday, useFitnessMutation, type Day } from '../../api/fitness';
 import { Button } from '../../components/Button';
-import { UnsavedGuard } from './UnsavedGuard';
-export function QuickRecords({ day, onlyWeight = false }: { day: Day; onlyWeight?: boolean }) {
+import { UnsavedGuard } from '../../components/UnsavedGuard';
+export function QuickRecords({
+  day,
+  onlyWeight = false,
+  weightKind = 'weight',
+}: {
+  day: Day;
+  onlyWeight?: boolean;
+  weightKind?: 'weight' | 'weight2';
+}) {
+  const weightLabel = weightKind === 'weight' ? '体重1' : '体重2';
   const client = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const readLatest = async () => {
@@ -32,14 +41,14 @@ export function QuickRecords({ day, onlyWeight = false }: { day: Day; onlyWeight
     try {
       await weight.mutateAsync(() =>
         fitnessApi.save(
-          'weight',
+          weightKind,
           day.date,
-          { kg: Number(kg), note: day.records.weight?.data?.note ?? null },
-          day.records.weight?.revision ?? -1,
+          { kg: Number(kg), note: day.records[weightKind]?.data?.note ?? null },
+          day.records[weightKind]?.revision ?? -1,
         ),
       );
       setKg('');
-      setNotice('体重已保存');
+      setNotice(weightLabel + '已保存');
     } catch {
       /* mutation renders the error; input remains */
     }
@@ -64,12 +73,14 @@ export function QuickRecords({ day, onlyWeight = false }: { day: Day; onlyWeight
           void saveWeight();
         }}
       >
-        <h2>体重</h2>
+        <h2>{weightLabel}</h2>
         <p>
-          {day.records.weight?.data ? `${day.records.weight.data.kg} kg · 已记录` : '当天尚未记录'}
+          {day.records[weightKind]?.data
+            ? `${day.records[weightKind].data.kg} kg · 已记录`
+            : '当天尚未记录'}
         </p>
         <label>
-          体重（kg）
+          {weightLabel}（kg）
           <input
             inputMode="decimal"
             type="number"
@@ -83,7 +94,7 @@ export function QuickRecords({ day, onlyWeight = false }: { day: Day; onlyWeight
           />
         </label>
         <Button type="submit" loading={weight.isPending} disabled={future}>
-          保存体重
+          保存{weightLabel}
         </Button>
         {weight.error && <p role="alert">{weight.error.message}。输入已保留。</p>}
       </form>

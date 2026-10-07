@@ -1,0 +1,1021 @@
+{
+  "realHttp": true,
+  "checks": [
+    {
+      "path": "/",
+      "width": 1440,
+      "overflow": false,
+      "title": "个人首页 · 知途"
+    },
+    {
+      "path": "/spaces",
+      "width": 1440,
+      "overflow": false,
+      "title": "空间目录 · 知途"
+    },
+    {
+      "path": "/today",
+      "width": 1440,
+      "overflow": false,
+      "title": "今日任务 · 知途"
+    },
+    {
+      "path": "/study",
+      "width": 1440,
+      "overflow": false,
+      "title": "今日学习 · 自学 · 知途"
+    },
+    {
+      "path": "/fitness",
+      "width": 1440,
+      "overflow": false,
+      "title": "健身今天 · 健身 · 知途"
+    },
+    {
+      "path": "/admin",
+      "width": 1440,
+      "overflow": false,
+      "title": "草稿与发布 · 知途"
+    },
+    {
+      "path": "/",
+      "width": 768,
+      "overflow": false,
+      "title": "个人首页 · 知途"
+    },
+    {
+      "path": "/spaces",
+      "width": 768,
+      "overflow": false,
+      "title": "空间目录 · 知途"
+    },
+    {
+      "path": "/today",
+      "width": 768,
+      "overflow": false,
+      "title": "今日任务 · 知途"
+    },
+    {
+      "path": "/study",
+      "width": 768,
+      "overflow": false,
+      "title": "今日学习 · 自学 · 知途"
+    },
+    {
+      "path": "/fitness",
+      "width": 768,
+      "overflow": false,
+      "title": "健身今天 · 健身 · 知途"
+    },
+    {
+      "path": "/admin",
+      "width": 768,
+      "overflow": false,
+      "title": "草稿与发布 · 知途"
+    },
+    {
+      "path": "/",
+      "width": 390,
+      "overflow": false,
+      "title": "个人首页 · 知途"
+    },
+    {
+      "path": "/spaces",
+      "width": 390,
+      "overflow": false,
+      "title": "空间目录 · 知途"
+    },
+    {
+      "path": "/today",
+      "width": 390,
+      "overflow": false,
+      "title": "今日任务 · 知途"
+    },
+    {
+      "path": "/study",
+      "width": 390,
+      "overflow": false,
+      "title": "今日学习 · 自学 · 知途"
+    },
+    {
+      "path": "/fitness",
+      "width": 390,
+      "overflow": false,
+      "title": "健身今天 · 健身 · 知途"
+    },
+    {
+      "path": "/admin",
+      "width": 390,
+      "overflow": false,
+      "title": "草稿与发布 · 知途"
+    }
+  ],
+  "errors": [],
+  "calls": [
+    {
+      "path": "/api/v1/auth/login",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/days/2026-10-07",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/study-summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/schedule/plans/e8c30061-5ef7-4077-83c0-4138678d1f60",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/days/2026-10-07",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/study-summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/schedule/plans/e8c30061-5ef7-4077-83c0-4138678d1f60",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dashboard",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/ccd819bb-a48b-5c75-bfbf-e26219023fef/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/afdac469-0fe4-5007-833c-51a71333967b/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/6450a55a-7d59-5632-b9ad-2a4e170af220/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/72494a28-2cb8-5df8-8f3f-2ba84b681e0d/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/schedule/plans/e8c30061-5ef7-4077-83c0-4138678d1f60",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/e2dd5f58-a12f-55e0-a691-455ea2233699/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces/study/visit",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/days/2026-10-07",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/goal",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces/fitness/visit",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/releases/ccef96c1-a6be-572c-826f-6c2e4cd6eca6/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/6450a55a-7d59-5632-b9ad-2a4e170af220/releases/1649ffaa-533f-5031-bc0e-e35092333eaa/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/ccd819bb-a48b-5c75-bfbf-e26219023fef/releases/b731a019-7b2c-5ab4-b275-d64d4f1e169d/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/files",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/knowledge",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/assessment-policy",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/questions",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/days/2026-10-07",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/study-summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/schedule/plans/e8c30061-5ef7-4077-83c0-4138678d1f60",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/days/2026-10-07",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/study-summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/schedule/plans/e8c30061-5ef7-4077-83c0-4138678d1f60",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dashboard",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/afdac469-0fe4-5007-833c-51a71333967b/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/ccd819bb-a48b-5c75-bfbf-e26219023fef/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/6450a55a-7d59-5632-b9ad-2a4e170af220/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/72494a28-2cb8-5df8-8f3f-2ba84b681e0d/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/schedule/plans/e8c30061-5ef7-4077-83c0-4138678d1f60",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/e2dd5f58-a12f-55e0-a691-455ea2233699/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces/study/visit",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/days/2026-10-07",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/goal",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces/fitness/visit",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/ccd819bb-a48b-5c75-bfbf-e26219023fef/releases/b731a019-7b2c-5ab4-b275-d64d4f1e169d/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/releases/ccef96c1-a6be-572c-826f-6c2e4cd6eca6/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/6450a55a-7d59-5632-b9ad-2a4e170af220/releases/1649ffaa-533f-5031-bc0e-e35092333eaa/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/files",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/knowledge",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/questions",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/assessment-policy",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/days/2026-10-07",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/study-summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/schedule/plans/e8c30061-5ef7-4077-83c0-4138678d1f60",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/days/2026-10-07",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/study-summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/schedule/plans/e8c30061-5ef7-4077-83c0-4138678d1f60",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dashboard",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/6450a55a-7d59-5632-b9ad-2a4e170af220/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/72494a28-2cb8-5df8-8f3f-2ba84b681e0d/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/ccd819bb-a48b-5c75-bfbf-e26219023fef/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/afdac469-0fe4-5007-833c-51a71333967b/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/schedule/plans/e8c30061-5ef7-4077-83c0-4138678d1f60",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/e2dd5f58-a12f-55e0-a691-455ea2233699/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces/study/visit",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/dashboard",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/afdac469-0fe4-5007-833c-51a71333967b/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/ccd819bb-a48b-5c75-bfbf-e26219023fef/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/72494a28-2cb8-5df8-8f3f-2ba84b681e0d/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/6450a55a-7d59-5632-b9ad-2a4e170af220/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/schedule/plans/e8c30061-5ef7-4077-83c0-4138678d1f60",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/practice/courses/e2dd5f58-a12f-55e0-a691-455ea2233699/questions",
+      "status": 403,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/goal",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/days/2026-10-07",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/summary",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces/fitness/visit",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/personal/spaces",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/ccd819bb-a48b-5c75-bfbf-e26219023fef/releases/b731a019-7b2c-5ab4-b275-d64d4f1e169d/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/releases/ccef96c1-a6be-572c-826f-6c2e4cd6eca6/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/6450a55a-7d59-5632-b9ad-2a4e170af220/releases/1649ffaa-533f-5031-bc0e-e35092333eaa/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/files",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/catalog",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/knowledge",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/questions",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/task-templates",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/assessment-policy",
+      "status": 200,
+      "method": "GET"
+    }
+  ]
+}

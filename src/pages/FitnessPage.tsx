@@ -1,3 +1,4 @@
+import { DateControl } from '../components/DateControl';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -22,7 +23,7 @@ import { FitnessEditor, titles, type Editable, type EditSpec } from '../features
 import { FitnessEditPage } from '../features/fitness/EditPage';
 import { FirstWeekPlan } from '../features/fitness/FirstWeekPlan';
 import { TemplateManager } from '../features/fitness/Templates';
-import { UnsavedGuard } from '../features/fitness/UnsavedGuard';
+import { UnsavedGuard } from '../components/UnsavedGuard';
 import { createUuid } from '../utils/uuid';
 
 import { monday, present, State } from '../features/fitness/display';
@@ -262,19 +263,7 @@ function FitnessWorkspacePage() {
           {section === 'goals' ? (
             <Button onClick={() => open('goal')}>＋ 设置新目标</Button>
           ) : (
-            <label className="date-control">
-              查看日期
-              <input
-                type="date"
-                required
-                min="1900-01-01"
-                max="2100-12-31"
-                value={date}
-                onChange={(e) => {
-                  if (e.target.value) setDate(e.target.value);
-                }}
-              />
-            </label>
+            <DateControl label="查看日期" value={date} onChange={setDate} />
           )}
         </div>
       )}

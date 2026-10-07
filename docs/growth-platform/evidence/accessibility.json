@@ -1,0 +1,39 @@
+{
+  "checks": [
+    {
+      "path": "/",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "path": "/spaces",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "path": "/today",
+      "width": 390,
+      "violations": []
+    },
+    {
+      "path": "/",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "path": "/spaces",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "path": "/today",
+      "width": 1440,
+      "violations": []
+    },
+    {
+      "path": "space-switcher",
+      "width": 1440,
+      "violations": []
+    }
+  ]
+}

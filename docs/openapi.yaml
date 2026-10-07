@@ -26260,7 +26260,11 @@ components:
         - document
       properties:
         id: *a2
-        paperId: *a2
+        paperId:
+          anyOf:
+            - *a2
+            - nullable: true
+              enum: [null]
         version: *a4
         state:
           type: string
@@ -26473,7 +26477,11 @@ components:
         - pages
       properties:
         courseId: *a2
-        cycleId: *a2
+        cycleId:
+          anyOf:
+            - *a2
+            - nullable: true
+              enum: [null]
         practice:
           anyOf:
             - $ref: "#/components/schemas/LocalApply"
@@ -26490,6 +26498,20 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/LocalPage"
+        practiceAnswers:
+          type: array
+          nullable: true
+          items:
+            type: object
+            additionalProperties: false
+            required: [number, text, selectedOption, pages]
+            properties:
+              number: { type: string }
+              text: { type: string }
+              selectedOption: { type: integer, nullable: true }
+              pages:
+                type: array
+                items: { type: integer, minimum: 1, maximum: 20 }
     LocalClaim:
       type: object
       additionalProperties: false

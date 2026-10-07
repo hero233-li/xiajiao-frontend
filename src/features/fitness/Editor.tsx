@@ -22,7 +22,7 @@ import { useConfirmation } from '../../components/ConfirmationProvider';
 import { Modal } from '../../components/Modal';
 import { createUuid } from '../../utils/uuid';
 import { ExerciseMotion } from './motion/ExerciseMotion';
-import { UnsavedGuard } from './UnsavedGuard';
+import { UnsavedGuard } from '../../components/UnsavedGuard';
 import { flushSync } from 'react-dom';
 export const goalNames = { LOSE: '减重', GAIN: '增重', MAINTAIN: '维持' };
 export const trainingNames = {
@@ -57,6 +57,7 @@ const defaults: Record<Editable, unknown> = {
     note: null,
   },
   weight: { kg: null, note: null },
+  weight2: { kg: null, note: null },
   'training-plan': { rest: false, exercises: [], note: null },
   training: { status: '', exercises: [], note: null, planSnapshot: null },
   'meal-plan': { foods: [], note: null },
@@ -67,7 +68,8 @@ const defaults: Record<Editable, unknown> = {
 };
 export const titles: Record<Editable, string> = {
   goal: '设置新目标',
-  weight: '体重记录',
+  weight: '体重1记录',
+  weight2: '体重2记录',
   'training-plan': '训练安排',
   training: '实际训练',
   'meal-plan': '食谱计划',
@@ -578,9 +580,9 @@ export function FitnessEditor({
               </p>
             </>
           )}
-          {spec.kind === 'weight' && (
+          {(spec.kind === 'weight' || spec.kind === 'weight2') && (
             <NumberField
-              label="体重（kg）"
+              label={spec.kind === 'weight2' ? '体重2（kg）' : '体重1（kg）'}
               required
               min={0.001}
               max={999999}

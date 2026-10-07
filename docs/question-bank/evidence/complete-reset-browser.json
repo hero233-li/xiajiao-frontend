@@ -1,0 +1,21 @@
+{
+  "verifiedAt": "2026-10-07T10:58:23.829Z",
+  "realHttp": true,
+  "mockedRoutes": 0,
+  "oldBankAndSnapshotsRemoved": true,
+  "originalDeterminantDraftsVisible": true,
+  "originalMultiplicationDraftsVisible": true,
+  "latestBankOnly": true,
+  "incompletePublicationBlocked": true,
+  "qualifiedPracticeAccessible": true,
+  "calculusFirstBatchAccessible": true,
+  "calculusQualifiedQuestions": 1200,
+  "incompleteChapterMiddleBlocked": true,
+  "calculusSecondChapterAccessible": true,
+  "calculusThirdChapterAccessible": true,
+  "calculusFourthChapterAccessible": true,
+  "calculusFifthChapterAccessible": true,
+  "calculusTwelfthBatchAccessible": true,
+  "independentExamsRemainBlocked": true,
+  "errors": []
+}

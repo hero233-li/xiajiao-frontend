@@ -1,3 +1,4 @@
+import { DateControl } from '../../components/DateControl';
 import { MealTracker } from './MealTracker';
 import { TrainingChecklist, trainingRows } from './TrainingChecklist';
 import { Activity, Utensils } from 'lucide-react';
@@ -16,23 +17,10 @@ export function TodaySection({ workspace: w }: { workspace: FitnessWorkspace }) 
         <div>
           <span className="eyebrow">健身今天</span>
           <h1>{status(data)}</h1>
-          <label className="date-control">
-            日期
-            <input
-              type="date"
-              required
-              min="1900-01-01"
-              max="2100-12-31"
-              value={date}
-              onChange={(e) => {
-                if (e.target.value) setDate(e.target.value);
-              }}
-            />
-          </label>
+          <DateControl label="日期" value={date} onChange={setDate} />
         </div>
         <Link to={`/fitness/history?date=${date}`}>查看当天全部记录</Link>
       </div>
-      <QuickRecords key={date} day={data} />
       <div className="fitness-two-col">
         <section className="platform-section">
           <div className="section-title">
@@ -63,6 +51,7 @@ export function TodaySection({ workspace: w }: { workspace: FitnessWorkspace }) 
           <MealTracker key={date} day={data} />
         </section>
       </div>
+      <QuickRecords key={date} day={data} />
       <section className="platform-section">
         <div className="section-title">
           <h2>记录摘要</h2>

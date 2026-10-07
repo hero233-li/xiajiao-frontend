@@ -18,6 +18,7 @@ export * from './fitness-models';
 export interface Models {
   goal: Goal;
   weight: Weight;
+  weight2: Weight;
   'training-plan': TrainingPlan;
   training: Training;
   'meal-plan': Meals;

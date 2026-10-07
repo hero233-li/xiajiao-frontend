@@ -1,0 +1,499 @@
+{
+  "verifiedAt": "2026-10-05T15:55:40.196Z",
+  "realHttp": true,
+  "mockedRoutes": 0,
+  "content": "isolated synthetic fixtures, not approved bank content",
+  "repeatedAnswerCoverage": 1,
+  "subjectivePendingBlocksProgress": true,
+  "realCuratedDraftsInAdmin": true,
+  "adminOrderedPaperReview": true,
+  "latestBankOnly": true,
+  "rejectedLegacyHistoryDeleted": true,
+  "rejectionLeadsToScopedCleanup": true,
+  "realSqlCodeDraftsInAdmin": true,
+  "unverifiedPublicationBlocked": true,
+  "fixedMockSubmitted": true,
+  "resultAfterReload": true,
+  "errors": [],
+  "calls": [
+    {
+      "path": "/api/v1/auth/login",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/courses/by-code/99999",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/courses/by-code/99999",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/sessions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/overview",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/questions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/questions/deda453b-edb2-4842-9f38-ba0a906e2e29/answers",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/overview",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/questions/deda453b-edb2-4842-9f38-ba0a906e2e29/answers",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/overview",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/questions/4eecf4ab-cd63-4e58-af90-52c1984a366d/answers",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/overview",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/papers/0bf2ffad-4341-4ced-9620-35c9125e23dd/sessions",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/sessions/bf8de209-1b80-4ab2-a4c5-f310097a5a8b",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/sessions/bf8de209-1b80-4ab2-a4c5-f310097a5a8b/answers/ceada0f3-5cf2-4bcd-85f7-b2986dae833f",
+      "method": "PUT",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/sessions/bf8de209-1b80-4ab2-a4c5-f310097a5a8b/answers/a3f42f45-60d1-4734-a59e-585658e4bce5",
+      "method": "PUT",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/sessions/bf8de209-1b80-4ab2-a4c5-f310097a5a8b/answers/d6c98333-c631-4eb3-8e48-23278df19820",
+      "method": "PUT",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/sessions/bf8de209-1b80-4ab2-a4c5-f310097a5a8b/submit",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/bank/sessions/bf8de209-1b80-4ab2-a4c5-f310097a5a8b",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/login",
+      "method": "POST",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/reviews",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/releases/ccef96c1-a6be-572c-826f-6c2e4cd6eca6/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/6450a55a-7d59-5632-b9ad-2a4e170af220/releases/1649ffaa-533f-5031-bc0e-e35092333eaa/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/ccd819bb-a48b-5c75-bfbf-e26219023fef/releases/b731a019-7b2c-5ab4-b275-d64d4f1e169d/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/releases/ccef96c1-a6be-572c-826f-6c2e4cd6eca6/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/reviews/00000000-99f3-4fee-bfc6-a8c8941fc3bb",
+      "method": "PUT",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/reviews",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/deletions",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/questions/21a13d8e-a2eb-41d4-b741-5134ca4fdf65/delete-history",
+      "method": "POST",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/deletions",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/questions",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/questions",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/reviews",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/releases/ccef96c1-a6be-572c-826f-6c2e4cd6eca6/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/releases/ccef96c1-a6be-572c-826f-6c2e4cd6eca6/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/6450a55a-7d59-5632-b9ad-2a4e170af220/releases/1649ffaa-533f-5031-bc0e-e35092333eaa/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/ccd819bb-a48b-5c75-bfbf-e26219023fef/releases/b731a019-7b2c-5ab4-b275-d64d4f1e169d/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/papers/0bf2ffad-4341-4ced-9620-35c9125e23dd",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/drafts",
+      "method": "POST",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/papers/0bf2ffad-4341-4ced-9620-35c9125e23dd",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/52129a02-4cb0-45f1-8dc3-4ab7ae142b15/questions",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/fitness/records/profile",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/72494a28-2cb8-5df8-8f3f-2ba84b681e0d/reviews",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/releases/ccef96c1-a6be-572c-826f-6c2e4cd6eca6/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/exams/cycles",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/72494a28-2cb8-5df8-8f3f-2ba84b681e0d",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/4c6db663-13a2-5b2b-8cfa-6422a6c37205/releases/ccef96c1-a6be-572c-826f-6c2e4cd6eca6/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/6450a55a-7d59-5632-b9ad-2a4e170af220/releases/1649ffaa-533f-5031-bc0e-e35092333eaa/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/ccd819bb-a48b-5c75-bfbf-e26219023fef/releases/b731a019-7b2c-5ab4-b275-d64d4f1e169d/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/courses/afdac469-0fe4-5007-833c-51a71333967b/releases/1bc86e3e-2bed-580c-b005-ec4ef354da9b/task-templates",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/72494a28-2cb8-5df8-8f3f-2ba84b681e0d/questions",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    },
+    {
+      "path": "/api/v1/admin/bank/courses/72494a28-2cb8-5df8-8f3f-2ba84b681e0d/questions",
+      "method": "GET",
+      "status": 200,
+      "role": "ADMIN"
+    }
+  ]
+}

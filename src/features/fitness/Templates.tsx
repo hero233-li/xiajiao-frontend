@@ -18,7 +18,7 @@ import { useConfirmation } from '../../components/ConfirmationProvider';
 import { Modal } from '../../components/Modal';
 import { createUuid } from '../../utils/uuid';
 import { EditorPageFrame, ExerciseFields, FoodFields } from './Editor';
-import { UnsavedGuard } from './UnsavedGuard';
+import { UnsavedGuard } from '../../components/UnsavedGuard';
 import { flushSync } from 'react-dom';
 type TemplateKind = 'training-template' | 'meal-template' | 'week-template';
 interface TemplateDraft {

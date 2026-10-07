@@ -37,7 +37,11 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
         (element) =>
           !element.closest('[hidden],[inert]') && element.getAttribute('aria-hidden') !== 'true',
       );
-    (focusable()[0] ?? panel.current)?.focus();
+    (
+      panel.current?.querySelector<HTMLElement>('[data-autofocus]') ??
+      focusable()[0] ??
+      panel.current
+    )?.focus();
     const trap = (event: KeyboardEvent) => {
       if (modalStack.at(-1) !== id) return;
       if (event.key === 'Escape') {

@@ -1,0 +1,78 @@
+{
+  "testFixturesOnly": true,
+  "productionSpacesAdded": 0,
+  "checks": [
+    {
+      "testFixture": true,
+      "count": 2,
+      "width": 390,
+      "search": true,
+      "filter": true,
+      "overflow": false
+    },
+    {
+      "testFixture": true,
+      "count": 2,
+      "width": 768,
+      "search": true,
+      "filter": true,
+      "overflow": false
+    },
+    {
+      "testFixture": true,
+      "count": 2,
+      "width": 1440,
+      "search": true,
+      "filter": true,
+      "overflow": false
+    },
+    {
+      "testFixture": true,
+      "count": 6,
+      "width": 390,
+      "search": true,
+      "filter": true,
+      "overflow": false
+    },
+    {
+      "testFixture": true,
+      "count": 6,
+      "width": 768,
+      "search": true,
+      "filter": true,
+      "overflow": false
+    },
+    {
+      "testFixture": true,
+      "count": 6,
+      "width": 1440,
+      "search": true,
+      "filter": true,
+      "overflow": false
+    },
+    {
+      "testFixture": true,
+      "count": 12,
+      "width": 390,
+      "search": true,
+      "filter": true,
+      "overflow": false
+    },
+    {
+      "testFixture": true,
+      "count": 12,
+      "width": 768,
+      "search": true,
+      "filter": true,
+      "overflow": false
+    },
+    {
+      "testFixture": true,
+      "count": 12,
+      "width": 1440,
+      "search": true,
+      "filter": true,
+      "overflow": false
+    }
+  ]
+}

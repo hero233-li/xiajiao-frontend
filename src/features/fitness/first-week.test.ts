@@ -1,64 +1,89 @@
 import { describe, expect, it } from 'vitest';
+import type { Day } from '../../api/fitness';
 import { createFirstWeek } from './first-week';
 
-describe('user-supplied first week', () => {
-  it('preserves the seven-day sequence, two-set strength and rest day', () => {
-    const days = createFirstWeek();
+const savedWeek = () =>
+  Array.from({ length: 7 }, (_, i) => ({
+    date: `2026-10-${String(i + 5).padStart(2, '0')}`,
+    records: {
+      'training-plan': {
+        kind: 'training-plan',
+        key: 'day',
+        revision: 1,
+        data: {
+          rest: i >= 5,
+          note: `Day ${i + 1}｜已保存安排。恢复说明。`,
+          exercises:
+            i >= 5
+              ? []
+              : [
+                  {
+                    id: `saved-${i}`,
+                    name: '平地快走',
+                    type: 'CARDIO',
+                    minutes: 15,
+                    sets: null,
+                    reps: null,
+                    kg: null,
+                    km: null,
+                    note: '按感受调整',
+                    completed: false,
+                  },
+                ],
+        },
+      },
+      'meal-plan': {
+        kind: 'meal-plan',
+        key: 'day',
+        revision: 2,
+        data: {
+          note: '账号中的备餐说明',
+          foods: [
+            {
+              meal: 'BREAKFAST',
+              name: '米饭',
+              quantity: 180,
+              unit: 'g',
+              kcal: null,
+              protein: null,
+              carbs: null,
+              fat: null,
+              note: '熟重',
+            },
+          ],
+        },
+      },
+    },
+  })) as Day[];
+
+describe('saved personal first week', () => {
+  it('reads the saved plan without inventing data or actual completion', () => {
+    const saved = savedWeek();
+    const days = createFirstWeek(saved);
     expect(days).toHaveLength(7);
-    expect(days.map((d) => d.training.rest)).toEqual([
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      true,
-    ]);
-    expect(days[0].training.exercises.map((e) => e.name)).toEqual([
-      '跑步机热身',
-      '动态热身',
-      '腿举 Leg Press',
-      '高位下拉 Lat Pulldown',
-      '坐姿推胸 Chest Press',
-      '坐姿划船 Seated Row',
-      '坐姿腿弯举 Leg Curl',
-      '髋外展 Hip Abduction',
-      '跑步机爬坡',
-      '慢走冷身',
-    ]);
-    expect(
-      days
-        .flatMap((d) => d.training.exercises)
-        .filter((e) => e.type === 'STRENGTH')
-        .every((e) => e.sets === 2),
-    ).toBe(true);
-    expect(days[5].training.exercises.reduce((sum, e) => sum + (e.minutes ?? 0), 0)).toBe(45);
+    expect(days[0].meals).toEqual(saved[0].records['meal-plan']!.data);
+    expect(days[0].training.exercises[0].completed).toBeNull();
+    expect(days[0].training.exercises[0].kg).toBeNull();
+    expect(days[5].training.rest).toBe(true);
     expect(days[6].training.exercises).toEqual([]);
-    expect(days[0].training.exercises[3].kg).toBeNull();
-    expect(days[0].training.exercises[3].note).toContain('10～15kg');
   });
-  it('preserves all four meals with known portions and unknown nutrition', () => {
-    const days = createFirstWeek();
-    for (const day of days) {
-      expect(new Set(day.meals.foods.map((f) => f.meal))).toEqual(
-        new Set(['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK']),
-      );
-      expect(
-        day.meals.foods.every(
-          (f) => f.kcal === null && f.protein === null && f.carbs === null && f.fat === null,
-        ),
-      ).toBe(true);
-    }
-    expect(days[0].meals.foods.find((f) => f.name === '鸡胸肉')?.quantity).toBe(160);
-    expect(days[6].meals.foods.find((f) => f.name === '全麦面包')?.note).toContain('1～2片');
+  it('does not substitute an old template when saved days are missing', () => {
+    expect(createFirstWeek([])).toEqual([]);
+    expect(createFirstWeek(savedWeek().slice(0, 6))).toEqual([]);
+    const missing = savedWeek();
+    delete missing[2].records['meal-plan'];
+    expect(createFirstWeek(missing)).toEqual([]);
   });
-  it('creates independent drafts so edits do not mutate the supplied content', () => {
-    const first = createFirstWeek(),
-      second = createFirstWeek();
-    first[0].training.exercises[2].kg = 25;
-    first[0].meals.foods[0].quantity = 3;
-    expect(second[0].training.exercises[2].kg).toBe(20);
-    expect(second[0].meals.foods[0].quantity).toBe(2);
-    expect(first[0].training.exercises[2].id).not.toBe(second[0].training.exercises[2].id);
+  it('keeps account records and other drafts independent', () => {
+    const saved = savedWeek();
+    const original = JSON.stringify(saved);
+    const first = createFirstWeek(saved),
+      second = createFirstWeek(saved);
+    first[0].meals.foods[0].quantity = 1;
+    first[0].training.exercises[0].minutes = 99;
+    expect(JSON.stringify(saved)).toBe(original);
+    expect(second[0].meals.foods[0].quantity).toBe(180);
+    expect(second[0].training.exercises[0].minutes).toBe(15);
+    expect(first[0].training.exercises[0].id).not.toBe(second[0].training.exercises[0].id);
   });
 });

@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-05",
+  "tests": 25,
+  "allPassed": true,
+  "classes": [
+    {
+      "class": "ReviewedBankMySqlIT",
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "FitnessMigrationMySqlIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "latestRealBrowserManifest": "browser.json",
+  "frontendBuildPassed": true,
+  "frontendRelatedTestsPassed": 45,
+  "fullSuitePassed": false
+}

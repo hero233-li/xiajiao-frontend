@@ -1,0 +1,64 @@
+{
+  "isolatedSyntheticHistory" : true,
+  "toVersion" : 26,
+  "rejectedItemsDeleted" : 224,
+  "explicitScopedCleanupExecuted" : true,
+  "fromVersion" : 11,
+  "tables" : {
+    "app_user" : {
+      "before" : 1,
+      "everyRetainedFieldUnchanged" : true,
+      "after" : 1,
+      "afterExplicitCleanup" : 1
+    },
+    "question" : {
+      "before" : 3671,
+      "everyRetainedFieldUnchanged" : true,
+      "after" : 3448,
+      "afterExplicitCleanup" : 3447
+    },
+    "question_revision" : {
+      "before" : 3671,
+      "everyRetainedFieldUnchanged" : true,
+      "after" : 3448,
+      "afterExplicitCleanup" : 3447
+    },
+    "question_solution" : {
+      "before" : 3671,
+      "everyRetainedFieldUnchanged" : true,
+      "after" : 3448,
+      "afterExplicitCleanup" : 3447
+    },
+    "question_point" : {
+      "before" : 3671,
+      "everyRetainedFieldUnchanged" : true,
+      "after" : 3448,
+      "afterExplicitCleanup" : 3447
+    },
+    "practice_submission" : {
+      "before" : 3,
+      "everyRetainedFieldUnchanged" : true,
+      "after" : 3,
+      "afterExplicitCleanup" : 0
+    },
+    "assessment_pass" : {
+      "before" : 0,
+      "everyRetainedFieldUnchanged" : true,
+      "after" : 0,
+      "afterExplicitCleanup" : 0
+    },
+    "score_record" : {
+      "before" : 0,
+      "everyRetainedFieldUnchanged" : true,
+      "after" : 0,
+      "afterExplicitCleanup" : 0
+    },
+    "score_record_revision" : {
+      "before" : 0,
+      "everyRetainedFieldUnchanged" : true,
+      "after" : 0,
+      "afterExplicitCleanup" : 0
+    }
+  },
+  "rejectedAnswerSnapshotsDeleted" : 3
+}

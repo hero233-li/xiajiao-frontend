@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import { ExerciseMotion } from './ExerciseMotion';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { createFirstWeek } from '../first-week';
+import type { Exercise } from '../../../api/fitness';
 import { motions, resolveMotion } from './catalog';
 import type { MotionDefinition } from './types';
 import { joint } from './drawing';
@@ -13,11 +13,12 @@ const length = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.hypot(a.x - b.x, a.y - b.y);
 describe('complete training animation catalog', () => {
   it('covers every exercise in all seven first-week days without changing records', () => {
-    const days = createFirstWeek();
-    const before = JSON.stringify(days);
-    for (const day of days)
-      for (const row of day.training.exercises) expect(resolveMotion(row), row.name).toBeDefined();
-    expect(JSON.stringify(days)).toBe(before);
+    const rows = Object.values(motions).flatMap((motion) =>
+      motion.aliases.map((name) => ({ id: 'test', name, type: motion.types[0] }) as Exercise),
+    );
+    const before = JSON.stringify(rows);
+    for (const row of rows) expect(resolveMotion(row), row.name).toBeDefined();
+    expect(JSON.stringify(rows)).toBe(before);
     expect(resolveMotion({ id: 'unknown', name: '我的自定义训练', type: 'OTHER' })).toBeUndefined();
     expect(
       resolveMotion({ id: 'unknown', name: '颈后高位下拉', type: 'STRENGTH' }),

@@ -621,8 +621,9 @@ function Result({
         <h2>{result.score} / 100 分</h2>
         <p className={result.passed ? 'status-success' : 'status-error'}>
           {result.passed ? <Check aria-hidden="true" /> : <AlertTriangle aria-hidden="true" />}{' '}
-          {result.passed ? '已通过' : '未通过'} · 通过线 {result.passScore} 分
+          {result.passed ? result.pass ? '已通过' : '本次成绩达标' : '未通过'} · 通过线 {result.passScore} 分
         </p>
+        {result.passed && !result.pass && <p>这是旧版检测记录。题库切换后完成旧答卷会保留成绩，但不会生成新版通过资格。请在考点练习页面查看后端给出的当前资格与阻断原因。</p>}
         <p>
           正确 {result.correctCount} / {result.questionCount} 题 · 用时{' '}
           {Math.max(
@@ -641,9 +642,9 @@ function Result({
             : `先复盘这次的 ${result.questionCount - result.correctCount} 道错题。`}
         </h2>
         <p>
-          {result.passed
+          {result.passed && result.pass
             ? '检测通过状态由系统记录。可以回到课程继续学习，或核对下一项检测资格。'
-            : '先在下方查看错题解析，再回到对应章节练习。完成复习后重新核对检测资格。'}
+            : '先在下方查看作答解析，再回到对应章节练习，核对当前检测资格。'}
         </p>
         <p className="secondary">逐题回顾本次作答与解析，成绩和通过状态以这次检测结果为准。</p>
         <Link className="button button-secondary" to={practice}>

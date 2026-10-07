@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-05",
+  "contentMigration": 25,
+  "tests": 39,
+  "allPassed": true,
+  "classes": [
+    {
+      "class": "ReviewedBankMySqlIT",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "BankUpgradeMySqlIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "PracticeMySqlIT",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "BackendMySqlIT",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "verificationType": "latest targeted class runs, not a repeated complete backend suite",
+  "browserVerifiedAt": "2026-10-05T03:49:46.137Z",
+  "realBrowser": "browser.json",
+  "operatesOnExistingUserDatabase": false,
+  "automaticHistoricalPurge": false,
+  "deletionScope": "explicit single question identity and exact preview digest",
+  "frontendRelatedTests": 45,
+  "frontendBuild": true,
+  "fullSuitePassed": false
+}

@@ -1,0 +1,25 @@
+{
+  "run": "full-backend-regression-before-compatibility-fixes",
+  "date": "2026-10-05",
+  "database": "isolated Testcontainers MySQL 8.4",
+  "tests": 99,
+  "failures": 12,
+  "errors": 0,
+  "skipped": 1,
+  "failureMethods": [
+    "cn.xuexizhitu.BackendMySqlIT.flywayCreatesAllApprovedTablesAndRejectsInvalidRole",
+    "cn.xuexizhitu.FitnessHttpMySqlIT.realBrowserDesktopMobileAndLearningCompatibility",
+    "cn.xuexizhitu.RefactorHttpMySqlIT.realFrontendUsesBackendAndIndependentDatabase",
+    "cn.xuexizhitu.PracticeMySqlIT.publishingNewRevisionPreservesHistoricalAnswersAndReplay",
+    "cn.xuexizhitu.PracticeMySqlIT.realBankHasStableChaptersPointsAndPublicQuestionsNeverContainSolutions",
+    "cn.xuexizhitu.PracticeMySqlIT.marksPersistUseOptimisticVersionsAndNeverAffectOtherUsers",
+    "cn.xuexizhitu.PracticeMySqlIT.rejectsInvalidChoicesInjectedResultsAndForeignHistory",
+    "cn.xuexizhitu.PracticeMySqlIT.originalCreditsDeduplicatePracticeTerminalAssessmentsAndReviewedLegacy",
+    "cn.xuexizhitu.PracticeMySqlIT.exactReplaySurvivesLaterAttemptsAndConflictingKeyIsRejected",
+    "cn.xuexizhitu.PracticeMySqlIT.serverGradesAndLatestWrongFilterChangesAfterCorrectRedo",
+    "cn.xuexizhitu.PracticeMySqlIT.concurrentSameKeyCreatesOneImmutableSubmission",
+    "cn.xuexizhitu.FitnessMigrationMySqlIT.v11PreservesExistingUsersEnrollmentProgressAndExecutedMigrationChecksums"
+  ],
+  "allPassed": false,
+  "note": "Subsequent focused reruns are recorded separately; this initial failed run is retained."
+}

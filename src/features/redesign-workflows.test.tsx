@@ -13,6 +13,24 @@ import { ConfirmationProvider } from '../components/ConfirmationProvider';
 vi.mock('../hooks/useAuth', () => ({
   useAuth: () => ({ user: { username: '验收', role: 'ADMIN' } }),
 }));
+const homeDirectory = {
+  spaces: [
+    {
+      id: 'study',
+      name: '自学',
+      description: '学习',
+      entry: '/study',
+      status: 'AVAILABLE',
+      visible: true,
+      order: 10,
+      icon: 'book',
+      accent: '#345d57',
+    },
+  ],
+  preferences: [
+    { spaceId: 'study', joined: true, favorite: false, hidden: false, position: 10, revision: -1 },
+  ],
+};
 const ok = (data: unknown) => HttpResponse.json({ code: 0, message: '成功', data });
 const emptyNutrition = {
   kcal: { knownTotal: null, complete: false, knownCount: 0, foodCount: 0 },
@@ -59,12 +77,14 @@ function Daily() {
 describe('重构后的核心任务路径', () => {
   it('首页使用后端具体目标，而不是空间首页', async () => {
     server.use(
-      http.get('/api/v1/personal/summary', () =>
+      http.get('/api/v1/personal/spaces', () => ok(homeDirectory)),
+      http.get('/api/v1/personal/study-summary', () =>
         ok({
-          today: day.date,
-          study: {
+          localDate: day.date,
+          selectedPlanId: null,
+          todaySuggestionMessage: '暂无今日安排',
+          continueLearning: {
             title: '集合基础',
-            message: '今天待学习',
             target: {
               courseCode: '00023',
               pane: 'CATALOG',
@@ -72,33 +92,34 @@ describe('重构后的核心任务路径', () => {
               itemId: 'item-real',
             },
           },
-          fitness: { streak: 0 },
-          fitnessToday: { checkedIn: false, rest: false, partial: false },
+          overallProgress: { completedItems: 1, totalItems: 10 },
         }),
       ),
     );
     mount(<Home />);
-    const link = await screen.findByRole('link', { name: '开始这一项' });
+    const link = await screen.findByRole('link', { name: '继续：集合基础' });
     expect(link.getAttribute('href')).toContain('/study/course/00023/catalog');
     expect(link.getAttribute('href')).toContain('itemId=item-real');
   });
   it('首页无安排提供直接配置入口', async () => {
     server.use(
-      http.get('/api/v1/personal/summary', () =>
+      http.get('/api/v1/personal/spaces', () => ok(homeDirectory)),
+      http.get('/api/v1/personal/study-summary', () =>
         ok({
-          today: day.date,
-          study: { title: '今日学习', message: '暂无今日安排', target: null },
-          fitness: { streak: 0 },
-          fitnessToday: { checkedIn: false, rest: false, partial: false },
+          localDate: day.date,
+          selectedPlanId: null,
+          todaySuggestionMessage: '暂无今日安排',
+          continueLearning: null,
+          overallProgress: { completedItems: 0, totalItems: 10 },
         }),
       ),
     );
     mount(<Home />);
-    expect(await screen.findByRole('link', { name: '安排学习' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: '安排下一次学习' })).toHaveAttribute(
       'href',
-      '/study/schedule?create=1',
+      '/study/schedule',
     );
-    expect(screen.queryByRole('link', { name: '开始这一项' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: '继续：集合基础' })).not.toBeInTheDocument();
   });
   it('历史失败时体重仍可保存，携带修订号并读回真实响应', async () => {
     let current = structuredClone(day);
@@ -122,11 +143,11 @@ describe('重构后的核心任务路径', () => {
     mount(<Daily />);
     await screen.findByText('历史暂不可用');
     const user = userEvent.setup();
-    await user.type(await screen.findByLabelText('体重（kg）'), '72.3');
-    await user.click(screen.getByRole('button', { name: '保存体重' }));
+    await user.type(await screen.findByLabelText('体重1（kg）'), '72.3');
+    await user.click(screen.getByRole('button', { name: '保存体重1' }));
     await screen.findByText('72.3 kg · 已记录');
     expect(write).toMatchObject({ expectedRevision: -1, data: { kg: 72.3, note: null } });
-    expect(screen.getByRole('button', { name: '保存体重' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '保存体重1' })).toBeEnabled();
   });
   it('保存冲突保留输入，不覆盖后端值', async () => {
     let writes = 0;
@@ -150,10 +171,10 @@ describe('重构后的核心任务路径', () => {
       />,
     );
     const user = userEvent.setup();
-    await user.type(screen.getByLabelText('体重（kg）'), '72.3');
-    await user.click(screen.getByRole('button', { name: '保存体重' }));
+    await user.type(screen.getByLabelText('体重1（kg）'), '72.3');
+    await user.click(screen.getByRole('button', { name: '保存体重1' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('输入已保留');
-    expect(screen.getByLabelText('体重（kg）')).toHaveValue(72.3);
+    expect(screen.getByLabelText('体重1（kg）')).toHaveValue(72.3);
     expect(writes).toBe(1);
     expect(screen.getByText('70 kg · 已记录')).toBeVisible();
   });
@@ -194,13 +215,13 @@ describe('重构后的核心任务路径', () => {
   });
   it('未保存输入时空间路由被拦截，取消后输入继续保留', async () => {
     const { router } = mount(<QuickRecords day={day} />);
-    await userEvent.type(screen.getByLabelText('体重（kg）'), '71');
+    await userEvent.type(screen.getByLabelText('体重1（kg）'), '71');
     await router.navigate('/study');
     expect(await screen.findByRole('dialog', { name: '有未保存的修改' })).toBeVisible();
     expect(router.state.location.pathname).toBe('/');
     await userEvent.click(screen.getByRole('button', { name: '取消' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(screen.getByLabelText('体重（kg）')).toHaveValue(71);
+    expect(screen.getByLabelText('体重1（kg）')).toHaveValue(71);
   });
   it('训练编辑成功保存后直接返回，不重复触发放弃修改提示', async () => {
     server.use(
