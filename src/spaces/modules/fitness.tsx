@@ -62,9 +62,5 @@ export async function loadSummary(signal?: AbortSignal): Promise<SpaceSummary> {
   };
 }
 export function Summary({ summary }: SummaryViewProps) {
-  return (
-    <p>
-      {summary.metrics?.map((m) => `${m.label} ${m.value}`).join(' · ')} · {summary.message}
-    </p>
-  );
+  return <p>{summary.message}</p>;
 }

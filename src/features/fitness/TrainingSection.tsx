@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { TrainingChecklist, trainingRows } from './TrainingChecklist';
 import { Activity, CheckCircle2, ChevronLeft, ChevronRight, Timer } from 'lucide-react';
 import { shiftDate } from '../../api/fitness';
@@ -10,6 +11,15 @@ import { State, weekday } from './display';
 export function TrainingSection({ workspace }: { workspace: FitnessWorkspace }) {
   const { date, setDate, start, history, setCopy, setDestination, setTemplateName, data, action } =
     workspace;
+  const weekStrip = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const strip = weekStrip.current;
+    const selected = strip?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!strip || !selected || strip.scrollWidth <= strip.clientWidth) return;
+    strip.scrollTo({
+      left: selected.offsetLeft - strip.offsetLeft - (strip.clientWidth - selected.offsetWidth) / 2,
+    });
+  }, [date, history.data]);
   if (!data) return null;
   const rows = trainingRows(data);
   const completed = rows.filter((row) =>
@@ -19,8 +29,9 @@ export function TrainingSection({ workspace }: { workspace: FitnessWorkspace }) 
   ).length;
   const timedMinutes = rows.reduce((sum, row) => sum + (row.minutes ?? 0), 0);
   const strengthCount = rows.filter((row) => row.type === 'STRENGTH').length;
-  const note = data.records.training?.data?.note ?? data.records['training-plan']?.data?.note ?? '';
+  const note = data.records['training-plan']?.data?.note ?? '';
   const [guidance, logs = ''] = note.split('每日记录：');
+  const actualNote = data.records.training?.data?.note;
   const [dailyGuidance, references = ''] = guidance.split('依据：');
   const [recordGuidance, recordReferences = ''] = logs.split('依据：');
   return (
@@ -34,15 +45,15 @@ export function TrainingSection({ workspace }: { workspace: FitnessWorkspace }) 
           <ChevronLeft size={16} />
           上一周
         </Button>
-        <strong>
-          {start} — {shiftDate(start, 6)}
+        <strong aria-label={`${start} 至 ${shiftDate(start, 6)}`}>
+          {start.slice(5)} — {shiftDate(start, 6).slice(5)}
         </strong>
         <Button variant="ghost" onClick={() => setDate(shiftDate(date, 7))}>
           下一周
           <ChevronRight size={16} />
         </Button>
       </div>
-      <div className="week-plan training-week">
+      <div ref={weekStrip} className="week-plan training-week" aria-label="本周训练安排">
         {history.data?.map((d) => (
           <button
             className={d.date === date ? 'selected' : ''}
@@ -109,6 +120,17 @@ export function TrainingSection({ workspace }: { workspace: FitnessWorkspace }) 
           </span>
         </div>
       </div>
+      <div className="training-record-command">
+        <div>
+          <strong>实际训练记录</strong>
+          <p>
+            {data.records.training?.data
+              ? `记录状态：${trainingNames[data.records.training.data.status] ?? data.records.training.data.status}`
+              : '尚未记录；计划中的动作不会自动标记完成。'}
+          </p>
+        </div>
+        {action('training', '记录实际训练')}
+      </div>
       <div className="training-workspace training-dashboard">
         <section className="planning-column">
           <div className="section-title">
@@ -116,9 +138,9 @@ export function TrainingSection({ workspace }: { workspace: FitnessWorkspace }) 
               <span className="training-eyebrow">
                 {weekday(date)} · {date}
               </span>
-              <h2>今日训练</h2>
+              <h2>当天动作</h2>
             </div>
-            {action('training-plan', '编辑训练')}
+            {action('training-plan', '编辑训练安排')}
           </div>
           {data.rest && !rows.length ? (
             <p className="inline-empty">今天安排休息，可以照常打卡。</p>
@@ -163,6 +185,7 @@ export function TrainingSection({ workspace }: { workspace: FitnessWorkspace }) 
           )}
         </section>
         <aside className="training-guidance" aria-label="训练说明">
+          <p className="eyebrow">训练安排</p>
           <h3>当天安排与恢复</h3>
           {dailyGuidance ? (
             dailyGuidance
@@ -171,6 +194,12 @@ export function TrainingSection({ workspace }: { workspace: FitnessWorkspace }) 
               .map((line, i) => <p key={i}>{line}</p>)
           ) : (
             <p>按当天状态选择训练量，并记录实际感受。</p>
+          )}
+          {actualNote && (
+            <div className="actual-training-note">
+              <h4>实际感受</h4>
+              <p>{actualNote}</p>
+            </div>
           )}
           {recordGuidance && (
             <details>

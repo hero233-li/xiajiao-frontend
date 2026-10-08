@@ -162,7 +162,7 @@ describe('今日学习工作台', () => {
     expect(shelf[0]).toHaveTextContent('测试理论课程');
     expect(shelf[0]).toHaveTextContent('8 / 20');
     expect(shelf[2]).toHaveAttribute('href', '/study/course/00002/manual');
-    expect(document.title).toBe('今日学习 · 知途个人管理平台');
+    expect(document.title).toBe('今日学习 · 知途个人成长平台');
   });
   it('建议采用后端结构化目标，保留前导零与题目定位', async () => {
     mount();

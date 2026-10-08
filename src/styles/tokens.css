@@ -1,25 +1,26 @@
 @import 'tailwindcss';
 @theme {
-  --color-primary: #245bdd;
-  --color-primary-hover: #1744b2;
-  --color-primary-pressed: #133a97;
-  --color-primary-soft: #edf2ff;
+  --color-primary: #354bd4;
+  --color-primary-hover: #283ba8;
+  --color-primary-pressed: #21328e;
+  --color-primary-soft: #eef1ff;
   --color-success: #276346;
   --color-success-soft: #eef5ee;
   --color-danger: #aa3b32;
   --color-danger-soft: #fff0ed;
   --color-warning: #875818;
   --color-warning-soft: #fff6e5;
-  --color-canvas: #f4f5f7;
+  --color-canvas: #f5f7fb;
   --color-surface: #ffffff;
-  --color-ink: #18243b;
-  --color-secondary: #526076;
-  --color-line: #ced5e0;
+  --color-ink: #20293c;
+  --color-secondary: #536176;
+  --color-line: #dfe4ee;
   --color-disabled: #efeee9;
   --color-disabled-ink: #73786f;
   --color-on-primary: #fff;
-  --font-sans: 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
-  --font-reading: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif;
+  --font-sans:
+    Inter, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-reading: var(--font-sans);
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
@@ -27,8 +28,17 @@
   --text-xl: 1.375rem;
   --text-2xl: 1.875rem;
   --spacing: 0.25rem;
-  --radius-normal: 0.3rem;
-  --radius-raised: 0.5rem;
+  --radius-normal: 0.5rem;
+  --radius-raised: 1rem;
   --shadow-normal: none;
   --shadow-raised: 0 12px 40px #23362a14;
+}
+
+:root {
+  --space-accent: var(--color-primary);
+  --platform-border: var(--color-line);
+  --platform-muted: var(--color-secondary);
+  --platform-canvas: var(--color-canvas);
+  --platform-ink: var(--color-ink);
+  --page-width: 1200px;
 }

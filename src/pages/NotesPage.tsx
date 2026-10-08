@@ -92,7 +92,7 @@ export function Component() {
       <header className="page-heading">
         <div>
           <p className="eyebrow">学习笔记</p>
-          <h1>{code ? '课程笔记' : '把理解留在这里。'}</h1>
+          <h1>{code ? '课程笔记' : '学习笔记'}</h1>
           <p className="secondary">记录易错点、思路与复习提示，随时回到相关课程。</p>
         </div>
         <Button disabled={!courses.data?.length || !ready} onClick={() => setEditor('new')}>

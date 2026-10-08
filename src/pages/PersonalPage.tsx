@@ -17,8 +17,8 @@ export function Component() {
       <div className="page-heading">
         <div>
           <p className="eyebrow">{date}</p>
-          <h1>今天，接着向前</h1>
-          <p className="secondary">{user?.username}，从一项具体行动开始。</p>
+          <h1>继续今天的成长</h1>
+          <p className="secondary">{user?.username}，查看今天的安排，接着完成下一步。</p>
         </div>
         <Link className="button button-secondary" to="/spaces">
           选择空间

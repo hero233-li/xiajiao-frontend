@@ -9,7 +9,6 @@ import { ContentEditor } from '../features/admin/ContentEditor';
 import { Rubrics } from '../features/admin/Rubrics';
 import { Operations } from '../features/admin/Operations';
 import { Button } from '../components/Button';
-import { Modal } from '../components/Modal';
 import '../features/admin/admin.css';
 const modes = [
   ['bank', '题库重建与审查'],
@@ -58,7 +57,8 @@ export function Component() {
     queryFn: () => courseDirectory(),
   });
   const courseId = search.get('courseId') ?? courses.data?.[0]?.id ?? '';
-  const course = courses.data?.find((c) => c.id === courseId) ?? directory.data?.find((c) => c.id === courseId);
+  const course =
+    courses.data?.find((c) => c.id === courseId) ?? directory.data?.find((c) => c.id === courseId);
   const releases = useQuery({
     queryKey: ['admin-releases', courseId],
     enabled: !!courseId && mode === 'content',
@@ -106,7 +106,7 @@ export function Component() {
       <header className="admin-heading">
         <div>
           <p className="eyebrow">管理工作台</p>
-          <h1>管理员工作台</h1>
+          <h1>{modes.find(([key]) => key === mode)?.[1] ?? '管理员工作台'}</h1>
           <p>维护课程与资料，完成内容校验，再启用新版本。</p>
         </div>
         <Link className="button button-secondary" to="/study">
@@ -148,7 +148,8 @@ export function Component() {
             >
               {courseId && !courses.data?.some((c) => c.id === courseId) && (
                 <option value={courseId}>
-                  {course ? `${course.code} · ${course.name}` : '当前链接指定的课程'}（不在当前周期课程列表）
+                  {course ? `${course.code} · ${course.name}` : '当前链接指定的课程'}
+                  （不在当前周期课程列表）
                 </option>
               )}
               {courses.data?.map((c) => (

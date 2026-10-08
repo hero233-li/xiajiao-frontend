@@ -24,6 +24,7 @@ export default function ManualReader({ courseId }: { courseId: string }) {
   const navigate = useNavigate();
   const navigationType = useNavigationType();
   const [search, setSearch] = useState('');
+  const [outlineOpen, setOutlineOpen] = useState(false);
   const [active, setActive] = useState('');
   const [pendingItem, setPendingItem] = useState('');
   const [saved, setSaved] = useState('');
@@ -154,6 +155,7 @@ export default function ManualReader({ courseId }: { courseId: string }) {
       <section className="card state" role="alert" data-state="error">
         <AlertCircle aria-hidden="true" />
         <p>实践手册加载失败，请重试。</p>
+        <p className="secondary">{query.error.message}</p>
         <Button loading={query.isFetching} onClick={() => void query.refetch()}>
           重新加载手册
         </Button>
@@ -174,9 +176,18 @@ export default function ManualReader({ courseId }: { courseId: string }) {
       </section>
     );
   return (
-    <div className="manual-layout">
-      <details className="manual-directory">
-        <summary>章节目录与全文搜索</summary>
+    <div className="manual-layout" data-outline-open={outlineOpen}>
+      <Button
+        className="manual-outline-toggle"
+        variant="secondary"
+        aria-expanded={outlineOpen}
+        aria-controls="manual-directory"
+        onClick={() => setOutlineOpen(!outlineOpen)}
+      >
+        章节目录与全文搜索
+      </Button>
+      <aside id="manual-directory" className="manual-directory">
+        <h2>章节目录与全文搜索</h2>
         <nav className="manual-toc" aria-label="手册目录">
           <h2>手册目录</h2>
           <section className="manual-search" aria-label="手册内搜索">
@@ -235,7 +246,7 @@ export default function ManualReader({ courseId }: { courseId: string }) {
             </a>
           ))}
         </nav>
-      </details>
+      </aside>
       <div className="manual-main">
         <label className="manual-mobile-toc">
           手册目录

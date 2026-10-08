@@ -640,7 +640,7 @@ export function KnowledgePage() {
   const cycleId = search.get('cycleId') || '';
   const course = useKnowledgeCourse(code, cycleId);
   useEffect(() => {
-    document.title = '知识索引 · 知途个人管理平台';
+    document.title = '知识索引 · 知途个人成长平台';
   }, [course.data?.name]);
   return (
     <div className="kh-page">

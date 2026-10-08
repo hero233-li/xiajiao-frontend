@@ -62,7 +62,7 @@ textarea {
   max-width: 100%;
   padding: 12px;
   border: 1px solid var(--color-line);
-  border-radius: 4px;
+  border-radius: var(--radius-normal);
   background: var(--color-surface);
   color: var(--color-ink);
   line-height: 1.7;
@@ -102,10 +102,10 @@ select {
   gap: 8px;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
+  min-height: 44px;
   padding: 8px 16px;
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-normal);
   font-weight: 600;
   font-size: 14px;
   line-height: 1.6;
@@ -160,7 +160,7 @@ select {
 .card {
   background: var(--color-surface);
   border: 1px solid var(--color-line);
-  border-radius: 4px;
+  border-radius: var(--radius-raised);
   padding: 24px;
   min-width: 0;
 }
@@ -199,10 +199,10 @@ select {
   color: var(--color-ink);
   background: var(--color-surface);
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   padding: 8px 12px;
   border: 1px solid var(--color-line);
-  border-radius: 4px;
+  border-radius: var(--radius-normal);
 }
 input:disabled {
   background: var(--color-disabled);
@@ -218,7 +218,7 @@ input[type='radio'] {
 }
 fieldset {
   border: 1px solid var(--color-line);
-  border-radius: 4px;
+  border-radius: var(--radius-normal);
 }
 table {
   border-collapse: collapse;
@@ -236,10 +236,10 @@ th {
   font-weight: 600;
 }
 .progress-track {
-  height: 4px;
-  background: #e3e7df;
+  height: 6px;
+  background: #e3e7f1;
   overflow: hidden;
-  border-radius: 1px;
+  border-radius: 6px;
 }
 .progress-fill {
   height: 100%;
@@ -332,7 +332,7 @@ th {
 .skeleton {
   width: 100%;
   min-height: 16px;
-  background: #e5e9df;
+  background: var(--color-line);
   animation: pulse 1.5s infinite;
 }
 .skeleton-block {
@@ -389,7 +389,7 @@ th {
   height: 28px;
   display: grid;
   place-items: center;
-  background: #eceee7;
+  background: var(--color-primary-soft);
   color: var(--color-primary);
   border-radius: 50%;
   font-weight: 700;
@@ -470,8 +470,8 @@ th {
 }
 .next-study {
   padding: 28px 32px;
-  background: #e9eee5;
-  border: 1px solid #d1dbc9;
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-line);
   border-left: 3px solid var(--color-primary);
   margin-bottom: 32px;
 }
@@ -526,7 +526,7 @@ th {
   place-items: center;
   width: 18px;
   height: 18px;
-  border: 1px solid #89978a;
+  border: 1px solid var(--color-secondary);
   border-radius: 3px;
 }
 .task-ledger li[data-done='true'] .task-check {
@@ -566,7 +566,7 @@ th {
 }
 .book-number {
   font-family: Georgia, serif;
-  color: #8d9c8c;
+  color: var(--color-secondary);
   font-size: 20px;
 }
 .book-entry > span:nth-child(2) {
@@ -602,7 +602,7 @@ th {
 }
 .exam-agenda svg {
   margin-top: 4px;
-  color: #8a9386;
+  color: var(--color-secondary);
 }
 .exam-agenda div {
   flex: 1;
@@ -702,16 +702,16 @@ th {
   height: 64px;
   display: grid;
   place-items: center;
-  background: #e5eade;
+  background: var(--color-primary-soft);
   color: var(--color-primary);
   font:
     24px Georgia,
     serif;
-  border-left: 3px solid #6d8065;
+  border-left: 3px solid var(--color-primary);
 }
 .shelf-course:nth-child(even) .shelf-index {
-  background: #ebe6da;
-  border-color: #a99574;
+  background: var(--color-warning-soft);
+  border-color: var(--color-warning);
 }
 .shelf-course h2 {
   margin-bottom: 4px;
@@ -901,14 +901,14 @@ th {
   margin: 16px 0;
 }
 .desk-state > svg {
-  color: #829078;
+  color: var(--color-secondary);
 }
 .desk-state p {
   font-size: 15px;
   margin-bottom: 14px;
 }
 .desk-state-error {
-  border-color: #c99c91;
+  border-color: var(--color-danger);
   background: var(--color-danger-soft);
 }
 .desk-state-error > svg {

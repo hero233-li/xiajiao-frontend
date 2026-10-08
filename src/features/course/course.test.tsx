@@ -34,9 +34,12 @@ it('课程框架保留五位代码，标签支持前进后退', async () => {
   expect(within(tabs).getAllByRole('link')).toHaveLength(5);
   await userEvent.click(within(tabs).getByRole('link', { name: '真题与成绩' }));
   await waitFor(() => expect(router.state.location.pathname).toBe('/study/course/00023/exams'));
-  expect(within(tabs).getByRole('link', { name: '真题与成绩' })).toHaveAttribute(
-    'aria-current',
-    'page',
+  await waitFor(() =>
+    expect(
+      within(screen.getByRole('navigation', { name: '课程页面' })).getByRole('link', {
+        name: '真题与成绩',
+      }),
+    ).toHaveAttribute('aria-current', 'page'),
   );
   await act(() => router.navigate(-1));
   await waitFor(() =>

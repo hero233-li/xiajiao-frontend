@@ -8,7 +8,7 @@ import { server } from '../../mocks/server';
 it('登录标题正确，空字段提示具体且聚焦第一个无效字段', async () => {
   renderRoute('/login');
   await screen.findByRole('heading', { name: '欢迎回来' });
-  expect(document.title).toBe('登录 · 知途个人管理平台');
+  expect(document.title).toBe('登录 · 知途个人成长平台');
   const username = screen.getByLabelText('用户名或邮箱');
   const password = screen.getByLabelText('密码');
   await userEvent.click(screen.getByRole('button', { name: '登录' }));

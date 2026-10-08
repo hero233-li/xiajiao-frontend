@@ -1,2 +1,485 @@
-.bank-layout{display:grid;gap:1.25rem;max-width:1100px;margin:auto}.bank-layout select,.bank-answer textarea{display:block;width:100%;padding:.7rem;border:1px solid var(--border,#ccd4da);border-radius:8px;background:var(--surface,#fff);color:inherit;margin-top:.5rem}.bank-levels{display:flex;flex-wrap:wrap;gap:.7rem}.bank-point-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.7rem}.bank-point{display:grid;gap:.4rem;text-align:left;padding:1rem;border:1px solid var(--border,#ccd4da);border-radius:12px;background:var(--surface,#fff);color:inherit;cursor:pointer}.bank-point[aria-pressed=true]{border:2px solid var(--accent,#116d59)}.bank-point span{font-size:.9rem}.bank-practice{display:grid;gap:1rem}.bank-options{display:grid;gap:.7rem;border:0;padding:0}.bank-options label{display:flex;align-items:flex-start;gap:.7rem;padding:.7rem;border:1px solid var(--border,#ccd4da);border-radius:8px}.bank-options input{margin-top:.3rem}.bank-answer{display:grid;gap:.5rem}.bank-answer textarea{font-family:inherit;resize:vertical}.bank-admin{display:grid;gap:1rem}.bank-admin textarea{width:100%;min-height:100px;font:inherit;padding:.7rem}.bank-admin pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:450px;overflow:auto}.bank-admin table{width:100%;border-collapse:collapse}.bank-admin td,.bank-admin th{padding:.5rem;text-align:left;border-bottom:1px solid var(--border,#ccd4da)}.bank-review{border:1px solid var(--border,#ccd4da);padding:1rem;border-radius:10px}.bank-status{padding:.7rem;border-radius:8px;background:var(--surface-muted,#f3f6f5)}
-.bank-review > .math-text,.bank-practice > .math-text{display:block;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}
+.bank-layout {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 1100px;
+  margin: auto;
+}
+.bank-layout select,
+.bank-answer textarea {
+  display: block;
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: inherit;
+  margin-top: 0.5rem;
+}
+.bank-levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+.bank-point-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.7rem;
+}
+.bank-point {
+  display: grid;
+  gap: 0.4rem;
+  text-align: left;
+  padding: 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: inherit;
+  cursor: pointer;
+}
+.bank-point[aria-pressed='true'] {
+  border: 2px solid var(--color-primary);
+}
+.bank-point span {
+  font-size: 0.9rem;
+}
+.bank-practice {
+  display: grid;
+  gap: 1rem;
+}
+.bank-options {
+  display: grid;
+  gap: 0.7rem;
+  border: 0;
+  padding: 0;
+}
+.bank-options label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.7rem;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+}
+.bank-options input {
+  margin-top: 0.3rem;
+}
+.bank-answer {
+  display: grid;
+  gap: 0.5rem;
+}
+.bank-answer textarea {
+  font-family: inherit;
+  resize: vertical;
+}
+.bank-admin {
+  display: grid;
+  gap: 1rem;
+}
+.bank-admin textarea {
+  width: 100%;
+  min-height: 100px;
+  font: inherit;
+  padding: 0.7rem;
+}
+.bank-admin pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 450px;
+  overflow: auto;
+}
+.bank-admin table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.bank-admin td,
+.bank-admin th {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-line);
+}
+.bank-review {
+  border: 1px solid var(--color-line);
+  padding: 1rem;
+  border-radius: 10px;
+}
+.bank-status {
+  padding: 0.7rem;
+  border-radius: 8px;
+  background: var(--color-primary-soft);
+}
+.bank-review > .math-text,
+.bank-practice > .math-text {
+  display: block;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+}
+
+.bank-focus {
+  max-width: 800px;
+  margin: 0 auto;
+  min-width: 0;
+}
+.bank-focus-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--color-secondary);
+}
+.bank-focus .bank-practice {
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  padding: 32px;
+  background: var(--color-surface);
+}
+.bank-options label {
+  min-height: 52px;
+  cursor: pointer;
+}
+.bank-options label:has(input:checked) {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+.bank-answer textarea {
+  font-size: 16px;
+  line-height: 1.8;
+}
+.bank-start {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.bank-start h3 {
+  font-size: 18px;
+}
+.bank-point[aria-pressed='true'] {
+  background: var(--color-primary-soft);
+}
+.bank-layout .card {
+  border-radius: 16px;
+}
+@media (max-width: 600px) {
+  .bank-focus-heading,
+  .bank-start {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .bank-focus .bank-practice {
+    padding: 20px 16px;
+  }
+  .bank-point-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Focused batch: progress, question, answer and actions have separate roles. */
+.bank-practice > div {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.batch-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+.batch-kicker {
+  font-size: 14px;
+  color: var(--color-secondary);
+  margin: 0 0 8px;
+}
+.batch-heading h2 {
+  font-size: 22px;
+  line-height: 1.5;
+  margin: 0;
+}
+.batch-state {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.batch-progress {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.batch-progress p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-secondary);
+  white-space: nowrap;
+}
+.batch-progress progress {
+  flex: 1;
+  min-width: 60px;
+  height: 6px;
+  border: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  accent-color: var(--color-primary);
+}
+.batch-progress progress::-webkit-progress-bar {
+  background: var(--color-line);
+}
+.batch-progress progress::-webkit-progress-value {
+  background: var(--color-primary);
+}
+.batch-question-nav {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 8px;
+}
+.batch-question-nav .button {
+  width: 100%;
+  padding: 8px 4px;
+  min-height: 44px;
+}
+.batch-question-nav .question-answered:not([aria-current]) {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+.batch-question {
+  border-top: 1px solid var(--color-line);
+  padding-top: 24px;
+  min-width: 0;
+}
+.batch-question-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  color: var(--color-secondary);
+  font-size: 14px;
+}
+.batch-question-meta h3 {
+  font-size: 16px;
+  color: var(--color-ink);
+  margin: 0;
+}
+.batch-response {
+  min-width: 0;
+}
+.batch-response .bank-answer {
+  font-size: 16px;
+  font-weight: 600;
+  gap: 10px;
+}
+.batch-response .bank-answer textarea {
+  margin: 0;
+  padding: 16px;
+  min-height: 200px;
+  font-weight: 400;
+  background: var(--color-canvas);
+}
+.batch-response .bank-answer small {
+  font-size: 14px;
+  color: var(--color-secondary);
+  font-weight: 400;
+}
+.bank-practice[data-question-type='CODE'] textarea {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.bank-images {
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 14px;
+}
+.bank-images summary {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 24px;
+  cursor: pointer;
+}
+.bank-images summary span {
+  margin-left: auto;
+  color: var(--color-secondary);
+}
+.bank-images p {
+  color: var(--color-secondary);
+  margin: 12px 0;
+}
+.bank-images input {
+  margin-top: 8px;
+  min-height: 44px;
+}
+.batch-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-line);
+}
+.batch-save,
+.batch-submit {
+  display: grid;
+  gap: 8px;
+}
+.batch-save > span,
+.batch-submit > span {
+  color: var(--color-secondary);
+  font-size: 14px;
+}
+.batch-submit {
+  text-align: right;
+}
+.batch-error {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 14px;
+}
+.bank-start > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 24px;
+}
+.bank-start > div > div {
+  min-width: 0;
+}
+.desk-focus:has(.bank-focus) > .focus-note-action {
+  max-width: 800px;
+  margin: 0 auto 16px;
+}
+@media (max-width: 600px) {
+  .bank-practice > div {
+    gap: 20px;
+  }
+  .batch-heading h2 {
+    font-size: 20px;
+  }
+  .batch-heading {
+    gap: 12px;
+  }
+  .batch-progress progress {
+    flex: none;
+    width: 100%;
+  }
+  .batch-progress {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .batch-question-nav {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .question-stem-body {
+    font-size: 17px;
+  }
+  .batch-response .bank-answer textarea {
+    min-height: 180px;
+  }
+  .batch-actions {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 12px;
+  }
+  .batch-save,
+  .batch-submit {
+    width: 100%;
+    text-align: left;
+  }
+  .batch-actions .button {
+    width: 100%;
+  }
+  .bank-images summary {
+    flex-wrap: wrap;
+  }
+  .bank-images summary span {
+    margin-left: 0;
+  }
+  .bank-start > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+.question-stem {
+  min-width: 0;
+}
+.question-stem-body {
+  font-size: 18px;
+  line-height: 2;
+  color: var(--color-ink);
+  display: grid;
+  gap: 12px;
+  letter-spacing: 0.015em;
+}
+.question-stem-paragraph {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.question-expression {
+  font-family: 'Cambria Math', 'STIX Two Math', Georgia, serif;
+  font-size: 1.13em;
+  letter-spacing: 0;
+  margin-inline: 0.15em;
+}
+.question-requirement {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-primary-soft);
+  font-size: 14px;
+  line-height: 1.8;
+  border-radius: 0 8px 8px 0;
+}
+.question-requirement strong {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+.question-stem pre {
+  white-space: pre;
+  overflow: auto;
+  padding: 16px;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: 1.7;
+}
+.question-stem code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.question-stem .katex-display {
+  margin: 12px 0;
+  text-align: left;
+  max-width: 100%;
+  padding: 12px 8px;
+}
+@media (max-width: 600px) {
+  .question-stem-body {
+    font-size: 17px;
+    line-height: 1.95;
+  }
+  .question-requirement {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 12px 14px;
+  }
+}
+.question-expression {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}

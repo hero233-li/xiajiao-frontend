@@ -1,6 +1,7 @@
+import { FilePenLine, CheckCircle2, Circle, Save, ShieldCheck, Send } from 'lucide-react';
 import { useConfirmation } from '../../components/ConfirmationProvider';
 import { useEffect, useRef, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '../cycle/navigation';
 import { Button } from '../../components/Button';
 import { Modal } from '../../components/Modal';
@@ -36,13 +37,12 @@ export function ContentEditor({
   const confirmAction = useConfirmation();
   const form = useRef<HTMLFormElement>(null);
   const base = `/admin/courses/${courseId}/releases/${release.id}`;
-  const query = useQuery({
-    queryKey: ['admin-content', release.id],
-    queryFn: async () =>
-      Object.fromEntries(
-        await Promise.all(sectionKeys.map(async (k) => [k, await request<Row>(`${base}/${k}`)])),
-      ),
-    refetchOnWindowFocus: false,
+  const sections = useQueries({
+    queries: sectionKeys.map((key) => ({
+      queryKey: ['admin-content', release.id, key],
+      queryFn: () => request<Row>(`${base}/${key}`),
+      refetchOnWindowFocus: false,
+    })),
   });
   const files = useQuery({
     queryKey: ['admin-files'],
@@ -64,7 +64,13 @@ export function ContentEditor({
     setDirty(dirty);
     return () => setDirty(false);
   }, [dirty, setDirty]);
-  const data = { ...query.data, ...edits };
+  const data = {
+    ...Object.fromEntries(
+      sections.flatMap((result, index) => (result.data ? [[sectionKeys[index], result.data]] : [])),
+    ),
+    ...edits,
+  };
+  const currentSection = sections[sectionKeys.indexOf(section)];
   function change(value: Row) {
     if (!editable) return;
     setUndo((prev) => [...prev.slice(-19), structuredClone(edits)]);
@@ -90,10 +96,7 @@ export function ContentEditor({
       nextRevision = list.find((r) => r.id === release.id)!.draftRevision ?? nextRevision + 1;
       setRevision(nextRevision);
       const saved = await request<Row>(`${base}/${key}`);
-      client.setQueryData<Record<string, Row>>(['admin-content', release.id], (old) => ({
-        ...old,
-        [key]: saved,
-      }));
+      client.setQueryData(['admin-content', release.id, key], saved);
       setEdits((old) => {
         const copy = { ...old };
         delete copy[key];
@@ -145,25 +148,32 @@ export function ContentEditor({
     }
     Object.values(v).forEach(collect);
   }
-  if (query.data) {
+  if (Object.keys(data).length) {
     collect(data.catalog);
     collect(data.knowledge);
     collect(data['task-templates']);
   }
-  if (query.isPending) return <p role="status">正在读取完整版本内容…</p>;
-  if (query.isError)
-    return (
-      <div role="alert">
-        {message(query.error)}
-        <Button onClick={() => void query.refetch()}>重新读取内容</Button>
-      </div>
-    );
   return (
-    <section className="admin-editor">
+    <section className="admin-editor" data-dirty={dirty}>
+      <ol className="publication-steps" aria-label="内容发布流程">
+        <li aria-current={editable && dirty ? 'step' : undefined}>
+          <FilePenLine size={18} />
+          编辑草稿
+        </li>
+        <li aria-current={editable && !dirty && !validation?.valid ? 'step' : undefined}>
+          <ShieldCheck size={18} />
+          保存与校验
+        </li>
+        <li aria-current={!editable || validation?.valid ? 'step' : undefined}>
+          <Send size={18} />
+          {editable ? '确认发布' : '已发布'}
+        </li>
+      </ol>
       <div className="version-command">
         <div>
           <strong>
-            版本 {release.versionNo} · {editable ? '草稿' : '已发布 · 只读'}
+            {dirty ? <Circle size={16} /> : <CheckCircle2 size={18} />}版本 {release.versionNo} ·{' '}
+            {editable ? '草稿' : '已发布 · 只读'}
           </strong>
           <small>
             {editable
@@ -186,6 +196,7 @@ export function ContentEditor({
                 }, '保存')
               }
             >
+              <Save size={16} />
               保存修改
             </Button>
             <Button
@@ -194,6 +205,7 @@ export function ContentEditor({
               disabled={!!busy}
               onClick={() => void run(check, '校验')}
             >
+              <ShieldCheck size={16} />
               保存并校验
             </Button>
             <Button
@@ -222,7 +234,7 @@ export function ContentEditor({
                   await onChanged();
                   const list = await all<ContentRelease>(`/admin/courses/${courseId}/releases`);
                   setRevision(list.find((r) => r.id === release.id)?.draftRevision ?? revision);
-                  await query.refetch();
+                  await Promise.all(sections.map((result) => result.refetch()));
                   setValidation(undefined);
                 }, '重新读取');
             }}
@@ -267,15 +279,16 @@ export function ContentEditor({
         <aside className="content-index">
           <h3>版本内容</h3>
           <nav className="admin-section-nav" aria-label="版本编辑分区">
-            {sectionKeys.map((k) => (
+            {sectionKeys.map((k, index) => (
               <button
                 type="button"
                 key={k}
                 aria-current={section === k ? 'page' : undefined}
                 onClick={() => setSection(k)}
               >
+                <span className="content-section-number">{String(index + 1).padStart(2, '0')}</span>
                 {titles[k]}
-                {edits[k] ? ' · 未保存' : ''}
+                {edits[k] ? ' · 未保存' : sections[index].isError ? ' · 读取失败' : ''}
               </button>
             ))}
           </nav>
@@ -298,6 +311,14 @@ export function ContentEditor({
               撤销上一步修改
             </Button>
           )}
+          {files.isError && (
+            <p role="alert">
+              文件清单读取失败；已有关联保持不变。
+              <Button variant="ghost" onClick={() => void files.refetch()}>
+                重试文件清单
+              </Button>
+            </p>
+          )}
           <form
             ref={form}
             onSubmit={(e) => {
@@ -311,7 +332,28 @@ export function ContentEditor({
             }}
           >
             <fieldset className="admin-fields" disabled={!!busy}>
-              {section === 'task-templates' ? (
+              {!data[section] ? (
+                <div
+                  className="content-region-state"
+                  role={currentSection.isError ? 'alert' : 'status'}
+                >
+                  <p>
+                    {currentSection.isError
+                      ? `${titles[section]}读取失败：${message(currentSection.error)}`
+                      : `正在读取${titles[section]}…`}
+                  </p>
+                  {currentSection.isError && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => void currentSection.refetch()}
+                    >
+                      重试当前分区
+                    </Button>
+                  )}
+                  <p>其他分区可继续查看；未保存输入会保留。</p>
+                </div>
+              ) : section === 'task-templates' ? (
                 <fieldset disabled={!editable}>
                   <TemplateEditor
                     templates={(data[section].templates ?? []) as unknown as TaskTemplate[]}

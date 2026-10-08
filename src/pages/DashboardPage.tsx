@@ -92,7 +92,7 @@ export function DashboardPage() {
   );
   const plan = usePlan(query.data?.selectedPlanId ?? '');
   useEffect(() => {
-    document.title = '今日学习 · 知途个人管理平台';
+    document.title = '今日学习 · 知途个人成长平台';
   }, []);
   const data = query.data;
   const target =

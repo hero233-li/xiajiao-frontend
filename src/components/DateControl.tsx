@@ -13,7 +13,7 @@ export function DateControl({
 }) {
   return (
     <label className="date-control">
-      {label}
+      <span>{label}</span>
       <input
         type="date"
         required

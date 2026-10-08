@@ -55,7 +55,9 @@ it('登录后回到稳定章节ID深链接', async () => {
   const { router } = renderRoute(path);
   await screen.findByRole('heading', { name: '欢迎回来' });
   await userEvent.click(screen.getByRole('button', { name: '使用演示账号' }));
-  await screen.findByRole('heading', { name: '函数与极限' });
+  await screen.findByRole('link', { name: '← 返回考点与进度' });
+  expect(screen.getByText(/函数与极限 · simple/)).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: '当前练习尚未开放' })).toBeInTheDocument();
   expect(
     router.state.location.pathname + router.state.location.search + router.state.location.hash,
   ).toBe(path);
@@ -73,7 +75,7 @@ it('普通用户无法访问管理入口', async () => {
 it('管理员可以访问真实管理工作台', async () => {
   await startDemoSession();
   renderRoute('/admin/content');
-  expect(await screen.findByRole('heading', { name: '管理员工作台' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: '内容发布' })).toBeInTheDocument();
 });
 it('刷新失败后跳转登录并保留原地址', async () => {
   await startDemoSession();

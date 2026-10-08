@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ChevronDown,
+  BookOpen,
+  Menu,
   House,
   Layers,
   CalendarCheck,
@@ -58,8 +60,7 @@ export function PlatformLayout() {
   useEffect(() => {
     document.documentElement.dataset.space = current?.id ?? (admin ? 'admin' : 'platform');
     document.documentElement.dataset.compact = String(profile?.compact ?? false);
-    document.documentElement.style.setProperty('--space-accent', current?.accent ?? '#345d57');
-  }, [current?.id, current?.accent, admin, profile?.compact]);
+  }, [current?.id, admin, profile?.compact]);
   useEffect(() => {
     document.title = `${title}${currentName ? ` · ${currentName}` : ''} · 知途`;
     setMore(false);
@@ -112,8 +113,10 @@ export function PlatformLayout() {
       </a>
       <header className="global-bar">
         <Link to="/" className="brand-mark">
-          <span>途</span>
-          <strong>知途</strong>
+          <BookOpen size={26} strokeWidth={1.8} />
+          <strong>
+            知途<span className="brand-descriptor">个人成长</span>
+          </strong>
         </Link>
         <nav className="global-spaces" aria-label="平台导航">
           <Link to="/" aria-current={pathname === '/' ? 'page' : undefined}>
@@ -210,15 +213,19 @@ export function PlatformLayout() {
       )}
       <nav className="phone-navigation" aria-label="手机主导航">
         <Link to="/" aria-current={pathname === '/' ? 'page' : undefined}>
+          <House size={20} />
           首页
         </Link>
         <Link to="/today" aria-current={pathname === '/today' ? 'page' : undefined}>
+          <CalendarCheck size={20} />
           今日
         </Link>
         <button aria-haspopup="dialog" onClick={() => setSwitching(true)}>
+          <Layers size={20} />
           空间
         </button>
         <button aria-expanded={more} onClick={() => setMore(!more)}>
+          <Menu size={20} />
           更多
         </button>
       </nav>

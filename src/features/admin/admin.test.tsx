@@ -99,6 +99,29 @@ beforeEach(() => {
   );
 });
 describe('Admin release editing', () => {
+  it('isolates a failed content region and preserves edits while retrying it', async () => {
+    const original = api.request.getMockImplementation()!;
+    let failing = true;
+    api.request.mockImplementation(async (...args) => {
+      if (String(args[0]).endsWith('/knowledge') && failing) throw new Error('知识分区暂不可用');
+      return original(...args);
+    });
+    mount();
+    const user = userEvent.setup();
+    await screen.findByDisplayValue('原有真题');
+    await user.clear(screen.getByLabelText('任务1名称'));
+    await user.type(screen.getByLabelText('任务1名称'), '尚未保存的任务');
+    await user.click(screen.getByRole('button', { name: /知识内容/ }));
+    await screen.findByText(/知识内容读取失败/);
+    expect(screen.getByRole('button', { name: '保存修改' })).toBeEnabled();
+    failing = false;
+    await user.click(screen.getByRole('button', { name: '重试当前分区' }));
+    await waitFor(() => expect(screen.queryByText(/知识内容读取失败/)).not.toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: /计划任务.*未保存/ }));
+    expect(screen.getByDisplayValue('尚未保存的任务')).toBeInTheDocument();
+    expect(api.request.mock.calls.some((call) => call[1] === 'PUT')).toBe(false);
+  });
+
   it('saves the full list, preserves originals and resource fields, and publishes only after latest validation', async () => {
     mount();
     const user = userEvent.setup();

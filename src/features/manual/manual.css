@@ -1,26 +1,32 @@
 .manual-layout {
-  display: block;
-  max-width: 920px;
-  margin: auto;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 24px;
+  max-width: none;
+  margin: 0;
   min-width: 0;
+  align-items: start;
 }
 .manual-directory {
-  background: #fff;
+  background: white;
   border: 1px solid var(--color-line);
-  margin-bottom: 20px;
+  border-radius: 14px;
+  padding: 18px;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  min-width: 0;
 }
-.manual-directory > summary {
-  padding: 16px 20px;
-  min-height: 52px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 600;
+.manual-directory > h2 {
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0 0 16px;
 }
 .manual-toc {
-  padding: 20px;
+  padding: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px 24px;
+  gap: 8px;
   font-size: 14px;
 }
 .manual-toc h2 {
@@ -50,7 +56,8 @@
 .manual-main {
   background: var(--color-surface);
   border: 1px solid var(--color-line);
-  padding: 36px 40px;
+  border-radius: 14px;
+  padding: 32px;
 }
 .manual-mobile-toc {
   display: none;
@@ -96,8 +103,8 @@
   padding: 24px 0;
   border-bottom: 1px solid var(--color-line);
   font-family: var(--font-reading);
-  font-size: 17px;
-  line-height: 1.95;
+  font-size: 16px;
+  line-height: 1.85;
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -314,5 +321,54 @@
   }
   .manual-code figcaption {
     padding: 8px 12px;
+  }
+}
+
+.manual-outline-toggle {
+  display: none;
+}
+@media (max-width: 900px) {
+  .manual-layout {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 16px;
+  }
+  .manual-main {
+    padding: 24px;
+  }
+}
+@media (max-width: 768px) {
+  .manual-layout {
+    display: block;
+  }
+  .manual-layout > .manual-outline-toggle {
+    display: inline-flex;
+    margin-bottom: 16px;
+  }
+  .manual-directory {
+    display: none;
+    position: static;
+    max-height: none;
+  }
+  .manual-layout[data-outline-open='true'] .manual-directory {
+    display: block;
+    margin-bottom: 20px;
+  }
+  .manual-toc {
+    grid-template-columns: 1fr;
+  }
+  .manual-main {
+    padding: 20px 16px;
+  }
+}
+.manual-layout > span:has(.manual-outline-toggle) {
+  display: none;
+}
+@media (max-width: 760px) {
+  .manual-layout > span:has(.manual-outline-toggle) {
+    display: block;
+    grid-column: 1 / -1;
+  }
+  .manual-layout > span:has(.manual-outline-toggle) .button {
+    width: 100%;
   }
 }

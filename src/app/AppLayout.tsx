@@ -1,7 +1,7 @@
 import { CycleProvider } from '../features/cycle/CycleContext';
 import { CourseFrame } from '../features/course/CourseContext';
 import { lazy, Suspense } from 'react';
-import { Outlet, useMatch, useLocation } from 'react-router-dom';
+import { Outlet, useMatch } from 'react-router-dom';
 
 const CourseQuickNote = lazy(() => import('../features/notes/CourseQuickNote'));
 export function AppLayout() {
@@ -12,7 +12,6 @@ export function AppLayout() {
   );
 }
 function Layout() {
-  const location = useLocation();
   const course = useMatch('/study/course/:code/*');
   const chapter = useMatch('/study/course/:code/practice/:chapterId');
   const test = useMatch('/study/course/:code/tests/*');
@@ -32,24 +31,17 @@ function Layout() {
         )}
         {course && !chapter && !test ? (
           <CourseFrame>
-            {location.pathname.endsWith('/exams') && (
-              <div className="exam-note-action">
-                <Suspense fallback={null}>
-                  <CourseQuickNote key={course.params.code} code={course.params.code ?? ''} />
-                </Suspense>
-              </div>
-            )}
+            <div className="course-note-action">
+              <Suspense fallback={null}>
+                <CourseQuickNote key={course.params.code} code={course.params.code ?? ''} />
+              </Suspense>
+            </div>
             <Outlet />
           </CourseFrame>
         ) : (
           <Outlet />
         )}
       </main>
-      {course && !chapter && !test && !location.pathname.endsWith('/exams') && (
-        <Suspense fallback={null}>
-          <CourseQuickNote key={course.params.code} code={course.params.code ?? ''} />
-        </Suspense>
-      )}
     </>
   );
 }

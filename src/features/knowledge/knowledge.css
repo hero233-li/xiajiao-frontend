@@ -13,12 +13,14 @@
   font-size: 20px;
 }
 .kh-filters {
+  padding: 20px;
+  background: white;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
   display: flex;
   gap: 24px;
   align-items: end;
   border-bottom: 1px solid var(--color-line);
-  padding: 0 0 24px;
-  background: transparent;
 }
 .kh-filters > div:first-child {
   flex: 1;
@@ -51,6 +53,10 @@
   margin-bottom: 20px;
 }
 .kh-module-list {
+  background: white;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  overflow: hidden;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -116,13 +122,14 @@
   margin-bottom: 20px;
 }
 .kh-detail-card {
+  border-radius: 14px;
   background: var(--color-surface);
   padding: 36px 44px;
   border: 1px solid var(--color-line);
   min-width: 0;
 }
 .kh-detail-card > h3 {
-  font-size: 28px;
+  font-size: 24px;
   font-family: var(--font-reading);
   line-height: 1.6;
   margin-bottom: 12px;
@@ -131,7 +138,7 @@
   margin-bottom: 28px;
 }
 .kh-prose {
-  font-size: 17px;
+  font-size: 16px;
   line-height: 1.9;
   font-family: var(--font-reading);
   padding: 24px 0;
@@ -304,6 +311,10 @@
     display: none;
   }
   .kh-module-list {
+    background: white;
+    border: 1px solid var(--color-line);
+    border-radius: 14px;
+    overflow: hidden;
     grid-template-columns: 1fr;
     gap: 0;
   }
@@ -315,6 +326,10 @@
     font-size: 19px;
   }
   .kh-filters {
+    padding: 20px;
+    background: white;
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
     flex-wrap: wrap;
     gap: 16px;
   }
@@ -325,13 +340,14 @@
     width: 100%;
   }
   .kh-detail-card {
+    border-radius: 14px;
     padding: 24px 20px;
   }
   .kh-detail-card > h3 {
     font-size: 24px;
   }
   .kh-prose {
-    font-size: 17px;
+    font-size: 16px;
   }
   .kh-mastery-option {
     padding: 8px;

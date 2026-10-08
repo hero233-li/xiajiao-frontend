@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Pencil } from 'lucide-react';
+import { ArrowRight, Pencil, BookOpen, NotebookPen } from 'lucide-react';
 import { CyclePicker, useCycle } from '../features/cycle/CycleContext';
 import { Link } from '../features/cycle/navigation';
 import { listCourses } from '../api/generated/courses/courses';
@@ -15,6 +15,7 @@ export function Component() {
   const auth = useAuth();
   const [editing, setEditing] = useState<{ course: Course; cycle: ExamCycle } | null>(null);
   const [notice, setNotice] = useState('');
+  const [filter, setFilter] = useState('ALL');
   const courses = useQuery({
     queryKey: ['my-courses', cycle?.cycleId],
     enabled: !!cycle?.cycleId,
@@ -22,7 +23,7 @@ export function Component() {
       (await listCourses({ cycleId: cycle!.cycleId!, size: 100 }, { signal, silent: true })).data,
   });
   useEffect(() => {
-    document.title = '我的科目 · 知途个人管理平台';
+    document.title = '我的科目 · 知途个人成长平台';
   }, []);
   return (
     <section>
@@ -34,6 +35,19 @@ export function Component() {
         </div>
         <CyclePicker />
       </header>
+      <div className="course-filters" role="group" aria-label="课程类型筛选">
+        {(
+          [
+            ['ALL', '全部课程'],
+            ['THEORY', '理论课'],
+            ['PRACTICE', '实践课'],
+          ] as const
+        ).map(([value, label]) => (
+          <button key={value} aria-pressed={filter === value} onClick={() => setFilter(value)}>
+            {label}
+          </button>
+        ))}
+      </div>
       {cycle?.pending || (!!cycle?.cycleId && courses.isPending) ? (
         <RegionState kind="loading" message="正在整理课程…" />
       ) : cycle?.error ? (
@@ -46,81 +60,94 @@ export function Component() {
         <RegionState kind="empty" message="本周期暂未开放课程。" />
       ) : (
         <div className="course-roster">
-          {courses.data.items.map((course, i) => {
-            const exam = cycle.selected?.courses.find((e) => e.courseId === course.id);
-            const base = `/study/course/${course.code}`;
-            const panes = [
-              ['catalog', '阅读与进度'],
-              ['knowledge', '知识索引'],
-              ['manual', '实践手册'],
-              ['practice', '练习与检测'],
-              ['exams', '真题与成绩'],
-            ] as const;
-            const available = panes.filter(([pane]) => course.capabilities[pane]);
-            return (
-              <article
-                key={course.id}
-                className="course-roster-row"
-                aria-labelledby={`course-${course.id}`}
-              >
-                <span className="course-roster-number">{String(i + 1).padStart(2, '0')}</span>
-                <div>
-                  <p className="eyebrow">
-                    {course.code} / {course.courseType === 'THEORY' ? '理论课程' : '实践课程'}
-                  </p>
-                  <h2 id={`course-${course.id}`}>{course.name}</h2>
-                  <p className="course-exam-date">
-                    {exam?.examDate
-                      ? `${dateLabel(exam.examDate)} ${exam.startsAt?.slice(0, 5) ?? '时间待确认'}${exam.endsAt ? `–${exam.endsAt.slice(0, 5)}` : ''}`
-                      : '考试日期待确认'}{' '}
-                    {auth.user?.role === 'ADMIN' && cycle.selected && exam && (
-                      <button
-                        className="button button-ghost"
-                        aria-label="修改考试时间"
-                        onClick={() => setEditing({ course, cycle: cycle.selected! })}
-                      >
-                        <Pencil size={13} />
-                      </button>
-                    )}
-                  </p>
-                  <details className="course-resources">
-                    <summary>学习入口与资料</summary>
-                    <nav className="course-resource-links" aria-label={`${course.name}学习入口`}>
-                      {available.map(([pane, label]) => (
-                        <Link key={pane} to={`${base}/${pane}`}>
-                          {label}
-                        </Link>
-                      ))}
-                      <Link to={`${base}/notes`}>课程笔记</Link>
-                    </nav>
-                  </details>
-                  <EnrollmentControls courseId={course.id} cycleId={cycle.cycleId!} />
-                </div>
-                <div className="course-roster-progress">
-                  <strong>目录完成 {course.progress.percent}%</strong>
-                  <div className="progress-track">
-                    <div
-                      className="progress-fill"
-                      style={{ width: `${course.progress.percent}%` }}
-                    />
+          {!courses.data.items.some(
+            (course) => filter === 'ALL' || course.courseType === filter,
+          ) && <p className="inline-empty">当前周期没有此类型课程。可切换类型查看其他课程。</p>}
+          {courses.data.items
+            .filter((course) => filter === 'ALL' || course.courseType === filter)
+            .map((course) => {
+              const exam = cycle.selected?.courses.find((e) => e.courseId === course.id);
+              const base = `/study/course/${course.code}`;
+              const panes = [
+                ['catalog', '阅读与进度'],
+                ['knowledge', '知识索引'],
+                ['manual', '实践手册'],
+                ['practice', '练习与检测'],
+                ['exams', '真题与成绩'],
+              ] as const;
+              const available = panes.filter(([pane]) => course.capabilities[pane]);
+              return (
+                <article
+                  key={course.id}
+                  className="course-roster-row"
+                  aria-labelledby={`course-${course.id}`}
+                >
+                  <div className="course-roster-ident">
+                    <span className="space-icon">
+                      {course.courseType === 'THEORY' ? (
+                        <BookOpen size={22} />
+                      ) : (
+                        <NotebookPen size={22} />
+                      )}
+                    </span>
+                    <span className="course-kind">
+                      {course.code} · {course.courseType === 'THEORY' ? '理论' : '实践'}
+                    </span>
                   </div>
-                  <p>
-                    {course.progress.completedItems} / {course.progress.totalItems} 项
-                  </p>
-                  {available.length ? (
-                    <Link
-                      className="button button-primary"
-                      to={`${base}/${course.capabilities.manual ? 'manual' : available[0][0]}`}
-                    >
-                      开始学习 <ArrowRight size={16} />
-                    </Link>
-                  ) : (
-                    <p>内容尚未开放</p>
-                  )}
-                </div>
-              </article>
-            );
-          })}
+                  <div>
+                    <h2 id={`course-${course.id}`}>{course.name}</h2>
+                    <p className="course-exam-date">
+                      {exam?.examDate
+                        ? `${dateLabel(exam.examDate)} ${exam.startsAt?.slice(0, 5) ?? '时间待确认'}${exam.endsAt ? `–${exam.endsAt.slice(0, 5)}` : ''}`
+                        : '考试日期待确认'}{' '}
+                      {auth.user?.role === 'ADMIN' && cycle.selected && exam && (
+                        <button
+                          className="button button-ghost"
+                          aria-label="修改考试时间"
+                          onClick={() => setEditing({ course, cycle: cycle.selected! })}
+                        >
+                          <Pencil size={13} />
+                        </button>
+                      )}
+                    </p>
+                    <details className="course-resources">
+                      <summary>学习入口与资料</summary>
+                      <nav className="course-resource-links" aria-label={`${course.name}学习入口`}>
+                        {available.map(([pane, label]) => (
+                          <Link key={pane} to={`${base}/${pane}`}>
+                            {label}
+                          </Link>
+                        ))}
+                        <Link to={`${base}/notes`}>课程笔记</Link>
+                      </nav>
+                    </details>
+                    <EnrollmentControls courseId={course.id} cycleId={cycle.cycleId!} />
+                  </div>
+                  <div className="course-roster-progress">
+                    <strong>目录完成 {course.progress.percent}%</strong>
+                    <div className="progress-track">
+                      <div
+                        className="progress-fill"
+                        style={{ width: `${course.progress.percent}%` }}
+                      />
+                    </div>
+                    <p>
+                      {course.progress.completedItems} / {course.progress.totalItems} 项
+                    </p>
+                    {available.length ? (
+                      <Link
+                        className="button button-primary"
+                        to={`${base}/${course.capabilities.manual ? 'manual' : available[0][0]}`}
+                      >
+                        开始学习 <ArrowRight size={16} />
+                      </Link>
+                    ) : (
+                      <p>内容尚未开放</p>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
         </div>
       )}
       {notice && (

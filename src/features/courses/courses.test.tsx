@@ -108,7 +108,7 @@ async function edit(name = names[0]) {
 it('六科书目提供报考记录并遵循能力，实践科入口遵循能力', async () => {
   mount();
   await screen.findByRole('heading', { name: names[0] });
-  expect(document.title).toBe('我的科目 · 知途个人管理平台');
+  expect(document.title).toBe('我的科目 · 知途个人成长平台');
   expect(screen.getAllByRole('article')).toHaveLength(6);
   await waitFor(() => expect(screen.getAllByRole('button', { name: '报考记录' })).toHaveLength(6));
   expect(screen.queryByRole('link', { name: '管理' })).not.toBeInTheDocument();

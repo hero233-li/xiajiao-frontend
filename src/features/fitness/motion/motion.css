@@ -10,7 +10,7 @@
   overflow: hidden;
   border: 1px solid var(--color-line);
   border-radius: 8px;
-  background: #f8f5ee;
+  background: var(--color-canvas);
 }
 .motion-thumbnail .motion-illustration {
   width: 100%;
@@ -37,8 +37,8 @@
   margin: 0 0 12px;
 }
 .motion-stage {
-  background: #f8f5ee;
-  border: 1px solid #e8e7dd;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-line);
   border-radius: 10px;
   display: flex;
   justify-content: center;
@@ -52,7 +52,7 @@
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-secondary);
   padding: 12px 0;
 }
@@ -105,7 +105,7 @@
   color: var(--color-secondary);
 }
 .motion-errors {
-  background: #f5f6f3;
+  background: var(--color-canvas);
   border-radius: 8px;
   padding: 14px 16px;
   margin: 12px 0;
@@ -118,7 +118,7 @@
 }
 .motion-reference {
   margin: 12px 0 0;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.7;
   color: var(--color-secondary);
 }
@@ -131,10 +131,10 @@
     max-height: 250px;
   }
   .motion-controls .button {
-    font-size: 13px;
+    font-size: 14px;
   }
   .motion-playback-status {
-    font-size: 12px;
+    font-size: 14px;
   }
   .motion-thumbnail {
     width: 60px;
@@ -150,10 +150,10 @@
 .motion-variants .button {
   min-height: 44px;
   padding: 8px 10px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .motion-note {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.7;
   color: var(--color-secondary);
   padding: 10px 12px;

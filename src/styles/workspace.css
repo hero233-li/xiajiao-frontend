@@ -1,32 +1,4 @@
 @import './tasks.css';
-:root {
-  --space-accent: #245bdd;
-  --platform-border: #ced5e0;
-  --platform-muted: #526076;
-  --platform-canvas: #f4f5f7;
-  --platform-ink: #18243b;
-  --color-primary: #245bdd;
-  --color-primary-hover: #1744b2;
-  --color-primary-soft: #edf2ff;
-  --color-secondary: #526076;
-  --color-surface: #fff;
-  --color-canvas: #f4f5f7;
-  --color-line: #ced5e0;
-  --color-ink: #18243b;
-  --text-base: 1rem;
-}
-:root[data-space='fitness'] {
-  --space-accent: #146951;
-  --color-primary: #146951;
-  --color-primary-hover: #0d503d;
-  --color-primary-soft: #e9f4ef;
-}
-:root[data-space='admin'] {
-  --space-accent: #593bab;
-  --color-primary: #593bab;
-  --color-primary-hover: #412881;
-  --color-primary-soft: #f0ecfa;
-}
 .platform-shell {
   min-height: 100vh;
   background: var(--platform-canvas);
@@ -39,7 +11,7 @@
   gap: 32px;
   padding: 0 max(24px, calc((100vw - 1320px) / 2));
   height: 72px;
-  background: #18243b;
+  background: var(--color-ink);
   color: white;
   position: relative;
   z-index: 25;
@@ -116,7 +88,7 @@
   border: 1px solid var(--platform-border);
   border-radius: 8px;
   padding: 8px;
-  box-shadow: 0 8px 24px #18243b1f;
+  box-shadow: var(--shadow-raised);
 }
 .account-menu a,
 .account-menu button {
@@ -148,7 +120,7 @@
   flex-shrink: 0;
 }
 .space-location > span {
-  color: #526076;
+  color: var(--color-secondary);
 }
 .space-location > strong {
   border-left: 1px solid var(--platform-border);
@@ -168,7 +140,7 @@
   padding: 12px;
   min-height: 44px;
   font-size: 14px;
-  color: #526076;
+  color: var(--color-secondary);
 }
 .space-navigation > a[aria-current] {
   color: var(--space-accent);
@@ -206,7 +178,7 @@
   justify-content: space-between;
   padding: 20px max(24px, calc((100vw - 1256px) / 2));
   font-size: 14px;
-  color: #526076;
+  color: var(--color-secondary);
   border-top: 1px solid var(--platform-border);
 }
 .page-heading {
@@ -274,11 +246,11 @@
 .help,
 .platform-main .help {
   font-size: 14px;
-  color: #526076;
+  color: var(--color-secondary);
   line-height: 1.7;
 }
 .inline-empty {
-  color: #526076;
+  color: var(--color-secondary);
   padding: 12px 0;
   font-size: 15px;
 }
@@ -315,8 +287,11 @@
   display: flex;
   align-items: center;
   gap: 24px;
-  border-bottom: 1px solid var(--platform-border);
-  padding-bottom: 16px;
+  padding: 20px 24px;
+  background: white;
+  border: 1px solid var(--color-line);
+  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
 }
 .course-back {
   font-size: 14px;
@@ -333,7 +308,7 @@
 }
 .course-context-row span {
   font-size: 14px;
-  color: #526076;
+  color: var(--color-secondary);
 }
 .course-context-row progress {
   width: 140px;
@@ -342,36 +317,40 @@
 }
 .course-tools {
   display: flex;
-  gap: 4px;
-  padding: 12px 0 20px;
-  flex-wrap: wrap;
+  gap: 20px;
+  flex-wrap: nowrap;
+  overflow: auto;
+  padding: 0 24px;
+  margin-bottom: 24px;
+  background: white;
+  border: 1px solid var(--color-line);
+  border-top: 0;
+  border-radius: 0 0 14px 14px;
 }
 .course-tools > a {
-  padding: 10px 16px;
-  min-height: 44px;
-  color: #526076;
+  padding: 12px 0;
+  min-height: 48px;
+  color: var(--color-secondary);
   font-size: 14px;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
 }
 .course-tools > a.active {
-  color: var(--space-accent);
-  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
   font-weight: 650;
-  border-radius: 5px;
+  background: transparent;
+  border-radius: 0;
 }
 .reading-workspace {
-  background: white;
-  border: 1px solid var(--platform-border);
-  border-radius: 8px;
-  overflow: hidden;
+  min-width: 0;
 }
 .reading-command {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 24px;
-  background: #eef1f6;
-  border-bottom: 1px solid var(--platform-border);
+  padding: 0 0 20px;
 }
 .reading-command > div {
   display: flex;
@@ -382,26 +361,35 @@
   margin: 0;
 }
 .reading-outline {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--platform-border);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  padding: 20px 16px;
+  background: white;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  min-width: 0;
+  display: block;
 }
 .reading-outline details {
-  border: 1px solid var(--platform-border);
-  padding: 12px;
-  align-self: start;
+  border-top: 1px solid var(--color-line);
+  padding: 12px 0;
 }
 .reading-outline summary {
-  font-size: 15px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 14px;
   min-height: 44px;
   cursor: pointer;
+  overflow-wrap: anywhere;
 }
 .reading-outline summary > span {
-  color: #526076;
-  margin-left: 12px;
+  color: var(--color-secondary);
+  margin-left: auto;
   font-size: 14px;
+  white-space: nowrap;
 }
 .reading-outline ol {
   list-style: none;
@@ -409,23 +397,32 @@
 }
 .reading-outline button:not(.button) {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: flex-start;
   padding: 10px 8px;
   width: 100%;
   border: 0;
+  border-radius: 8px;
   background: white;
+  color: var(--color-secondary);
+  font-size: 14px;
   text-align: left;
   min-height: 44px;
+  overflow-wrap: anywhere;
 }
 .reading-outline button[aria-current] {
   color: var(--space-accent);
   background: var(--color-primary-soft);
 }
 .reading-stage {
-  max-width: 880px;
-  padding: 36px;
-  margin: auto;
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+  padding: 32px;
+  margin: 0;
+  background: white;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
 }
 .reading-stage h1 {
   font-size: 26px;
@@ -436,7 +433,7 @@
   display: flex;
   gap: 20px;
   font-size: 14px;
-  color: #526076;
+  color: var(--color-secondary);
 }
 .reading-metadata strong {
   color: var(--space-accent);
@@ -478,12 +475,12 @@
 }
 .content-index {
   padding: 20px;
-  background: #eef1f6;
+  background: var(--color-primary-soft);
   border-right: 1px solid var(--platform-border);
 }
 .content-index h3 {
   font-size: 15px;
-  color: #526076;
+  color: var(--color-secondary);
 }
 .content-index .admin-section-nav {
   display: grid;
@@ -509,7 +506,7 @@
   font-size: 22px;
 }
 .content-section-heading p {
-  color: #526076;
+  color: var(--color-secondary);
   font-size: 14px;
 }
 .version-command {
@@ -541,7 +538,7 @@
 .admin-coverage summary {
   min-height: 44px;
   font-size: 14px;
-  color: #526076;
+  color: var(--color-secondary);
   cursor: pointer;
 }
 .admin-mode-picker {
@@ -549,7 +546,7 @@
 }
 .login-desk {
   min-height: 100vh;
-  background: #f4f5f7;
+  background: var(--color-canvas);
   padding: 32px max(24px, calc((100vw - 1160px) / 2));
   display: flex;
   flex-direction: column;
@@ -565,7 +562,7 @@
   width: 44px;
   height: 44px;
   border-radius: 6px;
-  background: #18243b;
+  background: var(--color-ink);
   color: white;
   font-size: 26px;
 }
@@ -576,22 +573,23 @@
   display: block;
   font-size: 14px;
   font-weight: 400;
-  color: #526076;
+  color: var(--color-secondary);
 }
 .login-body {
   flex: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 420px;
-  gap: 80px;
+  gap: 64px;
   align-items: center;
   padding: 48px 0;
 }
 .login-introduction h2 {
-  font-size: 34px;
+  font-size: 28px;
+  line-height: 1.5;
   margin: 12px 0;
 }
 .login-introduction > p {
-  color: #526076;
+  color: var(--color-secondary);
 }
 .login-capabilities {
   border-top: 1px solid var(--platform-border);
@@ -607,33 +605,38 @@
 }
 .login-capabilities span {
   font-size: 14px;
-  color: #526076;
+  color: var(--color-secondary);
 }
 .login-entry {
   background: white;
-  border-top: 4px solid #245bdd;
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
   padding: 32px;
+  box-shadow: 0 10px 36px #354bd409;
 }
 .login-entry h1 {
   font-size: 27px;
 }
 .login-desk > footer {
   font-size: 14px;
-  color: #526076;
+  color: var(--color-secondary);
   padding: 20px 0;
   border-top: 1px solid var(--platform-border);
 }
 .course-roster {
-  border-top: 2px solid var(--space-accent);
-  background: white;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
 }
 .course-roster-row {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) 240px;
-  gap: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
   padding: 24px;
-  border-bottom: 1px solid var(--platform-border);
-  align-items: start;
+  background: white;
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  min-width: 0;
 }
 .course-roster-number {
   font-size: 14px;
@@ -641,7 +644,7 @@
   padding-top: 6px;
 }
 .course-roster-row h2 {
-  font-size: 22px;
+  font-size: 20px;
   margin: 0 0 12px;
 }
 .course-exam-date {
@@ -688,7 +691,7 @@
 }
 .account-identity {
   padding: 24px;
-  background: #eef1f6;
+  background: var(--color-primary-soft);
   border-right: 1px solid var(--platform-border);
 }
 .account-preferences {
@@ -735,7 +738,7 @@
 .training-roster-head {
   font-size: 14px;
   color: var(--platform-muted);
-  background: #eef1f6;
+  background: var(--color-primary-soft);
 }
 .training-course-row h2 {
   font-size: 20px;
@@ -949,7 +952,7 @@
     justify-content: center;
     min-height: 48px;
     font-size: 14px;
-    color: #526076;
+    color: var(--color-secondary);
     border: 0;
     background: white;
   }
@@ -1161,14 +1164,14 @@
   width: 1.25rem;
   height: 1.25rem;
   flex: 0 0 auto;
-  accent-color: var(--space-accent, #286653);
+  accent-color: var(--color-primary);
 }
 .food-check-row small {
   display: inline;
 }
 .meal-tracker .meal-line {
   padding-block: 1rem;
-  border-bottom: 1px solid var(--border, #dce3df);
+  border-bottom: 1px solid var(--border, var(--color-line));
 }
 .meal-tracker fieldset {
   border: 0;
@@ -1185,14 +1188,14 @@
 
 /* Daily training: a compact week strip and a readable execution desk. */
 .training-page {
-  --training-green: #256451;
-  --training-soft: #edf5f1;
+  --training-green: var(--color-primary);
+  --training-soft: var(--color-primary-soft);
 }
 .training-page .period-toolbar {
   margin: 0 0 16px;
   padding: 14px 18px;
   background: white;
-  border: 1px solid #e2e9e5;
+  border: 1px solid var(--color-line);
   border-radius: 16px;
 }
 .training-page .training-week {
@@ -1202,7 +1205,7 @@
   margin-bottom: 24px;
 }
 .training-page .training-week button {
-  border: 1px solid #e0e7e3;
+  border: 1px solid var(--color-line);
   border-radius: 14px;
   padding: 16px 10px;
   background: white;
@@ -1211,13 +1214,13 @@
     border-color 0.15s;
 }
 .training-page .training-week button.selected {
-  background: #256451;
+  background: var(--color-primary);
   color: white;
-  border-color: #256451;
-  box-shadow: 0 5px 14px #25645120;
+  border-color: var(--color-primary);
+  box-shadow: none;
 }
 .training-page .training-week button.selected :is(span, small, em) {
-  color: #e2f0e9;
+  color: var(--color-on-primary);
 }
 .training-page .training-week button strong {
   font-size: 24px;
@@ -1225,7 +1228,7 @@
 }
 .training-page .training-week button em {
   font-style: normal;
-  font-size: 11px;
+  font-size: 14px;
 }
 .training-overview {
   display: grid;
@@ -1238,27 +1241,27 @@
   gap: 14px;
   padding: 20px;
   background: white;
-  border: 1px solid #e2e9e5;
+  border: 1px solid var(--color-line);
   border-radius: 16px;
   align-items: flex-start;
 }
 .training-overview svg {
-  color: #256451;
+  color: var(--color-primary);
   margin-top: 3px;
 }
 .training-overview span {
   display: grid;
   gap: 5px;
-  font-size: 12px;
-  color: #66776f;
+  font-size: 14px;
+  color: var(--color-secondary);
 }
 .training-overview strong {
   font-size: 23px;
-  color: #243b31;
+  color: var(--color-ink);
   font-weight: 650;
 }
 .training-overview strong small {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
 }
 .training-page .training-dashboard {
@@ -1272,14 +1275,14 @@
 .training-dashboard > .planning-column {
   padding: 24px;
   background: white;
-  border: 1px solid #e2e9e5;
+  border: 1px solid var(--color-line);
   border-radius: 20px;
   min-width: 0;
 }
 .training-eyebrow {
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.02em;
-  color: #63796d;
+  color: var(--color-secondary);
 }
 .training-dashboard h2 {
   margin-top: 6px;
@@ -1297,9 +1300,9 @@
   grid-template-columns: 34px minmax(0, 1fr);
   gap: 8px 12px;
   padding: 18px;
-  border: 1px solid #e3eae6;
+  border: 1px solid var(--color-line);
   border-radius: 14px;
-  background: #fcfdfc;
+  background: var(--color-surface);
 }
 .training-page .record-ledger > li::before {
   display: none;
@@ -1315,9 +1318,9 @@
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: #eaf3ee;
-  color: #256451;
-  font-size: 12px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 14px;
   font-weight: 700;
 }
 .training-page .exercise-motion-heading {
@@ -1332,58 +1335,58 @@
 }
 .training-page .record-ledger > li > span:not(.exercise-step) {
   grid-column: 2;
-  color: #256451;
-  font-size: 13px;
+  color: var(--color-primary);
+  font-size: 14px;
   font-weight: 600;
 }
 .training-page .exercise-instructions {
   grid-column: 2;
-  font-size: 13px;
-  color: #596b61;
+  font-size: 14px;
+  color: var(--color-secondary);
   line-height: 1.85;
   display: grid;
   gap: 4px;
 }
 .training-page .exercise-complete {
-  background: #f1f7f3 !important;
-  border-color: #bdd7c9 !important;
+  background: var(--color-success-soft) !important;
+  border-color: var(--color-success) !important;
 }
 .training-guidance {
   padding: 24px;
-  border: 1px solid #dce8df;
+  border: 1px solid var(--color-line);
   border-radius: 20px;
-  background: #edf5f0;
+  background: var(--color-primary-soft);
   min-width: 0;
 }
 .training-guidance h3 {
   font-size: 16px;
-  color: #284d3b;
+  color: var(--color-ink);
   margin: 0 0 16px;
 }
 .training-guidance p {
-  font-size: 13px;
-  color: #4f685b;
+  font-size: 14px;
+  color: var(--color-secondary);
   line-height: 1.85;
   margin: 0 0 12px;
   overflow-wrap: anywhere;
 }
 .training-guidance details {
-  border-top: 1px solid #d4e3d9;
+  border-top: 1px solid var(--color-line);
   padding: 14px 0 0;
   margin-top: 14px;
 }
 .training-guidance summary,
 .training-plan-tools summary {
   cursor: pointer;
-  color: #365b46;
-  font-size: 13px;
+  color: var(--color-primary);
+  font-size: 14px;
 }
 .training-guidance details p {
   margin-top: 12px;
 }
 .training-plan-tools {
   margin-top: 22px;
-  border-top: 1px solid #e3eae6;
+  border-top: 1px solid var(--color-line);
   padding-top: 16px;
 }
 .training-plan-tools .row {
@@ -1417,13 +1420,13 @@
     font-size: 17px;
   }
   .training-overview strong small {
-    font-size: 11px;
+    font-size: 14px;
   }
   .training-page .period-toolbar {
     padding: 10px 6px;
   }
   .training-page .period-toolbar strong {
-    font-size: 12px;
+    font-size: 14px;
   }
   .training-dashboard > .planning-column,
   .training-guidance {
@@ -1481,5 +1484,222 @@
   .weight-series-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
+  }
+}
+
+.reading-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.reading-outline header h2 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+.reading-outline header p {
+  font-size: 14px;
+  color: var(--color-secondary);
+  margin: 0 0 16px;
+}
+.reading-command .reading-outline-toggle {
+  display: none;
+}
+.reading-next > a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+.login-brand > svg {
+  color: var(--color-primary);
+}
+.login-brand strong {
+  color: var(--color-primary);
+}
+.login-route {
+  display: flex;
+  gap: 12px;
+  padding: 16px 0;
+  border-top: 1px solid var(--color-line);
+  align-items: center;
+}
+.login-route > svg {
+  color: var(--color-primary);
+}
+.login-route strong {
+  display: block;
+}
+.login-route span {
+  color: var(--color-secondary);
+  font-size: 14px;
+}
+.login-introduction .login-path {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  font-size: 14px;
+}
+.login-path span {
+  background: white;
+  border: 1px solid var(--color-line);
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+@media (max-width: 1000px) {
+  .reading-layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 18px;
+  }
+  .reading-stage {
+    padding: 24px;
+  }
+}
+@media (max-width: 768px) {
+  .reading-layout {
+    display: block;
+  }
+  .reading-outline {
+    display: none;
+    position: static;
+    max-height: none;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .reading-workspace[data-outline-open='true'] .reading-outline {
+    display: block;
+  }
+  .reading-workspace[data-outline-open='true'] .reading-stage {
+    display: none;
+  }
+  .reading-command .reading-outline-toggle {
+    display: inline-flex;
+  }
+  .reading-command {
+    padding: 0 0 16px;
+  }
+  .reading-stage {
+    padding: 22px 18px;
+  }
+  .course-context-row {
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+  .course-tools {
+    padding: 0 16px;
+    gap: 20px;
+  }
+  .course-tools > a {
+    padding: 12px 0;
+  }
+  .course-context-row progress {
+    max-width: 100px;
+  }
+  .login-body {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 24px;
+    padding: 24px 0;
+  }
+  .login-introduction h2 {
+    font-size: 24px;
+  }
+  .login-entry {
+    padding: 24px;
+  }
+}
+
+.reading-outline summary .outline-number {
+  flex: 0 0 24px;
+  margin: 0;
+  color: var(--color-secondary);
+}
+.reading-outline summary .outline-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  white-space: normal;
+  color: var(--color-ink);
+}
+.reading-outline summary small {
+  flex: 0 0 auto;
+  font-size: 14px;
+  white-space: nowrap;
+  margin-left: 0;
+}
+progress {
+  accent-color: var(--color-primary);
+}
+progress::-webkit-progress-bar {
+  background: #e3e7f1;
+  border-radius: 6px;
+}
+progress::-webkit-progress-value {
+  background: var(--color-primary);
+  border-radius: 6px;
+}
+progress::-moz-progress-bar {
+  background: var(--color-primary);
+  border-radius: 6px;
+}
+
+.course-roster-ident {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.course-roster-ident .space-icon {
+  color: var(--color-primary);
+}
+.course-kind {
+  background: #f5f7fb;
+  color: var(--color-secondary);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+.course-roster-progress {
+  width: 100%;
+  margin-top: auto;
+  border-top: 1px solid var(--color-line);
+}
+.course-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.course-filters button {
+  min-height: 44px;
+  border: 1px solid var(--color-line);
+  background: white;
+  color: var(--color-secondary);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+.course-filters button[aria-pressed='true'] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border-color: #aebcf0;
+}
+@media (max-width: 1100px) {
+  .course-roster {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .course-roster {
+    grid-template-columns: 1fr;
+  }
+  .course-roster-row {
+    display: flex;
+    padding: 20px;
   }
 }

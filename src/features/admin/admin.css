@@ -168,7 +168,7 @@
   margin-bottom: 20px;
 }
 .admin-section-nav button[aria-current] {
-  background: #eaf0e5;
+  background: var(--color-primary-soft);
   border-color: var(--color-primary);
 }
 .admin-fields {
@@ -264,7 +264,7 @@
   color: var(--color-secondary);
   font-size: 14px;
   font-weight: 500;
-  background: #edf0e9;
+  background: var(--color-primary-soft);
   padding: 10px 12px;
   white-space: nowrap;
 }
@@ -295,7 +295,7 @@
 }
 .admin-validation {
   padding: 16px;
-  background: #edf1e8;
+  background: var(--color-primary-soft);
   margin: 16px 0;
 }
 .admin-validation h3 {
@@ -314,7 +314,7 @@
   float: right;
 }
 .admin-error {
-  color: #964536;
+  color: var(--color-danger);
   padding: 12px 0;
   font-size: 14px;
 }
@@ -323,7 +323,7 @@
   font-size: 14px;
 }
 .admin-warning {
-  color: #946b30;
+  color: var(--color-warning);
 }
 .admin-empty {
   padding: 24px 0;
