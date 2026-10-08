@@ -1,4 +1,3 @@
-import { WeakItems } from '../features/dashboard/WeakItems';
 import { useEffect, useRef } from 'react';
 import { ArrowRight, Check, CalendarDays } from 'lucide-react';
 import { CyclePicker, useCycle } from '../features/cycle/CycleContext';
@@ -199,7 +198,6 @@ export function DashboardPage() {
                     )}
                   </section>
                 )}
-                <WeakItems courses={data.courses} />
                 <section className="platform-section">
                   <div className="section-title">
                     <h2>我的科目</h2>
