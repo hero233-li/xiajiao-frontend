@@ -1,3 +1,4 @@
+import { catalogGroups } from './groups';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -83,9 +84,16 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
   const [bulk, setBulk] = useState<CatalogChapter | null>(null);
   const [notice, setNotice] = useState('');
   const lock = useRef(false);
+  const groups = catalogGroups(course?.code, query.data?.chapters ?? []);
+  const visibleChapters = groups.flatMap((group) => group.chapters);
   const items =
-    query.data?.chapters.flatMap((chapter) => chapter.items.map((item) => ({ item, chapter }))) ??
-    [];
+    visibleChapters.flatMap((chapter) => chapter.items.map((item) => ({ item, chapter }))) ?? [];
+  const visiblePercent =
+    course?.code === '13015' && groups.length === 2
+      ? Math.round(
+          (items.filter(({ item }) => item.completed).length / Math.max(items.length, 1)) * 100,
+        )
+      : (query.data?.courseProgress.percent ?? 0);
   const requested = params.get('itemId');
   const hash = (() => {
     try {
@@ -168,7 +176,7 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
           <span className="eyebrow">
             阅读任务 {index + 1} / {items.length}
           </span>
-          <span className="secondary">目录完成 {query.data!.courseProgress.percent}%</span>
+          <span className="secondary">目录完成 {visiblePercent}%</span>
         </div>
         <Button
           className="reading-outline-toggle"
@@ -189,41 +197,46 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
               课程目录
             </h2>
             <p>
-              {query.data!.courseProgress.percent}% 已完成 · {items.length} 个条目
+              {visiblePercent}% 已完成 · {items.length} 个条目
             </p>
           </header>
-          {query.data!.chapters.map((chapter, n) => (
-            <details key={chapter.id} open={chapter.id === active.chapter.id || undefined}>
-              <summary>
-                <span className="outline-number">{String(n + 1).padStart(2, '0')}</span>
-                <span className="outline-title">
-                  <MathText text={chapter.title} />
-                </span>
-                <small>
-                  {chapter.items.filter((i) => i.completed).length}/{chapter.items.length}
-                </small>
-              </summary>
-              <ol>
-                {chapter.items.map((item) => (
-                  <li key={item.id}>
-                    <button
-                      aria-current={item.id === active.item.id ? 'true' : undefined}
-                      onClick={() => select(item.id)}
-                    >
-                      <span>{item.completed ? '✓' : '○'}</span>
-                      <MathText text={item.title} />
-                    </button>
-                  </li>
-                ))}
-              </ol>
-              <Button
-                variant="ghost"
-                disabled={completion.isPending || chapter.items.every((i) => i.completed)}
-                onClick={() => setBulk(chapter)}
-              >
-                本章全部标记完成
-              </Button>
-            </details>
+          {groups.map((group) => (
+            <section key={group.title || 'catalog'} aria-label={group.title || undefined}>
+              {group.title && <h3>{group.title}</h3>}
+              {group.chapters.map((chapter, n) => (
+                <details key={chapter.id} open={chapter.id === active.chapter.id || undefined}>
+                  <summary>
+                    <span className="outline-number">{String(n + 1).padStart(2, '0')}</span>
+                    <span className="outline-title">
+                      <MathText text={chapter.title} />
+                    </span>
+                    <small>
+                      {chapter.items.filter((i) => i.completed).length}/{chapter.items.length}
+                    </small>
+                  </summary>
+                  <ol>
+                    {chapter.items.map((item) => (
+                      <li key={item.id}>
+                        <button
+                          aria-current={item.id === active.item.id ? 'true' : undefined}
+                          onClick={() => select(item.id)}
+                        >
+                          <span>{item.completed ? '✓' : '○'}</span>
+                          <MathText text={item.title} />
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+                  <Button
+                    variant="ghost"
+                    disabled={completion.isPending || chapter.items.every((i) => i.completed)}
+                    onClick={() => setBulk(chapter)}
+                  >
+                    本章全部标记完成
+                  </Button>
+                </details>
+              ))}
+            </section>
           ))}
         </nav>
         <article className="reading-stage">
