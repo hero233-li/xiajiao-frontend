@@ -1056,6 +1056,46 @@ try {
    }
    await page.screenshot({path:resolve(out,'discrete-twenty-seventh-batch-reviewed.png'),fullPage:true});
   }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2730){
+   for(const [key,title] of [["02324:discrete-chapter-8:aa7728d23cca", "PROOF · hard · VERIFIED · 完全图三点计数反推"], ["02324:discrete-chapter-8:64b672e20aeb", "PROOF · hard · VERIFIED · 原补都无三角的六点障碍"], ["02324:discrete-chapter-8:3d0de2b9c5a5", "PROOF · hard · VERIFIED · 添加四顶点保持自补"], ["02324:discrete-chapter-8:4d1991a96c46", "PROOF · hard · VERIFIED · 结构变换保同构但逆推失败"]]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-twenty-eighth-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2830){
+   for(const [key,title] of [["02324:discrete-chapter-8:6664be55efa4", "PROOF · hard · VERIFIED · 收缩一桥保持其他桥判定"], ["02324:discrete-chapter-8:90663a545608", "PROOF · hard · VERIFIED · 连通的搜索证书"], ["02324:discrete-chapter-8:f58484df457e", "PROOF · hard · VERIFIED · 奇闭游走蕴含奇简单圈"], ["02324:discrete-chapter-9:635643d28367", "SHORT · simple · VERIFIED · 含树子图不代表整体是树"]]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-twenty-ninth-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2930){
+   for(const [key,title] of [["02324:discrete-chapter-9:635643d28367", "PROOF · hard · VERIFIED · 树中等距中点的边界"], ["02324:discrete-chapter-9:c60d5a5e72b1", "PROOF · hard · VERIFIED · 对生成树逐边加权的下界"], ["02324:discrete-chapter-9:67c0d562b5e9", "CALCULATION · middle · VERIFIED · 授权四月图的同权顺序"], ["02324:discrete-chapter-9:e37a40dfa984", "CALCULATION · middle · VERIFIED · 授权十月二叉树结构读取"]]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-thirtieth-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=3030){
+   for(const [key,title] of [["02324:discrete-chapter-9:e37a40dfa984", "PROOF · hard · VERIFIED · 镜像同时完全的充要条件"], ["02324:discrete-chapter-9:427d691bd13c", "CALCULATION · middle · VERIFIED · 授权十月树三遍历改编"], ["02324:discrete-chapter-9:d9f80bad17ab", "PROOF · hard · VERIFIED · Dirac门槛与圆桌存在性"], ["02324:discrete-chapter-9:62cdc55dc575", "CALCULATION · middle · VERIFIED · 删一边的K33可嵌入"]]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-thirty-first-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=3130){
+   for(const [key,title] of [["02324:discrete-chapter-9:19095e7c0ffc", "PROOF · hard · VERIFIED · 三边路径的度数计数"], ["02324:discrete-chapter-9:04165843b373", "CALCULATION · middle · VERIFIED · 授权树的亲属与子树改编"], ["02324:discrete-chapter-9:531457a68046", "PROOF · hard · VERIFIED · 授权小边数平面图证明"], ["02324:discrete-chapter-9:d178f2affcaa", "SHORT · simple · VERIFIED · 孤点不参与边覆盖"]]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-thirty-second-batch-reviewed.png'),fullPage:true});
+  }
 
 
   await page.goto(`${url}/study/course/02324/practice?cycleId=${cycle}`);
@@ -1627,8 +1667,123 @@ try {
     if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('TwentySeventh batch bypassed chapter coverage');
     if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('TwentySeventh batch bypassed simple qualification');
    }
-   if(await page.getByRole('button',{name:/^图的连通性\s+题量 0\/10/}).count()!==1)throw Error('Unpublished connectivity falsely counted');
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<2830 && await page.getByRole('button',{name:/^图的连通性\s+题量 0\/10/}).count()!==1)throw Error('Unpublished connectivity falsely counted');
    await page.screenshot({path:resolve(out,'discrete-twenty-seventh-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2730){
+   for(const [title,chapter] of [['完全图','第八章'],['补图','第八章'],['自补图','第八章'],['图的同构','第八章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-twenty-eighth-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('TwentyEighth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-twenty-eighth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('TwentyEighth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('TwentyEighth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<2830 && await page.getByRole('button',{name:/^图的连通性\s+题量 0\/10/}).count()!==1)throw Error('Unpublished connectivity falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-twenty-eighth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2830){
+   for(const [title,chapter] of [['割边','第八章'],['图的连通性','第八章'],['通路回路','第八章'],['树','第九章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-twenty-ninth-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('TwentyNinth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-twenty-ninth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('TwentyNinth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('TwentyNinth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<2930 && await page.getByRole('button',{name:/^二叉树\s+题量 0\/10/}).count()!==1)throw Error('Unpublished binary tree falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-twenty-ninth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2930){
+   for(const [title,chapter] of [['树','第九章'],['生成树','第九章'],['克鲁斯卡尔算法','第九章'],['二叉树','第九章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-thirtieth-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Thirtieth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-thirtieth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Thirtieth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Thirtieth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<3030 && await page.getByRole('button',{name:/^二叉树的遍历\s+题量 0\/10/}).count()!==1)throw Error('Unpublished binary traversal falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-thirtieth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=3030){
+   for(const [title,chapter] of [['二叉树','第九章'],['二叉树的遍历','第九章'],['哈密顿图','第九章'],['平面图','第九章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-thirty-first-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('ThirtyFirst batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-thirty-first-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('ThirtyFirst batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('ThirtyFirst batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<3130 && await page.getByRole('button',{name:/^树的握手定理\s+题量 0\/10/}).count()!==1)throw Error('Unpublished tree handshake falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-thirty-first-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=3130){
+   for(const [title,chapter] of [['树的握手定理','第九章'],['树的结点','第九章'],['欧拉公式','第九章'],['欧拉图','第九章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-thirty-second-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('ThirtySecond batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-thirty-second-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('ThirtySecond batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('ThirtySecond batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<3180 && await page.getByRole('button',{name:/^算术表达式的遍历\s+题量 0\/10/}).count()!==1)throw Error('Unpublished expression traversal falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-thirty-second-directory.png'),fullPage:true});
   }
 
 
@@ -1642,8 +1797,157 @@ try {
 
  }
 
+ if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=3180){
+  await page.goto(`${url}/admin?view=bank&courseId=${process.env.BANK_DISCRETE}&cycleId=${cycle}`);
+  await page.getByRole('heading',{name:'题库审查与发布',exact:true}).waitFor();
+  await page.getByRole('button',{name:'题目草稿与复核',exact:true}).click();
+  for(const [key,label] of [["02324:discrete-chapter-9:d178f2affcaa", "PROOF · hard · VERIFIED · 欧拉闭路线的充分性构造"], ["02324:discrete-chapter-9:7d332d997d63", "CALCULATION · middle · VERIFIED · 授权表达式树改编"]]){
+   await page.getByLabel('主考点',{exact:true}).selectOption(key);
+   await page.getByText(label,{exact:true}).click();
+   await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+  }
+  await page.screenshot({path:resolve(out,'batch64-02324-reviewed.png'),fullPage:true});
+  await page.goto(`${url}/study/course/02324/practice?cycleId=${cycle}`);
+  for(const [title,chapter] of [["欧拉图", "第九章"], ["算术表达式的遍历", "第九章"]]){
+   await directory();
+   const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+   await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+   await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+   await pointHeading(title);
+   await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+   const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+   await download.saveAs(resolve(out,`batch64-${title}.pdf`));
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Batch64 allowed no-image grading');
+   await page.screenshot({path:resolve(out,`batch64-focus-${title}.png`),fullPage:true});
+   await directory();
+   if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Batch64 bypassed per-point gate');
+   if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Batch64 bypassed optional hard gate');
+  }
+  await page.screenshot({path:resolve(out,'batch64-02324-directory.png'),fullPage:true});
+  await page.goto(`${url}/admin?view=bank&courseId=${course}&cycleId=${cycle}`);
+  await page.getByRole('heading',{name:'题库审查与发布',exact:true}).waitFor();
+  await page.getByRole('button',{name:'题目草稿与复核',exact:true}).click();
+  for(const [key,label] of [["13175:linear-chapter-1:9401784b3fca", "CALCULATION · middle · VERIFIED · 授权样卷余式和改编"], ["13175:linear-chapter-1:8d85624c40a0", "CALCULATION · middle · VERIFIED · 多个余式零约束的联动"]]){
+   await page.getByLabel('主考点',{exact:true}).selectOption(key);
+   await page.getByText(label,{exact:true}).click();
+   await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+  }
+  await page.screenshot({path:resolve(out,'batch64-13175-reviewed.png'),fullPage:true});
+  await page.goto(`${url}/study/course/13175/practice?cycleId=${cycle}`);
+  for(const [title,chapter] of [["代数余子式", "第一章"], ["余子式", "第一章"]]){
+   await directory();
+   const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+   await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+   await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+   await pointHeading(title);
+   await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+   const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+   await download.saveAs(resolve(out,`batch64-${title}.pdf`));
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Batch64 allowed no-image grading');
+   await page.screenshot({path:resolve(out,`batch64-focus-${title}.png`),fullPage:true});
+   await directory();
+   if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Batch64 bypassed per-point gate');
+   if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Batch64 bypassed optional hard gate');
+  }
+  await page.screenshot({path:resolve(out,'batch64-13175-directory.png'),fullPage:true});
+ }
+
+ if(Number(process.env.BANK_LINEAR_QUALIFIED)>=290){
+  await page.goto(`${url}/admin?view=bank&courseId=${course}&cycleId=${cycle}`);
+  await page.getByRole('heading',{name:'题库审查与发布',exact:true}).waitFor();
+  await page.getByRole('button',{name:'题目草稿与复核',exact:true}).click();
+  for(const [key,label] of [["13175:linear-chapter-1:8d85624c40a0","PROOF · hard · VERIFIED · 余式数据的一致性充要条件"],["13175:linear-chapter-1:943b8426ba01","CALCULATION · middle · VERIFIED · 稀疏四阶两层展开"],["13175:linear-chapter-1:8a7de259b627","CALCULATION · middle · VERIFIED · 指定四阶排列的带号项"],["13175:linear-chapter-1:d2b6f06349ad","CALCULATION · middle · VERIFIED · 授权参数行列式与实零集"]]){
+   await page.getByLabel('主考点',{exact:true}).selectOption(key);
+   await page.getByText(label,{exact:true}).click();
+   await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+  }
+  await page.screenshot({path:resolve(out,'batch65-admin-reviewed.png'),fullPage:true});
+  await page.goto(`${url}/study/course/13175/practice?cycleId=${cycle}`);
+  for(const title of ["余子式","按行（列）展开","行列式的定义","行列式的性质"]){
+   await directory();
+   const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:'第一章'});
+   await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+   await page.getByRole('button',{name:new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\s+题量 10/10`)}).click();
+   await pointHeading(title);
+   await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+   const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+   await download.saveAs(resolve(out,`batch65-${title}.pdf`));
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Batch65 no-image grading enabled');
+   await page.screenshot({path:resolve(out,`batch65-focus-${title}.png`),fullPage:true});
+   await directory();
+   if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Batch65 bypassed middle');
+   if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Batch65 bypassed optional hard');
+  }
+  await page.screenshot({path:resolve(out,'batch65-directory.png'),fullPage:true});
+ }
+ if(Number(process.env.BANK_LINEAR_QUALIFIED)>=390){
+  await page.goto(`${url}/admin?view=bank&courseId=${course}&cycleId=${cycle}`);
+  await page.getByRole('heading',{name:'题库审查与发布',exact:true}).waitFor();
+  await page.getByRole('button',{name:'题目草稿与复核',exact:true}).click();
+  for(const [key,label] of [["13175:linear-chapter-1:3385f23eae84","CALCULATION · middle · VERIFIED · 授权样卷乘积与平方改编"],["13175:linear-chapter-2:cf1687db603b","PROOF · hard · VERIFIED · 幂等矩阵的互补分解"],["13175:linear-chapter-2:21714e18a254","CALCULATION · middle · VERIFIED · 授权样卷分块求逆"],["13175:linear-chapter-2:a6f2416a759f","SHORT · simple · VERIFIED · 错误候选的单项反证"]]){
+   await page.getByLabel('主考点',{exact:true}).selectOption(key);
+   await page.getByText(label,{exact:true}).click();
+   await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+  }
+  await page.screenshot({path:resolve(out,'batch66-admin-reviewed.png'),fullPage:true});
+  await page.goto(`${url}/study/course/13175/practice?cycleId=${cycle}`);
+  for(const title of ["行列式的计算","矩阵的定义与类型","矩阵的分块","二阶矩阵的逆矩阵"]){
+   await directory();
+   const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:title==='行列式的计算'?'第一章':'第二章'});
+   await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+   await page.getByRole('button',{name:new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\s+题量 10/10`)}).click();
+   await pointHeading(title);
+   await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+   const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+   await download.saveAs(resolve(out,`batch66-${title}.pdf`));
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Batch66 no-image grading enabled');
+   await page.screenshot({path:resolve(out,`batch66-focus-${title}.png`),fullPage:true});
+   await directory();
+   if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Batch66 bypassed middle');
+   if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Batch66 bypassed optional hard');
+  }
+  await page.screenshot({path:resolve(out,'batch66-directory.png'),fullPage:true});
+ }
+ if(Number(process.env.BANK_LINEAR_QUALIFIED)>=490){
+  await page.goto(`${url}/admin?view=bank&courseId=${course}&cycleId=${cycle}`);
+  await page.getByRole('heading',{name:'题库审查与发布',exact:true}).waitFor();
+  await page.getByRole('button',{name:'题目草稿与复核',exact:true}).click();
+  for(const [key,label] of [["13175:linear-chapter-2:a6f2416a759f","PROOF · hard · VERIFIED · 逆与原矩阵差为对角的分类"],["13175:linear-chapter-2:4ae83907c407","CALCULATION · middle · VERIFIED · 循环参数族的可逆范围"],["13175:linear-chapter-2:5f155f518621","CALCULATION · middle · VERIFIED · 三阶消元同时记录逆"],["13175:linear-chapter-2:bd4aacd124e7","CALCULATION · middle · VERIFIED · 授权样卷矩阵方程改编"]]){
+   await page.getByLabel('主考点',{exact:true}).selectOption(key);
+   await page.getByText(label,{exact:true}).click();
+   await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+  }
+  await page.screenshot({path:resolve(out,'batch67-admin-reviewed.png'),fullPage:true});
+  await page.goto(`${url}/study/course/13175/practice?cycleId=${cycle}`);
+  for(const title of ["二阶矩阵的逆矩阵","可逆矩阵","初等行变换求逆矩阵","AX=B 的解法"]){
+   await directory();
+   const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:'第二章'});
+   await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+   await page.getByRole('button',{name:new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\s+题量 10/10`)}).click();
+   await pointHeading(title);
+   await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+   const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+   await download.saveAs(resolve(out,`batch67-${title}.pdf`));
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Batch67 no-image grading enabled');
+   await page.screenshot({path:resolve(out,`batch67-focus-${title}.png`),fullPage:true});
+   await directory();
+   if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Batch67 bypassed middle');
+   if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Batch67 bypassed optional hard');
+  }
+  await page.screenshot({path:resolve(out,'batch67-directory.png'),fullPage:true});
+ }
  if(errors.length)throw Error(errors.join('\n'));
- writeFileSync(resolve(out,'complete-reset-browser.json'),JSON.stringify({verifiedAt:new Date().toISOString(),realHttp:true,mockedRoutes:0,legacyResetInvoked:process.env.BANK_RESET_FIXTURE==='1',oldBankAndSnapshotsRemoved:process.env.BANK_RESET_FIXTURE==='1',originalDeterminantDraftsVisible:true,originalMultiplicationDraftsVisible:true,latestBankOnly:true,incompletePublicationBlocked:true,qualifiedPracticeAccessible:true,calculusFirstBatchAccessible:!!process.env.BANK_CALCULUS,calculusCompletePracticeQuota:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2970,discreteFirstBatchAccessible:!!process.env.BANK_DISCRETE,discreteSecondBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=130,discreteThirdBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=230,thirdBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=230,discreteFourthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=330,fourthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=330,discreteFifthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=430,fifthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=430,discreteSixthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=530,sixthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=530,discreteSeventhBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=630,seventhBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=630,discreteEighthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=730,eighthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=730,discreteNinthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=830,ninthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=830,discreteTenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=930,tenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=930,discreteEleventhBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1030,eleventhBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1030,discreteTwelfthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1130,twelfthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1130,discreteThirteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1230,thirteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1230,discreteFourteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1330,fourteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1330,discreteTwentySeventhBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2630,twentySeventhBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2630,discreteTwentySixthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2530,twentySixthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2530,discreteTwentyFifthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2430,twentyFifthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2430,discreteTwentyFourthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2330,twentyFourthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2330,discreteTwentyThirdBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2230,twentyThirdBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2230,discreteTwentySecondBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2130,twentySecondBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2130,discreteTwentyFirstBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2030,twentyFirstBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2030,discreteTwentiethBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1930,twentiethBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1930,discreteNineteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1830,nineteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1830,discreteEighteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1730,eighteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1730,discreteSeventeenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1630,seventeenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1630,discreteSixteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1530,sixteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1530,discreteFifteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1430,fifteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1430,discreteQualifiedQuestions:Number(process.env.BANK_DISCRETE_QUALIFIED || 0),calculusQualifiedQuestions:Number(process.env.BANK_CALCULUS_QUALIFIED || 100),incompleteChapterMiddleBlocked:true,calculusSecondChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=600,calculusThirdChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=900,calculusFourthChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1000,calculusFifthChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1100,calculusTwelfthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1200,calculusSixthChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1300,calculusThirteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1300,calculusFourteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1400,calculusFifteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1500,calculusSixteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1600,calculusSeventeenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1700,calculusEighteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1800,calculusNineteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1900,calculusTwentyNinthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2900,calculusTwentyEighthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2800,calculusTwentySeventhBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2700,calculusTwentySixthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2600,calculusTwentyFifthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2500,calculusTwentyFourthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2400,calculusTwentyThirdBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2300,calculusTwentySecondBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2200,calculusTwentyFirstBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2100,calculusTwentiethBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2000,unpublishedPointZeroCountVerified:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1800,independentExamsRemainBlocked:true,errors},null,2)+'\n');
+ writeFileSync(resolve(out,'complete-reset-browser.json'),JSON.stringify({verifiedAt:new Date().toISOString(),realHttp:true,mockedRoutes:0,legacyResetInvoked:process.env.BANK_RESET_FIXTURE==='1',oldBankAndSnapshotsRemoved:process.env.BANK_RESET_FIXTURE==='1',originalDeterminantDraftsVisible:true,originalMultiplicationDraftsVisible:true,latestBankOnly:true,incompletePublicationBlocked:true,qualifiedPracticeAccessible:true,calculusFirstBatchAccessible:!!process.env.BANK_CALCULUS,calculusCompletePracticeQuota:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2970,discreteFirstBatchAccessible:!!process.env.BANK_DISCRETE,discreteSecondBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=130,discreteThirdBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=230,thirdBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=230,discreteFourthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=330,fourthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=330,discreteFifthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=430,fifthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=430,discreteSixthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=530,sixthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=530,discreteSeventhBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=630,seventhBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=630,discreteEighthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=730,eighthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=730,discreteNinthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=830,ninthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=830,discreteTenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=930,tenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=930,discreteEleventhBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1030,eleventhBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1030,discreteTwelfthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1130,twelfthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1130,discreteThirteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1230,thirteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1230,discreteFourteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1330,fourteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1330,batch67LinearAccessible:Number(process.env.BANK_LINEAR_QUALIFIED)>=490,batch66LinearAccessible:Number(process.env.BANK_LINEAR_QUALIFIED)>=390,batch65LinearAccessible:Number(process.env.BANK_LINEAR_QUALIFIED)>=290,linearQualifiedQuestions:Number(process.env.BANK_LINEAR_QUALIFIED||0),batch64DiscreteComplete:Number(process.env.BANK_DISCRETE_QUALIFIED)>=3180,batch64LinearAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=3180,discreteThirtySecondBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=3130,thirtySecondBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=3130,discreteThirtyFirstBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=3030,thirtyFirstBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=3030,discreteThirtiethBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2930,thirtiethBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2930,discreteTwentyNinthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2830,twentyNinthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2830,discreteTwentyEighthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2730,twentyEighthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2730,discreteTwentySeventhBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2630,twentySeventhBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2630,discreteTwentySixthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2530,twentySixthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2530,discreteTwentyFifthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2430,twentyFifthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2430,discreteTwentyFourthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2330,twentyFourthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2330,discreteTwentyThirdBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2230,twentyThirdBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2230,discreteTwentySecondBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2130,twentySecondBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2130,discreteTwentyFirstBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2030,twentyFirstBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2030,discreteTwentiethBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1930,twentiethBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1930,discreteNineteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1830,nineteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1830,discreteEighteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1730,eighteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1730,discreteSeventeenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1630,seventeenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1630,discreteSixteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1530,sixteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1530,discreteFifteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1430,fifteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1430,discreteQualifiedQuestions:Number(process.env.BANK_DISCRETE_QUALIFIED || 0),calculusQualifiedQuestions:Number(process.env.BANK_CALCULUS_QUALIFIED || 100),incompleteChapterMiddleBlocked:true,calculusSecondChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=600,calculusThirdChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=900,calculusFourthChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1000,calculusFifthChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1100,calculusTwelfthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1200,calculusSixthChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1300,calculusThirteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1300,calculusFourteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1400,calculusFifteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1500,calculusSixteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1600,calculusSeventeenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1700,calculusEighteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1800,calculusNineteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1900,calculusTwentyNinthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2900,calculusTwentyEighthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2800,calculusTwentySeventhBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2700,calculusTwentySixthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2600,calculusTwentyFifthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2500,calculusTwentyFourthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2400,calculusTwentyThirdBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2300,calculusTwentySecondBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2200,calculusTwentyFirstBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2100,calculusTwentiethBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2000,unpublishedPointZeroCountVerified:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1800,independentExamsRemainBlocked:true,errors},null,2)+'\n');
 } catch(e){
  await page.screenshot({path:resolve(out,'publication-browser-failure.png'),fullPage:true});
  writeFileSync(resolve(out,'publication-browser-failure.html'),await page.content());
