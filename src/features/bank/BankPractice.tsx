@@ -115,7 +115,7 @@ export function BankPractice({
     data.chapters.find((c) => c.points.length);
   const requested = search.get('level');
   const level: Level =
-    requested === 'hard' || requested === 'middle'
+    requested === 'simple' || requested === 'hard' || requested === 'middle'
       ? requested
       : selectedChapter?.middleUnlocked
         ? 'middle'

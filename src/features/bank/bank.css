@@ -483,3 +483,220 @@
   max-width: 100%;
   overflow-wrap: anywhere;
 }
+
+/* Whole-sheet practice: one PDF and one set of answer photos. */
+.sheet-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 32px;
+  padding: 18px 24px 18px 40px;
+  background: #f4f6ff;
+  border-radius: 12px;
+  color: #475569;
+}
+.sheet-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+.sheet-help,
+.sheet-upload p,
+.sheet-overview p {
+  color: #64748b;
+  line-height: 1.7;
+}
+.sheet-pdf-preview {
+  width: 100%;
+  height: 700px;
+  border: 1px solid #dce2ed;
+  border-radius: 12px;
+  background: #f1f5f9;
+}
+.sheet-overview {
+  text-align: center;
+  border: 1px dashed #cbd5e1;
+  padding: 40px 20px;
+  border-radius: 12px;
+  color: #4338ca;
+}
+.sheet-question-preview {
+  margin: 20px 0;
+}
+.sheet-question-preview summary {
+  cursor: pointer;
+  color: #4338ca;
+}
+.sheet-question-preview section {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 0;
+}
+.sheet-upload {
+  margin-top: 28px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 20px;
+}
+.sheet-upload h3 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.sheet-upload-label {
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+  background: #f8fafc;
+  border: 1px dashed #94a3b8;
+  border-radius: 12px;
+}
+.sheet-upload-label input {
+  width: 100%;
+}
+.sheet-photo-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 10px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+.sheet-photo-row > span {
+  flex: 1;
+  min-width: 140px;
+  overflow-wrap: anywhere;
+}
+.sheet-answer-preview {
+  display: block;
+  max-width: 100%;
+  max-height: 600px;
+  margin: 16px auto;
+  object-fit: contain;
+}
+.sheet-apply {
+  margin-top: 24px;
+}
+.sheet-result {
+  padding: 24px 0;
+}
+.sheet-result details {
+  padding: 16px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+.sheet-render-container {
+  position: fixed;
+  left: -20000px;
+  top: 0;
+  width: 1000px;
+  pointer-events: none;
+}
+.practice-pdf-sheet {
+  width: 1000px;
+  min-height: 1414px;
+  padding: 44px;
+  box-sizing: border-box;
+  background: white;
+  color: #111827;
+  font:
+    20px/1.55 'PingFang SC',
+    'Microsoft YaHei',
+    'Noto Sans CJK SC',
+    sans-serif;
+}
+.practice-pdf-sheet header {
+  border-bottom: 2px solid #4338ca;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+.practice-pdf-sheet header strong {
+  color: #4338ca;
+  font-size: 18px;
+}
+.practice-pdf-sheet h1 {
+  margin: 8px 0;
+  font-size: 28px;
+  line-height: 1.4;
+}
+.practice-pdf-sheet header p {
+  font-size: 16px;
+  margin: 6px 0;
+}
+.practice-pdf-questions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 32px;
+}
+.practice-pdf-questions > div {
+  min-width: 0;
+}
+.practice-pdf-questions section {
+  border-bottom: 1px solid #d1d5db;
+  padding: 0 0 14px;
+  margin-bottom: 18px;
+  break-inside: avoid;
+}
+.practice-pdf-questions h2 {
+  font-size: 20px;
+  margin: 0 0 6px;
+}
+.practice-pdf-questions h2 span {
+  font-size: 16px;
+  font-weight: 400;
+  color: #475569;
+}
+.practice-pdf-sheet .question-stem,
+.practice-pdf-sheet .question-stem-body {
+  font-size: 20px;
+  line-height: 1.55;
+  gap: 4px;
+  margin: 0;
+}
+.practice-pdf-sheet .question-stem-paragraph {
+  margin: 0;
+  padding: 0;
+}
+.practice-pdf-sheet .question-expression {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.practice-pdf-sheet .question-requirement {
+  margin: 8px 0 0;
+  padding: 8px;
+  font-size: 17px;
+}
+.practice-pdf-sheet .question-requirement strong {
+  font-size: 16px;
+}
+.practice-pdf-sheet .katex-display {
+  margin: 6px 0;
+  overflow: visible;
+}
+.practice-pdf-sheet pre {
+  white-space: pre-wrap;
+  font-size: 16px;
+}
+.practice-pdf-sheet section p {
+  margin: 4px 0;
+}
+.practice-pdf-sheet footer {
+  border-top: 2px solid #4338ca;
+  padding-top: 12px;
+  font-size: 16px;
+  margin-top: 20px;
+}
+@media (max-width: 600px) {
+  .sheet-pdf-preview {
+    height: 480px;
+  }
+  .sheet-steps {
+    display: grid;
+    gap: 8px;
+  }
+  .sheet-toolbar .button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Preview the exact PDF page image without requiring a browser PDF plug-in. */
+.sheet-pdf-preview { display:block; height:auto; object-fit:contain; margin-top:16px; }
+@media(max-width:600px) { .sheet-pdf-preview { height:auto; } }

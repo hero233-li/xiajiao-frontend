@@ -23,7 +23,7 @@ async function focus(){
   await enter.click();
   await page.waitForURL(u=>u.pathname===new URL(target).pathname);
  }
- await page.getByRole('heading',{name:/^第 [0-9]+ 题$/}).waitFor();
+ await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
 }
 async function pointHeading(title){
  if(!await page.getByRole('link',{name:'← 返回考点与进度',exact:true}).count())
@@ -57,7 +57,7 @@ try {
  await page.goto(`${url}/study/course/13175/practice?cycleId=${cycle}`);
  await page.getByRole('heading',{name:'练习题分批开放中',exact:true}).waitFor();
  await focus();
- await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
+ await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
  if(await middleEnabled())throw Error('Middle unlocked with incomplete chapter coverage');
  await page.screenshot({path:resolve(out,'first-reviewed-batch-practice.png'),fullPage:true});
  if(process.env.BANK_CALCULUS){
@@ -376,8 +376,8 @@ try {
   await page.getByRole('heading',{name:'练习题分批开放中',exact:true}).waitFor();
   await page.getByText(`已有 ${process.env.BANK_CALCULUS_QUALIFIED || '100'} 道合格练习题发布。`,{exact:false}).waitFor();
  await focus();
-  await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-  if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete practice batch allowed grading');
+  await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+  if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete practice batch allowed grading');
   if(await middleEnabled())throw Error('Calculus middle unlocked with unfinished chapter points');
   await page.screenshot({path:resolve(out,'calculus-latest-batch-practice.png'),fullPage:true});
   if(Number(process.env.BANK_CALCULUS_QUALIFIED)>=600){
@@ -390,9 +390,9 @@ try {
    await page.getByRole('button',{name:/求梯度.*题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('求梯度');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('New calculus chapter middle unlocked without coverage');
    await page.screenshot({path:resolve(out,'calculus-second-chapter-practice.png'),fullPage:true});
    if(Number(process.env.BANK_CALCULUS_QUALIFIED)>=800){
@@ -402,9 +402,9 @@ try {
     await pointHeading('全微分');
     await pointHeading('全微分');
  await focus();
-    await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-    await page.getByRole('button',{name:'2',exact:true}).click();
-    await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
     if(await middleEnabled())throw Error('Differential middle unlocked without chapter coverage');
     await page.screenshot({path:resolve(out,'calculus-eighth-batch-practice.png'),fullPage:true});
    }
@@ -421,9 +421,9 @@ try {
    await page.getByRole('button',{name:/直角坐标求二重积分.*题量 10\/10/}).click();
    await page.getByRole('button',{name:/直角坐标求二重积分.*题量 10\/10/ ,pressed:true}).waitFor();
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Third chapter middle unlocked without chapter coverage');
    await page.screenshot({path:resolve(out,'calculus-third-chapter-practice.png'),fullPage:true});
   }
@@ -439,9 +439,9 @@ try {
    await page.getByRole('button',{name:/对弧长的曲线积分.*题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('对弧长的曲线积分');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Fourth chapter middle unlocked without all point coverage');
    await page.screenshot({path:resolve(out,'calculus-fourth-chapter-practice.png'),fullPage:true});
   }
@@ -456,9 +456,9 @@ try {
    await page.getByRole('button',{name:/可分离变量.*题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('可分离变量微分方程');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Fifth chapter middle unlocked without all point coverage');
    await page.screenshot({path:resolve(out,'calculus-fifth-chapter-practice.png'),fullPage:true});
   }
@@ -469,10 +469,10 @@ try {
    await page.getByRole('button',{name:/二阶常系数方程.*题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('二阶常系数方程');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete new point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete new point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Fifth chapter middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-twelfth-batch-practice.png'),fullPage:true});
   }
@@ -487,10 +487,10 @@ try {
    await page.getByRole('button',{name:/傅里叶系数.*题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('傅里叶系数');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete Fourier point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete Fourier point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Sixth chapter middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-sixth-chapter-practice.png'),fullPage:true});
   }
@@ -501,10 +501,10 @@ try {
    await page.getByRole('button',{name:/幂级数的展开.*题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('幂级数的展开');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete expansion point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete expansion point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Sixth chapter middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-fourteenth-batch-practice.png'),fullPage:true});
   }
@@ -515,10 +515,10 @@ try {
    await page.getByRole('button',{name:/根值审敛法.*题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('根值审敛法');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete root point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete root point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Sixth chapter middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-fifteenth-batch-practice.png'),fullPage:true});
   }
@@ -529,10 +529,10 @@ try {
    await page.getByRole('button',{name:/莱布尼兹审敛法.*题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('莱布尼兹审敛法');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete Leibniz point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete Leibniz point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Sixth chapter middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-sixteenth-batch-practice.png'),fullPage:true});
   }
@@ -547,10 +547,10 @@ try {
    await page.getByRole('button',{name:/可降阶的二阶微分方程.*题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('可降阶的二阶微分方程');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete reduction point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete reduction point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Fifth chapter middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-seventeenth-batch-practice.png'),fullPage:true});
   }
@@ -571,10 +571,10 @@ try {
  await directory();
    if(await page.getByRole('button',{name:/二元求极限.*题量 10\/10/}).count()!==1)throw Error('Published point did not display ten available questions');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete multivariate limit point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete multivariate limit point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Second chapter middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-eighteenth-batch-practice.png'),fullPage:true});
   }
@@ -589,10 +589,10 @@ try {
    await page.getByRole('button',{name:/直角坐标求三重积分.*题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('直角坐标求三重积分');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete triple integral point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete triple integral point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Third chapter middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-nineteenth-batch-practice.png'),fullPage:true});
   }
@@ -607,10 +607,10 @@ try {
    await page.getByRole('button',{name:/求全微分的原函数.*题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('求全微分的原函数');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete potential point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete potential point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Second chapter middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-twentieth-batch-practice.png'),fullPage:true});
   }
@@ -625,10 +625,10 @@ try {
    await page.getByRole('button',{name:/^二元函数的构造\s+题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('二元函数的构造');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete construct point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete construct point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Second chapter middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-twenty-first-batch-practice.png'),fullPage:true});
   }
@@ -645,10 +645,10 @@ try {
    await page.getByRole('button',{name:/^复合函数求导\s+题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('复合函数求导');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete chain point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete chain point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Foundation middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-twenty-second-batch-practice.png'),fullPage:true});
   }
@@ -659,10 +659,10 @@ try {
    await page.getByRole('button',{name:/^微积分基本定理\s+题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('微积分基本定理');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete FTC point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete FTC point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Foundation middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-twenty-third-batch-practice.png'),fullPage:true});
   }
@@ -673,10 +673,10 @@ try {
    await page.getByRole('button',{name:/^函数的单调性\s+题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('函数的单调性');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete monotonicity point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete monotonicity point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Foundation middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-twenty-fourth-batch-practice.png'),fullPage:true});
   }
@@ -687,10 +687,10 @@ try {
    await page.getByRole('button',{name:/^不定积分—换元法\s+题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('不定积分—换元法');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete substitution point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete substitution point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Foundation middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-twenty-fifth-batch-practice.png'),fullPage:true});
   }
@@ -701,10 +701,10 @@ try {
    await page.getByRole('button',{name:/^定积分\s+题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('定积分');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete definite integral point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete definite integral point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Foundation middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-twenty-sixth-batch-practice.png'),fullPage:true});
   }
@@ -714,10 +714,10 @@ try {
    await page.getByRole('button',{name:/^二、三阶行列式\s+题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('二、三阶行列式');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete definite integral point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete definite integral point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Foundation middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-twenty-seventh-batch-practice.png'),fullPage:true});
   }
@@ -727,10 +727,10 @@ try {
    await page.getByRole('button',{name:/^三类特殊函数求导\s+题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('三类特殊函数求导');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete definite integral point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete definite integral point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Foundation middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-twenty-eighth-batch-practice.png'),fullPage:true});
   }
@@ -740,10 +740,10 @@ try {
    await page.getByRole('button',{name:/^导数\s+题量 10\/10/ ,pressed:true}).waitFor();
    await pointHeading('导数');
  await focus();
-   await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-   if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete derivative point allowed grading');
-   await page.getByRole('button',{name:'2',exact:true}).click();
-   await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+   await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+   if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete derivative point allowed grading');
+   await page.getByText('展开全部10题预览',{exact:true}).click();
+   await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
    if(await middleEnabled())throw Error('Foundation middle unlocked with unfinished points');
    await page.screenshot({path:resolve(out,'calculus-twenty-ninth-batch-practice.png'),fullPage:true});
  await directory();
@@ -767,9 +767,9 @@ try {
   await page.getByRole('button',{name:/^空间点与卦限\s+题量 10\/10/ ,pressed:true}).waitFor();
   await pointHeading('空间点与卦限');
  await focus();
-  await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-  await page.getByRole('button',{name:'2',exact:true}).click();
-  await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+  await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+  await page.getByText('展开全部10题预览',{exact:true}).click();
+  await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
   if(await middleEnabled())throw Error('Complete math quota bypassed learner progress');
   await page.screenshot({path:resolve(out,'calculus-completion-practice.png'),fullPage:true});
  }
@@ -792,6 +792,272 @@ try {
    }
    await page.screenshot({path:resolve(out,'discrete-second-batch-reviewed.png'),fullPage:true});
   }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=230){
+   for(const [point,label] of [
+    ['02324:discrete-chapter-1:8461c713da96','PROOF · hard · VERIFIED · 省略行无法普遍认证等值'],
+    ['02324:discrete-chapter-1:2682d9b56225','PROOF · hard · VERIFIED · 有优先级例外的唯一决策'],
+    ['02324:discrete-chapter-1:06c5c02dec48','PROOF · hard · VERIFIED · 两个极小项能合并成公共文字项的判准'],
+    ['02324:discrete-chapter-1:7d839e8e934a','CALCULATION · middle · VERIFIED · 两个偶然式的条件式能有哪些类别']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(point);
+    await page.getByText(label,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-third-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=330){
+   for(const [point,label] of [
+    ['02324:discrete-chapter-1:7d839e8e934a','PROOF · hard · VERIFIED · 相同真行数不能确定条件式类别'],
+    ['02324:discrete-chapter-1:670d056368ba','PROOF · hard · VERIFIED · 否定正常形不增加原子出现数'],
+    ['02324:discrete-chapter-1:2792c7064fbe','PROOF · hard · VERIFIED · 删除任一前提仍有效不代表可同时删除'],
+    ['02324:discrete-chapter-1:abd8beec2c6d','PROOF · hard · VERIFIED · 环上恰k个条件失败的全部模型数量']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(point);
+    await page.getByText(label,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-fourth-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=430){
+   for(const [point,label] of [
+    ['02324:discrete-chapter-1:9ed09ee26396','PROOF · hard · VERIFIED · 独立翻值不变性强制两极端'],
+    ['02324:discrete-chapter-1:d4921bf6fc91','PROOF · hard · VERIFIED · 异或差分形式重建条件分支'],
+    ['02324:discrete-chapter-2:3060a2ecb680','PROOF · hard · VERIFIED · 不能把未撤销的旁支假设隐藏'],
+    ['02324:discrete-chapter-2:04b17f086607','SHORT · simple · VERIFIED · 永真式的主合取空边界']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(point);
+    await page.getByText(label,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-fifth-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=530){
+   for(const [key,label] of [
+    ['02324:discrete-chapter-2:04b17f086607','PROOF · hard · VERIFIED · 至少两真函数的规范与最短CNF'],
+    ['02324:discrete-chapter-2:d96fde6a7d9c','PROOF · hard · VERIFIED · 从不同原子域取共同规范形式'],
+    ['02324:discrete-chapter-2:a8bf6cf821ac','PROOF · hard · VERIFIED · 固定项数且每原子均不可忽略的函数计数'],
+    ['02324:discrete-chapter-2:845f12cf8b61','CALCULATION · middle · VERIFIED · 极小极大项蕴涵的索引矩阵']
+   ]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(label,{exact:false}).first().click();
+    await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-sixth-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=630){
+   for(const [key,label] of [
+    ['02324:discrete-chapter-2:845f12cf8b61','PROOF · hard · VERIFIED · 完整极大项归结与邻接的充要'],
+    ['02324:discrete-chapter-2:bd0b53668993','PROOF · hard · VERIFIED · 可证析取却不能证任一支的完整计数'],
+    ['02324:discrete-chapter-2:652c4a36cf13','PROOF · hard · VERIFIED · 最弱附加条件与完整推理反模型'],
+    ['02324:discrete-chapter-3:7c2407bea03c','CALCULATION · middle · VERIFIED · 交叉自由变量的安全标准化']
+   ]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(label,{exact:false}).first().click();
+    await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-seventh-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=730){
+   for(const [key,label] of [
+    ['02324:discrete-chapter-3:59fdf2b3c5b0','PROOF · hard · VERIFIED · 赋值一致引理的一般证明'],
+    ['02324:discrete-chapter-3:12e17886334b','CALCULATION · middle · VERIFIED · 关系矩阵四种前缀的完整求值'],
+    ['02324:discrete-chapter-3:09504e8e1981','CALCULATION · middle · VERIFIED · 存在恰一的否定条件分类'],
+    ['02324:discrete-chapter-3:478218f2cb46','SHORT · simple · VERIFIED · 全称双条件分成双向包含']
+   ]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(label,{exact:false}).first().click();
+    await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-eighth-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=830){
+   for(const [key,label] of [
+    ['02324:discrete-chapter-3:478218f2cb46','PROOF · hard · VERIFIED · 任意交替前缀的固定真分支'],
+    ['02324:discrete-chapter-3:683b19344e27','PROOF · hard · VERIFIED · 一致前提仍可无全称结论'],
+    ['02324:discrete-chapter-3:c979b675dd4e','CALCULATION · middle · VERIFIED · 每对不同成员共享一个第三对象'],
+    ['02324:discrete-chapter-3:1d10f33e9fc5','CALCULATION · middle · VERIFIED · 三层交替前缀的反见证']
+   ]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(label,{exact:false}).first().click();
+    await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-ninth-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=930){
+   for(const [key,label] of [
+    ['02324:discrete-chapter-3:1d10f33e9fc5','PROOF · hard · VERIFIED · 否定前缀的反见证树最小叶数'],
+    ['02324:discrete-chapter-3:f14130f16709','CALCULATION · middle · VERIFIED · 同一展开式中的对称与无自环联合'],
+    ['02324:discrete-chapter-3:aad9dd3a77ca','CALCULATION · middle · VERIFIED · 多前件箭头的范围与旁支辨别'],
+    ['02324:discrete-chapter-4:d2ff6e2e965c','CALCULATION · middle · VERIFIED · 平方阈值集合的空集边界']
+   ]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(label,{exact:false}).first().click();
+    await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-tenth-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1030){
+   for(const [key,label] of [
+    ['02324:discrete-chapter-4:df7dffadb976','PROOF · hard · VERIFIED · 无三重共属下两交见证的全局下界'],
+    ['02324:discrete-chapter-4:1d98054d5066','CALCULATION · middle · VERIFIED · 并集与对称差的正确范围公式'],
+    ['02324:discrete-chapter-4:2a3d37d8eba1','CALCULATION · middle · VERIFIED · 两层幂集成员分类'],
+    ['02324:discrete-chapter-4:15d12dd43a91','SHORT · simple · VERIFIED · 非空积给出因子非空']
+   ]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(label,{exact:false}).first().click();
+    await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-eleventh-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1130){
+   for(const [key,label] of [
+    ['02324:discrete-chapter-4:15d12dd43a91','PROOF · hard · VERIFIED · 非空关系为矩形的交叉闭合判据'],
+    ['02324:discrete-chapter-4:9116bdd5b5ff','CALCULATION · middle · VERIFIED · 未知纤维的整数参数恢复'],
+    ['02324:discrete-chapter-4:3ad37413d226','CALCULATION · middle · VERIFIED · 三个并式的多数成员化简'],
+    ['02324:discrete-chapter-4:ce0fd569d05e','SHORT · simple · VERIFIED · 描述条件含未定义运算的修正']
+   ]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(label,{exact:false}).first().click();
+    await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-twelfth-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1230){
+   for(const [key,label] of [
+    ['02324:discrete-chapter-4:ce0fd569d05e','PROOF · hard · VERIFIED · 正负成员资料何时确定唯一集合'],
+    ['02324:discrete-chapter-4:7312790cd48d','CALCULATION · middle · VERIFIED · 集合族外层差不能逐元删点'],
+    ['02324:discrete-chapter-5:71248f1ccb42','CALCULATION · middle · VERIFIED · 不完整关联资料的全部补全'],
+    ['02324:discrete-chapter-5:99b6d93edfbe','CALCULATION · middle · VERIFIED · 逐对文字和矩阵的差错定位']
+   ]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(label,{exact:false}).first().click();
+    await page.locator('article,details').filter({hasText:label}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-thirteenth-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1330){
+   for(const [key,title] of [['02324:discrete-chapter-5:16dc8db23fc5','PROOF · hard · VERIFIED · 有约束反向记录的最小纠错'],['02324:discrete-chapter-5:88cf5e75855f','PROOF · hard · VERIFIED · 等于恒等的两复合迫双射'],['02324:discrete-chapter-5:37af60cbe925','PROOF · hard · VERIFIED · 不完整对角资料可否补成两目标'],['02324:discrete-chapter-5:8ed7b0045268','SHORT · simple · VERIFIED · 给定单向边的反对称补全']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-fourteenth-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1430){
+   for(const [key,title] of [['02324:discrete-chapter-5:8ed7b0045268','PROOF · hard · VERIFIED · 按包含极大的反对称扩张'],['02324:discrete-chapter-5:95224dd01d15','PROOF · hard · VERIFIED · 所有二点限制仍可能漏传递'],['02324:discrete-chapter-5:5396003d70ff','PROOF · hard · VERIFIED · 两个自反对称传递关系的对称差'],['02324:discrete-chapter-5:2d889ac9d22e','CALCULATION · middle · VERIFIED · 从对称闭包反求所有原关系']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-fifteenth-batch-reviewed.png'),fullPage:true});
+  }
+
+
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1530){
+   for(const [key,title] of [['02324:discrete-chapter-5:2d889ac9d22e','PROOF · hard · VERIFIED · 正负边约束下的对称扩张'],['02324:discrete-chapter-5:d29cdfadabd0','PROOF · hard · VERIFIED · 单边更新闭包的精确公式'],['02324:discrete-chapter-5:d29a332f701b','PROOF · hard · VERIFIED · 核关系决定函数能区分的对象'],['02324:discrete-chapter-5:bbb87d19981c','CALCULATION · middle · VERIFIED · 两个同余类相交形成细类']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-sixteenth-batch-reviewed.png'),fullPage:true});
+  }
+
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1630){
+   for(const [key,title] of [['02324:discrete-chapter-5:c77072e08f92','PROOF · hard · VERIFIED · 交换两标签后不变的关系计数'],['02324:discrete-chapter-5:c857d8666cf8','CALCULATION · middle · VERIFIED · 失效覆盖族的最少删块'],['02324:discrete-chapter-5:ff30fe1d1497','PROOF · hard · VERIFIED · 复合偏序的交换充分条件'],['02324:discrete-chapter-5:1c52e00eff77','SHORT · simple · VERIFIED · 一元公式的陪域检查']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-seventeenth-batch-reviewed.png'),fullPage:true});
+  }
+
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1730){
+   for(const [key,title] of [['02324:discrete-chapter-5:1c52e00eff77','PROOF · hard · VERIFIED · 补函数图成为函数的陪域条件'],['02324:discrete-chapter-5:0c53d02831da','PROOF · hard · VERIFIED · 左逆刻画单射及空域例外'],['02324:discrete-chapter-5:0b2f6e76c3f0','PROOF · hard · VERIFIED · 双半轴比例的满射参数'],['02324:discrete-chapter-5:14bb6cacfef0','CALCULATION · middle · VERIFIED · 二进制差分编码的唯一恢复']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-eighteenth-batch-reviewed.png'),fullPage:true});
+  }
+
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1830){
+   for(const [key,title] of [['02324:discrete-chapter-5:14bb6cacfef0','PROOF · hard · VERIFIED · 有限置换图的一入一出与循环'],['02324:discrete-chapter-5:a4f666870d80','CALCULATION · middle · VERIFIED · 取整错位编码的逆及缺口'],['02324:discrete-chapter-5:a61c6524abc8','PROOF · hard · VERIFIED · 不同长链不妨碍偏序'],['02324:discrete-chapter-5:5aa406c97982','PROOF · hard · VERIFIED · 后函数分解存在的纤维判据']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-nineteenth-batch-reviewed.png'),fullPage:true});
+  }
+
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1930){
+   for(const [key,title] of [['02324:discrete-chapter-5:d68ca832363f','PROOF · hard · VERIFIED · 有限唯一极大与最大'],['02324:discrete-chapter-5:4688241b3afd','PROOF · hard · VERIFIED · 无限唯一极大未必最大'],['02324:discrete-chapter-6:6f6928fcd7b5','PROOF · hard · VERIFIED · 两个参数都有效的运算计数'],['02324:discrete-chapter-6:a3eb559b3801','SHORT · simple · VERIFIED · 实数平均运算非结合']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-twentieth-batch-reviewed.png'),fullPage:true});
+  }
+
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2030){
+   for(const [key,title] of [['02324:discrete-chapter-6:a3eb559b3801','PROOF · hard · VERIFIED · 只查重复首输入不能证明结合'],['02324:discrete-chapter-6:40244550b97c','PROOF · hard · VERIFIED · 幺元唯一性与有限表数量'],['02324:discrete-chapter-6:416a61363d7e','PROOF · hard · VERIFIED · 单侧零元的数量约束'],['02324:discrete-chapter-6:8e5843c93c41','CALCULATION · middle · VERIFIED · 两可逆元素积的逆序']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-twenty-first-batch-reviewed.png'),fullPage:true});
+  }
+
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2130){
+   for(const [key,title] of [['02324:discrete-chapter-6:8e5843c93c41','PROOF · hard · VERIFIED · 结合前提下逆元唯一及失败边界'],['02324:discrete-chapter-6:913a14fb1d0a','PROOF · hard · VERIFIED · 幂等自同态诱导新半群'],['02324:discrete-chapter-6:ec1825dc8a38','PROOF · hard · VERIFIED · 保单位同态不反映或提升可逆'],['02324:discrete-chapter-6:0df737cb62bb','PROOF · hard · VERIFIED · 只有左单位和左逆足以成群']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-twenty-second-batch-reviewed.png'),fullPage:true});
+  }
+
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2230){
+   for(const [key,title] of [['02324:discrete-chapter-6:3d2413fc01b0','PROOF · hard · VERIFIED · 三次幂恒单位不迫交换'],['02324:discrete-chapter-6:6bf40894351f','PROOF · hard · VERIFIED · 任意整数幂阶公式'],['02324:discrete-chapter-6:9a7c5b3efd75','SHORT · simple · VERIFIED · 只查相同输入的判据缺口'],['02324:discrete-chapter-6:3d11df9b5df4','SHORT · simple · VERIFIED · 模乘单位群计数']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-twenty-third-batch-reviewed.png'),fullPage:true});
+  }
+
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2330){
+   for(const [key,title] of [['02324:discrete-chapter-6:3d11df9b5df4','PROOF · hard · VERIFIED · 奇数阶群的平方映射'],['02324:discrete-chapter-6:2e39ba74fb7e','PROOF · hard · VERIFIED · 域上与环上一次方程根的差异'],['02324:discrete-chapter-7:06f2f8e0a8f4','PROOF · hard · VERIFIED · 两种格定义的等价'],['02324:discrete-chapter-7:2d9f8b8caaee','CALCULATION · middle · VERIFIED · 端点相等刻画单点']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-twenty-fourth-batch-reviewed.png'),fullPage:true});
+  }
+
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2430){
+   for(const [key,title] of [['02324:discrete-chapter-7:2d9f8b8caaee','PROOF · hard · VERIFIED · 主下集反映全格底元'],['02324:discrete-chapter-7:a9ad9c98a3fa','PROOF · hard · VERIFIED · 同态满像继承分配'],['02324:discrete-chapter-7:17ef926fa409','PROOF · hard · VERIFIED · 保交前提不可自动换成保并'],['02324:discrete-chapter-7:ca639c6105dd','PROOF · hard · VERIFIED · 分配格补元唯一性证明']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-twenty-fifth-batch-reviewed.png'),fullPage:true});
+  }
+
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2530){
+   for(const [key,title] of [['02324:discrete-chapter-7:51a70ad8dcdf','PROOF · hard · VERIFIED · 香农分解的代数证明'],['02324:discrete-chapter-8:72a09147c24d','PROOF · hard · VERIFIED · 含顶点选择的全部子图计数'],['02324:discrete-chapter-8:abc97ba9e72f','PROOF · hard · VERIFIED · 邻接阵与关联阵的乘积'],['02324:discrete-chapter-8:0e4d267b74fd','SHORT · simple · VERIFIED · 偶和上界仍不充分']]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-twenty-sixth-batch-reviewed.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2630){
+   for(const [key,title] of [["02324:discrete-chapter-8:0e4d267b74fd", "PROOF · hard · VERIFIED · 删同度顶点后的余度非唯一"], ["02324:discrete-chapter-8:f5c437f493f9", "PROOF · hard · VERIFIED · 度数总和的添加删除账本"], ["02324:discrete-chapter-8:51a02a23e117", "PROOF · hard · VERIFIED · 正则图存在的构造判据"], ["02324:discrete-chapter-8:aa7728d23cca", "CALCULATION · middle · VERIFIED · 重叠完全子图的并不必完全"]]){
+    await page.getByLabel('主考点',{exact:true}).selectOption(key);
+    await page.getByText(title,{exact:true}).click();
+    await page.locator('article,details').filter({hasText:title}).first().getByText('来源：',{exact:false}).first().waitFor();
+   }
+   await page.screenshot({path:resolve(out,'discrete-twenty-seventh-batch-reviewed.png'),fullPage:true});
+  }
+
+
   await page.goto(`${url}/study/course/02324/practice?cycleId=${cycle}`);
   await page.getByText(`已有 ${process.env.BANK_DISCRETE_QUALIFIED || '30'} 道合格练习题发布。`,{exact:false}).waitFor();
  await directory();
@@ -799,11 +1065,11 @@ try {
   await page.getByRole('button',{name:/^单条件\s+题量 10\/10/ ,pressed:true}).waitFor();
   await pointHeading('单条件');
  await focus();
-  await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-  await page.getByRole('button',{name:'2',exact:true}).click();
-  await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
+  await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+  await page.getByText('展开全部10题预览',{exact:true}).click();
+  await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
   if(await middleEnabled())throw Error('Discrete middle bypassed unfinished per-point progress');
-  if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('Incomplete conditional practice allowed grading');
+  if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Incomplete conditional practice allowed grading');
   await page.screenshot({path:resolve(out,'discrete-first-batch-practice.png'),fullPage:true});
 
   if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=130){
@@ -813,22 +1079,571 @@ try {
     await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`) ,pressed:true}).waitFor();
     await pointHeading(title);
  await focus();
-    await page.getByText('第 1 / 10 题',{exact:false}).waitFor();
-    await page.getByRole('button',{name:'2',exact:true}).click();
-    await page.getByText('第 2 / 10 题',{exact:false}).waitFor();
-    if(await page.getByRole('button',{name:'完成10题，申请批改',exact:true}).isEnabled())throw Error('New discrete point allowed incomplete grading');
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('New discrete point allowed incomplete grading');
     if(await middleEnabled())throw Error('New discrete point bypassed chapter qualification');
     await page.screenshot({path:resolve(out,`discrete-second-focus-${title}.png`),fullPage:true});
    }
  await directory();
-   if(await page.getByRole('button',{name:/^析取\s+题量 0\/10/}).count()!==1)throw Error('Unpublished discrete point received a false quota');
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<230 && await page.getByRole('button',{name:/^析取\s+题量 0\/10/}).count()!==1)throw Error('Unpublished discrete point received a false quota');
    await page.screenshot({path:resolve(out,'discrete-second-batch-practice.png'),fullPage:true});
   }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=230){
+   for(const title of ['命题符号化','析取','命题公式分类']){
+    await directory();
+    const selector=page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)});
+    await selector.click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Third batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-third-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Third batch bypassed per-point simple qualification');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Optional hard bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<330 && await page.getByRole('button',{name:/^永真式\s+题量 0\/10/}).count()!==1)throw Error('Unpublished tautology point falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-third-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=330){
+   for(const title of ['常用的命题定律','永真式','真成指派和成假指派']){
+    await directory();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Fourth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-fourth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Fourth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Fourth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<430 && await page.getByRole('button',{name:/^永真式永假式\s+题量 0\/10/}).count()!==1)throw Error('Unpublished combined constant-class point falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-fourth-directory.png'),fullPage:true});
+  }
+
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=430){
+   for(const [chapter,title] of [['第一章','永真式永假式'],['第一章','等值演算'],['第二章','CP规则'],['第二章','主合取范式']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    if(await option.count()!==1)throw Error('Missing discrete chapter '+chapter);
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Fifth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-fifth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Fifth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Fifth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<530 && await page.getByRole('button',{name:/^主析取范式\s+题量 0\/10/}).count()!==1)throw Error('Unpublished principal disjunction point falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-fifth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=530){
+   for(const title of ['主合取范式','主析取范式','大小项的个数','大小项的性质']){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:'第二章'});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Sixth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-sixth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Sixth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Sixth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<630 && await page.getByRole('button',{name:/^归谬法\s+题量 0\/10/}).count()!==1)throw Error('Unpublished reductio point falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-sixth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=630){
+   for(const [chapter,title] of [['第二章','大小项的性质'],['第二章','归谬法'],['第二章','推理规则'],['第三章','前束范式']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Seventh batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-seventh-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Seventh batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Seventh batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<730 && await page.getByRole('button',{name:/^自由变元与约束变元\s+题量 0\/10/}).count()!==1)throw Error('Unpublished free-bound variable point falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-seventh-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=730){
+   for(const title of ['自由变元与约束变元','谓词公式的真值','谓词和量词','谓词恒等式']){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:'第三章'});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Eighth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-eighth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Eighth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Eighth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<830 && await page.getByRole('button',{name:/^谓词推理\s+题量 0\/10/}).count()!==1)throw Error('Unpublished predicate inference point falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-eighth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=830){
+   for(const title of ['谓词恒等式','谓词推理','谓词符号化','量词否定']){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:'第三章'});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Ninth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-ninth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Ninth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Ninth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<930 && await page.getByRole('button',{name:/^量词的消去\s+题量 0\/10/}).count()!==1)throw Error('Unpublished quantifier elimination point falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-ninth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=930){
+   for(const [title,chapter] of [['量词否定','第三章'],['量词的消去','第三章'],['量词的辖域','第三章'],['子集和真子集','第四章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Tenth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-tenth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Tenth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Tenth batch bypassed simple qualification');
+   }
+   await page.screenshot({path:resolve(out,'discrete-tenth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1030){
+   for(const title of ['容斥原理','对称差','幂集','笛卡尔积']){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:'第四章'});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Eleventh batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-eleventh-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Eleventh batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Eleventh batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<1130 && await page.getByRole('button',{name:/^集合基数\s+题量 0\/10/}).count()!==1)throw Error('Unpublished cardinality point falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-eleventh-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1130){
+   for(const title of ['笛卡尔积','集合基数','集合恒等式','集合的基本概念']){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:'第四章'});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Twelfth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-twelfth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Twelfth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Twelfth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<1230 && await page.getByRole('button',{name:/^集合的运算\s+题量 0\/10/}).count()!==1)throw Error('Unpublished set operations falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-twelfth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1230){
+   for(const [title,chapter] of [['集合的基本概念','第四章'],['集合的运算','第四章'],['关系的基本概念','第五章'],['关系的表示','第五章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Thirteenth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-thirteenth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Thirteenth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Thirteenth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<1330 && await page.getByRole('button',{name:/^逆关系\s+题量 0\/10/}).count()!==1)throw Error('Unpublished inverse relation falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-thirteenth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1330){
+   for(const [title,chapter] of [['逆关系','第五章'],['复合关系','第五章'],['自反和反自反','第五章'],['对称和反对称','第五章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-fourteenth-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Fourteenth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-fourteenth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Fourteenth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Fourteenth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<1430 && await page.getByRole('button',{name:/^传递\s+题量 0\/10/}).count()!==1)throw Error('Unpublished transitivity falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-fourteenth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1430){
+   for(const [title,chapter] of [['对称和反对称','第五章'],['传递','第五章'],['关系运算后的性质','第五章'],['闭包','第五章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-fifteenth-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Fifteenth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-fifteenth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Fifteenth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Fifteenth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<1530 && await page.getByRole('button',{name:/^关系的传递闭包\s+题量 0\/10/}).count()!==1)throw Error('Unpublished transitive closure falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-fifteenth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1530){
+   for(const [title,chapter] of [['闭包','第五章'],['关系的传递闭包','第五章'],['等价关系','第五章'],['等价类','第五章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-sixteenth-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Sixteenth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-sixteenth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Sixteenth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Sixteenth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<1630 && await page.getByRole('button',{name:/^等价关系的个数\s+题量 0\/10/}).count()!==1)throw Error('Unpublished equivalence counting falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-sixteenth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1630){
+   for(const [title,chapter] of [['等价关系的个数','第五章'],['划分','第五章'],['偏序关系','第五章'],['函数的定义与基本性质','第五章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-seventeenth-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Seventeenth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-seventeenth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Seventeenth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Seventeenth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<1730 && await page.getByRole('button',{name:/^单射\s+题量 0\/10/}).count()!==1)throw Error('Unpublished injection falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-seventeenth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1730){
+   for(const [title,chapter] of [['函数的定义与基本性质','第五章'],['单射','第五章'],['满射','第五章'],['双射','第五章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-eighteenth-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Eighteenth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-eighteenth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Eighteenth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Eighteenth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<1830 && await page.getByRole('button',{name:/^反函数\s+题量 0\/10/}).count()!==1)throw Error('Unpublished inverse function falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-eighteenth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1830){
+   for(const [title,chapter] of [['双射','第五章'],['反函数','第五章'],['哈斯图','第五章'],['复合函数','第五章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-nineteenth-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Nineteenth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-nineteenth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Nineteenth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Nineteenth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<1930 && await page.getByRole('button',{name:/^最大元最小元\s+题量 0\/10/}).count()!==1)throw Error('Unpublished greatest least point falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-nineteenth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=1930){
+   for(const [title,chapter] of [['最大元最小元','第五章'],['极大元极小元','第五章'],['二元运算的基本概念','第六章'],['二元运算的性质','第六章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-twentieth-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('Twentieth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-twentieth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('Twentieth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('Twentieth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<2230 && await page.getByRole('button',{name:/^交换群\s+题量 0\/10/}).count()!==1)throw Error('Unpublished abelian group falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-twentieth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2030){
+   for(const [title,chapter] of [['二元运算的性质','第六章'],['幺元','第六章'],['零元','第六章'],['逆元','第六章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-twenty-first-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('TwentyFirst batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-twenty-first-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('TwentyFirst batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('TwentyFirst batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<2130 && await page.getByRole('button',{name:/^半群\s+题量 0\/10/}).count()!==1)throw Error('Unpublished semigroup falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-twenty-first-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2130){
+   for(const [title,chapter] of [['逆元','第六章'],['半群','第六章'],['独异点','第六章'],['群','第六章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-twenty-second-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('TwentySecond batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-twenty-second-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('TwentySecond batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('TwentySecond batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<2230 && await page.getByRole('button',{name:/^元素的阶\s+题量 0\/10/}).count()!==1)throw Error('Unpublished element order falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-twenty-second-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2230){
+   for(const [title,chapter] of [['交换群','第六章'],['元素的阶','第六章'],['子群判定','第六章'],['群的阶数','第六章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-twenty-third-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('TwentyThird batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-twenty-third-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('TwentyThird batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('TwentyThird batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<2330 && await page.getByRole('button',{name:/^环、整环、域\s+题量 0\/10/}).count()!==1)throw Error('Unpublished ring falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-twenty-third-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2330){
+   for(const [title,chapter] of [['群的阶数','第六章'],['环、整环、域','第六章'],['格','第七章'],['有界格','第七章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-twenty-fourth-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('TwentyFourth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-twenty-fourth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('TwentyFourth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('TwentyFourth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<2430 && await page.getByRole('button',{name:/^分配格\s+题量 0\/10/}).count()!==1)throw Error('Unpublished distributive lattice falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-twenty-fourth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2430){
+   for(const [title,chapter] of [['有界格','第七章'],['分配格','第七章'],['对偶原理','第七章'],['补元','第七章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-twenty-fifth-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('TwentyFifth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-twenty-fifth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('TwentyFifth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('TwentyFifth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<2530 && await page.getByRole('button',{name:/^布尔代数\s+题量 0\/10/}).count()!==1)throw Error('Unpublished Boolean algebra falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-twenty-fifth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2530){
+   for(const [title,chapter] of [['布尔代数','第七章'],['图的基本概念','第八章'],['图的表示','第八章'],['度数序列','第八章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-twenty-sixth-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('TwentySixth batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-twenty-sixth-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('TwentySixth batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('TwentySixth batch bypassed simple qualification');
+   }
+   if(Number(process.env.BANK_DISCRETE_QUALIFIED)<2630 && await page.getByRole('button',{name:/^握手定理\s+题量 0\/10/}).count()!==1)throw Error('Unpublished handshake theorem falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-twenty-sixth-directory.png'),fullPage:true});
+  }
+  if(Number(process.env.BANK_DISCRETE_QUALIFIED)>=2630){
+   for(const [title,chapter] of [['度数序列','第八章'],['握手定理','第八章'],['正则图','第八章'],['完全图','第八章']]){
+    await directory();
+    const option=page.getByLabel('练习章节',{exact:true}).locator('option').filter({hasText:chapter});
+    await page.getByLabel('练习章节',{exact:true}).selectOption(await option.getAttribute('value'));
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`)}).click();
+    await page.getByRole('button',{name:new RegExp(`^${title}\\s+题量 10/10`),pressed:true}).waitFor();
+    await pointHeading(title);
+    await page.getByRole('region',{name:'十题PDF练习单',exact:true}).waitFor();
+    await page.getByRole('img',{name:'十题PDF练习单预览',exact:true}).waitFor();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('link',{name:'下载PDF',exact:true}).click()]);
+    await download.saveAs(resolve(out,`discrete-twenty-seventh-${title}.pdf`));
+    await page.getByText('展开全部10题预览',{exact:true}).click();
+    await page.locator('.sheet-question-preview section').nth(1).getByRole('heading',{name:/^第2题/}).waitFor();
+    if(await page.getByRole('button',{name:'申请AI批改全部10题',exact:true}).isEnabled())throw Error('TwentySeventh batch allowed incomplete grading');
+    await page.screenshot({path:resolve(out,`discrete-twenty-seventh-focus-${title}.png`),fullPage:true});
+    await directory();
+    if(await page.getByRole('button',{name:/middle ·/}).isEnabled())throw Error('TwentySeventh batch bypassed chapter coverage');
+    if(await page.getByRole('button',{name:/hard ·/}).isEnabled())throw Error('TwentySeventh batch bypassed simple qualification');
+   }
+   if(await page.getByRole('button',{name:/^图的连通性\s+题量 0\/10/}).count()!==1)throw Error('Unpublished connectivity falsely counted');
+   await page.screenshot({path:resolve(out,'discrete-twenty-seventh-directory.png'),fullPage:true});
+  }
+
+
+
+
+
+
+
+
+
 
  }
 
  if(errors.length)throw Error(errors.join('\n'));
- writeFileSync(resolve(out,'complete-reset-browser.json'),JSON.stringify({verifiedAt:new Date().toISOString(),realHttp:true,mockedRoutes:0,legacyResetInvoked:process.env.BANK_RESET_FIXTURE==='1',oldBankAndSnapshotsRemoved:process.env.BANK_RESET_FIXTURE==='1',originalDeterminantDraftsVisible:true,originalMultiplicationDraftsVisible:true,latestBankOnly:true,incompletePublicationBlocked:true,qualifiedPracticeAccessible:true,calculusFirstBatchAccessible:!!process.env.BANK_CALCULUS,calculusCompletePracticeQuota:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2970,discreteFirstBatchAccessible:!!process.env.BANK_DISCRETE,discreteSecondBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=130,discreteQualifiedQuestions:Number(process.env.BANK_DISCRETE_QUALIFIED || 0),calculusQualifiedQuestions:Number(process.env.BANK_CALCULUS_QUALIFIED || 100),incompleteChapterMiddleBlocked:true,calculusSecondChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=600,calculusThirdChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=900,calculusFourthChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1000,calculusFifthChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1100,calculusTwelfthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1200,calculusSixthChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1300,calculusThirteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1300,calculusFourteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1400,calculusFifteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1500,calculusSixteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1600,calculusSeventeenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1700,calculusEighteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1800,calculusNineteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1900,calculusTwentyNinthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2900,calculusTwentyEighthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2800,calculusTwentySeventhBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2700,calculusTwentySixthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2600,calculusTwentyFifthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2500,calculusTwentyFourthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2400,calculusTwentyThirdBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2300,calculusTwentySecondBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2200,calculusTwentyFirstBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2100,calculusTwentiethBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2000,unpublishedPointZeroCountVerified:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1800,independentExamsRemainBlocked:true,errors},null,2)+'\n');
+ writeFileSync(resolve(out,'complete-reset-browser.json'),JSON.stringify({verifiedAt:new Date().toISOString(),realHttp:true,mockedRoutes:0,legacyResetInvoked:process.env.BANK_RESET_FIXTURE==='1',oldBankAndSnapshotsRemoved:process.env.BANK_RESET_FIXTURE==='1',originalDeterminantDraftsVisible:true,originalMultiplicationDraftsVisible:true,latestBankOnly:true,incompletePublicationBlocked:true,qualifiedPracticeAccessible:true,calculusFirstBatchAccessible:!!process.env.BANK_CALCULUS,calculusCompletePracticeQuota:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2970,discreteFirstBatchAccessible:!!process.env.BANK_DISCRETE,discreteSecondBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=130,discreteThirdBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=230,thirdBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=230,discreteFourthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=330,fourthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=330,discreteFifthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=430,fifthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=430,discreteSixthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=530,sixthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=530,discreteSeventhBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=630,seventhBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=630,discreteEighthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=730,eighthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=730,discreteNinthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=830,ninthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=830,discreteTenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=930,tenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=930,discreteEleventhBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1030,eleventhBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1030,discreteTwelfthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1130,twelfthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1130,discreteThirteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1230,thirteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1230,discreteFourteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1330,fourteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1330,discreteTwentySeventhBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2630,twentySeventhBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2630,discreteTwentySixthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2530,twentySixthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2530,discreteTwentyFifthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2430,twentyFifthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2430,discreteTwentyFourthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2330,twentyFourthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2330,discreteTwentyThirdBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2230,twentyThirdBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2230,discreteTwentySecondBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2130,twentySecondBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2130,discreteTwentyFirstBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2030,twentyFirstBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=2030,discreteTwentiethBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1930,twentiethBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1930,discreteNineteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1830,nineteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1830,discreteEighteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1730,eighteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1730,discreteSeventeenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1630,seventeenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1630,discreteSixteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1530,sixteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1530,discreteFifteenthBatchAccessible:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1430,fifteenthBatchOptionalHardBlocked:Number(process.env.BANK_DISCRETE_QUALIFIED)>=1430,discreteQualifiedQuestions:Number(process.env.BANK_DISCRETE_QUALIFIED || 0),calculusQualifiedQuestions:Number(process.env.BANK_CALCULUS_QUALIFIED || 100),incompleteChapterMiddleBlocked:true,calculusSecondChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=600,calculusThirdChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=900,calculusFourthChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1000,calculusFifthChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1100,calculusTwelfthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1200,calculusSixthChapterAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1300,calculusThirteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1300,calculusFourteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1400,calculusFifteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1500,calculusSixteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1600,calculusSeventeenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1700,calculusEighteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1800,calculusNineteenthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1900,calculusTwentyNinthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2900,calculusTwentyEighthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2800,calculusTwentySeventhBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2700,calculusTwentySixthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2600,calculusTwentyFifthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2500,calculusTwentyFourthBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2400,calculusTwentyThirdBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2300,calculusTwentySecondBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2200,calculusTwentyFirstBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2100,calculusTwentiethBatchAccessible:Number(process.env.BANK_CALCULUS_QUALIFIED)>=2000,unpublishedPointZeroCountVerified:Number(process.env.BANK_CALCULUS_QUALIFIED)>=1800,independentExamsRemainBlocked:true,errors},null,2)+'\n');
 } catch(e){
  await page.screenshot({path:resolve(out,'publication-browser-failure.png'),fullPage:true});
  writeFileSync(resolve(out,'publication-browser-failure.html'),await page.content());
