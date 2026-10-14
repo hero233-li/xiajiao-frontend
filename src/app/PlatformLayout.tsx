@@ -254,6 +254,9 @@ export function PlatformLayout() {
       </div>
       <footer className="platform-foot">
         <span>知途 · 个人成长平台</span>
+        <a className="icp-link" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
+          蜀ICP备2026061522号
+        </a>
         <Link to="/spaces">整理我的空间</Link>
       </footer>
     </div>

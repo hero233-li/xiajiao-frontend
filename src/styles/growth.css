@@ -128,8 +128,25 @@
   letter-spacing: 0.05em;
 }
 .platform-foot {
+  flex-wrap: wrap;
   background: white;
   border-top: 1px solid var(--color-line);
+}
+.login-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+.icp-link {
+  color: inherit;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.icp-link:hover,
+.icp-link:focus-visible {
+  text-decoration: underline;
 }
 .platform-section,
 .desk-section {
@@ -748,8 +765,7 @@ summary:focus-visible {
 }
 .task-focus .global-bar,
 .task-focus .space-bar,
-.task-focus .phone-navigation,
-.task-focus .platform-foot {
+.task-focus .phone-navigation {
   display: none;
 }
 .task-focus .desk-main {

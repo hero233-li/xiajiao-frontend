@@ -43,7 +43,12 @@ export function Component() {
           <LoginForm />
         </section>
       </div>
-      <footer>知途个人成长平台</footer>
+      <footer className="login-footer">
+        <span>知途个人成长平台</span>
+        <a className="icp-link" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
+          蜀ICP备2026061522号
+        </a>
+      </footer>
     </main>
   );
 }
