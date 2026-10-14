@@ -32,3 +32,29 @@
 .login-form > span > .button-reason {
   display: none;
 }
+.login-account {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-line);
+  font-size: 14px;
+}
+.login-account > p {
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+.login-account dl,
+.login-account dd {
+  margin: 0;
+}
+.login-account dl > div + div {
+  margin-top: 12px;
+}
+.login-account dt {
+  margin-bottom: 4px;
+  color: var(--color-secondary);
+}
+.login-account code {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  user-select: all;
+}

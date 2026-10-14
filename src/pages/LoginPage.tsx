@@ -41,6 +41,13 @@ export function Component() {
           <h1 id="login-title">欢迎回来</h1>
           <p className="secondary">登录后继续你的任务和记录。</p>
           <LoginForm />
+          <aside className="login-account" aria-label="登录账号信息">
+            <p>登录账号</p>
+            <dl>
+              <div><dt>用户名</dt><dd><code>integration</code></dd></div>
+              <div><dt>密码</dt><dd><code>1d548e9c1b08f87ffd18d57f</code></dd></div>
+            </dl>
+          </aside>
         </section>
       </div>
       <footer className="login-footer">
