@@ -699,3 +699,25 @@
     min-height: 380px;
   }
 }
+
+.wb-pdf-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wb-pdf-page {
+  margin: 0;
+  border: 1px solid var(--color-line);
+  background: #fff;
+}
+.wb-pdf-page img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.wb-pdf-page figcaption {
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--color-secondary);
+  border-top: 1px solid var(--color-line);
+}

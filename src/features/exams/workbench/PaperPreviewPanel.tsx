@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Download, ExternalLink, FileWarning, LockKeyhole, Smartphone } from 'lucide-react';
+import { Download, ExternalLink, FileWarning, LockKeyhole } from 'lucide-react';
 import type { Paper } from '../../../api/generated/models';
 import { saveExamFile } from '../../../api/exams';
 import { Link } from '../../cycle/navigation';
 import { usePaperFile, type PaperPart } from '../usePaperFile';
 import { canInlinePdf } from '../inlinePdf';
+import { PdfPageViewer } from './PdfPageViewer';
 
 export function PaperPreviewPanel({
   courseId,
@@ -111,33 +112,11 @@ export function PaperPreviewPanel({
             </>
           )}
           {url && isPdf && !inline && (
-            <div className="wb-paper-fallback">
-              <Smartphone size={22} aria-hidden="true" />
-              <div>
-                <strong>手机浏览器不支持在页面内显示 PDF</strong>
-                <p>
-                  {file?.file.name} · {((file?.file.sizeBytes ?? 0) / 1024).toFixed(0)} KB ·{' '}
-                  {paper.questionPages === null ? '页数未知' : `${paper.questionPages} 页`}
-                </p>
-                <p>点「打开 PDF」会用系统阅读器打开，也可以直接下载到本地。</p>
-                <div className="wb-paper-fallback-actions">
-                  <a className="button button-primary" href={url} target="_blank" rel="noreferrer">
-                    <ExternalLink size={16} aria-hidden="true" />
-                    打开 PDF
-                  </a>
-                  {file && (
-                    <button
-                      className="button button-secondary"
-                      type="button"
-                      onClick={() => saveExamFile(file)}
-                    >
-                      <Download size={16} aria-hidden="true" />
-                      下载到本地
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+            <PdfPageViewer
+              url={url}
+              title={`${paper.paperMonth} ${active === 'QUESTION' ? '题目' : '答案'}`}
+              file={file}
+            />
           )}
           {url && !isPdf && (
             <img

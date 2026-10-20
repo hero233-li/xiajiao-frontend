@@ -1,4 +1,4 @@
-import { beforeEach, expect, it } from 'vitest';
+import { beforeEach, expect, it, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -9,6 +9,14 @@ import operations from '../../../mocks/generated.json';
 import type { Paper, Unlock } from '../../../api/generated/models';
 import type { GradingTask, Rubric, Submission } from '../../../api/grading';
 import { Workbench } from './Workbench';
+
+vi.mock('../usePdfPages', () => ({
+  usePdfPages: () => ({
+    pages: [{ pageNo: 1, url: 'blob:page-1', width: 800, height: 1200 }],
+    loading: false,
+    error: '',
+  }),
+}));
 
 const example = <T,>(name: string) =>
   structuredClone(operations.find((op) => op.operationId === name)!.example.data) as T;
@@ -265,28 +273,27 @@ it('本卷分析在批改后展示逐题得分率与失分原因', async () => {
   expect(screen.getByText('×2')).toBeInTheDocument();
 });
 
-it('安卓手机浏览器也不渲染内嵌 PDF，改为打开/下载兜底', async () => {
+it('安卓手机浏览器不渲染内嵌 PDF，改为渲染页面图片', async () => {
   const original = navigator.userAgent;
   Object.defineProperty(navigator, 'userAgent', {
     value: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/124 Mobile Safari/537.36',
     configurable: true,
   });
   mount();
-  expect(await screen.findByText('手机浏览器不支持在页面内显示 PDF')).toBeInTheDocument();
+  expect(await screen.findByAltText(/第 1 页/)).toBeInTheDocument();
   expect(document.querySelector('iframe.wb-paper-frame')).toBeNull();
   Object.defineProperty(navigator, 'userAgent', { value: original, configurable: true });
 });
 
-it('微信内置浏览器不渲染内嵌 PDF，改为打开/下载兜底', async () => {
+it('微信内置浏览器不渲染内嵌 PDF，改为渲染页面图片', async () => {
   const original = navigator.userAgent;
   Object.defineProperty(navigator, 'userAgent', {
     value: `${original} MicroMessenger/8.0`,
     configurable: true,
   });
   mount();
-  expect(await screen.findByText('手机浏览器不支持在页面内显示 PDF')).toBeInTheDocument();
+  expect(await screen.findByAltText(/第 1 页/)).toBeInTheDocument();
   expect(document.querySelector('iframe.wb-paper-frame')).toBeNull();
-  expect(screen.getByRole('link', { name: /打开 PDF/ })).toBeInTheDocument();
   Object.defineProperty(navigator, 'userAgent', { value: original, configurable: true });
 });
 

@@ -5,6 +5,7 @@ import { saveExamFile } from '../api/exams';
 import { Link } from '../features/cycle/navigation';
 import { useCycle } from '../features/cycle/CycleContext';
 import { usePaperFile } from '../features/exams/usePaperFile';
+import { PdfPageViewer } from '../features/exams/workbench/PdfPageViewer';
 import { canInlinePdf } from '../features/exams/inlinePdf';
 import '../features/exams/paper-preview.css';
 
@@ -88,23 +89,7 @@ export function Component() {
             <iframe className="paper-preview-frame" src={url} title={`${month} ${labels[part]}预览`} />
           )}
           {url && isPdf && !inline && (
-            <div className="paper-preview-fallback">
-              <p>当前浏览器不支持在页面内显示 PDF。</p>
-              <p>
-                <a className="button button-primary" href={url} target="_blank" rel="noreferrer">
-                  打开 PDF
-                </a>
-                {file && (
-                  <button
-                    className="button button-secondary"
-                    type="button"
-                    onClick={() => saveExamFile(file)}
-                  >
-                    下载到本地
-                  </button>
-                )}
-              </p>
-            </div>
+            <PdfPageViewer url={url} title={`${month} ${labels[part]}`} file={file} />
           )}
           {url && !isPdf && (
             <img className="paper-preview-image" src={url} alt={`${month} ${labels[part]}预览`} />
