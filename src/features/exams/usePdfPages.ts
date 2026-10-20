@@ -30,7 +30,8 @@ export function usePdfPages(url: string, enabled: boolean) {
       try {
         const pdfjs = await import('pdfjs-dist');
         const worker = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
-        pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+        // 版本串用于绕开缓存：worker 文件名只随内容变化，若曾被错误 MIME 缓存会一直失败。
+        pdfjs.GlobalWorkerOptions.workerSrc = `${worker.default}?v=2`;
         const document_ = await pdfjs.getDocument({ url }).promise;
         const rendered: PdfPageImage[] = [];
         for (let index = 1; index <= document_.numPages; index++) {
