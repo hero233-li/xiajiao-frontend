@@ -80,3 +80,21 @@
     height: 68vh;
   }
 }
+
+.paper-preview-fallback {
+  padding: 28px;
+  border: 1px dashed var(--color-line);
+  background: var(--color-surface);
+  font-size: 14px;
+  color: var(--color-secondary);
+}
+.paper-preview-fallback p {
+  margin: 0 0 12px;
+}
+.paper-preview-fallback .button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  margin-right: 8px;
+  text-decoration: none;
+}
