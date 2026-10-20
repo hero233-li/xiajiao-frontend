@@ -114,10 +114,12 @@ export function PaperPreviewPanel({
             <div className="wb-paper-fallback">
               <Smartphone size={22} aria-hidden="true" />
               <div>
-                <strong>当前浏览器不支持在页面内显示 PDF</strong>
+                <strong>手机浏览器不支持在页面内显示 PDF</strong>
                 <p>
-                  {file?.file.name} · {((file?.file.sizeBytes ?? 0) / 1024).toFixed(0)} KB
+                  {file?.file.name} · {((file?.file.sizeBytes ?? 0) / 1024).toFixed(0)} KB ·{' '}
+                  {paper.questionPages === null ? '页数未知' : `${paper.questionPages} 页`}
                 </p>
+                <p>点「打开 PDF」会用系统阅读器打开，也可以直接下载到本地。</p>
                 <div className="wb-paper-fallback-actions">
                   <a className="button button-primary" href={url} target="_blank" rel="noreferrer">
                     <ExternalLink size={16} aria-hidden="true" />

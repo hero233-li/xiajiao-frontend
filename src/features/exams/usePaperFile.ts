@@ -33,7 +33,11 @@ export function usePaperFile(
         if (!alive) return;
         const data = response.data;
         const bytes = Uint8Array.from(atob(data.contentBase64), (char) => char.charCodeAt(0));
-        created = URL.createObjectURL(new Blob([bytes], { type: data.file.mimeType }));
+        // 用 File 而不是裸 Blob：新标签页标题和下载文件名会沿用真实文件名，
+        // 而不是浏览器显示的一串 blob UUID。
+        created = URL.createObjectURL(
+          new File([bytes], data.file.name, { type: data.file.mimeType }),
+        );
         setFile(data);
         setUrl(created);
       })

@@ -265,6 +265,18 @@ it('本卷分析在批改后展示逐题得分率与失分原因', async () => {
   expect(screen.getByText('×2')).toBeInTheDocument();
 });
 
+it('安卓手机浏览器也不渲染内嵌 PDF，改为打开/下载兜底', async () => {
+  const original = navigator.userAgent;
+  Object.defineProperty(navigator, 'userAgent', {
+    value: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/124 Mobile Safari/537.36',
+    configurable: true,
+  });
+  mount();
+  expect(await screen.findByText('手机浏览器不支持在页面内显示 PDF')).toBeInTheDocument();
+  expect(document.querySelector('iframe.wb-paper-frame')).toBeNull();
+  Object.defineProperty(navigator, 'userAgent', { value: original, configurable: true });
+});
+
 it('微信内置浏览器不渲染内嵌 PDF，改为打开/下载兜底', async () => {
   const original = navigator.userAgent;
   Object.defineProperty(navigator, 'userAgent', {
@@ -272,7 +284,7 @@ it('微信内置浏览器不渲染内嵌 PDF，改为打开/下载兜底', async
     configurable: true,
   });
   mount();
-  expect(await screen.findByText('当前浏览器不支持在页面内显示 PDF')).toBeInTheDocument();
+  expect(await screen.findByText('手机浏览器不支持在页面内显示 PDF')).toBeInTheDocument();
   expect(document.querySelector('iframe.wb-paper-frame')).toBeNull();
   expect(screen.getByRole('link', { name: /打开 PDF/ })).toBeInTheDocument();
   Object.defineProperty(navigator, 'userAgent', { value: original, configurable: true });
