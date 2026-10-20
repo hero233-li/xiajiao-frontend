@@ -278,16 +278,15 @@ it('微信内置浏览器不渲染内嵌 PDF，改为打开/下载兜底', async
   Object.defineProperty(navigator, 'userAgent', { value: original, configurable: true });
 });
 
-it('条件满足时提交批改可用，作答条件默认折叠', async () => {
+it('条件满足时提交批改可用，且不再显示作答条件', async () => {
   mount('/', {
     submissions: [submission(1)],
     setup: () => server.use(http.get('*/api/v1/grading/rubrics', () => ok([publishedRubric]))),
   });
   expect(await screen.findByText('条件已满足，可以直接提交批改。')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /提交批改/ })).toBeEnabled();
-  expect(screen.getByText('作答条件（可选，影响成绩预测）').closest('details')).not.toHaveAttribute(
-    'open',
-  );
+  expect(screen.queryByText(/作答条件/)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('实际用时')).not.toBeInTheDocument();
 });
 
 it('可以创建一次性配对凭证', async () => {
