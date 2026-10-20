@@ -6,6 +6,6 @@ export default defineConfig({
     name: 'exams',
     environment: 'jsdom',
     setupFiles: ['./src/features/exams/test-setup.ts'],
-    include: ['src/features/exams/*.test.tsx'],
+    include: ['src/features/exams/**/*.test.tsx'],
   },
 });

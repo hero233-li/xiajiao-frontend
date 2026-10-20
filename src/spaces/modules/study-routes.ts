@@ -52,6 +52,11 @@ export const studyRoutes: RouteObject[] = [
     lazy: () => import('../../pages/ExamsPage'),
   },
   {
+    path: '/study/course/:code/exams/:paperId',
+    handle: { title: '考卷工作台' },
+    lazy: () => import('../../pages/ExamWorkbenchPage'),
+  },
+  {
     path: '/study/course/:code/knowledge',
     handle: { title: '知识点梳理' },
     lazy: () => import('../../pages/KnowledgeAnalysisPage'),

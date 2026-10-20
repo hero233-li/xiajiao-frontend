@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { Link } from '../cycle/navigation';
-import { CheckCircle2, Eye, LockKeyhole, Info, FileText, Upload } from 'lucide-react';
+import { CheckCircle2, LockKeyhole, Info } from 'lucide-react';
 import type {
   Paper,
   Prediction,
@@ -11,6 +11,7 @@ import type {
 } from '../../api/generated/models';
 import { Button } from '../../components/Button';
 import { formatShanghaiDate } from '../../utils/date';
+import { PaperCard } from './PaperCard';
 
 export function AsyncRegion<T>({
   query,
@@ -179,7 +180,6 @@ export function PaperGroups({
   papers,
   unlock,
   onRecord,
-  onGrade,
   scoresByPaper,
   courseId,
   code,
@@ -190,15 +190,14 @@ export function PaperGroups({
   unlock?: Unlock;
   scoresByPaper: Map<string, ScoreRecord>;
   onRecord: (paper: Paper) => void;
-  onGrade: (paper: Paper) => void;
 }) {
   const [withAnswers, setWithAnswers] = useState(false);
   const filtered = papers.filter(
-    (p) => !withAnswers || !!p.answerFile || p.questionFile.containsAnswers,
+    (paper) => !withAnswers || !!paper.answerFile || paper.questionFile.containsAnswers,
   );
-  const years = [...new Set(filtered.map((p) => p.paperMonth.slice(0, 4)))].sort().reverse();
-  const preview = (paper: Paper, part: 'QUESTION' | 'ANSWER') =>
-    `/study/paper-preview/${paper.id}?courseId=${encodeURIComponent(courseId)}&part=${part}&month=${paper.paperMonth}&code=${encodeURIComponent(code)}`;
+  const years = [...new Set(filtered.map((paper) => paper.paperMonth.slice(0, 4)))].sort().reverse();
+  const unlocked = !!unlock?.canDownloadPapers;
+  const canWrite = !!unlock?.canWriteScores;
   return (
     <div className="exam-library">
       <div className="exam-library-tools">
@@ -210,7 +209,7 @@ export function PaperGroups({
           <input
             type="checkbox"
             checked={withAnswers}
-            onChange={(e) => setWithAnswers(e.target.checked)}
+            onChange={(event) => setWithAnswers(event.target.checked)}
           />
           仅看有答案
         </label>
@@ -225,7 +224,7 @@ export function PaperGroups({
       )}
       {years.map((year) => {
         const items = filtered
-          .filter((p) => p.paperMonth.startsWith(year))
+          .filter((paper) => paper.paperMonth.startsWith(year))
           .sort((a, b) => b.paperMonth.localeCompare(a.paperMonth));
         return (
           <section className="exam-year" key={year} aria-labelledby={`exam-year-${year}`}>
@@ -234,94 +233,18 @@ export function PaperGroups({
               <span>{items.length} 套</span>
             </header>
             <div className="exam-year-grid">
-              {items.map((paper) => {
-                const score = scoresByPaper.get(paper.id);
-                const answerLabel = paper.answerFile
-                  ? '独立答案'
-                  : paper.questionFile.containsAnswers
-                    ? '题目含答案'
-                    : '暂无答案';
-                return (
-                  <article className="exam-paper-card" key={paper.id}>
-                    <header className="exam-paper-card-head">
-                      <span className="exam-paper-month">{paper.paperMonth}</span>
-                      <span
-                        className={`exam-paper-badge ${answerLabel === '暂无答案' ? 'is-muted' : 'is-answer'}`}
-                      >
-                        {answerLabel}
-                      </span>
-                    </header>
-                    <p className="exam-paper-card-meta">
-                      <FileText size={15} aria-hidden="true" />
-                      {paper.questionPages === null
-                        ? '题目页数未提供'
-                        : `${paper.questionPages} 页题目`}
-                      {paper.answerFile && (
-                        <span>
-                          {paper.answerPages === null ? '答案页数未提供' : `答案 ${paper.answerPages} 页`}
-                        </span>
-                      )}
-                    </p>
-                    {paper.sourceCourseCode && paper.sourceCourseCode !== code && (
-                      <p className="exam-paper-card-note">
-                        补充资料 · 来源课程代码 {paper.sourceCourseCode}
-                      </p>
-                    )}
-                    <div className="exam-paper-card-score" data-has-score={!!score}>
-                      {score ? (
-                        <>
-                          <strong>{score.score}</strong>
-                          <span>分 · {formatShanghaiDate(score.practicedOn)}</span>
-                        </>
-                      ) : (
-                        <span className="secondary">尚未批改</span>
-                      )}
-                    </div>
-                    <div className="exam-paper-card-actions">
-                      {unlock?.canDownloadPapers ? (
-                        <>
-                          <Link
-                            className="button button-secondary exam-preview-button"
-                            to={preview(paper, 'QUESTION')}
-                            aria-label={`题目预览 ${paper.paperMonth}`}
-                          >
-                            <Eye size={16} aria-hidden="true" />
-                            题目预览
-                          </Link>
-                          {paper.answerFile && (
-                            <Link
-                              className="button button-ghost exam-preview-button"
-                              to={preview(paper, 'ANSWER')}
-                              aria-label={`答案预览 ${paper.paperMonth}`}
-                            >
-                              答案预览
-                            </Link>
-                          )}
-                        </>
-                      ) : (
-                        <span className="exam-download-state">
-                          <LockKeyhole size={14} aria-hidden="true" />
-                          {unlock ? '未开放预览' : '预览权限暂不可用'}
-                        </span>
-                      )}
-                    </div>
-                    {unlock?.canWriteScores && (
-                      <div className="exam-paper-card-grading">
-                        <Button
-                          aria-label={`上传答卷批改 ${paper.paperMonth}`}
-                          onClick={() => onGrade(paper)}
-                        >
-                          <Upload size={16} aria-hidden="true" />
-                          上传答卷批改
-                        </Button>
-                        <Button variant="ghost" onClick={() => onRecord(paper)}>
-                          记录成绩
-                        </Button>
-                      </div>
-                    )}
-                  </article>
-                );
-              })}
+              {items.map((paper) => (
+                <PaperCard
+                  key={paper.id}
+                  paper={paper}
+                  code={code}
+                  courseId={courseId}
+                  unlocked={unlocked}
+                  canWrite={canWrite}
+                  score={scoresByPaper.get(paper.id)}
+                  onRecord={onRecord}
+                />
+              ))}
             </div>
           </section>
         );

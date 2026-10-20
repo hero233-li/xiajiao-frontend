@@ -1,5 +1,4 @@
 import { BankExamReasons } from '../features/bank/BankExamReasons';
-import { GradingPanel } from '../features/grading/GradingPanel';
 import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Link, useSearchParams } from '../features/cycle/navigation';
@@ -89,16 +88,14 @@ export function ExamContent({
   code: string;
   cycleId: string;
 }) {
-  const [routeSearch] = useSearchParams();
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [view, setView] = useState<'papers' | 'records' | 'analysis' | 'grading'>(() => routeSearch.get('view') === 'grading' ? 'grading' : 'papers');
+  const [trendOpen, setTrendOpen] = useState(false);
   const [scorePage, setScorePage] = useState(1);
   const [historyPage, setHistoryPage] = useState(1);
   const data = useExamData(courseId, cycleId, historyOpen, scorePage, historyPage);
   const actions = useExamActions(courseId, cycleId);
   const [dialog, setDialog] = useState<{ paperId: string; record?: ScoreRecord }>();
   const [skipConfirm, setSkipConfirm] = useState(false);
-  const [graderPaperId, setGraderPaperId] = useState('');
   const practice = `/study/course/${code}/practice`;
   const canWrite = data.unlock.isSuccess && !data.unlock.isError && data.unlock.data.canWriteScores;
   const scoresByPaper = useMemo(() => {
@@ -107,10 +104,6 @@ export function ExamContent({
       if (!latest.has(record.paperId)) latest.set(record.paperId, record);
     return latest;
   }, [data.scores.data]);
-  const show = (next: 'papers' | 'records' | 'analysis' | 'grading') => {
-    setView(next);
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  };
   const kindLabels: Record<LegacyRecordSummaryKind, string> = {
     ability: '检测',
     grading: '批改',
@@ -122,125 +115,78 @@ export function ExamContent({
   };
   return (
     <>
-      <nav className="exam-views" aria-label="真题与成绩视图">
-        {(
-          [
-            ['papers', '找真题'],
-            ['records', '成绩与照片'],
-            ['analysis', '趋势与分析'],
-            ['grading', '上传批改'],
-          ] as const
-        ).map(([key, label]) => (
-          <button
-            key={key}
-            aria-current={view === key ? 'page' : undefined}
-            onClick={() => show(key)}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
-      {view === 'grading' && (
-        <>
-          <button
-            type="button"
-            className="exam-back-to-papers"
-            onClick={() => show('papers')}
-          >
-            ← 返回真题列表
-          </button>
-          <GradingPanel
-            courseId={courseId}
-            courseCode={code}
-            cycleId={cycleId}
-            initialTaskId={routeSearch.get('taskId') ?? ''}
-            initialPaperId={graderPaperId}
-            papers={data.papers.data ?? []}
-            canWrite={canWrite}
-          />
-        </>
-      )}
-      <div hidden={view !== 'papers'} className="exam-pane stack">
-        <AsyncRegion query={data.unlock} label="解锁信息">
-          {(unlock) => (
-            <>
-              <UnlockSteps unlock={unlock} practice={practice} />
-              {(unlock.skipWindow.canConfirm || unlock.activeOverride) && (
-                <section className="card exam-skip stack">
-                  <h2>{unlock.activeOverride ? '已手动跳过' : '临考手动跳过'}</h2>
+      <AsyncRegion query={data.unlock} label="解锁信息">
+        {(unlock) => (
+          <>
+            <UnlockSteps unlock={unlock} practice={practice} />
+            {(unlock.skipWindow.canConfirm || unlock.activeOverride) && (
+              <section className="card exam-skip stack">
+                <h2>{unlock.activeOverride ? '已手动跳过' : '临考手动跳过'}</h2>
+                <p>
+                  {unlock.activeOverride && <CheckCircle2 size={20} aria-hidden="true" />}
+                  跳过仅开放真题下载和试卷成绩录入，不授予章节检测或模拟卷资格，可以撤销。
+                </p>
+                {unlock.skipWindow.canConfirm && (
                   <p>
-                    {unlock.activeOverride && <CheckCircle2 size={20} aria-hidden="true" />}
-                    跳过仅开放真题下载和试卷成绩录入，不授予章节检测或模拟卷资格，可以撤销。
+                    可确认窗口：{unlock.skipWindow.windowStart} 至 {unlock.skipWindow.windowEnd}
+                    （上海日期，含首尾）。
                   </p>
-                  {unlock.skipWindow.canConfirm && (
-                    <p>
-                      可确认窗口：{unlock.skipWindow.windowStart} 至 {unlock.skipWindow.windowEnd}
-                      （上海日期，含首尾）。
-                    </p>
-                  )}
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      actions.skip.reset();
-                      setSkipConfirm(true);
-                    }}
-                  >
-                    {unlock.activeOverride ? '撤销跳过' : '手动跳过'}
-                  </Button>
-                </section>
-              )}
-            </>
-          )}
-        </AsyncRegion>
-        <section id="exam-papers" className="stack">
-          <div className="exam-library-heading">
-            <div>
-              <h2>历年真题</h2>
-              <p className="secondary exam-library-note">
-                按年份整理。点「题目预览」在新页面查看 PDF，做完题可上传答卷由 Mac
-                批改并生成分数。
-              </p>
-            </div>
-            {canWrite && data.papers.data?.length ? (
-              <Button onClick={() => setDialog({ paperId: data.papers.data![0].id })}>
-                录入成绩
-              </Button>
-            ) : null}
+                )}
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    actions.skip.reset();
+                    setSkipConfirm(true);
+                  }}
+                >
+                  {unlock.activeOverride ? '撤销跳过' : '手动跳过'}
+                </Button>
+              </section>
+            )}
+          </>
+        )}
+      </AsyncRegion>
+
+      <section id="exam-papers" className="stack">
+        <div className="exam-library-heading">
+          <div>
+            <h2>历年真题</h2>
+            <p className="secondary exam-library-note">
+              按年份整理。进入某份试卷的工作台，可以在同一页完成预览、上传答卷、批改与看分数。
+            </p>
           </div>
-          <AsyncRegion query={data.papers} label="试卷清单">
-            {(papers) =>
-              papers.length ? (
-                <PaperGroups
-                  papers={papers}
-                  code={code}
-                  courseId={courseId}
-                  scoresByPaper={scoresByPaper}
-                  unlock={data.unlock.isSuccess ? data.unlock.data : undefined}
-                  onRecord={(paper) => {
-                    if (canWrite) setDialog({ paperId: paper.id });
-                  }}
-                  onGrade={(paper) => {
-                    setGraderPaperId(paper.id);
-                    show('grading');
-                  }}
-                />
-              ) : (
-                <EmptyLine text="暂无收录试卷。" retry={() => void data.papers.refetch()} />
-              )
-            }
-          </AsyncRegion>
-        </section>
-      </div>
-      <div hidden={view !== 'records'} className="exam-pane stack">
-        <section className="stack">
-          <h2>我的成绩记录</h2>
           {canWrite && data.papers.data?.length ? (
             <Button onClick={() => setDialog({ paperId: data.papers.data![0].id })}>
-              选择试卷并录入成绩
+              录入成绩
             </Button>
-          ) : (
-            <p className="secondary">查看已有记录。新增或修改成绩需要当前课程真题权限。</p>
-          )}
+          ) : null}
+        </div>
+        <AsyncRegion query={data.papers} label="试卷清单">
+          {(papers) =>
+            papers.length ? (
+              <PaperGroups
+                papers={papers}
+                code={code}
+                courseId={courseId}
+                scoresByPaper={scoresByPaper}
+                unlock={data.unlock.isSuccess ? data.unlock.data : undefined}
+                onRecord={(paper) => {
+                  if (canWrite) setDialog({ paperId: paper.id });
+                }}
+              />
+            ) : (
+              <EmptyLine text="暂无收录试卷。" retry={() => void data.papers.refetch()} />
+            )
+          }
+        </AsyncRegion>
+      </section>
+
+      <details onToggle={(event) => setTrendOpen(event.currentTarget.open)}>
+        <summary>我的成绩记录</summary>
+        <section className="stack">
+          <p className="secondary">
+            这里汇总所有试卷的成绩与照片。要批改某份试卷，进入它自己的工作台。
+          </p>
           <AsyncRegion query={data.scores} label="成绩记录">
             {(scores) => (
               <>
@@ -266,64 +212,72 @@ export function ExamContent({
             )}
           </AsyncRegion>
         </section>
-        <details onToggle={(event) => setHistoryOpen(event.currentTarget.open)}>
-          <summary>历史检测与批改记录（只读）</summary>
-          <p>历史记录，不计入当前解锁。</p>
-          {historyOpen && (
-            <AsyncRegion query={data.history} label="历史记录">
-              {(history) => (
-                <>
-                  {history.items.length ? (
-                    <ul className="exam-history">
-                      {history.items.map((row) => (
-                        <li key={row.summary.id}>
-                          <strong>{row.summary.title}</strong>
-                          <p>
-                            {row.summary.createdAt
-                              ? formatShanghaiDate(row.summary.createdAt)
-                              : '日期未知'}{' '}
-                            · {kindLabels[row.summary.kind]} ·{' '}
-                            {row.oldScore === null ? '未提供分数' : `${row.oldScore} 分`}
-                          </p>
-                          <span>历史记录，不计入当前解锁 · 只读</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <EmptyLine text="暂无历史记录。" retry={() => void data.history.refetch()} />
-                  )}
-                  <Pagination
-                    page={history.page}
-                    size={history.size}
-                    total={history.total}
-                    change={setHistoryPage}
-                  />
-                </>
-              )}
-            </AsyncRegion>
-          )}
-        </details>
-      </div>
-      <div hidden={view !== 'analysis'} className="exam-pane stack">
-        <AsyncRegion query={data.prediction} label="成绩预测">
-          {(prediction) => <PredictionPanel prediction={prediction} />}
-        </AsyncRegion>
-        <section className="stack">
-          <h2>纸卷成绩趋势 · 最近 12 次</h2>
-          <AsyncRegion query={data.trend} label="成绩趋势">
-            {(trend) =>
-              trend.records.length ? (
-                <TrendPanel records={trend.records} />
-              ) : (
-                <EmptyLine
-                  text="暂无刷题成绩，完成试卷后可记录成绩。"
-                  retry={() => void data.trend.refetch()}
-                />
-              )
-            }
+      </details>
+
+      <details onToggle={(event) => setTrendOpen(event.currentTarget.open)}>
+        <summary>成绩趋势与预测</summary>
+        <div className="stack">
+          <AsyncRegion query={data.prediction} label="成绩预测">
+            {(prediction) => <PredictionPanel prediction={prediction} />}
           </AsyncRegion>
-        </section>
-      </div>
+          {trendOpen && (
+            <section className="stack">
+              <h2>纸卷成绩趋势 · 最近 12 次</h2>
+              <AsyncRegion query={data.trend} label="成绩趋势">
+                {(trend) =>
+                  trend.records.length ? (
+                    <TrendPanel records={trend.records} />
+                  ) : (
+                    <EmptyLine
+                      text="暂无刷题成绩，完成试卷后可记录成绩。"
+                      retry={() => void data.trend.refetch()}
+                    />
+                  )
+                }
+              </AsyncRegion>
+            </section>
+          )}
+        </div>
+      </details>
+
+      <details onToggle={(event) => setHistoryOpen(event.currentTarget.open)}>
+        <summary>历史检测与批改记录（只读）</summary>
+        <p>历史记录，不计入当前解锁。</p>
+        {historyOpen && (
+          <AsyncRegion query={data.history} label="历史记录">
+            {(history) => (
+              <>
+                {history.items.length ? (
+                  <ul className="exam-history">
+                    {history.items.map((row) => (
+                      <li key={row.summary.id}>
+                        <strong>{row.summary.title}</strong>
+                        <p>
+                          {row.summary.createdAt
+                            ? formatShanghaiDate(row.summary.createdAt)
+                            : '日期未知'}{' '}
+                          · {kindLabels[row.summary.kind]} ·{' '}
+                          {row.oldScore === null ? '未提供分数' : `${row.oldScore} 分`}
+                        </p>
+                        <span>历史记录，不计入当前解锁 · 只读</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <EmptyLine text="暂无历史记录。" retry={() => void data.history.refetch()} />
+                )}
+                <Pagination
+                  page={history.page}
+                  size={history.size}
+                  total={history.total}
+                  change={setHistoryPage}
+                />
+              </>
+            )}
+          </AsyncRegion>
+        )}
+      </details>
+
       <Link className="button button-secondary" to={practice}>
         回到章节检测与模拟卷
       </Link>
