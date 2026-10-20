@@ -47,7 +47,7 @@ it('课程框架保留五位代码，标签支持前进后退', async () => {
   await waitFor(() => expect(router.state.location.pathname).toBe('/study/course/00023/catalog'));
   await act(() => router.navigate(1));
   await waitFor(() => expect(router.state.location.pathname).toBe('/study/course/00023/exams'));
-  await screen.findByRole('heading', { name: '历年试卷' });
+  await screen.findByRole('heading', { name: '历年真题' });
   await waitFor(() => expect(screen.queryAllByText(/^正在加载/)).toHaveLength(0));
 });
 it('不存在的课程显示友好页面，并保留返回入口', async () => {

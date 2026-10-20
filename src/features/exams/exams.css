@@ -142,6 +142,145 @@
   min-height: 16px;
   padding: 0;
 }
+.exam-library-note {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--color-secondary);
+  max-width: 62ch;
+}
+.exam-year {
+  padding-top: 6px;
+}
+.exam-year-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-line);
+}
+.exam-year-head h3 {
+  margin: 0;
+  font: 20px Georgia, serif;
+  color: var(--color-ink);
+  letter-spacing: 0.02em;
+}
+.exam-year-head span {
+  font-size: 14px;
+  color: var(--color-secondary);
+}
+.exam-year-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 14px;
+  padding-top: 16px;
+}
+.exam-paper-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.exam-paper-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 6%);
+}
+.exam-paper-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.exam-paper-month {
+  font: 18px Georgia, serif;
+  color: var(--color-ink);
+  letter-spacing: 0.02em;
+}
+.exam-paper-badge {
+  font-size: 12px;
+  padding: 3px 8px;
+  border: 1px solid var(--color-line);
+  color: var(--color-secondary);
+  white-space: nowrap;
+}
+.exam-paper-badge.is-answer {
+  border-color: #94a685;
+  color: #55663f;
+}
+.exam-paper-badge.is-muted {
+  color: var(--color-secondary);
+}
+.exam-paper-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-secondary);
+}
+.exam-paper-card-meta > svg {
+  flex-shrink: 0;
+}
+.exam-paper-card-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-secondary);
+}
+.exam-paper-card-score {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 26px;
+  font-size: 14px;
+  color: var(--color-secondary);
+}
+.exam-paper-card-score strong {
+  font: 24px Georgia, serif;
+  color: var(--color-ink);
+}
+.exam-paper-card-score[data-has-score='true'] strong {
+  color: var(--color-primary);
+}
+.exam-paper-card-actions,
+.exam-paper-card-grading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.exam-paper-card-actions {
+  margin-top: auto;
+}
+.exam-paper-card-actions .button,
+.exam-paper-card-grading .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 6px 12px;
+  font-size: 14px;
+  text-decoration: none;
+}
+.exam-paper-card-grading .button:first-child {
+  flex: 1;
+  justify-content: center;
+}
+.exam-back-to-papers {
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  padding: 4px 0;
+  font-size: 14px;
+  color: var(--color-secondary);
+  cursor: pointer;
+}
+.exam-back-to-papers:hover {
+  color: var(--color-primary);
+}
 .exam-paper {
   display: grid;
   grid-template-columns: minmax(150px, 1fr) 130px minmax(180px, auto);

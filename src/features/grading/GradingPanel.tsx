@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../components/Button';
 import { sessionStore } from '../../api/session';
+import { Link } from '../cycle/navigation';
 import {
   gradingRequest as request,
   type Submission,
@@ -38,17 +39,23 @@ export function GradingPanel({
   cycleId,
   papers,
   canWrite,
+  courseCode,
+  initialTaskId = '',
+  initialPaperId = '',
 }: {
   courseId: string;
   cycleId: string;
   papers: Paper[];
   canWrite: boolean;
+  courseCode?: string;
+  initialTaskId?: string;
+  initialPaperId?: string;
 }) {
   const client = useQueryClient();
   const confirm = useConfirmation();
-  const [paperId, setPaperId] = useState(papers[0]?.id ?? '');
+  const [paperId, setPaperId] = useState(initialPaperId || papers[0]?.id || '');
   const [selected, setSelected] = useState<Submission>();
-  const [taskId, setTaskId] = useState('');
+  const [taskId, setTaskId] = useState(initialTaskId);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [pair, setPair] = useState<{ id: string; token: string }>();
@@ -86,7 +93,7 @@ export function GradingPanel({
   });
   const task = useQuery({
     queryKey: ['grading-task', taskId],
-    queryFn: () => request<GradingTask>('GET', `/tasks/${taskId}`),
+    queryFn: () => request<GradingTask>('GET', `/tasks/${encodeURIComponent(taskId)}`),
     enabled: !!taskId,
     refetchInterval: (q) => (q.state.data && terminal(q.state.data) ? false : 5000),
   });
@@ -97,6 +104,14 @@ export function GradingPanel({
     refetchInterval: (q) => (q.state.data?.some((item) => !terminal(item)) ? 5000 : false),
   });
   useEffect(() => {
+    if (taskId !== initialTaskId || !task.data?.submissionId || !submissions.data) return;
+    const linked = submissions.data.find((item) => item.id === task.data?.submissionId);
+    if (linked && linked.courseId === courseId && linked.cycleId === cycleId) {
+      setSelected(linked);
+      setPaperId(linked.paperId);
+    }
+  }, [taskId, initialTaskId, task.data?.submissionId, submissions.data, courseId, cycleId]);
+  useEffect(() => {
     setReview(task.data?.result ?? undefined);
     setConfirmed(false);
   }, [task.data]);
@@ -106,11 +121,15 @@ export function GradingPanel({
         queryKey: ['exams', sessionStore.getSnapshot()?.user.id, courseId],
       });
       void client.invalidateQueries({ queryKey: ['grading-tasks'] });
+      void client.invalidateQueries({ queryKey: ['knowledge-analysis'] });
     }
   }, [client, courseId, task.data?.state, task.data?.scoreId]);
   useEffect(() => {
-    if (!paperId && papers[0]) setPaperId(papers[0].id);
-  }, [papers, paperId]);
+    if (initialPaperId) setPaperId(initialPaperId);
+  }, [initialPaperId]);
+  useEffect(() => {
+    if (!paperId && papers[0] && (!initialTaskId || taskId !== initialTaskId)) setPaperId(papers[0].id);
+  }, [papers, paperId, initialTaskId, taskId]);
   async function act(action: () => Promise<void>) {
     setBusy(true);
     setError('');
@@ -372,6 +391,7 @@ export function GradingPanel({
       {task.data && (
         <section className="grading-result stack" aria-live="polite">
           <h3>2 · {states[task.data.state]}</h3>
+          {task.data.state === 'COMPLETED' && <Link to={courseCode ? `/study/course/${courseCode}/knowledge` : '/study/mistake-analysis'}>查看知识点梳理 →</Link>}
           {!task.data.workerOnline && !terminal(task.data) && <p>{task.data.workerReason}</p>}
           {task.data.error && <p>{task.data.error}</p>}
           {task.data.kind === 'GRADE' && <TaskImages taskId={task.data.id} />}

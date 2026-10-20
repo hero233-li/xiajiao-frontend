@@ -1,17 +1,11 @@
 import { BankExamReasons } from '../features/bank/BankExamReasons';
 import { GradingPanel } from '../features/grading/GradingPanel';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Link, useSearchParams } from '../features/cycle/navigation';
 import { CheckCircle2 } from 'lucide-react';
-import {
-  useExamCourse,
-  useExamCycles,
-  useExamData,
-  useExamActions,
-  saveExamFile,
-} from '../api/exams';
-import type { Paper, ScoreRecord, LegacyRecordSummaryKind } from '../api/generated/models';
+import { useExamCourse, useExamCycles, useExamData, useExamActions } from '../api/exams';
+import type { ScoreRecord, LegacyRecordSummaryKind } from '../api/generated/models';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import {
@@ -95,26 +89,28 @@ export function ExamContent({
   code: string;
   cycleId: string;
 }) {
+  const [routeSearch] = useSearchParams();
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [view, setView] = useState<'papers' | 'records' | 'analysis' | 'grading'>('papers');
+  const [view, setView] = useState<'papers' | 'records' | 'analysis' | 'grading'>(() => routeSearch.get('view') === 'grading' ? 'grading' : 'papers');
   const [scorePage, setScorePage] = useState(1);
   const [historyPage, setHistoryPage] = useState(1);
   const data = useExamData(courseId, cycleId, historyOpen, scorePage, historyPage);
   const actions = useExamActions(courseId, cycleId);
   const [dialog, setDialog] = useState<{ paperId: string; record?: ScoreRecord }>();
   const [skipConfirm, setSkipConfirm] = useState(false);
-  const [downloadError, setDownloadError] = useState('');
+  const [graderPaperId, setGraderPaperId] = useState('');
   const practice = `/study/course/${code}/practice`;
   const canWrite = data.unlock.isSuccess && !data.unlock.isError && data.unlock.data.canWriteScores;
-  async function download(paper: Paper, part: 'QUESTION' | 'ANSWER') {
-    if (!data.unlock.data?.canDownloadPapers || actions.download.isPending) return;
-    setDownloadError('');
-    try {
-      saveExamFile(await actions.download.mutateAsync({ id: paper.id, part }));
-    } catch (error) {
-      setDownloadError(error instanceof Error ? error.message : '下载失败，请重试');
-    }
-  }
+  const scoresByPaper = useMemo(() => {
+    const latest = new Map<string, ScoreRecord>();
+    for (const record of data.scores.data?.items ?? [])
+      if (!latest.has(record.paperId)) latest.set(record.paperId, record);
+    return latest;
+  }, [data.scores.data]);
+  const show = (next: 'papers' | 'records' | 'analysis' | 'grading') => {
+    setView(next);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
   const kindLabels: Record<LegacyRecordSummaryKind, string> = {
     ability: '检测',
     grading: '批改',
@@ -132,19 +128,38 @@ export function ExamContent({
             ['papers', '找真题'],
             ['records', '成绩与照片'],
             ['analysis', '趋势与分析'],
-            ['grading', '答卷批改'],
+            ['grading', '上传批改'],
           ] as const
         ).map(([key, label]) => (
           <button
             key={key}
             aria-current={view === key ? 'page' : undefined}
-            onClick={() => setView(key)}
+            onClick={() => show(key)}
           >
             {label}
           </button>
         ))}
       </nav>
-      {view === 'grading' && <GradingPanel courseId={courseId} cycleId={cycleId} papers={data.papers.data ?? []} canWrite={canWrite} />}
+      {view === 'grading' && (
+        <>
+          <button
+            type="button"
+            className="exam-back-to-papers"
+            onClick={() => show('papers')}
+          >
+            ← 返回真题列表
+          </button>
+          <GradingPanel
+            courseId={courseId}
+            courseCode={code}
+            cycleId={cycleId}
+            initialTaskId={routeSearch.get('taskId') ?? ''}
+            initialPaperId={graderPaperId}
+            papers={data.papers.data ?? []}
+            canWrite={canWrite}
+          />
+        </>
+      )}
       <div hidden={view !== 'papers'} className="exam-pane stack">
         <AsyncRegion query={data.unlock} label="解锁信息">
           {(unlock) => (
@@ -179,30 +194,34 @@ export function ExamContent({
         </AsyncRegion>
         <section id="exam-papers" className="stack">
           <div className="exam-library-heading">
-            <h2>历年试卷</h2>
+            <div>
+              <h2>历年真题</h2>
+              <p className="secondary exam-library-note">
+                按年份整理。点「题目预览」在新页面查看 PDF，做完题可上传答卷由 Mac
+                批改并生成分数。
+              </p>
+            </div>
             {canWrite && data.papers.data?.length ? (
               <Button onClick={() => setDialog({ paperId: data.papers.data![0].id })}>
                 录入成绩
               </Button>
             ) : null}
           </div>
-          {downloadError && (
-            <div role="alert" className="card" data-state="error">
-              <p>下载失败：{downloadError}</p>
-              <p>请重新点击对应试卷的下载按钮重试。</p>
-            </div>
-          )}
           <AsyncRegion query={data.papers} label="试卷清单">
             {(papers) =>
               papers.length ? (
                 <PaperGroups
                   papers={papers}
                   code={code}
+                  courseId={courseId}
+                  scoresByPaper={scoresByPaper}
                   unlock={data.unlock.isSuccess ? data.unlock.data : undefined}
-                  downloading={actions.download.isPending ? actions.download.variables : undefined}
-                  onDownload={(paper, part) => void download(paper, part)}
                   onRecord={(paper) => {
                     if (canWrite) setDialog({ paperId: paper.id });
+                  }}
+                  onGrade={(paper) => {
+                    setGraderPaperId(paper.id);
+                    show('grading');
                   }}
                 />
               ) : (
@@ -306,7 +325,7 @@ export function ExamContent({
         </section>
       </div>
       <Link className="button button-secondary" to={practice}>
-        回到练习与检测
+        回到章节检测与模拟卷
       </Link>
       {dialog && canWrite && data.papers.isSuccess && (
         <ScoreDialog

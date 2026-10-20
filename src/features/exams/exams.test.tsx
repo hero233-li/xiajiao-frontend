@@ -31,13 +31,13 @@ const handlers = [
   http.get('*/api/v1/exams/history', () => ok({ items: [], page: 1, size: 20, total: 0 })),
 ];
 beforeEach(() => server.use(...handlers));
-function mount() {
+function mount(initialEntry = '/') {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   render(
     <QueryClientProvider client={client}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <ExamContent courseId={unlock.courseId} cycleId={unlock.cycleId} code="00023" />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -47,6 +47,20 @@ function mount() {
 const denied = (message: string) =>
   HttpResponse.json({ code: 40301, data: null, message }, { status: 403 });
 describe('历年试卷与成绩', () => {
+  it('知识点证据深链进入答卷批改，按 owner task 自动选择原答卷并提供梳理入口', async () => {
+    const task = { id: 'linked-task', kind: 'GRADE', state: 'COMPLETED', submissionId: 'linked-submission', rubricId: null, model: 'model', result: null, rubricDraft: null, scoreId: null, error: null, leaseUntil: null, workerOnline: true, workerReason: null };
+    server.use(
+      http.get('*/api/v1/grading/tasks/linked-task', () => ok(task)),
+      http.get('*/api/v1/grading/submissions', () => ok([{ id: 'linked-submission', courseId: unlock.courseId, cycleId: unlock.cycleId, paperId: paper.id, revision: 2, pages: [] }])),
+      http.get('*/api/v1/grading/submissions/linked-submission/tasks', () => ok([task])),
+      http.get('*/api/v1/grading/workers', () => ok([])),
+      http.get('*/api/v1/grading/rubrics', () => ok([])),
+    );
+    mount('/study/course/00023/exams?view=grading&taskId=linked-task');
+    expect(await screen.findByRole('heading', { name: '2 · 已完成' })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole('combobox', { name: '已有答卷' })).toHaveValue('linked-submission'));
+    expect(screen.getByRole('link', { name: '查看知识点梳理 →' })).toHaveAttribute('href', '/study/course/00023/knowledge');
+  });
   it('加载中、空数据和可重试的失败区域独立展示', async () => {
     let calls = 0;
     server.use(
@@ -63,21 +77,33 @@ describe('历年试卷与成绩', () => {
     await userEvent.click(await screen.findByRole('button', { name: '重新加载成绩预测' }));
     expect(await screen.findByText('根据你的练习成绩估算，不代表正式成绩')).toBeInTheDocument();
   });
-  it('未解锁时显示紧凑试卷且没有下载或录入按钮', async () => {
+  it('未解锁时显示紧凑试卷且没有预览或录入按钮', async () => {
     server.use(
       http.get(`${base}/unlock`, () =>
         ok({ ...unlock, canDownloadPapers: false, canWriteScores: false }),
       ),
     );
     mount();
-    expect(await screen.findByText('未开放下载')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '下载题目' })).not.toBeInTheDocument();
+    expect(await screen.findByText('未开放预览')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /题目预览/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '上传答卷批改 2025-04' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '记录成绩' })).not.toBeInTheDocument();
     expect(screen.queryByText(/练习次数/)).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: '真题解锁步骤' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '手动跳过' })).not.toBeInTheDocument();
   });
-  it('年份与答案筛选组合使用，空结果可清除并恢复真实清单', async () => {
+  it('真题按年份分组，题目改为新页面预览而非下载', async () => {
+    mount();
+    expect(await screen.findByRole('heading', { name: '2025 年' })).toBeInTheDocument();
+    const link = screen.getByRole('link', { name: '题目预览 2025-04' });
+    expect(link).not.toHaveAttribute('target');
+    const href = link.getAttribute('href') ?? '';
+    expect(href).toContain(`/study/paper-preview/${paper.id}`);
+    expect(href).toContain('part=QUESTION');
+    expect(href).toContain(`courseId=${unlock.courseId}`);
+    expect(screen.queryByRole('button', { name: '下载题目' })).not.toBeInTheDocument();
+  });
+  it('年份分组展示试卷，答案筛选可清除并恢复真实清单', async () => {
     const papers = [
       {
         ...paper,
@@ -108,16 +134,14 @@ describe('历年试卷与成绩', () => {
     );
     mount();
     const user = userEvent.setup();
-    const year = await screen.findByRole('combobox', { name: '筛选试卷年份' });
-    await user.selectOptions(year, '2026');
-    expect(screen.getAllByRole('article')).toHaveLength(1);
+    expect(await screen.findByRole('heading', { name: '2026 年' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '2025 年' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '2024 年' })).toBeInTheDocument();
+    expect(screen.getAllByRole('article')).toHaveLength(3);
     expect(screen.getByText('暂无答案')).toBeVisible();
     await user.click(screen.getByLabelText('仅看有答案'));
-    expect(screen.queryAllByRole('article')).toHaveLength(0);
-    await user.click(screen.getByRole('button', { name: '清除筛选' }));
-    expect(screen.getAllByRole('article')).toHaveLength(3);
-    await user.click(screen.getByLabelText('仅看有答案'));
-    expect(screen.getAllByRole('article')).toHaveLength(2);
+    expect(await screen.findAllByRole('article')).toHaveLength(2);
+    expect(screen.queryByRole('heading', { name: '2026 年' })).not.toBeInTheDocument();
     expect(screen.getByText('题目含答案')).toBeVisible();
     expect(screen.getByText('独立答案')).toBeVisible();
     expect(screen.getByText('补充资料 · 来源课程代码 old')).toBeVisible();
@@ -307,19 +331,17 @@ describe('历年试卷与成绩', () => {
     expect(await screen.findByRole('button', { name: '撤销跳过' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '手动跳过' })).not.toBeInTheDocument();
   });
-  it('受控下载失败保留错误和重试入口', async () => {
-    let calls = 0;
+  it('卡片显示最近批改分数，并可直达该试卷的上传批改', async () => {
     server.use(
-      http.get(`${base}/papers/:paperId/file`, () => {
-        calls++;
-        return denied('未解锁，禁止下载');
-      }),
+      http.get(`${base}/scores`, () => ok({ items: [change.record], page: 1, size: 20, total: 1 })),
     );
     mount();
-    await userEvent.click(await screen.findByRole('button', { name: '下载题目' }));
-    expect(await screen.findByText('下载失败：未解锁，禁止下载')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: '下载题目' }));
-    await waitFor(() => expect(calls).toBe(2));
+    expect(await screen.findByText('75')).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole('button', { name: '上传答卷批改 2025-04' }));
+    expect(await screen.findByRole('heading', { name: '答卷批改' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: '批改试卷' })).toHaveValue(paper.id);
+    await userEvent.click(screen.getByRole('button', { name: '← 返回真题列表' }));
+    expect(await screen.findByRole('heading', { name: '2025 年' })).toBeInTheDocument();
   });
   it('历史详情只读展示上海时间、类型、分数', async () => {
     const legacy = example<LegacyDetail>('getLegacyHistory');
