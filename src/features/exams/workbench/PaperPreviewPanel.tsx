@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Download, ExternalLink, FileWarning, LockKeyhole } from 'lucide-react';
+import { Download, ExternalLink, FileWarning, LockKeyhole, Smartphone } from 'lucide-react';
 import type { Paper } from '../../../api/generated/models';
 import { saveExamFile } from '../../../api/exams';
 import { Link } from '../../cycle/navigation';
 import { usePaperFile, type PaperPart } from '../usePaperFile';
+import { canInlinePdf } from '../inlinePdf';
 
 export function PaperPreviewPanel({
   courseId,
@@ -23,6 +24,7 @@ export function PaperPreviewPanel({
   const active: PaperPart = part === 'ANSWER' && !hasAnswer ? 'QUESTION' : part;
   const { file, url, error, loading } = usePaperFile(courseId, paper.id, cycleId, active, unlocked);
   const isPdf = file?.file.mimeType === 'application/pdf';
+  const inline = canInlinePdf();
   const fullscreen = `/study/paper-preview/${paper.id}?courseId=${encodeURIComponent(courseId)}&part=${active}&month=${paper.paperMonth}&code=${encodeURIComponent(code)}`;
 
   return (
@@ -31,7 +33,8 @@ export function PaperPreviewPanel({
         <div>
           <h2 id="wb-paper-title">试卷</h2>
           <p className="secondary">
-            {paper.paperMonth} · {paper.questionPages === null ? '页数未提供' : `${paper.questionPages} 页题目`}
+            {paper.paperMonth} ·{' '}
+            {paper.questionPages === null ? '页数未提供' : `${paper.questionPages} 页题目`}
             {hasAnswer && paper.answerPages !== null ? ` · ${paper.answerPages} 页答案` : ''}
           </p>
         </div>
@@ -72,7 +75,7 @@ export function PaperPreviewPanel({
               </button>
             )}
             <Link className="button button-ghost" to={fullscreen}>
-              打开大图预览
+              大图预览页
             </Link>
           </div>
         )}
@@ -95,12 +98,44 @@ export function PaperPreviewPanel({
       {unlocked && !error && (
         <div className="wb-paper-body">
           {loading && <p role="status">正在加载试卷 PDF…</p>}
-          {url && isPdf && (
-            <iframe
-              className="wb-paper-frame"
-              src={url}
-              title={`${paper.paperMonth} ${active === 'QUESTION' ? '题目' : '答案'}预览`}
-            />
+          {url && isPdf && inline && (
+            <>
+              <iframe
+                className="wb-paper-frame"
+                src={url}
+                title={`${paper.paperMonth} ${active === 'QUESTION' ? '题目' : '答案'}预览`}
+              />
+              <p className="wb-paper-hint">
+                上方空白多半是浏览器不支持内嵌 PDF，用「新窗口打开」或「下载原文件」即可查看。
+              </p>
+            </>
+          )}
+          {url && isPdf && !inline && (
+            <div className="wb-paper-fallback">
+              <Smartphone size={22} aria-hidden="true" />
+              <div>
+                <strong>当前浏览器不支持在页面内显示 PDF</strong>
+                <p>
+                  {file?.file.name} · {((file?.file.sizeBytes ?? 0) / 1024).toFixed(0)} KB
+                </p>
+                <div className="wb-paper-fallback-actions">
+                  <a className="button button-primary" href={url} target="_blank" rel="noreferrer">
+                    <ExternalLink size={16} aria-hidden="true" />
+                    打开 PDF
+                  </a>
+                  {file && (
+                    <button
+                      className="button button-secondary"
+                      type="button"
+                      onClick={() => saveExamFile(file)}
+                    >
+                      <Download size={16} aria-hidden="true" />
+                      下载到本地
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           )}
           {url && !isPdf && (
             <img

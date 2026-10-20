@@ -12,6 +12,8 @@ import { GradingLauncher, type PracticeDraft } from './GradingLauncher';
 import { TaskPanel } from './TaskPanel';
 import { ScoreSummary } from './ScoreSummary';
 import { PaperAnalysis } from './PaperAnalysis';
+import { RubricPanel, WorkerPanel } from './AdminPanels';
+import { sessionStore } from '../../../api/session';
 import {
   useCourseTrend,
   useGradingTask,
@@ -91,6 +93,7 @@ export function Workbench({
     (worker) => worker.online && !worker.paused && !worker.revoked,
   );
   const records = scores.data?.items ?? [];
+  const admin = sessionStore.getSnapshot()?.user.role === 'ADMIN';
 
   if (paper.isPending || unlock.isPending)
     return (
@@ -245,6 +248,18 @@ export function Workbench({
       <div id="wb-score">
         <ScoreSummary records={records} canWrite={canWrite} onRecord={(record) => setDialog({ record })} />
       </div>
+
+      <section className="wb-maintenance" aria-label="维护">
+        <WorkerPanel workers={workers.data ?? []} />
+        <RubricPanel
+          courseId={courseId}
+          cycleId={cycleId}
+          paperId={paperId}
+          rubrics={rubrics.data ?? []}
+          admin={admin}
+          onChanged={() => void rubrics.refetch()}
+        />
+      </section>
 
       <div id="wb-analysis">
         <PaperAnalysis

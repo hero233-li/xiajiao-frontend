@@ -5,6 +5,7 @@ import { saveExamFile } from '../api/exams';
 import { Link } from '../features/cycle/navigation';
 import { useCycle } from '../features/cycle/CycleContext';
 import { usePaperFile } from '../features/exams/usePaperFile';
+import { canInlinePdf } from '../features/exams/inlinePdf';
 import '../features/exams/paper-preview.css';
 
 const labels = { QUESTION: '题目', ANSWER: '答案' } as const;
@@ -26,6 +27,7 @@ export function Component() {
 
   const missing = !courseId || !paperId;
   const isPdf = file?.file.mimeType === 'application/pdf';
+  const inline = canInlinePdf();
 
   return (
     <div className="paper-preview">
@@ -82,8 +84,27 @@ export function Component() {
       {!missing && !error && (
         <div className="paper-preview-body">
           {loading && <p role="status">正在加载试卷 PDF…</p>}
-          {url && isPdf && (
+          {url && isPdf && inline && (
             <iframe className="paper-preview-frame" src={url} title={`${month} ${labels[part]}预览`} />
+          )}
+          {url && isPdf && !inline && (
+            <div className="paper-preview-fallback">
+              <p>当前浏览器不支持在页面内显示 PDF。</p>
+              <p>
+                <a className="button button-primary" href={url} target="_blank" rel="noreferrer">
+                  打开 PDF
+                </a>
+                {file && (
+                  <button
+                    className="button button-secondary"
+                    type="button"
+                    onClick={() => saveExamFile(file)}
+                  >
+                    下载到本地
+                  </button>
+                )}
+              </p>
+            </div>
           )}
           {url && !isPdf && (
             <img className="paper-preview-image" src={url} alt={`${month} ${labels[part]}预览`} />

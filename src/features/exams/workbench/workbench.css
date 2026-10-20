@@ -513,6 +513,76 @@
   border-bottom: 1px solid var(--color-line);
   font-size: 14px;
 }
+
+.wb-paper-hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--color-secondary);
+}
+.wb-paper-fallback {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 24px;
+  border: 1px dashed var(--color-line);
+  background: #faf9f6;
+}
+.wb-paper-fallback strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.wb-paper-fallback p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--color-secondary);
+}
+.wb-paper-fallback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wb-paper-fallback-actions .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  text-decoration: none;
+}
+.wb-ready {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid #94a685;
+  background: #eef1e8;
+  font-size: 14px;
+}
+.wb-submit-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.wb-submit-row .button {
+  min-height: 42px;
+  padding: 8px 22px;
+}
+.wb-advanced {
+  border-top: 1px solid var(--color-line);
+  padding-top: 10px;
+}
+.wb-advanced summary {
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--color-primary);
+}
+.wb-advanced .wb-form-grid,
+.wb-advanced .wb-checks {
+  margin-top: 12px;
+}
+
 .wb-analysis-rows {
   list-style: none;
   margin: 0;

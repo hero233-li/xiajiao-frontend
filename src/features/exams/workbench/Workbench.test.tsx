@@ -264,3 +264,40 @@ it('本卷分析在批改后展示逐题得分率与失分原因', async () => {
   expect(screen.getByText('步骤不完整')).toBeInTheDocument();
   expect(screen.getByText('×2')).toBeInTheDocument();
 });
+
+it('微信内置浏览器不渲染内嵌 PDF，改为打开/下载兜底', async () => {
+  const original = navigator.userAgent;
+  Object.defineProperty(navigator, 'userAgent', {
+    value: `${original} MicroMessenger/8.0`,
+    configurable: true,
+  });
+  mount();
+  expect(await screen.findByText('当前浏览器不支持在页面内显示 PDF')).toBeInTheDocument();
+  expect(document.querySelector('iframe.wb-paper-frame')).toBeNull();
+  expect(screen.getByRole('link', { name: /打开 PDF/ })).toBeInTheDocument();
+  Object.defineProperty(navigator, 'userAgent', { value: original, configurable: true });
+});
+
+it('条件满足时提交批改可用，作答条件默认折叠', async () => {
+  mount('/', {
+    submissions: [submission(1)],
+    setup: () => server.use(http.get('*/api/v1/grading/rubrics', () => ok([publishedRubric]))),
+  });
+  expect(await screen.findByText('条件已满足，可以直接提交批改。')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /提交批改/ })).toBeEnabled();
+  expect(screen.getByText('作答条件（可选，影响成绩预测）').closest('details')).not.toHaveAttribute(
+    'open',
+  );
+});
+
+it('可以创建一次性配对凭证', async () => {
+  mount('/', {
+    setup: () =>
+      server.use(
+        http.post('*/api/v1/grading/workers', () => ok({ id: 'worker-2', token: 'pair-token-123' })),
+      ),
+  });
+  await userEvent.click(await screen.findByText('批改程序配对与状态'));
+  await userEvent.click(screen.getByRole('button', { name: /创建专用配对凭证/ }));
+  expect(await screen.findByDisplayValue('pair-token-123')).toBeInTheDocument();
+});

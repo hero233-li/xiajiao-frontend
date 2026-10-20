@@ -189,5 +189,24 @@ export function useWorkbenchActions(courseId: string, cycleId: string) {
       refreshScores();
     },
   });
-  return { createSubmission, uploadPage, reorderPages, removePage, applyGrading, refreshScores };
+  const pairWorker = useMutation({
+    mutationFn: (label: string) =>
+      gradingRequest<{ id: string; token: string }>('POST', '/workers', { label }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: ['grading-workers'] }),
+  });
+  const revokeWorker = useMutation({
+    mutationFn: (workerId: string) =>
+      gradingRequest('DELETE', `/workers/${workerId}`),
+    onSuccess: () => void client.invalidateQueries({ queryKey: ['grading-workers'] }),
+  });
+  return {
+    createSubmission,
+    uploadPage,
+    reorderPages,
+    removePage,
+    applyGrading,
+    pairWorker,
+    revokeWorker,
+    refreshScores,
+  };
 }
