@@ -31,7 +31,9 @@ it('课程框架保留五位代码，标签支持前进后退', async () => {
     'href',
     '/study/courses',
   );
-  expect(within(tabs).getAllByRole('link')).toHaveLength(5);
+  expect(within(tabs).getAllByRole('link')).toHaveLength(2);
+  for (const name of ['阅读', '知识点梳理', '参考知识', '章节检测与模拟卷', '弱项练习'])
+    expect(within(tabs).queryByRole('link', { name })).not.toBeInTheDocument();
   await userEvent.click(within(tabs).getByRole('link', { name: '真题与成绩' }));
   await waitFor(() => expect(router.state.location.pathname).toBe('/study/course/00023/exams'));
   await waitFor(() =>
@@ -42,13 +44,7 @@ it('课程框架保留五位代码，标签支持前进后退', async () => {
     ).toHaveAttribute('aria-current', 'page'),
   );
   await act(() => router.navigate(-1));
-  await waitFor(() =>
-    expect(
-      within(screen.getByRole('navigation', { name: '课程页面' })).getByRole('link', {
-        name: '阅读',
-      }),
-    ).toHaveAttribute('aria-current', 'page'),
-  );
+  await waitFor(() => expect(router.state.location.pathname).toBe('/study/course/00023/catalog'));
   await act(() => router.navigate(1));
   await waitFor(() => expect(router.state.location.pathname).toBe('/study/course/00023/exams'));
   await screen.findByRole('heading', { name: '历年试卷' });

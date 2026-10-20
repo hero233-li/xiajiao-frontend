@@ -7,10 +7,9 @@ export const spaceModules: SpaceModule[] = [
     id: 'study',
     entry: '/study',
     navigation: [
+      ['/study/rapid', '速刷提升'],
       ['/study', '今日'],
       ['/study/courses', '课程'],
-      ['/study/schedule', '计划'],
-      ['/study/training', '练习与检测'],
       ['/study/notes', '笔记'],
     ],
     routes: [{ element: <AppLayout />, children: studyRoutes }],

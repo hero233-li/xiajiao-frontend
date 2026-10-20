@@ -62,14 +62,11 @@ export function CourseFrame({ children }: PropsWithChildren) {
   const course = query.data;
   if (!course) return null;
   const tabs = [
-    ['catalog', '阅读'],
-    ['knowledge', '知识'],
-    ['practice', '练习与检测'],
     ['exams', '真题与成绩'],
-    ['notes', '笔记'],
+    ['printing', '打印'],
     ['manual', '手册'],
   ].filter(
-    ([path]) => path === 'notes' || course.capabilities[path as keyof Course['capabilities']],
+    ([path]) => path === 'printing' || course.capabilities[path as keyof Course['capabilities']],
   );
   return (
     <CourseContext.Provider value={course}>

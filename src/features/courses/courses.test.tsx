@@ -143,6 +143,13 @@ it('主入口使用有效能力，无内容时不伪造课程入口', async () =
     exams: false,
     manual: false,
   };
+  records[2].capabilities = {
+    catalog: false,
+    knowledge: false,
+    practice: false,
+    exams: true,
+    manual: false,
+  };
   mount();
   await screen.findByRole('heading', { name: names[0] });
   expect(within(card(names[0])).getByRole('link', { name: '开始学习' })).toHaveAttribute(
@@ -150,6 +157,13 @@ it('主入口使用有效能力，无内容时不伪造课程入口', async () =
     '/study/course/00023/manual',
   );
   expect(within(card(names[1])).queryByRole('link', { name: '开始学习' })).not.toBeInTheDocument();
+  expect(within(card(names[1])).getByText('内容尚未开放')).toBeInTheDocument();
+  expect(within(card(names[2])).getByRole('link', { name: '开始学习' })).toHaveAttribute(
+    'href',
+    '/study/course/13015/exams',
+  );
+  for (const name of ['阅读与进度', '知识点梳理', '参考知识', '章节检测与模拟卷'])
+    expect(within(card(names[2])).queryByRole('link', { name })).not.toBeInTheDocument();
 });
 it('只修改本科时间，读取最新周期以保留其他安排，重新进入仍显示保存值', async () => {
   const router = mount();
@@ -273,7 +287,7 @@ it('切换周期保留课程链接与返回路径，错误和空数据可恢复'
   await screen.findByRole('heading', { name: names[0] });
   expect(within(card(names[0])).getByRole('link', { name: '开始学习' })).toHaveAttribute(
     'href',
-    `/study/course/00023/catalog?cycle=${cycleKey(other)}`,
+    `/study/course/00023/exams?cycle=${cycleKey(other)}`,
   );
   expect(router.state.location.search).toBe(`?cycle=${cycleKey(other)}`);
 });

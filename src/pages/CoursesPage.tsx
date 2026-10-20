@@ -69,10 +69,7 @@ export function Component() {
               const exam = cycle.selected?.courses.find((e) => e.courseId === course.id);
               const base = `/study/course/${course.code}`;
               const panes = [
-                ['catalog', '阅读与进度'],
-                ['knowledge', '知识索引'],
                 ['manual', '实践手册'],
-                ['practice', '练习与检测'],
                 ['exams', '真题与成绩'],
               ] as const;
               const available = panes.filter(([pane]) => course.capabilities[pane]);
