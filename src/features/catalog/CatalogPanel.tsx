@@ -63,7 +63,7 @@ function Resource({ item, courseId }: { item: CatalogItem; courseId: string }) {
           <BookOpen size={28} />
           <p>此目录项暂未关联可打开的资料。</p>
           <p className="secondary">
-            可按条目标题学习教材，或查看本课知识索引与手册；完成后记录进度。
+            可按条目标题学习教材，或查看本课知识点梳理、参考知识与手册；完成后记录进度。
           </p>
         </>
       )}
@@ -301,11 +301,12 @@ export function CatalogPanel({ courseId }: { courseId: string }) {
             </Link>
           </footer>
           <nav className="reading-related" aria-label="关联学习内容">
+            {course && <Link to={`/study/course/${course.code}/knowledge`}>知识点梳理 →</Link>}
             {course?.capabilities.knowledge && (
-              <Link to={`/study/course/${course.code}/knowledge`}>查看知识索引 →</Link>
+              <Link to={`/study/course/${course.code}/reference`}>参考知识 →</Link>
             )}
             {course?.capabilities.practice && (
-              <Link to={`/study/course/${course.code}/practice`}>进入练习与检测 →</Link>
+              <Link to={`/study/course/${course.code}/practice`}>进入章节检测与模拟卷 →</Link>
             )}
             {course?.capabilities.manual && (
               <Link to={`/study/course/${course.code}/manual`}>阅读实践手册 →</Link>

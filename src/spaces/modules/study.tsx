@@ -1,8 +1,7 @@
 import { apiRequest } from '../../api/http';
 import type { Dashboard } from '../../api/generated/models';
-import { getPlan } from '../../api/generated/schedule/schedule';
 import { learningTargetPath } from '../../features/dashboard/navigation';
-import type { SpaceSummary, SummaryViewProps, TodayTask } from '../types';
+import type { SpaceSummary, SummaryViewProps } from '../types';
 export async function loadSummary(signal?: AbortSignal): Promise<SpaceSummary> {
   const d = (
     await apiRequest<{ data: Dashboard }>({
@@ -11,38 +10,10 @@ export async function loadSummary(signal?: AbortSignal): Promise<SpaceSummary> {
       silent: true,
     })
   ).data;
-  let tasks: TodayTask[] = [];
-  if (d.selectedPlanId) {
-    const plan = (await getPlan(d.selectedPlanId, { signal, silent: true })).data;
-    const ids = [
-      ...new Set(
-        (plan.days.find((day) => day.day === d.localDate)?.segments ?? [])
-          .filter((s) => s.state === 'SCHEDULED')
-          .map((s) => s.taskId),
-      ),
-    ];
-    tasks = ids.flatMap((id) => {
-      const t = plan.tasks.find((t) => t.id === id);
-      return t
-        ? [
-            {
-              id: t.id,
-              title: t.title,
-              date: d.localDate,
-              status: t.completed ? '已完成' : '待完成',
-              to: learningTargetPath(t.target),
-            },
-          ]
-        : [];
-    });
-  }
   return {
-    message: d.todaySuggestionMessage,
-    tasks,
-    next: {
-      label: tasks.some((t) => t.status === '待完成') ? '查看学习安排' : '安排下一次学习',
-      to: '/study/schedule',
-    },
+    message: '自由学习，按自己的节奏阅读与练习。',
+    tasks: [],
+    next: { label: '查看考试倒计时', to: '/study' },
     resume: d.continueLearning
       ? { label: d.continueLearning.title, to: learningTargetPath(d.continueLearning.target) }
       : undefined,

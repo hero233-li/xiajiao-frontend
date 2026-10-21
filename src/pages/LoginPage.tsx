@@ -55,6 +55,10 @@ export function Component() {
         <a className="icp-link" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
           蜀ICP备2026061522号
         </a>
+        <a className="icp-link" href="https://beian.mps.gov.cn/#/query/webSearch?code=51011202001535" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <img src="/public-security-beian.png" alt="" width={20} height={20} />
+          川公网安备51011202001535号
+        </a>
       </footer>
     </main>
   );

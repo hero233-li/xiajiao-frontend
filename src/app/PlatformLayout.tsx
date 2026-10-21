@@ -6,6 +6,7 @@ import {
   BookOpen,
   Menu,
   House,
+  Smartphone,
   Layers,
   CalendarCheck,
   Settings,
@@ -131,6 +132,10 @@ export function PlatformLayout() {
             <Layers size={18} />
             空间目录
           </Link>
+          <Link to="/download/android" aria-current={pathname === '/download/android' ? 'page' : undefined}>
+            <Smartphone size={18} />
+            Android App
+          </Link>
         </nav>
         <button
           className="space-switch-trigger"
@@ -174,6 +179,10 @@ export function PlatformLayout() {
             <Link to="/settings">
               <Settings size={18} />
               账号设置
+            </Link>
+            <Link to="/download/android">
+              <Smartphone size={18} />
+              Android App
             </Link>
             {auth.user?.role === 'ADMIN' && (
               <Link to="/admin">
@@ -234,6 +243,7 @@ export function PlatformLayout() {
           {links.map(item)}
           <Link to="/spaces">空间目录</Link>
           <Link to="/settings">账号设置</Link>
+          <Link to="/download/android">Android App</Link>
           {auth.user?.role === 'ADMIN' && <Link to="/admin">管理工作台</Link>}
         </nav>
       )}
@@ -256,6 +266,10 @@ export function PlatformLayout() {
         <span>知途 · 个人成长平台</span>
         <a className="icp-link" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
           蜀ICP备2026061522号
+        </a>
+        <a className="icp-link" href="https://beian.mps.gov.cn/#/query/webSearch?code=51011202001535" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <img src="/public-security-beian.png" alt="" width={20} height={20} />
+          川公网安备51011202001535号
         </a>
         <Link to="/spaces">整理我的空间</Link>
       </footer>

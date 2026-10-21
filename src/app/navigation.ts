@@ -28,10 +28,12 @@ export function routeTitle(path: string, search: string) {
       (
         {
           catalog: '阅读与进度',
-          knowledge: '知识索引',
+          knowledge: '知识点梳理',
+          reference: '参考知识',
           manual: '实践手册',
-          practice: '练习与检测',
+          practice: '章节检测与模拟卷',
           notes: '课程笔记',
+          printing: '课程打印',
           exams: '真题与成绩',
         } as Record<string, string>
       )[path.split('/').at(-1) ?? ''] ?? '课程'
@@ -44,10 +46,13 @@ export function routeTitle(path: string, search: string) {
         '/settings': '账号设置',
         '/spaces': '空间目录',
         '/today': '今日任务',
-        '/study': '今日学习',
+        '/study': '今日',
+        '/study/rapid': '速刷提升',
         '/study/courses': '我的科目',
-        '/study/schedule': '学习计划',
-        '/study/training': '练习与检测',
+        '/study/schedule': '考试倒计时',
+        '/study/training': '章节检测与模拟卷',
+        '/study/mistake-analysis': '知识点梳理',
+        '/study/printing': '打印功能区',
         '/study/notes': '学习笔记',
         '/fitness': '健身今天',
         '/fitness/training': '训练',

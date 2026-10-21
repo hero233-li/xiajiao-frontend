@@ -3,7 +3,7 @@ import { MathText } from '../../components/MathText';
 
 // Preserve authored content: punctuation creates paragraphs only outside math/code.
 const protectedSyntax =
-  /(```[\s\S]*?```|`[^`\n]+`|(?<!\\)\$\$[\s\S]+?\$\$|(?<!\\)\$[^$\n]+?\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\])/g;
+  /(!\[[^\]\n]*\]\(\/bank-figures\/discrete-mock-[ABC]-(?:31|32)\.svg\)|```[\s\S]*?```|`[^`\n]+`|(?<!\\)\$\$[\s\S]+?\$\$|(?<!\\)\$[^$\n]+?\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\])/g;
 function PlainText({ text }: { text: string }) {
   const expressions = text.split(/([A-Za-z0-9α-ω][A-Za-z0-9α-ω=+\-*/^().<>≤≥≠∈∞∫Σ√²³₀-₉]*)/g);
   return (
@@ -27,6 +27,11 @@ function Content({ text, protectedParts }: { text: string; protectedParts: strin
         const match = /^\uE000(\d+)\uE001$/.exec(part);
         if (!match) return <PlainText key={index} text={part} />;
         const original = protectedParts[Number(match[1])];
+        // Only the six bundled, reviewed diagram assets are allowed. No remote URLs,
+        // arbitrary SVG markup, HTML or user-selected paths are interpreted.
+        const figure = /^!\[([^\]\n]*)\]\((\/bank-figures\/discrete-mock-[ABC]-(?:31|32)\.svg)\)$/.exec(original);
+        if (figure)
+          return <img key={index} src={figure[2]} alt={figure[1]} style={{ display: 'block', maxWidth: '100%', width: 480, margin: '12px auto' }} />;
         if (original.startsWith('```'))
           return (
             <pre key={index}>

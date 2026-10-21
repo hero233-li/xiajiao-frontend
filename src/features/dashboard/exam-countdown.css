@@ -1,0 +1,159 @@
+.exam-countdown {
+  max-width: 850px;
+  margin: 24px auto;
+  padding: clamp(24px, 5vw, 56px);
+  border: 1px solid var(--color-line, #dce3de);
+  border-radius: 20px;
+  background: var(--color-surface, #fff);
+}
+.exam-countdown-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.exam-countdown-heading h2 {
+  margin: 0;
+  font-size: clamp(18px, 3vw, 24px);
+}
+.exam-countdown-clock {
+  display: flex;
+  justify-content: center;
+  gap: clamp(16px, 5vw, 56px);
+  margin: 40px 0 24px;
+}
+.exam-countdown-clock > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.exam-countdown-clock strong {
+  font-size: clamp(40px, 8vw, 80px);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+.exam-countdown-clock span,
+.exam-countdown-date,
+.exam-countdown-footer {
+  color: var(--color-secondary, #52645b);
+}
+.exam-countdown-date {
+  text-align: center;
+  line-height: 1.8;
+}
+.exam-countdown-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 24px;
+  margin-top: 32px;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.exam-countdown-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.exam-schedule {
+  margin: 32px 0;
+  padding: clamp(16px, 3vw, 32px);
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  background: var(--color-surface);
+}
+.exam-schedule-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.exam-schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 15px;
+}
+.exam-schedule-table th,
+.exam-schedule-table td {
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: top;
+}
+.exam-schedule-table thead {
+  background: var(--color-primary-soft);
+}
+.exam-schedule-table th:first-child,
+.exam-schedule-table td:nth-child(2) {
+  white-space: nowrap;
+}
+.exam-schedule-table ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 260px;
+}
+.exam-schedule-table li + li {
+  margin-top: 8px;
+}
+.exam-course-code {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-secondary);
+}
+.exam-schedule-note {
+  margin: 18px 0 0;
+  color: var(--color-secondary);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.exam-practice-note {
+  margin-top: 24px;
+  padding: 18px 20px;
+  border-radius: 10px;
+  background: var(--color-primary-soft);
+}
+.exam-practice-note p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.9;
+}
+@media (max-width: 600px) {
+  .exam-schedule-table th,
+  .exam-schedule-table td {
+    padding: 14px 10px;
+  }
+}
+@media (max-width: 600px) {
+  .exam-schedule-table thead {
+    display: none;
+  }
+  .exam-schedule-table tbody {
+    display: block;
+  }
+  .exam-schedule-table tbody tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    border-bottom: 1px solid var(--color-line);
+    padding: 16px 0;
+  }
+  .exam-schedule-table tbody th,
+  .exam-schedule-table tbody td {
+    border: 0;
+    padding: 0;
+  }
+  .exam-schedule-table tbody th {
+    color: var(--color-primary);
+  }
+  .exam-schedule-table tbody td:nth-child(2) {
+    font-size: 13px;
+  }
+  .exam-schedule-table tbody td:last-child {
+    grid-column: 1 / -1;
+    margin-top: 14px;
+  }
+  .exam-schedule-table ul {
+    min-width: 0;
+  }
+}

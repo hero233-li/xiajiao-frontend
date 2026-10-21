@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PointPracticeBatch } from './PointPracticeBatch';
@@ -71,6 +71,9 @@ const mount = () =>
 describe('单页十题PDF与整组照片批改', () => {
   it('生成一个包含全部十题且无答案的PDF，不显示逐题答题框', async () => {
     mount();
+    await screen.findByRole('heading', { name: '测试考点', level: 1 });
+    expect(pdf).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: '生成练习PDF' }));
     await waitFor(() => expect(pdf).toHaveBeenCalled());
     const sheet = pdf.mock.calls[0][0] as HTMLElement;
     expect(sheet.querySelectorAll('section')).toHaveLength(10);
@@ -80,10 +83,13 @@ describe('单页十题PDF与整组照片批改', () => {
       'download',
       '测试考点-simple-十题练习单.pdf',
     );
+    fireEvent.click(screen.getByRole('tab', { name: '作答照片' }));
     expect(screen.getByRole('button', { name: '申请AI批改全部10题' })).toBeDisabled();
   });
   it('多张照片依次携带最新版本号保存，一次申请十题批改', async () => {
     mount();
+    await screen.findByRole('heading', { name: '测试考点', level: 1 });
+    fireEvent.click(screen.getByRole('tab', { name: '作答照片' }));
     const upload = await screen.findByLabelText('上传整组作答照片');
     fireEvent.change(upload, {
       target: {
@@ -105,6 +111,8 @@ describe('单页十题PDF与整组照片批改', () => {
   });
   it('上传中途失败保留已成功的照片，不创建批改任务', async () => {
     mount();
+    await screen.findByRole('heading', { name: '测试考点', level: 1 });
+    fireEvent.click(screen.getByRole('tab', { name: '作答照片' }));
     await screen.findByLabelText('上传整组作答照片');
     const original = request.getMockImplementation()!;
     let n = 0;
@@ -126,6 +134,8 @@ describe('单页十题PDF与整组照片批改', () => {
   });
   it('拒绝非图片和超过张数限制，不上传', async () => {
     mount();
+    await screen.findByRole('heading', { name: '测试考点', level: 1 });
+    fireEvent.click(screen.getByRole('tab', { name: '作答照片' }));
     const upload = await screen.findByLabelText('上传整组作答照片');
     fireEvent.change(upload, {
       target: { files: [new File(['bad'], 'x.txt', { type: 'text/plain' })] },
@@ -140,4 +150,69 @@ describe('单页十题PDF与整组照片批改', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('最多20张');
     expect(request).toHaveBeenCalledTimes(1);
   });
+});
+
+it('restored review opens results first, keeps provisional scores clear and expands flagged questions', async () => {
+  batch.state = 'REVIEW';
+  batch.taskId = 'task';
+  (batch as any).result = {
+    reviewItems: ['第10题字迹不清，需核对'],
+    answers: Array.from({ length: 10 }, (_, i) => ({
+      number: String(i + 1),
+      recognizedAnswer: '作答',
+      pages: [1],
+      reviewItems: i === 9 ? ['末尾理由看不清'] : [],
+      points: [{ pointId: 'p', score: i === 9 ? 0 : 10, reason: i === 9 ? '需核对' : '通过' }],
+    })),
+  };
+  mount();
+  await screen.findByRole('heading', { name: '测试考点', level: 1 });
+  const results = screen.getByRole('tabpanel', { name: '批改结果' });
+  expect(results).toBeVisible();
+  expect(within(results).getByText('模型参考得分')).toBeVisible();
+  expect(within(results).getByText(/不计入通过资格/)).toBeVisible();
+  expect(pdf).not.toHaveBeenCalled();
+  const flagged = within(results).getByText('第 10 题').closest('details')!;
+  expect(flagged).toHaveAttribute('open');
+  expect(within(flagged).getByText('末尾理由看不清')).toBeVisible();
+  expect(within(results).getByText('第 1 题').closest('details')).not.toHaveAttribute('open');
+  fireEvent.click(screen.getByRole('tab', { name: '练习题目' }));
+  expect(screen.getByRole('tabpanel', { name: '练习题目' })).toBeVisible();
+  expect(screen.queryByRole('tabpanel', { name: '批改结果' })).not.toBeInTheDocument();
+});
+it('restored photos open the upload list and tab navigation supports keyboard', async () => {
+  batch.sheetFiles = [{ id: 'saved', name: '已保存.png', mimeType: 'image/png' }];
+  mount();
+  await screen.findByText('已保存.png');
+  expect(screen.getByRole('tabpanel', { name: '作答照片 · 1' })).toBeVisible();
+  fireEvent.keyDown(screen.getByRole('tab', { name: '作答照片 · 1' }), { key: 'ArrowRight' });
+  expect(screen.getByRole('tab', { name: '批改结果' })).toHaveAttribute('aria-selected', 'true');
+  fireEvent.keyDown(screen.getByRole('tab', { name: '批改结果' }), { key: 'Home' });
+  expect(screen.getByRole('tab', { name: '练习题目' })).toHaveFocus();
+});
+it('shows upload progress before confirmation and uses a longer upload timeout', async () => {
+  const original = request.getMockImplementation()!;
+  let release!: () => void;
+  const pending = new Promise<void>((r) => {
+    release = r;
+  });
+  request.mockImplementation(async (...args: any[]) => {
+    if (args[0].endsWith('/sheet-pages')) {
+      args[4].onUploadProgress({ loaded: 50, total: 100 });
+      await pending;
+    }
+    return original(...args);
+  });
+  mount();
+  await screen.findByRole('heading', { name: '测试考点', level: 1 });
+  fireEvent.click(screen.getByRole('tab', { name: '作答照片' }));
+  fireEvent.change(screen.getByLabelText('上传整组作答照片'), {
+    target: { files: [new File(['x'], '作答.png', { type: 'image/png' })] },
+  });
+  expect(await screen.findByText('正在保存第 1 / 1 张照片')).toBeVisible();
+  expect(screen.getByRole('progressbar')).toHaveValue(50);
+  expect(request.mock.calls.find((c) => c[0].endsWith('/sheet-pages'))?.[4].timeout).toBe(120000);
+  release();
+  await screen.findByText(/已上传 1\/20 张/);
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
 });

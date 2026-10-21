@@ -7,6 +7,11 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tailwindcss()],
     server: {
       proxy: {
+        '/exam-countdown-source': {
+          target: 'https://ce.sjtu.edu.cn',
+          changeOrigin: true,
+          rewrite: () => '/',
+        },
         '/api': { target: env.API_PROXY_TARGET || 'http://127.0.0.1:8080', changeOrigin: true },
       },
     },

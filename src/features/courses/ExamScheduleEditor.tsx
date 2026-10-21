@@ -116,7 +116,7 @@ export function ExamScheduleEditor({
   return (
     <Modal open title={`修改考试时间 · ${course.name}`} onClose={close}>
       <p className="secondary">
-        {cycle.name}。保存后会更新此周期的考试安排与倒计时，已有学习计划不会自动重排。
+        {cycle.name}。保存后会更新此周期的科目考试安排。今日倒计时以上海交大官网为准。
       </p>
       <form className="stack" onSubmit={(event) => void save(event)}>
         <label htmlFor="exam-date">

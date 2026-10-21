@@ -445,7 +445,7 @@ describe('知识合集', () => {
   it('未选模块不显示返回按钮，知识合集只有二级标题且不写入掌握状态', async () => {
     mount(false);
     await screen.findByRole('button', { name: /导数定义/ });
-    expect(screen.getByRole('heading', { name: '知识索引' })).toHaveProperty('tagName', 'H2');
+    expect(screen.getByRole('heading', { name: '参考知识' })).toHaveProperty('tagName', 'H2');
     expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '返回模块列表' })).not.toBeInTheDocument();
     expect(writes).toHaveLength(0);

@@ -17,6 +17,7 @@ apiClient.interceptors.request.use((config) => {
 });
 const notify = (error: ApiError, config?: AxiosRequestConfig) => { if (!config?.silent) notifications.error(error.message); return error; };
 apiClient.interceptors.response.use((response) => {
+  if (response.config.responseType === 'blob' && response.data instanceof Blob) return response;
   const body: unknown = response.data;
   if (typeof body !== 'object' || body === null || !('code' in body) || !('data' in body) || !('message' in body))
     throw notify(new ApiError('服务器响应格式不正确', response.status), response.config);

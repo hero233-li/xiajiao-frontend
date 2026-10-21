@@ -640,13 +640,14 @@ export function KnowledgePage() {
   const cycleId = search.get('cycleId') || '';
   const course = useKnowledgeCourse(code, cycleId);
   useEffect(() => {
-    document.title = '知识索引 · 知途个人成长平台';
+    document.title = '参考知识 · 知途个人成长平台';
   }, [course.data?.name]);
   return (
     <div className="kh-page">
       <header className="kh-heading">
         <div>
-          <h2>知识索引</h2>
+          <h2>参考知识</h2>
+          <Link to={`/study/course/${code}/knowledge`}>知识点梳理 →</Link>
         </div>
         <Link className="button button-ghost" to="/study/courses">
           我的科目
@@ -668,6 +669,8 @@ export function KnowledgePage() {
           retry={() => void course.refetch()}
           retrying={course.isFetching}
         />
+      ) : !course.data.capabilities.knowledge ? (
+        <Region empty="本课程尚未开放参考知识。已有笔记不会删除，你仍可进入知识点梳理整理自己的学习记录。" />
       ) : (
         <KnowledgeWorkspace key={course.data.id} courseId={course.data.id} />
       )}

@@ -3,13 +3,15 @@ import type { Navigation } from '../../api/generated/models';
 export function learningTargetPath(target: Navigation, _cycleId?: string) {
   const query = new URLSearchParams();
   if (target.chapterId && target.pane !== 'PRACTICE') query.set('chapterId', target.chapterId);
-  if (target.itemId) query.set('itemId', target.itemId);
+  if (target.itemId) query.set(target.pane === 'KNOWLEDGE' ? 'moduleId' : 'itemId', target.itemId);
   if (target.questionId) query.set('questionId', target.questionId);
   const chapter =
     target.pane === 'PRACTICE' && target.chapterId
       ? `/${encodeURIComponent(target.chapterId)}`
       : '';
-  return `/study/course/${encodeURIComponent(target.courseCode)}/${target.pane.toLowerCase()}${chapter}?${query}`;
+  // Server KNOWLEDGE targets still describe the reference library, not personal analysis cards.
+  const pane = target.pane === 'KNOWLEDGE' ? 'reference' : target.pane.toLowerCase();
+  return `/study/course/${encodeURIComponent(target.courseCode)}/${pane}${chapter}?${query}`;
 }
 export function dateLabel(date: string) {
   return new Intl.DateTimeFormat('zh-CN', {

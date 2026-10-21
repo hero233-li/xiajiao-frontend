@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { PencilLine, FileCheck2, Files } from 'lucide-react';
+import { PencilLine, Files } from 'lucide-react';
 import { CyclePicker, useCycle } from '../features/cycle/CycleContext';
 import { Link } from '../features/cycle/navigation';
 import { listCourses } from '../api/generated/courses/courses';
@@ -16,9 +16,9 @@ export function Component() {
     <section>
       <header className="page-heading">
         <div>
-          <p className="eyebrow">练习与检测</p>
-          <h1>练习与检测</h1>
-          <p className="secondary">日常练习及时看解析，正式检测独立作答后查看结果。</p>
+          <p className="eyebrow">章节检测与模拟卷</p>
+          <h1>章节检测与模拟卷</h1>
+          <p className="secondary">直接选择章节检测，完成评分后查看成绩与解析。</p>
         </div>
         <CyclePicker />
       </header>
@@ -53,15 +53,9 @@ export function Component() {
                         to={`/study/course/${c.code}/practice`}
                       >
                         <PencilLine size={18} />
-                        章节练习
+                        章节检测
                       </Link>
-                      <Link
-                        className="button button-secondary"
-                        to={`/study/course/${c.code}/practice?mode=detect`}
-                      >
-                        <FileCheck2 size={18} />
-                        检测资格
-                      </Link>
+
                     </>
                   )}
                   {c.capabilities.exams && (

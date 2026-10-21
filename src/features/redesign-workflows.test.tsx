@@ -101,7 +101,7 @@ describe('重构后的核心任务路径', () => {
     expect(link.getAttribute('href')).toContain('/study/course/00023/catalog');
     expect(link.getAttribute('href')).toContain('itemId=item-real');
   });
-  it('首页无安排提供直接配置入口', async () => {
+  it('首页无安排提供考试倒计时入口', async () => {
     server.use(
       http.get('/api/v1/personal/spaces', () => ok(homeDirectory)),
       http.get('/api/v1/personal/study-summary', () =>
@@ -115,9 +115,9 @@ describe('重构后的核心任务路径', () => {
       ),
     );
     mount(<Home />);
-    expect(await screen.findByRole('link', { name: '安排下一次学习' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: '查看考试倒计时' })).toHaveAttribute(
       'href',
-      '/study/schedule',
+      '/study',
     );
     expect(screen.queryByRole('link', { name: '继续：集合基础' })).not.toBeInTheDocument();
   });

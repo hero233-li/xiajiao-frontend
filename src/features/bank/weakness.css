@@ -1,0 +1,1453 @@
+.weakness-page {
+  --weakness-border: #e3e8f0;
+  --weakness-ink: #243146;
+  --weakness-muted: #64748b;
+  display: grid;
+  gap: 20px;
+  max-width: 1240px;
+  margin: auto;
+  color: var(--weakness-ink);
+}
+.weakness-page *,
+.weakness-page *::before,
+.weakness-page *::after {
+  box-sizing: border-box;
+}
+.weakness-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 26px 30px;
+  border: 1px solid var(--weakness-border);
+  border-radius: 18px;
+  background: linear-gradient(135deg, #f7f8fc 0%, #eef2ff 100%);
+}
+.weakness-eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #6366a3;
+}
+.weakness-hero h1 {
+  margin: 0;
+  font-size: clamp(22px, 2.4vw, 30px);
+  line-height: 1.35;
+}
+.weakness-context {
+  margin: 10px 0 0;
+  max-width: 760px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--weakness-muted);
+}
+.weakness-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #4c5a70;
+}
+.weakness-facts strong {
+  color: #1f2b3d;
+}
+.weakness-status {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4f46a5;
+  font-size: 12px;
+  font-weight: 600;
+}
+.weakness-status-redo {
+  background: #fff7e6;
+  color: #9a6200;
+}
+.weakness-status-completed {
+  background: #edf7f1;
+  color: #277350;
+}
+.weakness-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid #f2cccc;
+  border-radius: 12px;
+  background: #fdf3f3;
+  color: #8b2e2e;
+  font-size: 13px;
+}
+.weakness-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 20px;
+  align-items: start;
+}
+.weakness-main {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.weakness-aside {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 14px;
+}
+.weakness-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.weakness-section-head h2 {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.5;
+}
+.weakness-section-head > span {
+  flex-shrink: 0;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #f1f3f7;
+  font-size: 11px;
+  color: #5b6880;
+  white-space: nowrap;
+}
+.weakness-example,
+.weakness-drill,
+.weakness-redo {
+  padding: 22px;
+  border-radius: 16px;
+}
+.weakness-example-question {
+  padding: 16px 18px;
+  border: 1px solid var(--weakness-border);
+  border-radius: 12px;
+  background: #fbfcfe;
+}
+.weakness-options-read {
+  display: grid;
+  gap: 5px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.weakness-options-read li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 14px;
+}
+.weakness-options-read li > span {
+  flex-shrink: 0;
+  font-weight: 600;
+}
+.weakness-example-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+.weakness-example-columns > div {
+  padding: 14px;
+  border: 1px solid var(--weakness-border);
+  border-radius: 12px;
+  background: #fff;
+}
+.weakness-example-columns h3,
+.weakness-method h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #43506a;
+}
+.weakness-example-columns p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.weakness-example-columns small {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--weakness-muted);
+}
+.weakness-method {
+  margin-top: 14px;
+  padding: 16px 18px;
+  border: 1px solid #dbe4f7;
+  border-radius: 12px;
+  background: #f6f8ff;
+}
+.weakness-method-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.weakness-method-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #e7edff;
+  color: #4256a5;
+}
+.weakness-method-head h3 {
+  margin: 1px 0 0;
+  font-size: 14px;
+}
+.weakness-method .math-text,
+.weakness-method p {
+  font-size: 13px;
+  line-height: 1.8;
+}
+.weakness-step-list {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.weakness-step-list > li {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 10px;
+}
+.weakness-step-no {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: #4256a5;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.weakness-step-list strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 13px;
+  color: #2d3852;
+}
+.weakness-step-list p {
+  margin: 0;
+  color: #5b6880;
+}
+.weakness-formula {
+  margin-top: 8px;
+  padding: 9px 12px;
+  overflow-x: auto;
+  border: 1px solid #e1e7f5;
+  border-radius: 9px;
+  background: #fff;
+}
+.weakness-formula .math-text {
+  display: block;
+  min-width: max-content;
+}
+.weakness-formula .katex-display {
+  margin: 0;
+}
+.weakness-error-note {
+  display: flex;
+  gap: 9px;
+  margin-top: 13px;
+  padding: 10px 12px;
+  border: 1px solid #f0d8ae;
+  border-radius: 9px;
+  background: #fffaf1;
+  color: #7a4b0a;
+}
+.weakness-error-note > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.weakness-error-note strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 12px;
+}
+.weakness-error-note p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.75;
+}
+.weakness-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.weakness-progress progress {
+  flex: 1;
+  height: 10px;
+  accent-color: #4f46a5;
+}
+.weakness-progress strong {
+  font-size: 13px;
+  color: #4f46a5;
+}
+.weakness-muted {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--weakness-muted);
+}
+.weakness-level {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+.weakness-level > header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.weakness-level > header strong {
+  padding: 3px 9px;
+  border-radius: 7px;
+  background: #eef2ff;
+  color: #4f46a5;
+  font-size: 12px;
+}
+.weakness-level > header span {
+  font-size: 12px;
+  color: var(--weakness-muted);
+}
+.weakness-question-list {
+  display: grid;
+  gap: 10px;
+}
+.weakness-question {
+  padding: 16px;
+  border: 1px solid var(--weakness-border);
+  border-radius: 14px;
+  background: #fff;
+}
+.weakness-question.is-correct {
+  border-color: #cfe8d8;
+  background: #fbfefc;
+}
+.weakness-question-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.weakness-question-number {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #eef2ff;
+  color: #4f46a5;
+  font-size: 12px;
+  font-weight: 600;
+}
+.weakness-question-head > div {
+  flex: 1;
+  min-width: 0;
+}
+.weakness-question-head strong {
+  display: block;
+  font-size: 14px;
+}
+.weakness-question-head small {
+  font-size: 11px;
+  color: var(--weakness-muted);
+}
+.weakness-question-state {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f1f3f7;
+  font-size: 11px;
+  color: #5b6880;
+}
+.weakness-question-state.is-correct {
+  background: #e8f6ee;
+  color: #277350;
+}
+.weakness-previous {
+  margin: 0 0 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #f8f9fc;
+  font-size: 12px;
+  color: #5b6880;
+}
+.weakness-options {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  border: 0;
+}
+.weakness-options legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+.weakness-options label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 11px 12px;
+  border: 1px solid var(--weakness-border);
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.weakness-options label:has(input:checked) {
+  border-color: #6366f1;
+  background: #f6f7ff;
+}
+.weakness-options input {
+  margin-top: 4px;
+}
+.weakness-answer {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #43506a;
+}
+.weakness-answer textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--weakness-border);
+  border-radius: 10px;
+  font: inherit;
+  line-height: 1.7;
+  resize: vertical;
+}
+.weakness-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+.weakness-error {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #a13a3a;
+}
+.weakness-feedback {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #5b6880;
+}
+.weakness-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #277350;
+}
+.weakness-reference,
+.weakness-reference-details {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #dbe4f7;
+  border-radius: 10px;
+  background: #f8faff;
+  font-size: 13px;
+}
+.weakness-reference h4 {
+  margin: 0 0 5px;
+  font-size: 12px;
+  color: #4f46a5;
+}
+.weakness-reference-details summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: #4f46a5;
+}
+.weakness-redo.is-locked {
+  border-style: dashed;
+}
+.weakness-locked,
+.weakness-complete {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 28px 18px;
+  text-align: center;
+  color: var(--weakness-muted);
+}
+.weakness-locked strong,
+.weakness-complete strong {
+  color: var(--weakness-ink);
+}
+.weakness-locked p,
+.weakness-complete p {
+  max-width: 520px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.weakness-complete {
+  margin: 8px 0 14px;
+  border: 1px solid #cfe8d8;
+  border-radius: 14px;
+  background: #f5fbf7;
+}
+.weakness-side-card {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 16px;
+}
+.weakness-side-card h2 {
+  margin: 0;
+  font-size: 17px;
+}
+.weakness-points {
+  display: grid;
+  gap: 9px;
+}
+.weakness-point {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 10px;
+  border: 1px solid var(--weakness-border);
+  border-radius: 10px;
+}
+.weakness-point > span {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #fff3df;
+  color: #946000;
+  font-size: 11px;
+  font-weight: 600;
+}
+.weakness-point strong {
+  display: block;
+  font-size: 13px;
+}
+.weakness-point small {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--weakness-muted);
+}
+.weakness-guide {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.weakness-guide li {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+}
+.weakness-guide li > span {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #4f46a5;
+  font-size: 11px;
+  font-weight: 600;
+}
+.weakness-guide p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--weakness-muted);
+}
+.weakness-empty {
+  display: grid;
+  place-items: center;
+  min-height: 50vh;
+}
+.weakness-empty .card {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  max-width: 560px;
+  padding: 34px;
+  text-align: center;
+  color: var(--weakness-muted);
+}
+.weakness-empty h1 {
+  margin: 0;
+  font-size: 21px;
+  color: var(--weakness-ink);
+}
+.weakness-empty p {
+  margin: 0;
+  line-height: 1.8;
+}
+@media (max-width: 980px) {
+  .weakness-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .weakness-aside {
+    position: static;
+    order: -1;
+  }
+}
+@media (max-width: 640px) {
+  .weakness-hero {
+    flex-direction: column;
+    padding: 20px;
+  }
+  .weakness-example,
+  .weakness-drill,
+  .weakness-redo {
+    padding: 16px;
+  }
+  .weakness-example-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .weakness-section-head {
+    flex-direction: column;
+  }
+  .weakness-section-head > span {
+    align-self: flex-start;
+  }
+}
+.weakness-analyses {
+  padding: 22px;
+  border-radius: 16px;
+}
+.weakness-analysis-list {
+  display: grid;
+  gap: 8px;
+}
+.weakness-analysis {
+  border: 1px solid var(--weakness-border);
+  border-radius: 12px;
+  background: #fff;
+}
+.weakness-analysis > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 13px;
+  cursor: pointer;
+  list-style: none;
+}
+.weakness-analysis > summary::-webkit-details-marker {
+  display: none;
+}
+.weakness-analysis > summary strong {
+  flex: 1;
+  font-size: 13px;
+}
+.weakness-analysis-flag {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f1f3f7;
+  font-size: 11px;
+  color: #5b6880;
+}
+.weakness-analysis-flag.is-blank {
+  background: #fff4dd;
+  color: #946000;
+}
+.weakness-analysis-body {
+  display: grid;
+  gap: 12px;
+  padding: 0 13px 15px;
+  border-top: 1px solid var(--weakness-border);
+}
+.weakness-analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.weakness-analysis-grid > div,
+.weakness-analysis-reasons,
+.weakness-analysis-explain {
+  padding: 10px 12px;
+  border: 1px solid var(--weakness-border);
+  border-radius: 10px;
+  background: #fbfcfe;
+}
+.weakness-analysis-body h4 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: #6366a3;
+}
+.weakness-analysis-body p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.weakness-analysis-reasons > p {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0;
+}
+.weakness-analysis-reasons strong {
+  flex-shrink: 0;
+  color: #2b5c45;
+}
+.weakness-analysis-weak {
+  margin: 0;
+  font-size: 12px;
+  color: #946000;
+}
+.weakness-complete-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.weakness-detection-notice {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: #946000;
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .weakness-analysis-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.weakness-analysis-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.weakness-expand-all {
+  padding: 5px 10px;
+  border: 1px solid var(--weakness-border);
+  border-radius: 999px;
+  background: #fff;
+  color: #4b5a78;
+  font-size: 12px;
+  cursor: pointer;
+}
+.weakness-expand-all:hover {
+  border-color: #b9c6e6;
+  color: #2d3c5c;
+}
+.weakness-worked {
+  display: grid;
+  gap: 11px;
+}
+.weakness-worked-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.weakness-worked-block {
+  padding: 10px 12px;
+  border: 1px solid var(--weakness-border);
+  border-radius: 10px;
+  background: #fbfcfe;
+}
+.weakness-worked-block.is-idea {
+  border-color: #cfe0f6;
+  background: #f4f9ff;
+}
+.weakness-worked-block.is-diagnosis {
+  border-color: #f0d8ae;
+  background: #fffaf1;
+}
+.weakness-worked-block.is-pitfall {
+  border-color: #f0c9c9;
+  background: #fff7f7;
+}
+.weakness-worked-block h4,
+.weakness-worked-steps h4,
+.weakness-worked-next h4 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: #6366a3;
+}
+.weakness-worked-block p,
+.weakness-worked-block .math-text,
+.weakness-worked-next p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.75;
+}
+.weakness-worked-steps > ol {
+  display: grid;
+  gap: 9px;
+  margin: 7px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.weakness-worked-steps > ol > li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 9px;
+}
+.weakness-worked-steps > ol > li > div > strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 13px;
+  color: #2d3852;
+}
+.weakness-worked-steps > ol > li > div > p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #5b6880;
+}
+.weakness-worked-next {
+  padding: 10px 12px;
+  border: 1px solid #cfe6d7;
+  border-radius: 10px;
+  background: #f4fbf6;
+}
+.weakness-analysis-extra {
+  margin-top: 2px;
+  border-top: 1px dashed var(--weakness-border);
+  padding-top: 7px;
+}
+.weakness-analysis-extra > summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: #6b7894;
+}
+.weakness-analysis-extra .weakness-analysis-reasons,
+.weakness-analysis-extra .weakness-analysis-explain {
+  margin-top: 6px;
+}
+@media (max-width: 640px) {
+  .weakness-worked-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .weakness-analysis-tools {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+.weakness-worked-answer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+}
+.weakness-worked-answer .math-text {
+  display: inline;
+}
+.weakness-collapse-head {
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 4px 6px;
+  margin: -4px -6px 0;
+  user-select: none;
+}
+.weakness-collapse-head:hover {
+  background: #f6f8fd;
+}
+.weakness-collapse-head:focus-visible {
+  outline: 2px solid #8ea6d8;
+  outline-offset: 2px;
+}
+.weakness-collapse-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6f7d99;
+}
+.weakness-collapse-meta > span {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #f1f3f8;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.weakness-collapse-head .weakness-analysis-tools {
+  gap: 8px;
+  color: #6f7d99;
+}
+.weakness-sheet {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 16px;
+  padding: 14px;
+  border: 1px solid #dbe4f7;
+  border-radius: 12px;
+  background: #f8faff;
+}
+.weakness-sheet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.weakness-sheet-head strong {
+  display: block;
+  font-size: 14px;
+  color: #2d3852;
+}
+.weakness-sheet-head p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 1.65;
+  color: #6a7892;
+}
+.weakness-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 7px 11px;
+  border: 1px solid #b9c8e6;
+  border-radius: 8px;
+  background: #fff;
+  color: #34508a;
+  font-size: 12px;
+  cursor: pointer;
+}
+.weakness-upload input {
+  display: none;
+}
+.weakness-upload.is-disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.weakness-sheet-files {
+  display: grid;
+  gap: 5px;
+}
+.weakness-sheet-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid #e3e8f4;
+  border-radius: 7px;
+  background: #fff;
+  font-size: 12px;
+}
+.weakness-sheet-file > span {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #eef2fb;
+  color: #5a6a8e;
+  font-size: 10px;
+}
+.weakness-sheet-file > button:nth-of-type(1) {
+  flex: 1;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: #35518a;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.weakness-sheet-remove {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #8a4a4a;
+  cursor: pointer;
+}
+.weakness-sheet-remove:hover {
+  background: #fff0f0;
+}
+.weakness-sheet-preview {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+.weakness-sheet-preview img {
+  max-width: 100%;
+  max-height: 420px;
+  border: 1px solid #dbe4f7;
+  border-radius: 8px;
+  background: #fff;
+}
+.weakness-sheet-preview button {
+  border: 0;
+  background: transparent;
+  color: #4b5f8c;
+  font-size: 12px;
+  cursor: pointer;
+}
+.weakness-sheet-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.weakness-sheet-actions > span {
+  font-size: 12px;
+  color: #6a7892;
+}
+.weakness-sheet-status p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.65;
+  color: #5a6a8e;
+}
+.weakness-sheet-notice {
+  margin: 0;
+  padding: 7px 9px;
+  border-radius: 7px;
+  background: #f3f8f4;
+  color: #356044;
+  font-size: 12px;
+}
+.weakness-image-note {
+  margin: 8px 0 0;
+  padding: 7px 9px;
+  border-radius: 7px;
+  background: #f7f9fd;
+  color: #6a7892;
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .weakness-sheet-head {
+    flex-direction: column;
+  }
+}
+.weakness-review-check {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.weakness-review-check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #4256a5;
+  cursor: pointer;
+}
+.weakness-review-check input:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+.weakness-review-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 12px;
+  padding: 9px 11px;
+  border: 1px solid var(--weakness-border);
+  border-radius: 9px;
+  background: #fbfcfe;
+  font-size: 12px;
+  color: #5b6880;
+}
+.weakness-review-progress progress {
+  flex: 1;
+  height: 7px;
+  accent-color: #4256a5;
+}
+.weakness-review-progress strong {
+  color: #2d3852;
+  white-space: nowrap;
+}
+.weakness-analysis-grid.is-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Reading and review workspace */
+.weakness-page {
+  max-width: 1320px;
+}
+.weakness-grid {
+  grid-template-columns: minmax(0, 1fr) 288px;
+  gap: 24px;
+}
+.weakness-aside {
+  top: calc(var(--course-head-height, 70px) + 64px);
+  max-height: calc(100dvh - var(--course-head-height, 70px) - 84px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.weakness-side-card > div {
+  display: grid;
+  gap: 12px;
+}
+.weakness-section-nav {
+  display: grid;
+  gap: 4px;
+}
+.weakness-section-nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-radius: 9px;
+  color: var(--weakness-ink);
+  text-decoration: none;
+  font-size: 13px;
+}
+.weakness-section-nav a:hover {
+  background: #f4f6ff;
+}
+.weakness-section-nav a > span {
+  color: #8b96ac;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.weakness-section-nav a > strong,
+.weakness-section-nav a > svg {
+  margin-left: auto;
+  font-size: 11px;
+  color: #64748b;
+}
+.weakness-question-nav {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
+  border-top: 1px solid var(--weakness-border);
+  padding-top: 16px;
+}
+.weakness-question-nav button {
+  min-height: 35px;
+  border: 1px solid #dfe5ef;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.weakness-question-nav button.is-attempted {
+  border-color: #edd6a8;
+  background: #fff9ed;
+  color: #946000;
+}
+.weakness-question-nav button.is-correct {
+  border-color: #cde5d7;
+  background: #edf8f1;
+  color: #277350;
+}
+.weakness-question-nav button:hover {
+  border-color: #7c83ca;
+  box-shadow: 0 0 0 2px #eef0ff;
+}
+.weakness-nav-legend {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  color: #7b879b;
+  font-size: 10px;
+}
+.weakness-nav-legend i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #7fb698;
+}
+.weakness-nav-legend i + i,
+.weakness-nav-legend i:nth-of-type(2) {
+  background: #dbbc7d;
+  margin-left: 6px;
+}
+.weakness-drill-toolbar {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--weakness-border);
+  border-bottom: 1px solid var(--weakness-border);
+}
+.weakness-drill-toolbar > span {
+  color: #8490a5;
+  font-size: 11px;
+}
+.weakness-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.weakness-filters button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #f5f7fb;
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+}
+.weakness-filters button[aria-pressed='true'] {
+  border-color: #d6dcfa;
+  background: #eef1ff;
+  color: #4f46a5;
+  font-weight: 600;
+}
+.weakness-filters button > span {
+  opacity: 0.7;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.weakness-filter-empty {
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--weakness-muted);
+}
+.weakness-level > header {
+  padding: 5px 0;
+}
+.weakness-level > header > small {
+  margin-left: auto;
+  white-space: nowrap;
+  color: #7b879b;
+  font-size: 11px;
+}
+.weakness-question-list {
+  gap: 16px;
+}
+.weakness-question {
+  padding: 22px;
+  background: #fff;
+}
+.weakness-question.is-correct {
+  border-color: #dce6e0;
+  background: #fff;
+}
+.weakness-question.needs-practice {
+  border-color: #ead8b7;
+}
+.weakness-question-head {
+  align-items: center;
+  margin-bottom: 18px;
+}
+.weakness-question-head strong {
+  margin-bottom: 3px;
+}
+.weakness-question-head small {
+  line-height: 1.6;
+}
+.weakness-question.needs-practice .weakness-question-state {
+  background: #fff4df;
+  color: #946000;
+}
+.weakness-question .weakness-options-read {
+  gap: 6px;
+  margin: 16px 0;
+}
+.weakness-question .weakness-options-read li {
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid #edf0f5;
+  border-radius: 8px;
+  line-height: 1.7;
+}
+.weakness-question .weakness-options-read li > span:first-child {
+  color: #7a879c;
+  font-size: 12px;
+  min-width: 16px;
+}
+.weakness-question .weakness-options-read li.is-answer {
+  border-color: #d5e9de;
+  background: #f5faf7;
+}
+.weakness-options-read li > small {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+  color: #36805a;
+  font-size: 10px;
+}
+.weakness-result-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 9px;
+  background: #f7f8fb;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.weakness-result-strip > div:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.weakness-result-strip > div > span:first-child {
+  display: block;
+  margin-bottom: 3px;
+  color: #7b879b;
+  font-size: 11px;
+}
+.weakness-result-strip > .weakness-result-score {
+  flex: 0 0 auto;
+  margin-left: auto;
+  text-align: right;
+}
+.weakness-result-score strong {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  color: #334155;
+}
+.weakness-result-score small {
+  font-size: 12px;
+  font-weight: 400;
+  color: #8490a5;
+}
+.weakness-question .weakness-reference-details {
+  padding: 0;
+  border-color: #e3e7f1;
+  background: #fbfcff;
+  overflow: hidden;
+}
+.weakness-question .weakness-reference-details > summary {
+  padding: 12px 14px;
+  font-weight: 500;
+}
+.weakness-solution-body {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-top: 1px solid #e3e7f1;
+  line-height: 1.85;
+}
+.weakness-solution-body h4 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: #7b879b;
+}
+.weakness-question,
+#weakness-example,
+#weakness-analysis,
+#weakness-drill,
+#weakness-redo {
+  scroll-margin-top: calc(var(--course-head-height, 70px) + 80px);
+}
+.weakness-question-nav button:focus-visible,
+.weakness-filters button:focus-visible,
+.weakness-section-nav a:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 3px;
+}
+@media (max-width: 980px) {
+  .weakness-grid { grid-template-columns: minmax(0, 1fr); }
+  .weakness-aside { position: static; max-height: none; overflow: visible; }
+  .weakness-section-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .weakness-question-nav { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .weakness-question { padding: 16px; }
+  .weakness-question-nav { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .weakness-level > header { flex-wrap: wrap; gap: 6px; }
+  .weakness-level > header > span { font-size: 11px; }
+  .weakness-analyses { padding: 16px; }
+  .weakness-collapse-meta { flex-wrap: wrap; }
+  .weakness-collapse-meta > span { white-space: normal; }
+}
+
+/* Keep longer drill explanations readable on phone and desktop. */
+.weakness-tutoring { display: grid; gap: 20px; }
+.weakness-tutoring-section { min-width: 0; padding-top: 16px; border-top: 1px solid var(--border, #e2e8f0); }
+.weakness-tutoring-section:first-child { padding-top: 0; border-top: 0; }
+.weakness-tutoring-section h5 { margin: 0 0 10px; color: var(--text, #26334b); font-size: 15px; line-height: 1.7; font-weight: 650; }
+.weakness-tutoring-prose { line-height: 1.95; overflow-wrap: anywhere; }
+.weakness-tutoring-prose > .math-text > span { white-space: pre-line; }
+.weakness-tutoring-prose .katex { white-space: normal; }
+.weakness-tutoring-prose .katex-display { overflow-x: auto; overflow-y: hidden; padding: 6px 0; }
+.weakness-generation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #e1e5f4;
+  border-radius: 12px;
+  background: #fafbff;
+}
+.weakness-generation strong { font-size: 14px; }
+.weakness-generation p { margin: 5px 0 0; max-width: 560px; font-size: 12px; line-height: 1.75; color: #6a7892; }
+.weakness-generation .button { flex-shrink: 0; }
+.weakness-sheet.is-graded { border-color: #d4e7da; background: #f7fbf8; }
+.weakness-sheet.is-graded .weakness-sheet-status p { display: flex; align-items: center; gap: 5px; color: #387652; }
+@media (max-width: 700px) { .weakness-generation { flex-direction: column; align-items: flex-start; } }
+.weakness-generation-progress {
+  margin: 14px 0 18px;
+  padding: 18px;
+  border: 1px solid #dce2f6;
+  border-radius: 12px;
+  background: #f8faff;
+}
+.weakness-generation-progress-head,
+.weakness-generation-progress-head > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.weakness-generation-progress-head { justify-content: space-between; flex-wrap: wrap; }
+.weakness-generation-progress-head > div { color: #4f46a5; font-size: 13px; }
+.weakness-generation-progress-head > div > svg { flex-shrink: 0; }
+.weakness-generation-progress-head > span { color: #77839b; font-size: 11px; font-variant-numeric: tabular-nums; }
+.weakness-generation-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 20px 0 14px;
+  padding: 0;
+  list-style: none;
+}
+.weakness-generation-steps li { position: relative; display: grid; justify-items: center; gap: 8px; color: #8a95a9; text-align: center; }
+.weakness-generation-steps li:not(:last-child)::after { content: ''; position: absolute; z-index: 0; top: 13px; left: calc(50% + 18px); width: calc(100% - 36px); height: 2px; background: #e1e6f0; }
+.weakness-generation-steps li > span { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid #dce2ed; border-radius: 50%; background: #fff; font-size: 11px; }
+.weakness-generation-steps li > strong { font-size: 11px; font-weight: 500; }
+.weakness-generation-steps li.is-current { color: #4f46a5; }
+.weakness-generation-steps li.is-current > span { border-color: #6b6cc9; background: #eeefff; box-shadow: 0 0 0 4px #f0f1fc; }
+.weakness-generation-steps li.is-done { color: #32815a; }
+.weakness-generation-steps li.is-done > span { border-color: #cce4d6; background: #eaf6ee; }
+.weakness-generation-steps li.is-done::after { background: #b8d9c6; }
+.weakness-generation-progress-note { margin: 0; font-size: 12px; line-height: 1.75; color: #748198; }
+.weakness-generation-progress.is-complete { border-color: #d1e5d8; background: #f7fbf8; }
+.weakness-generation-progress.is-complete .weakness-generation-progress-head > div { color: #32815a; }
+.weakness-generation-progress.is-failed { border-color: #eed9bc; background: #fffcf5; }
+.weakness-generation-progress.is-failed .weakness-generation-progress-head > div { color: #946000; }
+@media (max-width: 640px) {
+  .weakness-generation-progress { padding: 14px 10px; }
+  .weakness-generation-progress-head { padding: 0 4px; }
+  .weakness-generation-steps li > strong { font-size: 10px; }
+}

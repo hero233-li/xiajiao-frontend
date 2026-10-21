@@ -427,7 +427,7 @@ export function ContentEditor({
                 await client.invalidateQueries({
                   predicate: (q) => !String(q.queryKey[0]).startsWith('admin-'),
                 });
-                setSuccess('发布成功。返回学习计划后重新预览，不会自动确认正式计划。');
+                setSuccess('发布成功，可前往课程查看最新内容。');
               }, '发布')
             }
           >
@@ -436,8 +436,8 @@ export function ContentEditor({
         </div>
       </Modal>
       {release.state === 'PUBLISHED' && (
-        <Link className="button button-secondary" to="/study/schedule">
-          返回学习计划预览
+        <Link className="button button-secondary" to="/study/courses">
+          查看课程
         </Link>
       )}
     </section>
