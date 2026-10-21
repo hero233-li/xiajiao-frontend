@@ -91,7 +91,7 @@ describe('批次 1 回归', () => {
     const forbidden = ['接口' + '未提供', '暂' + '未提供', '后端' + '返回'];
     // Existing missing-content messages describe actual data, not an unimplemented feature.
     const missingContentMessages: Record<string, string[]> = {
-      'pages/WeaknessPage.tsx': ['参考答案暂未提供'],
+      'features/bank/weakness/answers.ts': ['参考答案暂未提供'],
       'features/knowledge-analysis/KnowledgeAnalysis.tsx': ['原题暂未提供', '参考答案暂未提供'],
     };
     const violations: string[] = [];
