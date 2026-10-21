@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-export { useCourseByCode as usePracticeCourse } from './courses';
+export { useCourseByCode as usePracticeCourse } from './course-detail';
 import { listCycles } from './generated/exams/exams';
 import { applyAssessment, getPracticeOverview, listQuestions } from './generated/practice/practice';
 import type {

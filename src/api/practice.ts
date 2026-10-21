@@ -1,5 +1,5 @@
 import { useQuery, queryOptions } from '@tanstack/react-query';
-export { useCourseByCode as usePracticeCourse } from './courses';
+export { useCourseByCode as usePracticeCourse } from './course-detail';
 import {
   getPracticeOverview,
   listQuestions,

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-export { useCourseByCode as useKnowledgeCourse } from './courses';
+export { useCourseByCode as useKnowledgeCourse } from './course-detail';
 import { listCycles } from './generated/exams/exams';
 import {
   downloadCourseResource,

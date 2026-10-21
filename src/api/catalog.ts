@@ -1,7 +1,7 @@
 import { invalidateImpact } from './invalidation';
 import { createUuid } from '../utils/uuid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-export { useCourseByCode as useCatalogCourse } from './courses';
+export { useCourseByCode as useCatalogCourse } from './course-detail';
 import { completeCatalogBatch, completeCatalogItem, getCatalog } from './generated/catalog/catalog';
 import type { BatchCompletionWrite, Catalog, CatalogItem } from './generated/models';
 

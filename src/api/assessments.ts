@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-export { useCourseByCode as useAssessmentCourse } from './courses';
+export { useCourseByCode as useAssessmentCourse } from './course-detail';
 import {
   getAssessment,
   getAssessmentResult,

@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { createUuid } from '../utils/uuid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-export { useCourseByCode as useExamCourse } from './courses';
+export { useCourseByCode as useExamCourse } from './course-detail';
 import * as api from './generated/exams/exams';
 import type { ScoreWrite, ScoreUpdate, FileDownload, ScoreRecord } from './generated/models';
 import { sessionStore } from './session';

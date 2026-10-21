@@ -5,7 +5,7 @@ import { http, HttpResponse } from 'msw';
 import { expect, it } from 'vitest';
 import { createQueryClient } from '../app/queryClient';
 import { server } from '../mocks/server';
-import { useCourseByCode } from './courses';
+import { useCourseByCode } from './course-detail';
 import { useCatalogCourse } from './catalog';
 import { useKnowledgeCourse } from './knowledge';
 import { usePracticeCourse } from './practice';
