@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   knowledgeAnalysisApi as api,
@@ -61,11 +61,11 @@ export function useAnalysisReview(card: CardDetail, userKey: string) {
   const fallback = drafts.get(key)!;
   const draft = useSyncExternalStore(subscribe, () => drafts.get(key) ?? fallback);
   const client = useQueryClient();
-  function update(value: Partial<Draft>) {
+  const update = useCallback((value: Partial<Draft>) => {
     if (owner !== userKey || !drafts.has(key)) return;
     drafts.set(key, { ...drafts.get(key)!, ...value });
     emit();
-  }
+  }, [key, userKey]);
   useEffect(() => {
     const current = drafts.get(key);
     if (
@@ -83,7 +83,7 @@ export function useAnalysisReview(card: CardDetail, userKey: string) {
         error: '',
       });
     }
-  }, [card.note, card.reviewState, card.revision, key]);
+  }, [card.note, card.reviewState, card.revision, key, update]);
   const edit = (value: Partial<Pick<Draft, 'note' | 'reviewState'>>) =>
     update({ ...value, dirty: true });
   async function save() {

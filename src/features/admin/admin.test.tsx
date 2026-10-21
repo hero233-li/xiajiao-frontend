@@ -153,7 +153,7 @@ describe('Admin release editing', () => {
     });
     await user.click(screen.getByRole('button', { name: '发布此版本' }));
     await user.click(screen.getByRole('button', { name: '确认启用版本 4' }));
-    await screen.findByText(/发布成功。返回学习计划/);
+    await screen.findByText('发布成功，可前往课程查看最新内容。');
     expect(api.request.mock.calls.filter((c) => c[0].endsWith('/validation'))).toHaveLength(2);
   });
   it('requires explicit deletion confirmation and permits undo before saving', async () => {

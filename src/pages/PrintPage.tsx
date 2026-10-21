@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Printer, RefreshCw, Check, RotateCcw, FileText, Trash2, Undo2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
@@ -30,22 +30,25 @@ export function Component() {
   const allDocs=(query.data??[]).filter(d=>!scopeId||d.course_id===scopeId);const docs=allDocs.filter(d=>!d.status.startsWith('TRASH_'));const visible = allDocs.filter(d=>filter==='TRASH'?d.status.startsWith('TRASH_'):!d.status.startsWith('TRASH_')&&(filter==='ALL'||filter==='PENDING'&&d.status!=='PRINTED'||d.status===filter));const chosen=allDocs.filter(d=>selected.includes(d.id));
   const pageCount=Math.max(1,Math.ceil(visible.length/pageSize));const currentPage=Math.min(page,pageCount);const pageDocs=visible.slice((currentPage-1)*pageSize,currentPage*pageSize);const chosenPages=chosen.reduce((n,d)=>n+d.pages,0);
   useEffect(()=>{setSelected([]);setPage(1);},[scopeId,filter]);
-  async function refreshConnection() {
+  const refreshConnection = useCallback(async () => {
     if(connectionPending.current||deletingRemote)return;connectionPending.current=true;setChecking(true);
     try{const currentMode=mode??(await printSyncConfig()).mode;setMode(currentMode);const result=currentMode==='SERVER'?await serverPrint<PrintConnection>('status'):await printBridge('status');setConnection(result);setRemoteSelected([]);setCheckedAt(new Date().toLocaleTimeString('zh-CN'));}
     catch(cause){setConnection({connected:false,reason:cause instanceof Error?cause.message:'连接失败'});}
     finally{connectionPending.current=false;setChecking(false);}
-  }
-  useEffect(()=>{void refreshConnection();},[]);
+  }, [mode, deletingRemote]);
+  // Keep the existing mount and polling cadence while using current connection state.
+  const refreshConnectionRef = useRef(refreshConnection);
+  useEffect(() => { refreshConnectionRef.current = refreshConnection; }, [refreshConnection]);
+  useEffect(()=>{void refreshConnectionRef.current();},[]);
   async function startServerLogin(){
     setError('');try{const result=await serverPrint<{image:string;expiresIn:number}>('login','POST');setQr(result.image);setQrUntil(Date.now()+result.expiresIn*1000);}catch(cause){setError(cause instanceof Error?cause.message:'二维码读取失败');}
   }
   useEffect(()=>{
     if(mode!=='SERVER')return;let cancelled=false;
-    const poll=async()=>{try{const jobs=await serverPrint<PrintSyncJob[]>(`jobs${scopeId?`?courseId=${encodeURIComponent(scopeId)}`:''}`);if(cancelled)return;setServerJobs(jobs);const done=jobs.filter(job=>job.status==='SUCCEEDED').map(job=>job.id).join(',');if(done!==lastServerDone.current){lastServerDone.current=done;void refreshConnection();}await client.invalidateQueries({queryKey:['print-documents']});}catch{/* Keep the last durable queue visible while offline. */}};
+    const poll=async()=>{try{const jobs=await serverPrint<PrintSyncJob[]>(`jobs${scopeId?`?courseId=${encodeURIComponent(scopeId)}`:''}`);if(cancelled)return;setServerJobs(jobs);const done=jobs.filter(job=>job.status==='SUCCEEDED').map(job=>job.id).join(',');if(done!==lastServerDone.current){lastServerDone.current=done;void refreshConnectionRef.current();}await client.invalidateQueries({queryKey:['print-documents']});}catch{/* Keep the last durable queue visible while offline. */}};
     void poll();const timer=window.setInterval(()=>void poll(),5000);return()=>{cancelled=true;window.clearInterval(timer);};
   },[mode,scopeId,client]);
-  useEffect(()=>{if(!qr||mode!=='SERVER')return;const timer=window.setInterval(()=>{if(Date.now()>qrUntil){setQr('');setMessage('二维码已过期，请重新获取');return;}void refreshConnection();},5000);return()=>window.clearInterval(timer);},[qr,qrUntil,mode]);
+  useEffect(()=>{if(!qr||mode!=='SERVER')return;const timer=window.setInterval(()=>{if(Date.now()>qrUntil){setQr('');setMessage('二维码已过期，请重新获取');return;}void refreshConnectionRef.current();},5000);return()=>window.clearInterval(timer);},[qr,qrUntil,mode]);
   useEffect(()=>{if(connection.loggedIn)setQr('');},[connection.loggedIn]);
   async function jobAction(id:string,action:'retry'|'cancel'){
     try{await serverPrint(`jobs/${id}${action==='retry'?'/retry':''}`,action==='retry'?'POST':'DELETE');setServerJobs(await serverPrint<PrintSyncJob[]>(`jobs${scopeId?`?courseId=${encodeURIComponent(scopeId)}`:''}`));}catch(cause){setError(cause instanceof Error?cause.message:'操作失败');}

@@ -7,7 +7,7 @@ if (![url,username,password,cycle,code,chapter,photo,out].every(Boolean)) throw 
 mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({headless:true});
 const page=await browser.newPage({viewport:{width:1280,height:1000}});const errors=[];const requests=[];const batchStates=[];
-page.on('pageerror',e=>errors.push(e.message));page.on('response',async r=>{if(r.url().includes('/practice-batches')&&r.headers()['content-type']?.includes('application/json')) {try {const d=(await r.json()).data;batchStates.push({path:new URL(r.url()).pathname,state:d?.state,error:d?.error,result:d?.result});} catch{}}});page.on('response',r=>{if(new URL(r.url()).pathname.startsWith('/api/')) requests.push({path:new URL(r.url()).pathname,status:r.status(),method:r.request().method()});});
+page.on('pageerror',e=>errors.push(e.message));page.on('response',async r=>{if(r.url().includes('/practice-batches')&&r.headers()['content-type']?.includes('application/json')) {try {const d=(await r.json()).data;batchStates.push({path:new URL(r.url()).pathname,state:d?.state,error:d?.error,result:d?.result});} catch{/* Ignore non-JSON responses while observing the browser workflow. */}}});page.on('response',r=>{if(new URL(r.url()).pathname.startsWith('/api/')) requests.push({path:new URL(r.url()).pathname,status:r.status(),method:r.request().method()});});
 async function downloadPdf(name){
  const link=page.getByRole('link',{name:'下载PDF',exact:true});await link.waitFor({timeout:60000});
  const download=page.waitForEvent('download');await link.click();await(await download).saveAs(resolve(out,name));

@@ -18,7 +18,7 @@ it('入口位于今日之前，诊断与独立题没有答案，使用图片上�
   ]);
   localStorage.clear();
   const u = userEvent.setup();
-  const v = render(
+  render(
     <AuthContext.Provider value={auth('one')}>
       <Component />
     </AuthContext.Provider>,

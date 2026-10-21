@@ -2,7 +2,7 @@ const BASE='https://selfcopying.cnbksy.com/client/new/cprintPc/';
 const origins=new Set(['https://xiajiao.cloud','http://124.222.151.76:8080','http://localhost:5173','http://127.0.0.1:5173']);
 let uploading=false;
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
-async function manager(){const stored=await chrome.storage.session.get('manager');let tab;try{tab=stored.manager&&await chrome.tabs.get(stored.manager);}catch{}if(!tab||!tab.url?.startsWith(BASE)){tab=await chrome.tabs.create({url:BASE+'printDoc.html',active:false});await chrome.storage.session.set({manager:tab.id});}return tab;}
+async function manager(){const stored=await chrome.storage.session.get('manager');let tab;try{tab=stored.manager&&await chrome.tabs.get(stored.manager);}catch{/* The remembered tab may have closed; create a replacement below. */}if(!tab||!tab.url?.startsWith(BASE)){tab=await chrome.tabs.create({url:BASE+'printDoc.html',active:false});await chrome.storage.session.set({manager:tab.id});}return tab;}
 async function command(tab,message){
  // Retry only delivery while the content script is loading. Never replay an uncertain upload.
  for(let n=0;n<120;n++){

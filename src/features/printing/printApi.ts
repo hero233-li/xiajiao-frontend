@@ -29,7 +29,9 @@ export function printBridge(action: 'status' | 'upload' | 'delete', payload?: un
     const finish = () => { window.removeEventListener('message', receive); window.clearTimeout(timeout); };
     const receive = (event: MessageEvent) => {
       if (event.source !== window || event.origin !== window.location.origin || event.data?.source !== 'zhitu-print-helper' || event.data.id !== id) return;
-      finish(); event.data.error ? reject(new Error(event.data.error)) : resolve(event.data.result);
+      finish();
+      if (event.data.error) reject(new Error(event.data.error));
+      else resolve(event.data.result);
     };
     const timeout = window.setTimeout(() => { finish(); reject(new Error(action === 'status' ? '未连接打印助手，请先安装并打开文印网站' : '文印同步超时，请查看文印列表后再重试')); }, action === 'status' ? 30000 : 120000);
     window.addEventListener('message', receive);

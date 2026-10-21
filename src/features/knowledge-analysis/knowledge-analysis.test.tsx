@@ -380,8 +380,9 @@ describe('知识点梳理', () => {
     await openCard();
     const before = client
       .getQueryCache()
-      .getAll()
+      .findAll({ queryKey: ['knowledge-analysis'] })
       .map((query) => query.queryKey);
+    expect(before.length).toBeGreaterThan(0);
     expect(
       before.every(
         (key) => key[0] === 'knowledge-analysis' && String(key[1]).startsWith('anonymous:'),

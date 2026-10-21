@@ -222,7 +222,7 @@ try {
           position: p.position,
           expectedRevision: latest.revision,
         });
-      } catch {}
+      } catch {/* Best-effort cleanup; continue restoring the remaining preferences. */}
     }
   }
   await browser.close();

@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-li
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PointPracticeBatch } from './PointPracticeBatch';
-import type { BankChapter, BankPoint } from '../../api/bank';
+import type { BankChapter, BankPoint, BankGradingAnswer, bankRequest } from '../../api/bank';
 const request = vi.hoisted(() => vi.fn());
 const pdf = vi.hoisted(() => vi.fn());
 vi.mock('../../api/bank', () => ({ bankRequest: request }));
@@ -21,6 +21,7 @@ const makeBatch = () => ({
   sheetFiles: [] as { id: string; name: string; mimeType: string }[],
   workerOnline: false,
   workerReason: '离线等待',
+  result: undefined as { reviewItems: string[]; answers: BankGradingAnswer[] } | undefined,
   questions: Array.from({ length: 10 }, (_, i) => ({
     id: `q${i}`,
     stem: `题干${i}`,
@@ -155,7 +156,7 @@ describe('单页十题PDF与整组照片批改', () => {
 it('restored review opens results first, keeps provisional scores clear and expands flagged questions', async () => {
   batch.state = 'REVIEW';
   batch.taskId = 'task';
-  (batch as any).result = {
+  batch.result = {
     reviewItems: ['第10题字迹不清，需核对'],
     answers: Array.from({ length: 10 }, (_, i) => ({
       number: String(i + 1),
@@ -196,9 +197,9 @@ it('shows upload progress before confirmation and uses a longer upload timeout',
   const pending = new Promise<void>((r) => {
     release = r;
   });
-  request.mockImplementation(async (...args: any[]) => {
+  request.mockImplementation(async (...args: Parameters<typeof bankRequest>) => {
     if (args[0].endsWith('/sheet-pages')) {
-      args[4].onUploadProgress({ loaded: 50, total: 100 });
+      args[4]?.onUploadProgress?.({ loaded: 50, total: 100, bytes: 50, lengthComputable: true });
       await pending;
     }
     return original(...args);

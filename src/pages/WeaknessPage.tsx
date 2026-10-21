@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
@@ -6,7 +6,6 @@ import {
   type WeaknessExample,
   type WeaknessPlan,
   type WeaknessQuestion,
-  type WeaknessSaved,
 } from '../api/bank';
 import { useCourse } from '../features/course/CourseContext';
 import { Button } from '../components/Button';
@@ -143,9 +142,9 @@ export function Component() {
         ...(sessionId ? { sessionId } : {}),
       }),
   });
-  function update(plan: WeaknessPlan) {
+  const update = useCallback((plan: WeaknessPlan) => {
     client.setQueryData(['weakness-plan', course?.id, sessionId], plan);
-  }
+  }, [client, course?.id, sessionId]);
   async function toggleReviewed(question: WeaknessQuestion) {
     setReviewBusy(question.id);
     setError('');
@@ -174,7 +173,7 @@ export function Component() {
       }
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [query.data]);
+  }, [query.data, update]);
   async function generateDrill() {
     setGenerationBusy(true);
     setSheetError('');

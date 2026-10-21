@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { bankRequest } from '../../api/bank';
+import type { BankGradingAnswer } from '../../api/bank';
 import { RapidPhotoPanel } from './RapidPhotoPanel';
 vi.mock('../../api/bank', () => ({ bankRequest: vi.fn() }));
 vi.mock('../../api/generated/courses/courses', () => ({
@@ -14,10 +15,18 @@ vi.mock('../cycle/CycleContext', () => ({
 it('多页排序与提交、待核对不计零分、账号隔离', async () => {
   localStorage.clear();
   let photo = 0;
-  let history: any[] = [];
-  let submitted: any;
+  type Submission = { requestId: string; fileIds: string[]; closedBook: boolean; pagesComplete: boolean };
+  type Attempt = {
+    id: string; state: string; pages: unknown[];
+    practice: { minutes: number; closedBook: boolean; answersSeenBefore: boolean; complete: boolean };
+    maximums: { number: string; maximum: number }[];
+    result: { reviewItems: string[]; answers: BankGradingAnswer[] } | null;
+    workerOnline: boolean; workerReason: string;
+  };
+  let history: Attempt[] = [];
+  let submitted: Submission | undefined;
   let owner = 'one';
-  vi.mocked(bankRequest).mockImplementation((async (path: string, method = 'GET', data?: any) => {
+  vi.mocked(bankRequest).mockImplementation((async (path: string, method = 'GET', data?: unknown) => {
     if (path === '/grading/workers') return [];
     if (path === '/rapid/materials' && method === 'POST')
       return {
@@ -30,10 +39,10 @@ it('多页排序与提交、待核对不计零分、账号隔离', async () => {
     if (path.startsWith('/rapid/materials/'))
       return { mimeType: 'image/png', contentBase64: 'aW1hZ2U=' };
     if (path === '/rapid/attempts' && method === 'POST') {
-      submitted = data;
+      submitted = data as Submission;
       history = [
         {
-          id: data.requestId,
+          id: submitted.requestId,
           state: 'QUEUED',
           pages: [],
           practice: { minutes: 25, closedBook: true, answersSeenBefore: false, complete: true },
@@ -68,9 +77,9 @@ it('多页排序与提交、待核对不计零分、账号隔离', async () => {
   await u.click(screen.getByLabelText('本次作答页面已全部拍齐'));
   await u.click(screen.getByRole('button', { name: '提交图片批改' }));
   await screen.findByText('批改程序离线，照片已保存');
-  expect(submitted.fileIds).toEqual(['file2', 'file1']);
-  expect(submitted.closedBook).toBe(true);
-  expect(submitted.pagesComplete).toBe(true);
+  expect(submitted?.fileIds).toEqual(['file2', 'file1']);
+  expect(submitted?.closedBook).toBe(true);
+  expect(submitted?.pagesComplete).toBe(true);
   expect(screen.getByRole('button', { name: '本次已提交' })).toBeDisabled();
   history = [
     {

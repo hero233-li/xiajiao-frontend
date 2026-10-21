@@ -56,8 +56,9 @@ it('登录后回到稳定章节ID深链接', async () => {
   await screen.findByRole('heading', { name: '欢迎回来' });
   await userEvent.click(screen.getByRole('button', { name: '使用演示账号' }));
   await screen.findByRole('link', { name: '← 返回考点与进度' });
-  expect(screen.getByText(/函数与极限 · simple/)).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: '当前练习尚未开放' })).toBeInTheDocument();
+  expect(screen.getByText('请返回考点目录查看发布状态与解锁条件。')).toBeVisible();
+  expect(new URL(screen.getByRole('link', { name: '← 返回考点与进度' }).getAttribute('href')!, window.location.origin).searchParams.get('chapter')).toBe('b8816b55-e24a-5653-b1af-5c962d1b54f1');
   expect(
     router.state.location.pathname + router.state.location.search + router.state.location.hash,
   ).toBe(path);

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BookOpen, CheckCheck, FileSearch, RefreshCw, Repeat2, Target } from 'lucide-react';
 import {
@@ -412,7 +412,7 @@ function Workspace({ global, userKey }: { global: boolean; userKey: string }) {
   const [actionError, setActionError] = useState('');
   const [actionResult, setActionResult] = useState('');
   const client = useQueryClient();
-  const prefix = ['knowledge-analysis', userKey];
+  const prefix = useMemo(() => ['knowledge-analysis', userKey], [userKey]);
   const overview = useQuery({
     queryKey: [...prefix, 'overview', courseId],
     queryFn: ({ signal }) => api.overview(courseId, signal),
@@ -457,7 +457,7 @@ function Workspace({ global, userKey }: { global: boolean; userKey: string }) {
       void client.invalidateQueries({ queryKey: [...prefix, 'card'] });
     }
     previousTasks.current = next;
-  }, [tasks.data, client, userKey]);
+  }, [tasks.data, client, prefix]);
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setSearch(q.trim());

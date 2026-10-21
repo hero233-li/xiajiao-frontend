@@ -128,12 +128,13 @@ export function PointPracticeBatch({
     };
   }, [courseId, chapter.chapter_id, point.point_key, level]);
   useEffect(() => {
-    pdfGeneration.current++;
+    const generation = pdfGeneration;
+    generation.current++;
     setPdfUrl('');
     setPdfBusy(false);
     setPreview('');
     return () => {
-      pdfGeneration.current++;
+      generation.current++;
     };
   }, [batchId]);
   useEffect(
@@ -362,9 +363,9 @@ export function PointPracticeBatch({
                         ? 2
                         : (n + (e.key === 'ArrowRight' ? 1 : 2)) % 3;
                   setView(tabNames[target].id);
-                  e.currentTarget.parentElement
-                    ?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
-                    [target]?.focus();
+                  const tabs = e.currentTarget.parentElement
+                    ?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+                  tabs?.[target]?.focus();
                 }}
               >
                 <Icon size={17} />

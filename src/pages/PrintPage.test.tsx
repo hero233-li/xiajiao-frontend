@@ -2,6 +2,8 @@ import { render, screen, cleanup, fireEvent, waitFor, within } from '@testing-li
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { Component } from './PrintPage';
+import type { PrintDocument } from '../features/printing/printApi';
+type PrintRequest = { url: string; method?: string; params?: { courseId?: string }; data: { documents: { id: string }[]; action: string } };
 const pdf=vi.hoisted(()=>vi.fn());
 const syncConfig=vi.hoisted(()=>vi.fn());const server=vi.hoisted(()=>vi.fn());
 const request=vi.hoisted(()=>vi.fn());const bridge=vi.hoisted(()=>vi.fn());
@@ -9,12 +11,12 @@ vi.mock('react-router-dom',()=>({useSearchParams:()=>[new URLSearchParams()]}));
 vi.mock('../features/course/CourseContext',()=>({useCourse:()=>({id:'course',name:'高等数学'})}));
 vi.mock('../api/http',()=>({apiRequest:request}));
 vi.mock('../features/printing/printApi',()=>({PRINT_SITE:'https://selfcopying.cnbksy.com/client/new/cprintPc/cprint.html',printSyncConfig:syncConfig,serverPrint:server,printBridge:bridge,printBlob:pdf,blobBase64:vi.fn()}));
-let docs:any[];
+let docs:PrintDocument[];
 const mount=()=>{const result=render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><Component/></QueryClientProvider>);fireEvent.click(screen.getByRole('tab',{name:/^全部/}));return result;};
 beforeEach(()=>{
  syncConfig.mockReset();syncConfig.mockResolvedValue({mode:'BROWSER',serverAvailable:true});server.mockReset();
- docs=[{id:'one',filename:'考点一.pdf',course_id:'course',chapter_title:'第一章',difficulty:'simple',pages:1,byte_size:1000,status:'PENDING',printed_count:0,revision:0,last_printed_at:null},{id:'two',filename:'考点二.pdf',course_id:'course',chapter_title:'第一章',difficulty:'simple',pages:2,byte_size:2000,status:'PRINTED',printed_count:2,revision:3,last_printed_at:'2026-10-17T02:00:00.000+00:00'}];
- request.mockReset();bridge.mockReset();pdf.mockReset();bridge.mockResolvedValue({connected:false,reason:'尚未连接打印助手'});request.mockImplementation(async(config:any)=>{if(config.method==='DELETE'){const ids=config.data.documents.map((d:any)=>d.id);docs=docs.filter(d=>!ids.includes(d.id));return{data:ids.length};}if(config.method==='POST'){const id=config.url.split('/').at(-2);docs=docs.map(d=>d.id!==id?d:{...d,status:config.data.action==='TRASH'?'TRASH_'+d.status:config.data.action==='RESTORE'?d.status.substring(6):config.data.action==='REPRINT'?'PENDING':config.data.action==='UPLOADED'?'UPLOADED':'PRINTED',printed_count:d.printed_count+(config.data.action==='PRINTED'?1:0),revision:d.revision+1});return{data:docs.find(d=>d.id===id)};}return{data:docs.map(d=>({...d}))};});
+ docs=[{id:'one',filename:'考点一.pdf',course_id:'course',chapter_title:'第一章',point_title:'测试考点',created_at:'2026-10-17T00:00:00Z',difficulty:'simple',pages:1,byte_size:1000,status:'PENDING',printed_count:0,revision:0,last_printed_at:null},{id:'two',filename:'考点二.pdf',course_id:'course',chapter_title:'第一章',point_title:'测试考点',created_at:'2026-10-17T00:00:00Z',difficulty:'simple',pages:2,byte_size:2000,status:'PRINTED',printed_count:2,revision:3,last_printed_at:'2026-10-17T02:00:00.000+00:00'}];
+ request.mockReset();bridge.mockReset();pdf.mockReset();bridge.mockResolvedValue({connected:false,reason:'尚未连接打印助手'});request.mockImplementation(async(config:PrintRequest)=>{if(config.method==='DELETE'){const ids=config.data.documents.map(d=>d.id);docs=docs.filter(d=>!ids.includes(d.id));return{data:ids.length};}if(config.method==='POST'){const id=config.url.split('/').at(-2);docs=docs.map(d=>d.id!==id?d:{...d,status:config.data.action==='TRASH'?'TRASH_'+d.status:config.data.action==='RESTORE'?d.status.substring(6):config.data.action==='REPRINT'?'PENDING':config.data.action==='UPLOADED'?'UPLOADED':'PRINTED',printed_count:d.printed_count+(config.data.action==='PRINTED'?1:0),revision:d.revision+1});return{data:docs.find(d=>d.id===id)};}return{data:docs.map(d=>({...d}))};});
 });
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals();});
 it('selects files individually or all and keeps print counts when requesting reprint',async()=>{
@@ -101,7 +103,7 @@ it('empties only the current course trash after explicit permanent-delete confir
 
 it('continues a batch after one upload fails, reports each result and retries only failures',async()=>{
  docs=[docs[0],{...docs[0],id:'two',filename:'考点二.pdf'},{...docs[0],id:'three',filename:'考点三.pdf'}];pdf.mockResolvedValue(new Blob(['%PDF-'],{type:'application/pdf'}));
- let fail=true;bridge.mockImplementation(async(action:string,payload:any)=>{if(action==='upload'&&payload.name==='考点二.pdf'&&fail)throw Error('上传超时');return{connected:true,loggedIn:true,files:[]};});
+ let fail=true;bridge.mockImplementation(async(action:string,payload:{name:string})=>{if(action==='upload'&&payload.name==='考点二.pdf'&&fail)throw Error('上传超时');return{connected:true,loggedIn:true,files:[]};});
  mount();await screen.findByText('考点一.pdf');fireEvent.click(screen.getByLabelText('全选打印文件'));fireEvent.click(screen.getByRole('button',{name:'同步文件列表到文印网站'}));
  await screen.findByText('同步完成：成功 2 份，失败 1 份。已保留失败文件的勾选，可直接重试。');
  expect(bridge.mock.calls.filter(([action])=>action==='upload').map(([,p])=>p.name)).toEqual(['考点一.pdf','考点二.pdf','考点三.pdf']);expect(screen.getByText('已选 1')).toBeVisible();expect(screen.getByText(/上传超时/)).toBeVisible();expect(docs.map(d=>d.status)).toEqual(['UPLOADED','PENDING','UPLOADED']);

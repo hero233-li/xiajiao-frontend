@@ -1,5 +1,6 @@
 /** Only web URLs and local, non protocol-relative paths are navigable. */
 export function safeAnalysisUrl(value?: string): string | undefined {
+  // eslint-disable-next-line no-control-regex -- Control characters must be rejected in untrusted URLs.
   if (!value || /[\u0000-\u0020\u007f\\]/.test(value)) return undefined;
   if (value.startsWith('/') && !value.startsWith('//')) return value;
   if (value.startsWith('#')) return value;
