@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Pencil, BookOpen, NotebookPen } from 'lucide-react';
 import { CyclePicker, useCycle } from '../features/cycle/CycleContext';
 import { Link } from '../features/cycle/navigation';
-import { listCourses } from '../api/generated/courses/courses';
+import { useMyCourses } from '../api/courses';
 import { RegionState } from '../components/dashboard/RegionState';
 import { ExamScheduleEditor } from '../features/courses/ExamScheduleEditor';
 import { useAuth } from '../hooks/useAuth';
@@ -16,12 +15,7 @@ export function Component() {
   const [editing, setEditing] = useState<{ course: Course; cycle: ExamCycle } | null>(null);
   const [notice, setNotice] = useState('');
   const [filter, setFilter] = useState('ALL');
-  const courses = useQuery({
-    queryKey: ['my-courses', cycle?.cycleId],
-    enabled: !!cycle?.cycleId,
-    queryFn: async ({ signal }) =>
-      (await listCourses({ cycleId: cycle!.cycleId!, size: 100 }, { signal, silent: true })).data,
-  });
+  const courses = useMyCourses(cycle?.cycleId);
   useEffect(() => {
     document.title = '我的科目 · 知途个人成长平台';
   }, []);

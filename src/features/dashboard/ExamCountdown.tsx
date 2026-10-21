@@ -9,17 +9,12 @@ import {
   personalExamSessions,
   confirmedExamSessions,
 } from './countdown';
-import { listCourses } from '../../api/generated/courses/courses';
+import { useMyCourses } from '../../api/courses';
 import { useCycle } from '../cycle/CycleContext';
 import './exam-countdown.css';
 export function ExamCountdown() {
   const cycle = useCycle();
-  const courses = useQuery({
-    queryKey: ['my-courses', cycle?.cycleId],
-    enabled: !!cycle?.cycleId,
-    queryFn: async ({ signal }) =>
-      (await listCourses({ cycleId: cycle!.cycleId, size: 100 }, { signal, silent: true })).data,
-  });
+  const courses = useMyCourses(cycle?.cycleId);
   const [now, setNow] = useState(Date.now);
   const query = useQuery({
     queryKey: ['official-exam-countdown'],
