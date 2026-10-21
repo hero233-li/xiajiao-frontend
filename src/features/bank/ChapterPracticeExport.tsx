@@ -4,9 +4,7 @@ import { bankRequest, type BankChapter, type BankPoint, type BankQuestion, type 
 import { Button } from '../../components/Button';
 import { MathText } from '../../components/MathText';
 import { QuestionStem } from './QuestionStem';
-import { practiceSheetPdf } from './practiceSheetPdf';
 import { practiceZip } from './practiceZip';
-import { practicePrintPdf } from '../printing/practicePrintPdf';
 import { syncPrintPdf } from '../printing/printApi';
 import { Link } from '../cycle/navigation';
 import { useCourse } from '../course/CourseContext';
@@ -43,12 +41,14 @@ export function ChapterPracticeExport({ courseId, chapter, level, enabled }: {
         if (questions.length !== 10) throw Error(`${point.title}题量已变化，请刷新后重试`);
         flushSync(() => setPage({ point, questions }));
         if (mode === 'print') {
+          const { practicePrintPdf } = await import('../printing/practicePrintPdf');
           const blob = await practicePrintPdf(sheet.current!);
           await syncPrintPdf(blob, courseId, chapter.title, point.title, level, point.point_key, questions);
           synced++;
           if (!active.current) return;
           continue;
         }
+        const { practiceSheetPdf } = await import('./practiceSheetPdf');
         const pdf = await practiceSheetPdf(sheet.current!);
         if (!active.current) return;
         files.push({ name: `${String(index + 1).padStart(2, '0')}-${point.title}-${level}.pdf`.replace(/[\\/:*?"<>|]/g, '_'), blob: pdf.blob });
