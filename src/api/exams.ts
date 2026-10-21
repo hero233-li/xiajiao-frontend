@@ -1,20 +1,12 @@
 import { useRef } from 'react';
 import { createUuid } from '../utils/uuid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getCourseByCode } from './generated/courses/courses';
+export { useCourseByCode as useExamCourse } from './courses';
 import * as api from './generated/exams/exams';
 import type { ScoreWrite, ScoreUpdate, FileDownload, ScoreRecord } from './generated/models';
 import { sessionStore } from './session';
 
 const options = { silent: true };
-export function useExamCourse(code: string, cycleId: string) {
-  return useQuery({
-    queryKey: ['exam-course', sessionStore.getSnapshot()?.user.id, code, cycleId],
-    enabled: !!code && !!cycleId,
-    queryFn: async ({ signal }) =>
-      (await getCourseByCode(code, { cycleId }, { ...options, signal })).data,
-  });
-}
 export function useExamCycles() {
   return useQuery({
     queryKey: ['exam-cycles', sessionStore.getSnapshot()?.user.id],

@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { getCourseByCode } from './generated/courses/courses';
+export { useCourseByCode as usePracticeCourse } from './courses';
 import { listCycles } from './generated/exams/exams';
 import { applyAssessment, getPracticeOverview, listQuestions } from './generated/practice/practice';
 import type {
@@ -8,14 +8,6 @@ import type {
   ListQuestionsParams,
 } from './generated/models';
 
-export function usePracticeCourse(code: string, cycleId: string) {
-  return useQuery({
-    queryKey: ['practice-course', code, cycleId],
-    enabled: !!code && !!cycleId,
-    queryFn: async ({ signal }) =>
-      (await getCourseByCode(code, { cycleId }, { signal, silent: true })).data,
-  });
-}
 export function usePracticeOverview(courseId: string | undefined) {
   return useQuery({
     queryKey: ['practice-overview', courseId],

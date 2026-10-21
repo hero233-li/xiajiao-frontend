@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { getCourseByCode } from './generated/courses/courses';
+export { useCourseByCode as useAssessmentCourse } from './courses';
 import {
   getAssessment,
   getAssessmentResult,
@@ -13,14 +13,6 @@ import type {
 } from './generated/models';
 import { sessionStore } from './session';
 
-export function useAssessmentCourse(code: string, cycleId: string) {
-  return useQuery({
-    queryKey: ['assessment-course', sessionStore.getSnapshot()?.user.id, code, cycleId],
-    enabled: !!code && !!cycleId,
-    queryFn: async ({ signal }) =>
-      (await getCourseByCode(code, { cycleId }, { signal, silent: true })).data,
-  });
-}
 export function useAssessmentSession(courseId: string, sessionId: string) {
   return useQuery<{ session: AssessmentSession; measuredAt: number }>({
     queryKey: ['assessment-session', sessionStore.getSnapshot()?.user.id, courseId, sessionId],

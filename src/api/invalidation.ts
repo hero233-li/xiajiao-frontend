@@ -4,6 +4,7 @@ import type { Query, QueryClient } from '@tanstack/react-query';
 const courseKeys = [
   'course',
   'courses',
+  'my-courses',
   'course-progress',
   'catalog-course',
   'practice-course',
@@ -47,7 +48,7 @@ export function affectedQuery(impact: MutationImpact, query: Pick<Query, 'queryK
     return true;
   if (!key.startsWith('/api/v1/')) return false;
   const paths: Record<MutationImpact, RegExp> = {
-    completion: /^\/api\/v1\/(courses|dashboard|home|plans)(\/|$)/,
+    completion: /^\/api\/v1\/(courses|dashboard|home|schedule|plans)(\/|$)/,
     practice: /^\/api\/v1\/(courses\/[^/]+\/(practice|questions)|dashboard)(\/|$)/,
     mark: /^\/api\/v1\/courses\/[^/]+\/questions(\/|$)/,
     assessment: /^\/api\/v1\/(courses|dashboard)(\/|$)/,

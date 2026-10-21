@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getCourseByCode } from './generated/courses/courses';
+export { useCourseByCode as useKnowledgeCourse } from './courses';
 import { listCycles } from './generated/exams/exams';
 import {
   downloadCourseResource,
@@ -12,14 +12,6 @@ import type { KnowledgePage, KnowledgeNoteWrite, ListKnowledgeParams } from './g
 
 export const knowledgeDetailKey = (courseId: string, moduleId: string) =>
   ['knowledge-detail', courseId, moduleId] as const;
-export function useKnowledgeCourse(code: string, cycleId: string) {
-  return useQuery({
-    queryKey: ['knowledge-course', code, cycleId],
-    enabled: !!code && !!cycleId,
-    queryFn: async ({ signal }) =>
-      (await getCourseByCode(code, { cycleId }, { signal, silent: true })).data,
-  });
-}
 export function useKnowledgeCycles(page: number, enabled: boolean) {
   return useQuery({
     queryKey: ['knowledge-cycles', page],

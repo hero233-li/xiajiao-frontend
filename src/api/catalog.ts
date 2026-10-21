@@ -1,18 +1,11 @@
+import { invalidateImpact } from './invalidation';
 import { createUuid } from '../utils/uuid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getCourseByCode } from './generated/courses/courses';
+export { useCourseByCode as useCatalogCourse } from './courses';
 import { completeCatalogBatch, completeCatalogItem, getCatalog } from './generated/catalog/catalog';
 import type { BatchCompletionWrite, Catalog, CatalogItem } from './generated/models';
 
 export const catalogKey = (courseId: string) => ['catalog', courseId] as const;
-export function useCatalogCourse(code: string, cycleId: string) {
-  return useQuery({
-    queryKey: ['catalog-course', code, cycleId],
-    enabled: !!code && !!cycleId,
-    queryFn: async ({ signal }) =>
-      (await getCourseByCode(code, { cycleId }, { signal, silent: true })).data,
-  });
-}
 export function useCatalog(courseId: string) {
   return useQuery({
     queryKey: catalogKey(courseId),
@@ -85,31 +78,7 @@ export function useCatalogCompletion(courseId: string) {
           },
       );
     },
-    onSettled: async () => {
-      // 当前项目 dashboard 为备考总览；同时兼容未来首页、35 天安排及生成客户端键。
-      await client.invalidateQueries({
-        predicate: (query) => {
-          const name = String(query.queryKey[0]);
-          return (
-            [
-              'catalog',
-              'catalog-course',
-              'course',
-              'courses',
-              'course-progress',
-              'dashboard',
-              'home',
-              'home-aggregate',
-              'personal-home',
-              'schedule',
-              'plan',
-              'plans',
-            ].includes(name) ||
-            /^\/api\/v1\/(courses|dashboard|home|schedule|plans)(\/|$)/.test(name)
-          );
-        },
-      });
-    },
+    onSettled: () => invalidateImpact(client, 'completion'),
   });
 }
 export function completionUpdates(items: CatalogItem[], completed: boolean): BatchCompletionWrite {
