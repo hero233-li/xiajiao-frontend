@@ -260,9 +260,18 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
 
         {!question.mode && (
           <p className="text-muted border-line/70 border-t px-4 py-2.5 text-[12px] leading-5 sm:px-5">
-            点「运行」会在本机用 JDK 编译并弹出窗口（需要先开着运行器：
-            <code className="text-secondary">node ~/IDEA/自考/tools/java-runner.mjs</code>
-            ）。不开运行器也能下载下来跑：<code className="text-secondary">tools/run-java.sh</code>。
+            {REMOTE_RUNNER ? (
+              <>
+                点「运行」由服务器编译，在虚拟屏里跑完把窗口截图贴在这里。程序里如果有输入框、按钮，
+                远程点不了，会停在第一个输入框。
+              </>
+            ) : (
+              <>
+                点「运行」会在本机用 JDK 编译并弹出窗口（需要先开着运行器：
+                <code className="text-secondary">node ~/IDEA/自考/tools/java-runner.mjs</code>
+                ）。不开运行器也能下载下来跑：<code className="text-secondary">tools/run-java.sh</code>。
+              </>
+            )}
           </p>
         )}
       </section>
