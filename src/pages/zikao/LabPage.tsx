@@ -33,12 +33,11 @@ function useDraft(question: LabQuestion) {
 }
 
 /**
- * Java 运行器地址：
- * 本机开发时直接连 Mac 上的 tools/java-runner.mjs；
- * 线上走前端容器的 Nginx 反代 /java-runner/，由服务器编译、在 Xvfb 里跑并截图回来。
+ * Java 只在本机跑：本地开发时连 Mac 上的 tools/java-runner.mjs。
+ * 线上不提供服务器编译（用户决定不要那套环境），Java 题给出本机跑法即可。
  */
-const JAVA_RUNNER = import.meta.env.DEV ? 'http://127.0.0.1:18791' : '/java-runner';
-const REMOTE_RUNNER = !import.meta.env.DEV;
+const JAVA_RUNNER = 'http://127.0.0.1:18791';
+const JAVA_RUNNABLE = import.meta.env.DEV;
 
 interface JavaRunState {
   ok: boolean;
@@ -81,9 +80,8 @@ async function runJava(code: string, fileName: string): Promise<JavaRunState> {
     return {
       ok: false,
       stage: 'runner',
-      message: REMOTE_RUNNER
-        ? '服务器上的运行器没响应，稍后再点一次；一直这样就是 xiajiao-java-runner 服务停了。'
-        : '本机运行器没启动。双击 ~/IDEA/自考/tools/启动Java运行器.command，或在终端执行 node ~/IDEA/自考/tools/java-runner.mjs，然后再点运行。',
+      message:
+        '本机运行器没启动。双击 ~/IDEA/自考/tools/启动Java运行器.command，或在终端执行 node ~/IDEA/自考/tools/java-runner.mjs，然后再点运行。',
     };
   }
 }
@@ -120,7 +118,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
   }, [question.id]);
 
   const sqlMode = question.mode === 'ddl' || question.mode === 'query';
-  const runnable = sqlMode || !question.mode;
+  const runnable = sqlMode || (!question.mode && JAVA_RUNNABLE);
 
   async function handleRun() {
     setRunning(true);
@@ -260,16 +258,16 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
 
         {!question.mode && (
           <p className="text-muted border-line/70 border-t px-4 py-2.5 text-[12px] leading-5 sm:px-5">
-            {REMOTE_RUNNER ? (
-              <>
-                点「运行」由服务器编译，在虚拟屏里跑完把窗口截图贴在这里。程序里如果有输入框、按钮，
-                远程点不了，会停在第一个输入框。
-              </>
-            ) : (
+            {JAVA_RUNNABLE ? (
               <>
                 点「运行」会在本机用 JDK 编译并弹出窗口（需要先开着运行器：
                 <code className="text-secondary">node ~/IDEA/自考/tools/java-runner.mjs</code>
                 ）。不开运行器也能下载下来跑：<code className="text-secondary">tools/run-java.sh</code>。
+              </>
+            ) : (
+              <>
+                Java 题在本地跑：复制或下载代码，用 Eclipse 运行，或者在终端跑
+                <code className="text-secondary">tools/run-java.sh</code>。数据库题可以直接在这里执行。
               </>
             )}
           </p>

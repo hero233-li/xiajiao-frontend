@@ -21,9 +21,7 @@ RUN sed -i '/emSign_ECC_Root_CA_-_G3\.crt/d; /AAA_Certificate_Services\.crt/d' /
     && update-ca-certificates --fresh
 # backend 为同一 Docker 网络中的后端服务名，可在启动时覆盖。
 ENV BACKEND_ORIGIN=http://backend:8080 \
-    JAVA_RUNNER_ORIGIN=http://172.18.0.1:18791 \
-    RUNNER_TOKEN=92a52e8b84cbcea6424dd7d50e0d6105116e99eeaf19f184 \
-    NGINX_ENVSUBST_FILTER='^BACKEND_ORIGIN$|^JAVA_RUNNER_ORIGIN$|^RUNNER_TOKEN$' 
+    NGINX_ENVSUBST_FILTER='^BACKEND_ORIGIN$' 
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
 # 构建机 umask 可能把 public/ 里的静态文件带成 600，nginx worker 读不了会 403。
