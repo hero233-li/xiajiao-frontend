@@ -275,8 +275,10 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
                 启动成功。
                 <span className="text-muted">
                   {javaRun.image
-                    ? ` 类名 ${javaRun.className}，窗口见下图（服务器上跑完就关，不占资源）。`
-                    : ` 类名 ${javaRun.className}，窗口应该已经弹在你桌面上；点「停止」可以关掉它。`}
+                    ? ` 类名 ${javaRun.className}，窗口见下图。`
+                    : javaRun.windowed
+                      ? ` 类名 ${javaRun.className}，窗口应该已经弹在你桌面上；点「停止」可以关掉它。`
+                      : ` 类名 ${javaRun.className}，程序跑完了但没有窗口——模板里的 TODO 还空着的话就不会出现窗口。`}
                 </span>
               </p>
               {javaRun.image && (

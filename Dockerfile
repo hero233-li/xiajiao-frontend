@@ -26,6 +26,8 @@ ENV BACKEND_ORIGIN=http://backend:8080 \
     NGINX_ENVSUBST_FILTER='^BACKEND_ORIGIN$|^JAVA_RUNNER_ORIGIN$|^RUNNER_TOKEN$' 
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
+# 构建机 umask 可能把 public/ 里的静态文件带成 600，nginx worker 读不了会 403。
+RUN chmod -R a+rX /usr/share/nginx/html
 
 EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
