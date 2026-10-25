@@ -1,0 +1,58 @@
+/* 设计令牌：颜色取 Radix UI Colors（iris 品牌 + slate 中性 + 语义色），
+   材质取 Apple Liquid Glass（流光玻璃）规范。数值来源见项目根 AGENTS.md。 */
+
+:root {
+  /* 材质：低不透明度 + 背景模糊饱和，离开背景近乎不可见 */
+  --glass-fill: rgba(255, 255, 255, 0.55);
+  --glass-fill-strong: rgba(255, 255, 255, 0.75);
+  --glass-fill-quiet: rgba(255, 255, 255, 0.35);
+  --glass-edge: rgba(255, 255, 255, 0.7);
+  --glass-edge-strong: rgba(255, 255, 255, 0.9);
+  --glass-hairline: rgba(15, 23, 42, 0.06);
+  --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --glass-shadow-soft: 0 8px 24px rgba(15, 23, 42, 0.06);
+  --glass-shadow-pill: 0 2px 8px rgba(15, 23, 42, 0.05);
+  --glass-blur: blur(20px) saturate(180%);
+  --glass-blur-pill: blur(12px) saturate(160%);
+
+  /* 流光：一道移动的淡彩高光，周期 6s，只在装饰层出现 */
+  --sheen: linear-gradient(
+    100deg,
+    transparent 36%,
+    rgba(120, 180, 255, 0.08) 46%,
+    rgba(120, 230, 200, 0.07) 52%,
+    rgba(255, 150, 220, 0.06) 58%,
+    transparent 68%
+  );
+
+  /* 圆角：卡片 22，胶囊全圆角；嵌套元素按「内 = 外 − 内边距」推算 */
+  --radius-card: 22px;
+  --radius-control: 14px;
+  --radius-pill: 999px;
+
+  /* 动效：只留必要反馈，统一 ease-out 250ms */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration: 250ms;
+}
+
+.dark {
+  --glass-fill: rgba(20, 20, 24, 0.5);
+  --glass-fill-strong: rgba(24, 24, 30, 0.7);
+  --glass-fill-quiet: rgba(20, 20, 24, 0.35);
+  --glass-edge: rgba(255, 255, 255, 0.12);
+  --glass-edge-strong: rgba(255, 255, 255, 0.18);
+  --glass-hairline: rgba(255, 255, 255, 0.1);
+  --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --glass-shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --glass-shadow-pill: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --sheen: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(120, 180, 255, 0.08) 45%,
+    rgba(120, 230, 200, 0.07) 55%,
+    rgba(255, 150, 220, 0.06) 65%,
+    transparent 80%
+  );
+  color-scheme: dark;
+}
+
