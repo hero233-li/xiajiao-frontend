@@ -999,6 +999,12 @@ delimiter ;
 -- 调用
 select f_info_concat('G0208');`;
 
+/** 查询题的起手模板：示例库是现成的，只提示从哪写起。 */
+const queryStarter = raw`-- 示例库已就绪：majorinfo（专业 2 条）、classinfo（班级 3 条）、studentinfo（学生 17 条）
+-- 直接写查询，例如：select * from studentinfo where studentage > 20;
+
+select `;
+
 const sqlStarter = raw`-- 先把这套表建出来再写题目里的语句
 drop database if exists school;
 create database school;
@@ -1062,7 +1068,7 @@ export const sqlSet: LabSet = {
       requirement: '查询 2001-01-01 之后入学、且姓张的学生全部信息。',
       checks: ['entrancedate > 日期字面量', "studentname like '张%'", '用 and 组合条件'],
       answer: sqlQ2,
-      starter: sqlStarter,
+      starter: queryStarter,
     },
     {
       id: 'sql-3',
@@ -1081,7 +1087,7 @@ export const sqlSet: LabSet = {
         'order by studentage asc',
       ],
       answer: sqlQ3,
-      starter: sqlStarter,
+      starter: queryStarter,
     },
     {
       id: 'sql-4',
@@ -1098,7 +1104,7 @@ export const sqlSet: LabSet = {
         'studentmark < (子查询)',
       ],
       answer: sqlQ4,
-      starter: sqlStarter,
+      starter: queryStarter,
     },
     {
       id: 'sql-5',
@@ -1111,7 +1117,7 @@ export const sqlSet: LabSet = {
       requirement: '统计成绩大于 90 分的学生人数超过 10 人的班级号与人数。',
       checks: ['where studentmark > 90', 'group by classid', 'having count(...) > 10'],
       answer: sqlQ5,
-      starter: sqlStarter,
+      starter: queryStarter,
     },
     {
       id: 'sql-6',
@@ -1128,7 +1134,7 @@ export const sqlSet: LabSet = {
         '相关子查询条件不能漏',
       ],
       answer: sqlQ6,
-      starter: sqlStarter,
+      starter: queryStarter,
     },
     {
       id: 'sql-7',
@@ -1146,7 +1152,7 @@ export const sqlSet: LabSet = {
         'classid in (子查询拿到该专业的班级)',
       ],
       answer: sqlQ7,
-      starter: sqlStarter,
+      starter: queryStarter,
     },
     {
       id: 'sql-8',
@@ -1163,7 +1169,7 @@ export const sqlSet: LabSet = {
         '列别名用中文或英文都行',
       ],
       answer: sqlQ8,
-      starter: sqlStarter,
+      starter: queryStarter,
     },
     {
       id: 'sql-9',
@@ -1182,7 +1188,7 @@ export const sqlSet: LabSet = {
         'delimiter $$ 包裹，结束不要忘了还原 delimiter ;',
       ],
       answer: sqlQ9,
-      starter: sqlStarter,
+      starter: queryStarter,
     },
     {
       id: 'sql-10',
@@ -1200,7 +1206,7 @@ export const sqlSet: LabSet = {
         'signal sqlstate 抛错 + message_text',
       ],
       answer: sqlQ10,
-      starter: sqlStarter,
+      starter: queryStarter,
     },
     {
       id: 'sql-11',
@@ -1219,7 +1225,7 @@ export const sqlSet: LabSet = {
         '用 call 调用，delimiter $$',
       ],
       answer: sqlQ11,
-      starter: sqlStarter,
+      starter: queryStarter,
     },
     {
       id: 'sql-12',
@@ -1239,7 +1245,7 @@ export const sqlSet: LabSet = {
         '最后 return 变量',
       ],
       answer: sqlQ12,
-      starter: sqlStarter,
+      starter: queryStarter,
     },
   ],
 };
