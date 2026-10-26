@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import qGirl from '../assets/q-girl.svg';
 import { ApiError, authApi, setPersist } from '../lib/api';
 import { useSession } from '../lib/useSession';
+import { SiteFooter } from '../app/SiteFooter';
 
 /** 测试环境自带账号：默认填好，自动记住密码 + 自动登录。 */
 const DEFAULT_IDENTIFIER = 'integration';
@@ -96,7 +97,7 @@ export function LoginPage() {
   }
 
   return (
-    <main className="relative grid min-h-full place-items-center px-4 py-8">
+    <main className="relative flex min-h-full flex-col items-center justify-center gap-2 px-4 py-8">
       {/* 登录页自己的背景：淡蓝 → 淡紫 → 淡粉 */}
       <div
         aria-hidden
@@ -201,6 +202,8 @@ export function LoginPage() {
           </div>
         </form>
       </div>
+
+      <SiteFooter />
     </main>
   );
 }

@@ -4,6 +4,7 @@ import { LogOut } from 'lucide-react';
 import { authApi } from '../lib/api';
 import qGirl from '../assets/q-girl.svg';
 import { Sidebar } from './Sidebar';
+import { SiteFooter } from './SiteFooter';
 import { useUser } from '../lib/useSession';
 
 export function AppShell() {
@@ -19,7 +20,7 @@ export function AppShell() {
   const initial = (user?.username ?? '?').slice(0, 1).toUpperCase();
 
   return (
-    <div className="min-h-full">
+    <div className="flex min-h-full flex-col">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 pt-5 pb-4 sm:px-6">
         <Link to="/today" className="text-ink flex items-center gap-2.5 text-[15px] font-semibold">
           <span
@@ -73,6 +74,10 @@ export function AppShell() {
           </div>
         </div>
       </main>
+
+      <div className="mt-auto">
+        <SiteFooter />
+      </div>
     </div>
   );
 }
