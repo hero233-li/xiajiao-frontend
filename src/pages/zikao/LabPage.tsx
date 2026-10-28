@@ -45,6 +45,7 @@ interface JavaRunState {
   message: string;
   className?: string;
   output?: string;
+  finished?: boolean;
   image?: string | null;
   windowed?: boolean;
 }
@@ -55,6 +56,7 @@ interface RunnerPayload {
   message?: string;
   className?: string;
   output?: string;
+  finished?: boolean;
   image?: string | null;
   windowed?: boolean;
 }
@@ -73,6 +75,7 @@ async function runJava(code: string, fileName: string): Promise<JavaRunState> {
       message: data.message ?? data.output ?? '',
       className: data.className,
       output: data.output,
+      finished: data.finished,
       image: data.image ?? null,
       windowed: data.windowed,
     };
@@ -129,7 +132,8 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
         const result = await runJava(draft, question.fileName);
         setJavaRun(result);
         // 服务器模式是「跑完截图就关」，没有常驻窗口可停
-        if (result.ok && !result.image) setJavaWindow(true);
+        // 只有还在跑的（多半是界面程序）才需要「停止」；命令行程序这时已经结束了
+        if (result.ok && !result.image && !result.finished) setJavaWindow(true);
       }
     } finally {
       setRunning(false);
@@ -279,13 +283,15 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
           {javaRun.ok ? (
             <div className="flex flex-col gap-2">
               <p className="text-secondary text-[13px]">
-                启动成功。
+                {javaRun.finished ? '跑完了。' : '启动成功。'}
                 <span className="text-muted">
                   {javaRun.image
                     ? ` 类名 ${javaRun.className}，窗口见下图。`
-                    : javaRun.windowed
-                      ? ` 类名 ${javaRun.className}，窗口应该已经弹在你桌面上；点「停止」可以关掉它。`
-                      : ` 类名 ${javaRun.className}，程序跑完了但没有窗口——模板里的 TODO 还空着的话就不会出现窗口。`}
+                    : javaRun.finished
+                      ? javaRun.output?.trim()
+                        ? ` 类名 ${javaRun.className}，输出见下方。`
+                        : ` 类名 ${javaRun.className}，程序正常结束但没有打印任何内容——检查是不是还没写 System.out.print。`
+                      : ` 类名 ${javaRun.className}，窗口应该已经弹在你桌面上；点「停止」可以关掉它。`}
                 </span>
               </p>
               {javaRun.image && (
@@ -295,8 +301,8 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
                   className="border-line max-h-[420px] w-auto max-w-full self-start rounded-[10px] border"
                 />
               )}
-              {javaRun.output && (
-                <pre className="text-secondary overflow-x-auto font-mono text-[12px] leading-5 whitespace-pre-wrap">
+              {javaRun.output?.trim() && (
+                <pre className="border-line text-secondary max-h-[320px] overflow-auto rounded-[10px] border bg-[var(--slate-2)] px-3 py-2 font-mono text-[12px] leading-5 whitespace-pre-wrap">
                   {javaRun.output}
                 </pre>
               )}

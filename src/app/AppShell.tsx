@@ -21,7 +21,7 @@ export function AppShell() {
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 pt-5 pb-4 sm:px-6">
+      <header className="flex w-full items-center justify-between px-4 pt-5 pb-4 sm:px-6 lg:px-8">
         <Link to="/today" className="text-ink flex items-center gap-2.5 text-[15px] font-semibold">
           <span
             className="float-soft grid size-9 place-items-center overflow-hidden rounded-full shadow-[0_0_0_2px_#fff,0_6px_16px_rgba(15,23,42,0.12)]"
@@ -64,7 +64,7 @@ export function AppShell() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
+      <main className="w-full px-4 pb-16 sm:px-6 lg:px-8">
         <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-5">
           <div className="lg:sticky lg:top-5">
             <Sidebar />

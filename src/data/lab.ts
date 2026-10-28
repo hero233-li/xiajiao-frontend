@@ -687,6 +687,378 @@ public class Test4 extends JFrame {
     }
 }`;
 
+/* --------------------- Java 模拟卷（按 13216 考纲） --------------------- */
+
+const javaMock1 = raw`import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+/** 字符统计：统计一行字符里的数字、英文字母、其它字符各多少个。 */
+public class CharCount {
+    public static void main(String[] args) throws IOException {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("请输入一行字符：");
+        String line = in.readLine();
+        if (line == null) {
+            line = "abc123!@#XYZ456";   // 没接键盘（如远程运行）时用示例行
+        }
+
+        int digits = 0, letters = 0, others = 0;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c >= '0' && c <= '9') {
+                digits++;
+            } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+                letters++;
+            } else {
+                others++;
+            }
+        }
+        System.out.println("数字 " + digits + " 个，字母 " + letters + " 个，其它 " + others + " 个");
+    }
+}`;
+
+const javaMock2 = raw`/** 水仙花数：三位数，各位数字的立方和等于它本身。 */
+public class Narcissus {
+    public static void main(String[] args) {
+        for (int n = 100; n <= 999; n++) {
+            int a = n / 100;
+            int b = n / 10 % 10;
+            int c = n % 10;
+            if (a * a * a + b * b * b + c * c * c == n) {
+                System.out.print(n + " ");
+            }
+        }
+        System.out.println();
+    }
+}`;
+
+const javaMock3 = raw`/** 完数：等于其所有真因子之和（6 = 1 + 2 + 3）。 */
+public class PerfectNumber {
+    public static void main(String[] args) {
+        for (int n = 2; n <= 1000; n++) {
+            int sum = 0;
+            StringBuilder factors = new StringBuilder();
+            for (int i = 1; i < n; i++) {
+                if (n % i == 0) {
+                    sum += i;
+                    factors.append(factors.length() == 0 ? "" : "+").append(i);
+                }
+            }
+            if (sum == n) {
+                System.out.println(n + " = " + factors);
+            }
+        }
+    }
+}`;
+
+const javaMock4 = raw`/** 素数：输出 1 到 100 之间的素数，每行 10 个。 */
+public class PrimeList {
+    public static void main(String[] args) {
+        int count = 0;
+        for (int n = 2; n <= 100; n++) {
+            boolean prime = true;
+            for (int i = 2; i * i <= n; i++) {
+                if (n % i == 0) {
+                    prime = false;
+                    break;
+                }
+            }
+            if (prime) {
+                System.out.printf("%4d", n);
+                if (++count % 10 == 0) {
+                    System.out.println();
+                }
+            }
+        }
+        if (count % 10 != 0) {
+            System.out.println();
+        }
+    }
+}`;
+
+const javaMock5 = raw`import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+/** 提取整数中的每个数字：逐位输出、逆序、求和。 */
+public class Digits {
+    public static void main(String[] args) throws IOException {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("请输入一个整数：");
+        String line = in.readLine();
+        if (line == null || line.trim().isEmpty()) {
+            line = "20819";             // 没接键盘时用示例数
+        }
+        int n = Math.abs(Integer.parseInt(line.trim()));
+
+        StringBuilder reversed = new StringBuilder();
+        int sum = 0, bits = 0;
+        int temp = n;
+        while (temp > 0) {
+            int d = temp % 10;
+            reversed.append(d);
+            sum += d;
+            bits++;
+            temp /= 10;
+        }
+
+        System.out.println("位数：" + bits);
+        System.out.println("逆序：" + reversed);
+        System.out.println("各位和：" + sum);
+        System.out.print("逐位：");
+        String forward = reversed.reverse().toString();
+        for (int i = 0; i < forward.length(); i++) {
+            System.out.print(forward.charAt(i) + " ");
+        }
+        System.out.println();
+    }
+}`;
+
+const javaMock6 = raw`/** 数组排序：冒泡排序，升序输出。 */
+public class BubbleSort {
+    public static void main(String[] args) {
+        int[] a = {49, 38, 65, 97, 76, 13, 27, 49, 55, 4};   // 考场从键盘读 10 个数
+
+        for (int i = 0; i < a.length - 1; i++) {
+            for (int j = 0; j < a.length - 1 - i; j++) {
+                if (a[j] > a[j + 1]) {
+                    int t = a[j];
+                    a[j] = a[j + 1];
+                    a[j + 1] = t;
+                }
+            }
+        }
+
+        System.out.print("排序后：");
+        for (int v : a) {
+            System.out.print(v + " ");
+        }
+        System.out.println();
+    }
+}`;
+
+const javaMock7 = raw`/** 类的继承：抽象形状类 → 圆 / 矩形，多态求面积与周长。 */
+abstract class Shape {
+    private String name;
+
+    Shape(String name) {
+        this.name = name;
+    }
+
+    String getName() {
+        return name;
+    }
+
+    abstract double area();
+
+    abstract double perimeter();
+
+    void show() {
+        System.out.printf("%s：面积 %.2f，周长 %.2f%n", name, area(), perimeter());
+    }
+}
+
+class Circle extends Shape {
+    private double r;
+
+    Circle(double r) {
+        super("圆");
+        this.r = r;
+    }
+
+    double area() {
+        return Math.PI * r * r;
+    }
+
+    double perimeter() {
+        return 2 * Math.PI * r;
+    }
+}
+
+class Rectangle extends Shape {
+    private double w, h;
+
+    Rectangle(double w, double h) {
+        super("矩形");
+        this.w = w;
+        this.h = h;
+    }
+
+    double area() {
+        return w * h;
+    }
+
+    double perimeter() {
+        return 2 * (w + h);
+    }
+}
+
+public class ShapeDemo {
+    public static void main(String[] args) {
+        Shape[] shapes = {new Circle(3), new Rectangle(4, 5)};
+        for (Shape s : shapes) {
+            s.show();
+        }
+    }
+}`;
+
+const javaMock8 = raw`import java.awt.BorderLayout;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+/** Swing 界面：两个按钮操作一个计数标签。 */
+public class CounterWindow extends JFrame {
+    private int count = 0;
+    private final JLabel label = new JLabel("当前计数：0", JLabel.CENTER);
+
+    public CounterWindow() {
+        super("按钮与标签");
+        label.setFont(new Font("宋体", Font.BOLD, 20));
+
+        JButton add = new JButton("加一");
+        JButton reset = new JButton("清零");
+        add.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                label.setText("当前计数：" + (++count));
+            }
+        });
+        reset.addActionListener(e -> {
+            count = 0;
+            label.setText("当前计数：0");
+        });
+
+        JPanel buttons = new JPanel();
+        buttons.add(add);
+        buttons.add(reset);
+
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().add(label, BorderLayout.CENTER);
+        getContentPane().add(buttons, BorderLayout.SOUTH);
+
+        setSize(320, 160);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        new CounterWindow();
+    }
+}`;
+
+const javaMock9 = raw`import java.awt.Color;
+import java.awt.Graphics;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+/** 绘图：重写 paintComponent，画矩形、圆、三角形和字符串。 */
+public class PaintPanel extends JPanel {
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+
+        g.setColor(Color.BLUE);
+        g.drawRect(30, 30, 120, 80);
+
+        g.setColor(Color.RED);
+        g.drawOval(180, 30, 100, 100);
+
+        g.setColor(Color.GREEN);
+        g.drawLine(60, 220, 160, 140);
+        g.drawLine(160, 140, 260, 220);
+        g.drawLine(260, 220, 60, 220);
+
+        g.setColor(Color.BLACK);
+        g.drawString("paintComponent 绘图", 40, 270);
+    }
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("绘图板");
+        frame.setContentPane(new PaintPanel());
+        frame.setSize(400, 320);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+    }
+}`;
+
+const javaMock10 = raw`/** 多线程：两个线程交替打印 1 到 20。 */
+public class TwoThreads {
+    private static int current = 1;
+    private static final Object lock = new Object();
+
+    public static void main(String[] args) {
+        Runnable a = () -> print("A");
+        Runnable b = () -> print("B");
+
+        new Thread(a, "A").start();
+        new Thread(b, "B").start();
+    }
+
+    private static void print(String name) {
+        while (true) {
+            synchronized (lock) {
+                if (current > 20) {
+                    lock.notifyAll();
+                    return;
+                }
+                if ((current % 2 == 1) != name.equals("A")) {
+                    try {
+                        lock.wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                    continue;
+                }
+                System.out.println("线程 " + name + " 打印 " + current);
+                current++;
+                lock.notifyAll();
+            }
+        }
+    }
+}`;
+
+const javaMock11 = raw`import java.applet.Applet;
+import java.awt.Color;
+import java.awt.Graphics;
+
+/** Applet 图形处理：考场用 MyEclipse 8.6 可运行；JDK 17 上 javac 会报找不到 java.applet。 */
+public class DrawApplet extends Applet {
+    @Override
+    public void paint(Graphics g) {
+        g.setColor(Color.BLUE);
+        g.drawRect(20, 20, 120, 80);
+
+        g.setColor(Color.RED);
+        g.drawOval(170, 20, 90, 90);
+
+        g.setColor(Color.GREEN);
+        g.drawLine(40, 220, 120, 150);
+        g.drawLine(120, 150, 200, 220);
+        g.drawLine(200, 220, 40, 220);
+
+        g.setColor(Color.BLACK);
+        g.drawString("Applet 里的 paint", 40, 260);
+    }
+}`;
+
+const javaMockStarter = raw`import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+public class Demo {
+    public static void main(String[] args) throws Exception {
+        // TODO：本题的代码写在这里
+        // 需要从键盘读数据时：
+        // BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        // String line = in.readLine();
+    }
+}`;
+
 export const javaSets: LabSet[] = [
   {
     id: 'java-a',
@@ -851,7 +1223,204 @@ export const javaSets: LabSet[] = [
       },
     ],
   },
+  {
+    id: 'java-mock',
+    name: '模拟卷',
+    note: '按 13216 考纲（2025-12 版）出的模拟卷：上机 1 小时，两级计分（合格/不合格）。算法题可在本机直接跑。',
+    questions: [
+      {
+        id: 'java-mock-1',
+        no: 1,
+        title: '字符统计：数字、字母、其它',
+        score: '10 分',
+        fileName: 'CharCount.java',
+        starter: javaMockStarter,
+        requirement:
+          '编写程序，读入一行字符，统计其中的数字字符、英文字母和其它字符各有多少个，并输出三个计数。',
+        checks: [
+          '用 BufferedReader 或 Scanner 读入一行',
+          'char 区间判断：数字 0-9、字母 a-z 与 A-Z 都要算',
+          "其它字符走 else 分支（空格、标点都算其它）",
+          '没有键盘输入时给一个示例字符串，保证远程运行也能出结果',
+        ],
+        answer: javaMock1,
+      },
+      {
+        id: 'java-mock-2',
+        no: 2,
+        title: '水仙花数',
+        score: '10 分',
+        fileName: 'Narcissus.java',
+        starter: javaMockStarter,
+        requirement:
+          '输出 100 到 999 之间所有的水仙花数。水仙花数是指各位数字的立方和等于该数本身的三位数。',
+        checks: [
+          '三位数拆位：百位 n/100，十位 n/10%10，个位 n%10',
+          '立方和与原数比较',
+          '四个答案：153、370、371、407',
+        ],
+        answer: javaMock2,
+      },
+      {
+        id: 'java-mock-3',
+        no: 3,
+        title: '完数',
+        score: '10 分',
+        fileName: 'PerfectNumber.java',
+        starter: javaMockStarter,
+        requirement:
+          '输出 1000 以内所有的完数，并按「6 = 1+2+3」的格式打印每个完数的因子。',
+        checks: [
+          '真因子：从 1 到 n-1 逐个试除',
+          '累加因子与 n 比较',
+          '答案：6、28、496',
+          '因子串拼接建议用 StringBuilder',
+        ],
+        answer: javaMock3,
+      },
+      {
+        id: 'java-mock-4',
+        no: 4,
+        title: '素数',
+        score: '10 分',
+        fileName: 'PrimeList.java',
+        starter: javaMockStarter,
+        requirement: '输出 1 到 100 之间的所有素数，每行输出 10 个。',
+        checks: [
+          'i 从 2 到 sqrt(n) 试除即可',
+          '每输出一个计数加一，计数到 10 换行',
+          '1 不是素数，循环从 2 开始',
+        ],
+        answer: javaMock4,
+      },
+      {
+        id: 'java-mock-5',
+        no: 5,
+        title: '提取整数中的每个数字',
+        score: '10 分',
+        fileName: 'Digits.java',
+        starter: javaMockStarter,
+        requirement:
+          '读入一个整数，输出它的位数、逆序结果、各位数字之和，并把每个数字按从左到右逐位打印出来。',
+        checks: [
+          '取位用取模：n % 10 得个位，n / 10 去掉个位',
+          '逆序可以用 StringBuilder 边取边 append',
+          '位数与各位和都在同一个循环里累计',
+          '负数先取绝对值',
+        ],
+        answer: javaMock5,
+      },
+      {
+        id: 'java-mock-6',
+        no: 6,
+        title: '数组排序：冒泡',
+        score: '10 分',
+        fileName: 'BubbleSort.java',
+        starter: javaMockStarter,
+        requirement:
+          '读入 10 个整数存进数组，用冒泡排序把它们升序排好再输出。不要直接调用 Arrays.sort。',
+        checks: [
+          '两层循环，外层 n-1 趟，内层逐对比较',
+          '相邻元素交换用临时变量',
+          '内层循环上界随趟数递减（可加优化）',
+          '外层每趟结束后末尾已有序',
+        ],
+        answer: javaMock6,
+      },
+      {
+        id: 'java-mock-7',
+        no: 7,
+        title: '类的继承：几何形状',
+        score: '10 分',
+        fileName: 'ShapeDemo.java',
+        starter: javaMockStarter,
+        requirement:
+          '声明抽象类 Shape，含名字、抽象方法 area() 与 perimeter()、以及显示信息的方法；再派生出圆和矩形，创建对象后用父类引用调用，打印面积与周长。',
+        checks: [
+          'abstract class + abstract 方法',
+          '子类 super("圆") 调父类构造器',
+          '父类引用指向子类对象（多态）',
+          'printf("%.2f") 保留两位小数',
+          '一个文件里只能有一个 public 类，文件名与它一致',
+        ],
+        answer: javaMock7,
+      },
+      {
+        id: 'java-mock-8',
+        no: 8,
+        title: 'Swing 界面：按钮与标签',
+        score: '10 分',
+        fileName: 'CounterWindow.java',
+        starter: javaMockStarter,
+        requirement:
+          '用 JFrame 做一个窗口：中间一个 JLabel 显示计数，底部两个按钮「加一」「清零」，点按钮更新标签文字。窗口 320×160，标题「按钮与标签」。',
+        checks: [
+          'JFrame 子类 + super(标题)',
+          'BorderLayout 中间放标签、南部放按钮面板',
+          'addActionListener 里改 label.setText',
+          '计数用私有 int 成员保存',
+          'setSize + setDefaultCloseOperation + setVisible(true)',
+        ],
+        answer: javaMock8,
+      },
+      {
+        id: 'java-mock-9',
+        no: 9,
+        title: '绘图：重写 paintComponent',
+        score: '10 分',
+        fileName: 'PaintPanel.java',
+        starter: javaMockStarter,
+        requirement:
+          '继承 JPanel 并重写 paintComponent，画出矩形、圆、三角形，再画一行字符串，放入 JFrame 显示。',
+        checks: [
+          '第一行必须 super.paintComponent(g)',
+          'drawRect / drawOval / drawLine 各画一个',
+          '三角形用三条 drawLine 首尾相连',
+          'g.drawString 写字，坐标就是基线位置',
+          'JFrame.setContentPane(new PaintPanel())',
+        ],
+        answer: javaMock9,
+      },
+      {
+        id: 'java-mock-10',
+        no: 10,
+        title: '多线程：两个线程交替打印',
+        score: '10 分',
+        fileName: 'TwoThreads.java',
+        starter: javaMockStarter,
+        requirement:
+          '开两个线程，让它们交替打印 1 到 20（A 打奇数、B 打偶数），用 synchronized 加 wait/notify 保证顺序。',
+        checks: [
+          '共享计数变量 + 同一把锁对象',
+          'synchronized (lock) 里判断该谁打',
+          '不轮到自己的线程 lock.wait()，打完 lock.notifyAll()',
+          '打印完要退出循环，别死等',
+          '也可以用一个标志位 + wait/notify 实现',
+        ],
+        answer: javaMock10,
+      },
+      {
+        id: 'java-mock-11',
+        no: 11,
+        title: '附加：Applet 图形处理（了解）',
+        score: '附加',
+        fileName: 'DrawApplet.java',
+        starter: javaMockStarter,
+        requirement:
+          '这一项只要求会写、认识，不要求在你本机跑通：考场的 MyEclipse 8.6 自带老 JDK，Applet 可用；你本机 JDK 17 已经移除 Applet，跑不了属正常。',
+        checks: [
+          '类继承 java.applet.Applet',
+          '重写 paint(Graphics g)',
+          '用 g.setColor / drawRect / drawOval / drawString 绘制',
+          '页面里用 <applet code="DrawApplet.class" width=400 height=300> 加载',
+          '本机 JDK 17 编译报错是预期的，别以为是代码写错',
+        ],
+        answer: javaMock11,
+      },
+    ],
+  },
 ];
+
 
 
 /* --------------------------- 数据库上机 --------------------------- */

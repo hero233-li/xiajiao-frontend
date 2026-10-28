@@ -4,7 +4,7 @@
  */
 export function SiteFooter() {
   return (
-    <footer className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 pt-6 pb-10 text-[12px] sm:px-6">
+    <footer className="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 pt-6 pb-10 text-[12px] sm:px-6">
       <span className="text-muted">菲比啾比卷卷卷</span>
       <a
         className="text-muted hover:text-secondary transition-colors"
