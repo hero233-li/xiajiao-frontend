@@ -172,7 +172,16 @@ export async function runSql(
 ): Promise<SqlOutcome> {
   const statement = toSqlite(sql);
   if (!statement) {
-    return { ok: false, results: [], tables: [], error: '没有可执行的语句' };
+    // 只写了建库/切库语句：浏览器里是 SQLite，没有「库」这一层，这类语句会被忽略
+    const onlyDbStatements = /\b(create|drop)\s+database\b|\buse\s+\w+/i.test(sql);
+    return {
+      ok: false,
+      results: [],
+      tables: [],
+      error: onlyDbStatements
+        ? '建库、切库语句在浏览器里会被忽略（这里跑的是 SQLite，没有库这一层）。请在后面接着写建表语句，或点「填模板」看完整写法。'
+        : '没有可执行的语句',
+    };
   }
 
   const SQL = await loadEngine();
