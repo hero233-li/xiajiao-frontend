@@ -37,7 +37,11 @@ function useDraft(question: LabQuestion) {
  * 线上不提供服务器编译（用户决定不要那套环境），Java 题给出本机跑法即可。
  */
 const JAVA_RUNNER = 'http://127.0.0.1:18791';
-const JAVA_RUNNABLE = import.meta.env.DEV;
+/**
+ * 本机 Java 运行器是否在线：开发时默认按「可用」处理，线上页面探测一下
+ * （只在你自己的 Mac 上开着运行器时才连得上）。
+ */
+const DEV = import.meta.env.DEV;
 
 interface JavaRunState {
   ok: boolean;
@@ -112,6 +116,25 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
   const [running, setRunning] = useState(false);
   const [javaRun, setJavaRun] = useState<JavaRunState | null>(null);
   const [javaWindow, setJavaWindow] = useState(false);
+  const [runnerReady, setRunnerReady] = useState(DEV);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2500);
+    fetch(`${JAVA_RUNNER}/health`, { signal: controller.signal })
+      .then((response) => response.json())
+      .then((data: { ok?: boolean }) => {
+        if (data?.ok) setRunnerReady(true);
+      })
+      .catch(() => {
+        /* 没开运行器就保持隐藏运行按钮 */
+      })
+      .finally(() => clearTimeout(timer));
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, []);
 
   useEffect(() => {
     setOutcome(null);
@@ -121,7 +144,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
   }, [question.id]);
 
   const sqlMode = question.mode === 'ddl' || question.mode === 'query';
-  const runnable = sqlMode || (!question.mode && JAVA_RUNNABLE);
+  const runnable = sqlMode || (!question.mode && runnerReady);
 
   async function handleRun() {
     setRunning(true);
@@ -262,9 +285,9 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
 
         {!question.mode && (
           <p className="text-muted border-line/70 border-t px-4 py-2.5 text-[12px] leading-5 sm:px-5">
-            {JAVA_RUNNABLE ? (
+            {runnerReady ? (
               <>
-                点「运行」会在本机用 JDK 编译并弹出窗口（需要先开着运行器：
+                本机运行器已连上：点「运行」会用本机 JDK 编译执行，命令行程序回显输出、界面程序弹窗（运行器：
                 <code className="text-secondary">node ~/IDEA/自考/tools/java-runner.mjs</code>
                 ）。不开运行器也能下载下来跑：<code className="text-secondary">tools/run-java.sh</code>。
               </>
