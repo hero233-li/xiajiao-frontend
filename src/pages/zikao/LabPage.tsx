@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Check, ChevronDown, Copy, Download, Loader2, Play, RotateCcw, Square } from 'lucide-react';
-import { javaSets, sqlSet, type LabQuestion, type LabSet } from '../../data/lab';
+import { javaSets, sqlMockSet, sqlSet, type LabQuestion, type LabSet } from '../../data/lab';
 import { runSql, type SqlOutcome } from '../../lib/sqlRunner';
 
 /** 实践课上机考试：2026-10-31（周六）。 */
@@ -124,7 +124,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
     setRunning(true);
     try {
       if (sqlMode) {
-        setOutcome(await runSql(draft, { seed: question.mode === 'query' }));
+        setOutcome(await runSql(draft, { seed: question.mode === 'query', dataset: question.dataset }));
       } else {
         const result = await runJava(draft, question.fileName);
         setJavaRun(result);
@@ -382,13 +382,15 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
 export function LabPage() {
   const [tab, setTab] = useState<'java' | 'sql'>('java');
   const [javaSetIndex, setJavaSetIndex] = useState(0);
+  const [sqlPaper, setSqlPaper] = useState<'real' | 'mock'>('real');
   const [selectedId, setSelectedId] = useState(javaSets[0].questions[0].id);
 
-  const activeSet: LabSet = tab === 'java' ? javaSets[javaSetIndex] : sqlSet;
+  const sqlActiveSet = sqlPaper === 'mock' ? sqlMockSet : sqlSet;
+  const activeSet: LabSet = tab === 'java' ? javaSets[javaSetIndex] : sqlActiveSet;
 
   useEffect(() => {
-    setSelectedId(tab === 'java' ? javaSets[javaSetIndex].questions[0].id : sqlSet.questions[0].id);
-  }, [tab, javaSetIndex]);
+    setSelectedId(tab === 'java' ? javaSets[javaSetIndex].questions[0].id : sqlActiveSet.questions[0].id);
+  }, [tab, javaSetIndex, sqlActiveSet]);
 
   const question = useMemo(
     () => activeSet.questions.find((item) => item.id === selectedId) ?? activeSet.questions[0],
@@ -427,6 +429,27 @@ export function LabPage() {
             {label}
           </button>
         ))}
+
+        {tab === 'sql' &&
+          (
+            [
+              ['real', '真题 2017-04'],
+              ['mock', '模拟卷'],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setSqlPaper(key)}
+              className={`rounded-full px-3.5 py-1.5 text-[13px] transition-colors ${
+                sqlPaper === key
+                  ? 'pill pill--solid'
+                  : 'text-secondary hover:text-ink border border-line'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
 
         {tab === 'java' &&
           javaSets.map((set, index) => (
