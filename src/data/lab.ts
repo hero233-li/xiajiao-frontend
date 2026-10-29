@@ -1050,7 +1050,7 @@ public class DrawApplet extends Applet {
 const javaMockStarter = raw`import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-public class Demo {
+public class CharCount {
     public static void main(String[] args) throws Exception {
         // TODO：本题的代码写在这里
         // 需要从键盘读数据时：
