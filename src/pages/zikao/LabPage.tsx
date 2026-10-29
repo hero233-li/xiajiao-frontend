@@ -708,9 +708,11 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
 }
 
 export function LabPage() {
-  const [tab, setTab] = useState<'java' | 'sql'>('java');
-  const [javaSetIndex, setJavaSetIndex] = useState(0);
-  const [sqlPaper, setSqlPaper] = useState<'real' | 'mock'>('real');
+  const [tab, setTab] = useState<'java' | 'sql'>('sql');
+  const [javaSetIndex, setJavaSetIndex] = useState(() =>
+    Math.max(0, javaSets.findIndex((set) => set.id === 'java-mock')),
+  );
+  const [sqlPaper, setSqlPaper] = useState<'real' | 'mock'>('mock');
   const [selectedId, setSelectedId] = useState(javaSets[0].questions[0].id);
 
   const sqlActiveSet = sqlPaper === 'mock' ? sqlMockSet : sqlSet;
@@ -740,8 +742,8 @@ export function LabPage() {
         <div className="flex w-full flex-wrap gap-2 lg:ml-auto lg:w-auto">
         {(
           [
-            ['java', 'Java 上机'],
             ['sql', '数据库上机'],
+            ['java', 'Java 上机'],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -761,8 +763,8 @@ export function LabPage() {
         {tab === 'sql' &&
           (
             [
-              ['real', '真题 2017-04'],
               ['mock', '模拟卷'],
+              ['real', '真题 2017-04'],
             ] as const
           ).map(([key, label]) => (
             <button
@@ -780,7 +782,10 @@ export function LabPage() {
           ))}
 
         {tab === 'java' &&
-          javaSets.map((set, index) => (
+          [...javaSets]
+            .map((set, index) => ({ set, index }))
+            .sort((a, b) => Number(b.set.id === 'java-mock') - Number(a.set.id === 'java-mock'))
+            .map(({ set, index }) => (
             <button
               key={set.id}
               type="button"
@@ -793,7 +798,7 @@ export function LabPage() {
             >
               {set.name}
             </button>
-          ))}
+            ))}
         </div>
       </div>
 
