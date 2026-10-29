@@ -184,15 +184,15 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
 
   return (
     <div className="flex flex-col gap-4 lg:h-full lg:min-h-0">
-      <section className="glass px-4 py-4 sm:px-5 lg:shrink-0">
+      <section className="glass px-4 py-3 sm:px-5 lg:shrink-0">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="text-muted text-[13px] tabular-nums">第 {question.no} 题</span>
           <h2 className="text-ink text-[17px] font-semibold">{question.title}</h2>
           <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5 text-[12px]">{question.score}</span>
         </div>
-        <p className="text-secondary mt-3 text-[14px] leading-6">{question.requirement}</p>
+        <p className="text-secondary mt-2 text-[14px] leading-6">{question.requirement}</p>
 
-        <ul className="mt-3 flex flex-col gap-1.5 lg:grid lg:grid-cols-2 lg:gap-x-6">
+        <ul className="mt-2 flex flex-col gap-1 lg:grid lg:grid-cols-2 lg:gap-x-6">
           {question.checks.map((check) => (
             <li key={check} className="text-secondary flex gap-2 text-[13px] leading-5">
               <span className="text-brand mt-0.5 shrink-0">
@@ -274,7 +274,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
               ? '写 SQL，点运行，结果直接出现在下面。'
               : '在这里写，写完复制到 Eclipse 跑。'
           }
-          className="text-ink placeholder:text-muted block h-72 w-full resize-y bg-transparent px-4 py-3 font-mono text-[13px] leading-6 outline-none sm:h-80 sm:px-5 lg:h-auto lg:min-h-0 lg:flex-1 lg:resize-none"
+          className="text-ink placeholder:text-muted block h-72 w-full resize-y bg-transparent px-4 py-3 font-mono text-[13px] leading-6 outline-none sm:h-80 sm:px-5 lg:h-auto lg:min-h-[320px] lg:flex-1 lg:resize-none"
         />
 
         {question.mode === 'mysql' && (
@@ -285,7 +285,11 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
         )}
 
         {!question.mode && (
-          <p className="text-muted border-line/70 border-t px-4 py-2.5 text-[12px] leading-5 sm:px-5">
+          <p
+            className={`text-muted border-line/70 border-t px-4 py-2 text-[12px] leading-5 sm:px-5 ${
+              runnerReady ? 'lg:hidden' : ''
+            }`}
+          >
             {runnerReady ? (
               <>
                 点「运行」在本机 JDK 执行（命令行回显输出、界面程序弹窗）；不想开运行器就下载用{' '}
@@ -432,15 +436,14 @@ export function LabPage() {
 
   return (
     <div className="flex flex-col gap-4 lg:h-[calc(100dvh-13.75rem)] lg:overflow-hidden">
-      <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <h1 className="text-ink text-[22px] font-semibold">实践演练</h1>
         <p className="text-secondary text-[13px]">
           10 月 31 日考试
           {days > 0 ? `，还有 ${days} 天` : '，今天就是考试日'}
         </p>
-      </div>
 
-      <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-wrap gap-2 lg:ml-auto lg:w-auto">
         {(
           [
             ['java', 'Java 上机'],
@@ -497,6 +500,7 @@ export function LabPage() {
               {set.name}
             </button>
           ))}
+        </div>
       </div>
 
       <div className="grid items-start gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[210px_minmax(0,1fr)] lg:items-stretch">
