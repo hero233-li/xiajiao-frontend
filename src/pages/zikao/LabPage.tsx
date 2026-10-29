@@ -446,6 +446,35 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
           {copied && <span className="text-brand text-[12px]">已复制</span>}
         </div>
 
+        {grade.status === 'grading' && (
+          <div className="text-secondary flex flex-wrap items-center gap-3 bg-[var(--iris-2)] px-4 py-2 text-[13px] sm:px-5">
+            <Loader2 size={14} strokeWidth={2} className="text-brand animate-spin" />
+            <span>AI 正在逐条对照评分点看你的代码，已等 {gradeTick} 秒</span>
+            <button
+              type="button"
+              onClick={cancelGrade}
+              className="text-secondary hover:text-ink ml-auto rounded-full border border-line px-3 py-0.5 text-[12px]"
+            >
+              取消
+            </button>
+          </div>
+        )}
+
+        {grade.status === 'error' && (
+          <div className="text-danger flex flex-wrap items-center gap-3 bg-[var(--red-2)] px-4 py-2 text-[13px] sm:px-5">
+            <AlertTriangle size={14} strokeWidth={2} />
+            <span>批改失败：{grade.message}</span>
+            <button
+              type="button"
+              onClick={handleGrade}
+              className="ml-auto flex items-center gap-1.5 rounded-full border border-line px-3 py-0.5 text-[12px]"
+            >
+              <RotateCcw size={12} strokeWidth={2} />
+              再试一次
+            </button>
+          </div>
+        )}
+
         {frozen && (
           <div
             className={`flex flex-wrap items-center gap-2 px-4 py-2 text-[13px] sm:px-5 ${
@@ -514,58 +543,20 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
         )}
       </section>
 
-      {(grade.status === 'grading' || grade.status === 'error' || grade.status === 'done') && (
-        <section className="glass px-4 py-3 sm:px-5">
-          {grade.status === 'grading' && (
-            <div className="flex flex-wrap items-center gap-3">
-            <p className="text-secondary flex items-center gap-2 text-[13px]">
-              <Loader2 size={14} strokeWidth={2} className="text-brand animate-spin" />
-              AI 正在逐条对照评分点看你的代码，通常六到二十秒。已等 {gradeTick} 秒。
-              {gradeTick >= 25 && <span className="text-muted">这次模型排得比较久，可以继续等，也可以取消。</span>}
-            </p>
-            <button
-              type="button"
-              onClick={cancelGrade}
-              className="text-secondary hover:text-ink flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px]"
-            >
-              取消
-            </button>
-            </div>
+      {grade.status === 'done' && (grade.result.summary || grade.result.issues.length > 0) && (
+        <section className="glass flex flex-col gap-2 px-4 py-3 sm:px-5">
+          {grade.result.issues.length > 0 && (
+            <ul className="flex flex-col gap-1.5">
+              {grade.result.issues.map((issue, index) => (
+                <li key={index} className="text-danger flex items-start gap-2 text-[13px] leading-6">
+                  <AlertTriangle size={13} strokeWidth={2} className="mt-1 shrink-0" />
+                  <span className="min-w-0">{issue}</span>
+                </li>
+              ))}
+            </ul>
           )}
-
-          {grade.status === 'error' && (
-            <div className="flex flex-col gap-2">
-              <p className="text-danger flex items-start gap-2 text-[13px]">
-                <AlertTriangle size={14} strokeWidth={2} className="mt-1 shrink-0" />
-                批改失败：{grade.message}
-              </p>
-              <button
-                type="button"
-                onClick={handleGrade}
-                className="text-secondary hover:text-ink flex w-fit items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px]"
-              >
-                <RotateCcw size={12} strokeWidth={2} />
-                再试一次
-              </button>
-            </div>
-          )}
-
-          {grade.status === 'done' && (
-            <div className="flex flex-col gap-2">
-              {grade.result.issues.length > 0 && (
-                <ul className="flex flex-col gap-1.5">
-                  {grade.result.issues.map((issue, index) => (
-                    <li key={index} className="text-danger flex items-start gap-2 text-[13px] leading-6">
-                      <AlertTriangle size={13} strokeWidth={2} className="mt-1 shrink-0" />
-                      <span className="min-w-0">{issue}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {grade.result.summary && (
-                <p className="text-secondary text-[13px] leading-6">{grade.result.summary}</p>
-              )}
-            </div>
+          {grade.result.summary && (
+            <p className="text-secondary text-[13px] leading-6">{grade.result.summary}</p>
           )}
         </section>
       )}
