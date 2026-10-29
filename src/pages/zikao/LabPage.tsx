@@ -375,7 +375,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
           <button
             type="button"
             onClick={handleGrade}
-            disabled={grade.status === 'grading' || !draft.trim()}
+            disabled={grade.status === 'grading' || draft.trim().length < 20}
             className={`pill text-brand flex items-center gap-1.5 px-3.5 py-1 text-[12px] disabled:opacity-50 ${frozen ? 'hidden' : ''}`}
           >
             {grade.status === 'grading' ? (
