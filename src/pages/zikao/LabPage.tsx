@@ -524,6 +524,20 @@ function QuestionPanel({
         />
         )}
 
+        {frozen && (frozen.result.issues.length > 0 || frozen.result.summary) && (
+          <div className="border-line/70 flex flex-col gap-1.5 border-t px-4 py-3 sm:px-5">
+            {frozen.result.issues.map((issue, index) => (
+              <p key={index} className="text-danger flex items-start gap-2 text-[13px] leading-6">
+                <AlertTriangle size={13} strokeWidth={2} className="mt-1 shrink-0" />
+                <span className="min-w-0">{issue}</span>
+              </p>
+            ))}
+            {frozen.result.summary && (
+              <p className="text-secondary text-[13px] leading-6">{frozen.result.summary}</p>
+            )}
+          </div>
+        )}
+
         {question.mode === 'mysql' && (
           <p className="text-muted border-line/70 border-t px-4 py-2.5 text-[12px] leading-5 sm:px-5">
             MySQL 专属写法（delimiter、trigger、procedure、function），浏览器里的 SQLite 引擎跑不了。复制到本机
@@ -551,24 +565,6 @@ function QuestionPanel({
           </p>
         )}
       </section>
-
-      {grade.status === 'done' && (grade.result.summary || grade.result.issues.length > 0) && (
-        <section className="glass flex flex-col gap-2 px-4 py-3 sm:px-5">
-          {grade.result.issues.length > 0 && (
-            <ul className="flex flex-col gap-1.5">
-              {grade.result.issues.map((issue, index) => (
-                <li key={index} className="text-danger flex items-start gap-2 text-[13px] leading-6">
-                  <AlertTriangle size={13} strokeWidth={2} className="mt-1 shrink-0" />
-                  <span className="min-w-0">{issue}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {grade.result.summary && (
-            <p className="text-secondary text-[13px] leading-6">{grade.result.summary}</p>
-          )}
-        </section>
-      )}
 
       {javaRun && (
         <section className="glass px-4 py-3 sm:px-5">
