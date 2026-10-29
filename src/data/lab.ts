@@ -24,6 +24,8 @@ export interface LabSet {
   id: string;
   name: string;
   note: string;
+  /** 真题卷：题干照原卷，不展示额外评分点 */
+  hideChecks?: boolean;
   questions: LabQuestion[];
 }
 
@@ -1571,252 +1573,183 @@ delimiter ;
 select f_info_concat('G0208');`;
 
 /** 查询题的起手模板：示例库是现成的，只提示从哪写起。 */
-const queryStarter = raw`-- 示例库已就绪：majorinfo（专业 2 条）、classinfo（班级 3 条）、studentinfo（学生 17 条）
--- 直接写查询，例如：select * from studentinfo where studentage > 20;
-
-select `;
-
-const sqlStarter = raw`-- 先把这套表建出来再写题目里的语句
-drop database if exists school;
-create database school;
-use school;
-
-create table majorinfo (
-  majorid int primary key,
-  major   varchar(20)
-);
-
-create table classinfo (
-  classid     char(5) primary key,
-  classnumber int,
-  majorid     int
-);
-
-create table studentinfo (
-  studentid    int primary key,
-  studentname  varchar(20) unique,
-  studentsex   char(1),
-  studentage   smallint,
-  studentmark  smallint,
-  entrancedate datetime,
-  classid      char(5)
-);`;
-
-
 export const sqlSet: LabSet = {
   id: 'sql-201704',
   name: '数据库 2017-04 卷',
-  note: '闭卷上机 1 小时，MySQL 5.5+。SQL 交互操作 + 数据库编程。',
+  hideChecks: true,
+  note: '打开 SQL Server，建立名为 School 的数据库，在其中建 StudentInfo、ClassInfo、MajorInfo 三张表。语句写在 1.sql 里，考试结束上传，可以重复提交覆盖。',
   questions: [
     {
       id: 'sql-1',
       mode: 'ddl',
       no: 1,
-      title: '建库建表与完整性约束',
-      score: '建表题',
+      title: '创建 StudentInfo 表',
+      score: '',
       fileName: '01-ddl.sql',
       engine: 'MySQL',
       requirement:
-        '建立 school 库，建 majorinfo（专业）、classinfo（班级）、studentinfo（学生）三张表，主键、唯一、检查约束、外键都要写全，外键最后用 alter table 补也可以。',
+        '写出创建 StudentInfo 表的 SQL 语句。（要求写出约束相关语句）StudentInfo 字段：学生编号 StudentId int 为主键；学生姓名 StudentName varchar(20) 唯一；学生性别 StudentSex nchar(1)，在「男」「女」中取值；学生年龄 StudentAge smallint，要求输入年龄大于 18 岁；学生成绩 StudentMark smallint；入学时间 EntranceDate smalldatetime；班级编号 ClassId char(5)，外键。假设一个学生只有一个成绩。',
       checks: [
-        'drop database if exists + create database + use',
-        '三张表都有主键，studentname 加 unique',
-        'studentage 加 check，studentsex 用 char(1)',
-        'classinfo.majorid 外键指向 majorinfo，studentinfo.classid 外键指向 classinfo',
-        '注意：原始资料里 studentinfo 建表少写了一个列名（只有 smallint），照抄会报错',
+        '建出 studentinfo 表，字段齐全',
+        '主键 studentid',
+        'studentname 唯一',
+        'studentsex 限制取值男或女',
+        'studentage 限制大于 18',
+        'classid 是外键',
       ],
       answer: sqlQ1,
-      starter: sqlStarter,
+      starter: '',
     },
     {
       id: 'sql-2',
       mode: 'query',
       no: 2,
-      title: '条件查询：日期 + 模糊匹配',
-      score: '查询题',
+      title: '按姓名与入学时间查询',
+      score: '',
       fileName: '02-select.sql',
       engine: 'MySQL',
-      requirement: '查询 2001-01-01 之后入学、且姓张的学生全部信息。',
-      checks: ['entrancedate > 日期字面量', "studentname like '张%'", '用 and 组合条件'],
+      requirement: '查询学生姓名中第一个字为「张」且入学时间晚于 2001 年 1 月 1 日的所有学生信息。',
+      checks: ['姓名以张开头', '入学时间晚于 2001-01-01', '两个条件同时满足'],
       answer: sqlQ2,
-      starter: queryStarter,
+      starter: '',
     },
     {
       id: 'sql-3',
       mode: 'query',
       no: 3,
-      title: '三表连接 + 排序',
-      score: '查询题',
+      title: '多表连接查询',
+      score: '',
       fileName: '03-join.sql',
       engine: 'MySQL',
       requirement:
-        '查询专业为「信息管理与信息系统」的男生，显示姓名、年龄、班级号、专业，按年龄升序。',
+        '查询专业名称（Major）为信息管理与信息系统的所有男学生姓名、年龄及成绩、班级编号及专业名称，输出按照年龄从小到大排列。',
       checks: [
-        'studentinfo、classinfo、majorinfo 三表连接',
-        '连接条件 classid 与 majorid 都要写',
-        'where 里加 major 与 studentsex 条件',
-        'order by studentage asc',
+        '用到 studentinfo、classinfo、majorinfo',
+        '筛选专业名称与性别为男',
+        '输出姓名、年龄、成绩、班级编号、专业名称',
+        '按年龄升序排列',
       ],
       answer: sqlQ3,
-      starter: queryStarter,
+      starter: '',
     },
     {
       id: 'sql-4',
       mode: 'query',
       no: 4,
-      title: '子查询：低于本班平均分',
-      score: '查询题',
+      title: '低于班级平均分',
+      score: '',
       fileName: '04-subquery.sql',
       engine: 'MySQL',
-      requirement: '查询 G0208 班中成绩低于本班平均分的学生姓名、年龄、成绩。',
-      checks: [
-        '外层 where 限制 classid',
-        '内层 select avg(studentmark) 同班级',
-        'studentmark < (子查询)',
-      ],
+      requirement: "查询班级编号（ClassId）为 'G0208' 的小于该班级平均分的学生姓名、年龄和成绩信息。",
+      checks: ['限定班级 G0208', '与该班平均分比较', '输出姓名、年龄、成绩'],
       answer: sqlQ4,
-      starter: queryStarter,
+      starter: '',
     },
     {
       id: 'sql-5',
       mode: 'query',
       no: 5,
-      title: '分组 + having',
-      score: '查询题',
+      title: '成绩优秀的班级',
+      score: '',
       fileName: '05-group.sql',
       engine: 'MySQL',
-      requirement: '统计成绩大于 90 分的学生人数超过 10 人的班级号与人数。',
-      checks: ['where studentmark > 90', 'group by classid', 'having count(...) > 10'],
+      requirement: '查询有多于 10 个学生考试成绩优秀（大于 90）的班级编号。',
+      checks: ['按班级分组统计', '成绩大于 90 才计入', '人数多于 10'],
       answer: sqlQ5,
-      starter: queryStarter,
+      starter: '',
     },
     {
       id: 'sql-6',
       mode: 'query',
       no: 6,
-      title: 'update + 相关子查询',
-      score: '更新题',
+      title: '更新班级人数',
+      score: '',
       fileName: '06-update.sql',
       engine: 'MySQL',
-      requirement: '把 classinfo 的 classnumber 更新为该班在 studentinfo 中的实际人数。',
-      checks: [
-        'update 目标表与子查询表不同，可直接写',
-        'set classnumber = (select count(1) ... where s.classid = c.classid)',
-        '相关子查询条件不能漏',
-      ],
+      requirement: '对每个班级，求该班学生的人数，并将结果存入到班级信息表中的班级人数字段中。（使用 Update 语句）',
+      checks: ['统计每个班级的学生人数', '用 update 写回 classinfo 的班级人数字段'],
       answer: sqlQ6,
-      starter: queryStarter,
+      starter: '',
     },
     {
       id: 'sql-7',
       mode: 'query',
       no: 7,
-      title: 'update + in 子查询',
-      score: '更新题',
+      title: '成绩增加 2%',
+      score: '',
       fileName: '07-update-in.sql',
       engine: 'MySQL',
-      requirement:
-        '把专业为「信息管理与信息系统」且年龄大于 30 岁的学生成绩提高 2%。',
-      checks: [
-        'set studentmark = studentmark * 1.02',
-        'where studentage > 30',
-        'classid in (子查询拿到该专业的班级)',
-      ],
+      requirement: '将所有专业名称为「信息管理与信息系统」的年龄大于 30 的学生考试成绩加上 2%。',
+      checks: ['限定专业名称', '限定年龄大于 30', '成绩按 2% 增加'],
       answer: sqlQ7,
-      starter: queryStarter,
+      starter: '',
     },
     {
       id: 'sql-8',
       mode: 'query',
       no: 8,
-      title: '行转列：及格与不及格人数',
-      score: '查询题',
+      title: '行转列统计',
+      score: '',
       fileName: '08-pivot.sql',
       engine: 'MySQL',
-      requirement: '按性别统计及格（≥60）与不及格人数，一行显示性别、及格、不及格。',
-      checks: [
-        'group by studentsex',
-        'sum(case when ... then 1 else 0 end) 或两个子查询 join',
-        '列别名用中文或英文都行',
-      ],
+      requirement:
+        '写出查询如下结果的 SQL 语句。结果表三列：性别、及格、不及格；两行：男、女；格子里是人数。',
+      checks: ['按性别分组', '分别统计及格人数与不及格人数', '结果一行一个性别'],
       answer: sqlQ8,
-      starter: queryStarter,
+      starter: '',
     },
     {
       id: 'sql-9',
       mode: 'mysql',
       no: 9,
-      title: '触发器：成绩超过 90 分不许修改',
-      score: '编程题',
+      title: '触发器：改成绩',
+      score: '',
       fileName: '09-trigger-update.sql',
       engine: 'MySQL',
-      requirement:
-        '在 studentinfo 上建 before update 触发器：若原成绩大于 90，则拒绝修改并给出提示。',
-      checks: [
-        'before update on studentinfo for each row',
-        '用 old.studentmark 判断原值',
-        'signal sqlstate 抛错，message_text 给中文提示',
-        'delimiter $$ 包裹，结束不要忘了还原 delimiter ;',
-      ],
+      requirement: '编写触发器，分数大于 90 分的学生不允许修改其成绩。',
+      checks: ['触发器挂在 update 上', '判断原分数大于 90', '拒绝并给出提示'],
       answer: sqlQ9,
-      starter: queryStarter,
+      starter: '',
     },
     {
       id: 'sql-10',
       mode: 'mysql',
       no: 10,
-      title: '触发器：年龄小于 30 不许删除',
-      score: '编程题',
+      title: '触发器：删学生',
+      score: '',
       fileName: '10-trigger-delete.sql',
       engine: 'MySQL',
-      requirement:
-        '在 studentinfo 上建 before delete 触发器：若学生年龄小于 30，则拒绝删除。',
-      checks: [
-        'before delete on studentinfo for each row',
-        '用 old.studentage 判断',
-        'signal sqlstate 抛错 + message_text',
-      ],
+      requirement: '编写触发器，年龄小于 30 岁的学生不允许被删除。',
+      checks: ['触发器挂在 delete 上', '判断年龄小于 30', '拒绝并给出提示'],
       answer: sqlQ10,
-      starter: queryStarter,
+      starter: '',
     },
     {
       id: 'sql-11',
       mode: 'mysql',
       no: 11,
-      title: '存储过程：按时间段查询',
-      score: '编程题',
+      title: '存储过程：入学时间区间',
+      score: '',
       fileName: '11-procedure.sql',
       engine: 'MySQL',
-      requirement:
-        '建立存储过程 p_studentinfo_get，传入开始与结束时间，查出该区间的学生并按入学时间排序。',
-      checks: [
-        'create procedure 名字(in beginTime datetime, in endTime datetime)',
-        'begin ... end 体内 select ... where entrancedate between ? and ?',
-        'order by entrancedate',
-        '用 call 调用，delimiter $$',
-      ],
+      requirement: '编写存储过程，传入入学时间的下限与上限，返回符合要求的所有学生信息。',
+      checks: ['两个入参分别是下限与上限', '按入学时间过滤', '返回学生信息'],
       answer: sqlQ11,
-      starter: queryStarter,
+      starter: '',
     },
     {
       id: 'sql-12',
       mode: 'mysql',
       no: 12,
-      title: '存储函数：group_concat 拼接',
-      score: '编程题',
+      title: '自定义函数：拼接姓名年龄',
+      score: '',
       fileName: '12-function.sql',
       engine: 'MySQL',
       requirement:
-        '建立存储函数 f_info_concat，传入班级号，返回该班「姓名(年龄)」拼接成的字符串，按年龄排序。',
-      checks: [
-        'create function 名字(vclassid char(5)) returns varchar(4096)',
-        'reads sql data',
-        'declare 变量 + select ... into',
-        'group_concat(studentname, "(", studentage, ")")',
-        '最后 return 变量',
-      ],
+        '编写自定义函数，传入班级编号，返回该班级所有学生姓名及年龄的拼接字符串，中间使用逗号分割。（如返回：张三(20), 李四(21), 王五(20)）',
+      checks: ['入参是班级编号', '拼接格式为 姓名(年龄)', '多项之间用逗号分隔'],
       answer: sqlQ12,
-      starter: queryStarter,
+      starter: '',
     },
   ],
 };

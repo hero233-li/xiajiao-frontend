@@ -213,10 +213,12 @@ function FrozenPaper({ code, result }: { code: string; result: GradeResult | nul
 
 function QuestionPanel({
   question,
+  hideChecks,
   template,
   view,
 }: {
   question: LabQuestion;
+  hideChecks: boolean;
   template: string;
   view: LabView;
 }) {
@@ -331,10 +333,15 @@ function QuestionPanel({
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="text-muted text-[13px] tabular-nums">第 {question.no} 题</span>
           <h2 className="text-ink text-[17px] font-semibold">{question.title}</h2>
-          <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5 text-[12px]">{question.score}</span>
+          {question.score && (
+          <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5 text-[12px]">
+            {question.score}
+          </span>
+        )}
         </div>
         <p className="text-secondary mt-2 text-[14px] leading-6">{question.requirement}</p>
 
+        {!hideChecks && (
         <ul className="mt-2 flex flex-col gap-1 lg:grid lg:grid-cols-2 lg:gap-x-6">
           {question.checks.map((check) => (
             <li key={check} className="text-secondary flex gap-2 text-[13px] leading-5">
@@ -345,6 +352,7 @@ function QuestionPanel({
             </li>
           ))}
         </ul>
+        )}
       </section>
 
       <div className="flex flex-col gap-4">
@@ -437,7 +445,9 @@ function QuestionPanel({
               setResetHint(true);
               window.setTimeout(() => setResetHint(false), 1500);
             }}
-            className={`text-secondary hover:text-ink flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px] ${locked ? 'hidden' : ''}`}
+            className={`text-secondary hover:text-ink flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px] ${
+              locked || !template.trim() ? 'hidden' : ''
+            }`}
           >
             <RotateCcw size={13} strokeWidth={1.8} />
             {resetHint ? '已填好' : '填模板'}
@@ -854,6 +864,7 @@ export function LabPage() {
 
         <QuestionPanel
           question={question}
+          hideChecks={activeSet.hideChecks === true}
           template={question.starter ?? ''}
           view={{
             tab,
