@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   BadgeCheck,
@@ -206,6 +206,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
   const [runnerReady, setRunnerReady] = useState(DEV);
   const [grade, setGrade] = useState<GradeState>({ status: 'idle' });
   const [gradeTick, setGradeTick] = useState(0);
+  const gradeAbort = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -267,6 +268,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
     setGradeTick(0);
     const startedAt = Date.now();
     const controller = new AbortController();
+    gradeAbort.current = controller;
     const timer = window.setTimeout(() => controller.abort(), 170_000);
     try {
       const response = await fetch(GRADE_ENDPOINT, {
@@ -299,7 +301,14 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
       });
     } finally {
       window.clearTimeout(timer);
+      gradeAbort.current = null;
     }
+  }
+
+  function cancelGrade() {
+    gradeAbort.current?.abort();
+    gradeAbort.current = null;
+    setGrade({ status: 'idle' });
   }
 
   async function handleStop() {
@@ -508,10 +517,20 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
       {(grade.status === 'grading' || grade.status === 'error' || grade.status === 'done') && (
         <section className="glass px-4 py-3 sm:px-5">
           {grade.status === 'grading' && (
+            <div className="flex flex-wrap items-center gap-3">
             <p className="text-secondary flex items-center gap-2 text-[13px]">
               <Loader2 size={14} strokeWidth={2} className="text-brand animate-spin" />
-              AI 正在逐条对照评分点看你的代码，通常十秒左右。已等 {gradeTick} 秒。
+              AI 正在逐条对照评分点看你的代码，通常六到二十秒。已等 {gradeTick} 秒。
+              {gradeTick >= 25 && <span className="text-muted">这次模型排得比较久，可以继续等，也可以取消。</span>}
             </p>
+            <button
+              type="button"
+              onClick={cancelGrade}
+              className="text-secondary hover:text-ink flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px]"
+            >
+              取消
+            </button>
+            </div>
           )}
 
           {grade.status === 'error' && (
