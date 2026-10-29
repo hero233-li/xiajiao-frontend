@@ -1,6 +1,7 @@
 /**
- * 实践演练的批改状态放在模块里，真正的判卷在服务器排队：
- * 切页面、按 F5 都不会丢——浏览器只记住 jobId 和已拿到的结果。
+ * 实践演练的批改状态：**按题目分开存**，一道题一个任务，互不挤占。
+ * 具体的判卷在服务器排队（POST /jobs → 轮询 GET /jobs/<id>），
+ * 所以切页面、按 F5、同时批多道题都不会丢。
  */
 export interface GradeResult {
   verdict: 'pass' | 'fail';
@@ -16,22 +17,17 @@ export interface LabView {
   sqlPaper?: 'real' | 'a' | 'b' | 'c';
 }
 
-export type GradeJob =
-  | { status: 'idle'; questionId: null }
-  | { status: 'grading'; questionId: string; code: string; startedAt: number; view?: LabView }
-  | {
-      status: 'done';
-      questionId: string;
-      code: string;
-      result: GradeResult;
-      seconds: number;
-      view?: LabView;
-    }
-  | { status: 'error'; questionId: string; message: string; view?: LabView };
+export type GradeEntry =
+  | { status: 'grading'; code: string; startedAt: number; queued: boolean }
+  | { status: 'done'; code: string; result: GradeResult; seconds: number }
+  | { status: 'error'; code: string; message: string; retryable: boolean };
+
+export type GradeMap = Record<string, GradeEntry>;
 
 const JOB_ENDPOINT = '/lab-grade/jobs';
 const PASS_KEY = 'xj.lab.pass';
-const SNAPSHOT_KEY = 'xj.lab.grade.v1';
+const SNAPSHOT_KEY = 'xj.lab.jobs.v2';
+const LEGACY_KEY = 'xj.lab.grade.v1';
 const POLL_MS = 1500;
 /** 已完成的结果留一天，刷新还能看到批注。 */
 const KEEP_DONE_MS = 24 * 60 * 60 * 1000;
@@ -42,7 +38,9 @@ function loadPassed(): Set<string> {
   try {
     const raw = localStorage.getItem(PASS_KEY);
     const list: unknown = raw ? JSON.parse(raw) : [];
-    return new Set(Array.isArray(list) ? list.filter((id): id is string => typeof id === 'string') : []);
+    return new Set(
+      Array.isArray(list) ? list.filter((id): id is string => typeof id === 'string') : [],
+    );
   } catch {
     return new Set();
   }
@@ -71,82 +69,93 @@ export function markPassed(id: string) {
   passedListeners.forEach((listener) => listener());
 }
 
-/* ---------------- 批改任务 ---------------- */
+/* ---------------- 持久化 ---------------- */
 
-type SavedSnapshot =
-  | {
-      status: 'grading';
-      jobId: string;
-      questionId: string;
-      code: string;
-      startedAt: number;
-      view?: LabView;
-    }
-  | {
-      status: 'done';
-      questionId: string;
-      code: string;
-      result: GradeResult;
-      seconds: number;
-      savedAt: number;
-      view?: LabView;
-    };
+interface SavedJob {
+  questionId: string;
+  jobId: string;
+  code: string;
+  startedAt: number;
+  view?: LabView;
+}
 
-function readSnapshot(): SavedSnapshot | null {
+interface SavedState {
+  jobs: SavedJob[];
+  done: { questionId: string; code: string; result: GradeResult; seconds: number; savedAt: number }[];
+  view?: LabView;
+}
+
+function readSaved(): SavedState {
+  const empty: SavedState = { jobs: [], done: [] };
   try {
     const raw = localStorage.getItem(SNAPSHOT_KEY);
-    return raw ? (JSON.parse(raw) as SavedSnapshot) : null;
+    if (!raw) return empty;
+    const parsed = JSON.parse(raw) as Partial<SavedState>;
+    return {
+      jobs: Array.isArray(parsed.jobs) ? parsed.jobs : [],
+      done: Array.isArray(parsed.done) ? parsed.done : [],
+      view: parsed.view,
+    };
   } catch {
-    return null;
+    return empty;
   }
 }
 
-function writeSnapshot(value: SavedSnapshot | null) {
+let savedJobs: SavedJob[] = [];
+let savedDone: SavedState['done'] = [];
+
+function readState() {
+  const state = readSaved();
+  savedJobs = state.jobs.filter((job) => job && job.jobId);
+  savedDone = state.done.filter(
+    (item) => item && item.questionId && Date.now() - (item.savedAt ?? 0) <= KEEP_DONE_MS,
+  );
+  return state;
+}
+
+function writeSaved(view: LabView | undefined) {
   try {
-    if (value) localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(value));
-    else localStorage.removeItem(SNAPSHOT_KEY);
+    localStorage.setItem(SNAPSHOT_KEY, JSON.stringify({ jobs: savedJobs, done: savedDone, view }));
+    localStorage.removeItem(LEGACY_KEY);
   } catch {
     /* 存不下就算了 */
   }
 }
 
-function restore(): GradeJob {
-  const saved = readSnapshot();
-  if (!saved) return { status: 'idle', questionId: null };
-  if (saved.status === 'done') {
-    if (Date.now() - saved.savedAt > KEEP_DONE_MS) {
-      writeSnapshot(null);
-      return { status: 'idle', questionId: null };
-    }
-    currentView = saved.view;
-    return {
-      status: 'done',
-      questionId: saved.questionId,
-      code: saved.code,
-      result: saved.result,
-      seconds: saved.seconds,
-      view: saved.view,
-    };
-  }
-  currentView = saved.view;
-  return {
+/* ---------------- 批改状态 ---------------- */
+
+const initial = readState();
+let view: LabView | undefined = initial.view;
+
+const grades: GradeMap = {};
+for (const item of savedDone) {
+  grades[item.questionId] = {
+    status: 'done',
+    code: item.code,
+    result: item.result,
+    seconds: item.seconds,
+  };
+}
+for (const job of savedJobs) {
+  grades[job.questionId] = {
     status: 'grading',
-    questionId: saved.questionId,
-    code: saved.code,
-    startedAt: saved.startedAt,
-    view: saved.view,
+    code: job.code,
+    startedAt: job.startedAt,
+    queued: false,
   };
 }
 
-let currentView: LabView | undefined;
-
-let gradeSnapshot: GradeJob = restore();
+let snapshot: GradeMap = { ...grades };
 const gradeListeners = new Set<() => void>();
-let pollTimer: number | null = null;
-let activeJobId: string | null = null;
+const timers = new Map<string, number>(); // questionId -> timer
+const jobOf = new Map<string, string>(); // questionId -> jobId
 
-function emitGrade(next: GradeJob) {
-  gradeSnapshot = next;
+function persist() {
+  writeSaved(view);
+}
+
+function emit() {
+  snapshot = { ...grades };
   gradeListeners.forEach((listener) => listener());
 }
 
@@ -155,46 +164,54 @@ export function subscribeGrade(listener: () => void) {
   return () => gradeListeners.delete(listener);
 }
 
-export function getGrade() {
-  return gradeSnapshot;
+export function getGrades(): GradeMap {
+  return snapshot;
 }
 
-function stopPolling() {
-  if (pollTimer !== null) window.clearTimeout(pollTimer);
-  pollTimer = null;
-  activeJobId = null;
+/** 上一次点过的卷别，用于刷新后回到原处。 */
+export function getLastView() {
+  return view;
 }
 
-export function resetGrade() {
-  stopPolling();
-  writeSnapshot(null);
-  emitGrade({ status: 'idle', questionId: null });
+function stopTimer(questionId: string) {
+  const timer = timers.get(questionId);
+  if (timer !== undefined) window.clearTimeout(timer);
+  timers.delete(questionId);
+  jobOf.delete(questionId);
 }
 
-export const cancelGrade = resetGrade;
+function remember(job: SavedJob) {
+  savedJobs = [...savedJobs.filter((item) => item.questionId !== job.questionId), job];
+  savedDone = savedDone.filter((item) => item.questionId !== job.questionId);
+  persist();
+}
 
-function finish(
-  questionId: string,
-  code: string,
-  result: GradeResult,
-  seconds: number,
-) {
-  writeSnapshot({ status: 'done', questionId, code, result, seconds, savedAt: Date.now(), view: currentView });
+function finish(questionId: string, code: string, result: GradeResult, seconds: number) {
+  stopTimer(questionId);
+  savedJobs = savedJobs.filter((item) => item.questionId !== questionId);
+  savedDone = [
+    ...savedDone.filter((item) => item.questionId !== questionId),
+    { questionId, code, result, seconds, savedAt: Date.now() },
+  ];
   if (result.verdict === 'pass') markPassed(questionId);
-  emitGrade({ status: 'done', questionId, code, result, seconds, view: currentView });
+  grades[questionId] = { status: 'done', code, result, seconds };
+  persist();
+  emit();
 }
 
-function failJob(questionId: string, message: string) {
-  stopPolling();
-  writeSnapshot(null);
-  emitGrade({ status: 'error', questionId, message, view: currentView });
+function fail(questionId: string, code: string, message: string, retryable = true) {
+  stopTimer(questionId);
+  savedJobs = savedJobs.filter((item) => item.questionId !== questionId);
+  persist();
+  grades[questionId] = { status: 'error', code, message, retryable };
+  emit();
 }
 
-function pollJob(jobId: string, questionId: string, code: string, startedAt: number) {
-  stopPolling();
-  activeJobId = jobId;
+function poll(questionId: string, jobId: string, code: string, startedAt: number) {
+  stopTimer(questionId);
+  jobOf.set(questionId, jobId);
   const tick = async () => {
-    if (activeJobId !== jobId) return;
+    if (jobOf.get(questionId) !== jobId) return;
     try {
       const response = await fetch(`${JOB_ENDPOINT}/${jobId}`, { cache: 'no-store' });
       const data = (await response.json().catch(() => null)) as
@@ -205,19 +222,36 @@ function pollJob(jobId: string, questionId: string, code: string, startedAt: num
             error?: string;
           }
         | null;
+      if (response.status === 404) {
+        fail(questionId, code, '任务已过期，重新批一次就好');
+        return;
+      }
       if (!response.ok || !data?.ok) throw new Error(data?.error ?? `批改服务返回 ${response.status}`);
       if (data.status === 'done' && data.verdictResult) {
-        finish(questionId, code, data.verdictResult, Math.max(1, Math.round((Date.now() - startedAt) / 1000)));
-        stopPolling();
+        finish(
+          questionId,
+          code,
+          data.verdictResult,
+          Math.max(1, Math.round((Date.now() - startedAt) / 1000)),
+        );
         return;
       }
       if (data.status === 'error') {
-        failJob(questionId, data.error ?? '批改失败');
+        fail(questionId, code, data.error ?? '批改失败');
         return;
       }
-      pollTimer = window.setTimeout(() => void tick(), POLL_MS);
+      const entry = grades[questionId];
+      const queued = data.status === 'queued';
+      if (entry && entry.status === 'grading' && entry.queued !== queued) {
+        grades[questionId] = { ...entry, queued };
+        emit();
+      }
+      timers.set(
+        questionId,
+        window.setTimeout(() => void tick(), POLL_MS),
+      );
     } catch (error) {
-      failJob(questionId, error instanceof Error ? error.message : String(error));
+      fail(questionId, code, error instanceof Error ? error.message : String(error));
     }
   };
   void tick();
@@ -225,22 +259,23 @@ function pollJob(jobId: string, questionId: string, code: string, startedAt: num
 
 export interface GradeInput {
   questionId: string;
-  view?: LabView;
   title: string;
   requirement: string;
   checks: string[];
   code: string;
   lang: 'java' | 'sql';
+  view?: LabView;
 }
 
-/** 发起一次批改：任务交给服务器排队，浏览器只记 jobId，刷新也能接着等。 */
+/** 发起一次批改：只影响这道题，其它题的任务照旧跑。 */
 export function startGrade(input: GradeInput) {
   const code = input.code.trim();
   if (code.length < 20) return;
-  stopPolling();
-  currentView = input.view;
+  const questionId = input.questionId;
   const startedAt = Date.now();
-  emitGrade({ status: 'grading', questionId: input.questionId, code, startedAt, view: currentView });
+  view = input.view ?? view;
+  grades[questionId] = { status: 'grading', code, startedAt, queued: false };
+  emit();
 
   void (async () => {
     try {
@@ -261,23 +296,33 @@ export function startGrade(input: GradeInput) {
       if (!response.ok || !data?.ok || !data.jobId) {
         throw new Error(data?.error ?? `批改服务返回 ${response.status}`);
       }
-      writeSnapshot({
-        status: 'grading',
-        jobId: data.jobId,
-        questionId: input.questionId,
-        code,
-        startedAt,
-        view: currentView,
-      });
-      pollJob(data.jobId, input.questionId, code, startedAt);
+      remember({ questionId, jobId: data.jobId, code, startedAt, view: input.view });
+      poll(questionId, data.jobId, code, startedAt);
     } catch (error) {
-      failJob(input.questionId, error instanceof Error ? error.message : String(error));
+      fail(questionId, code, error instanceof Error ? error.message : String(error));
     }
   })();
 }
 
-/* 刷新后继续等上一次没跑完的任务 */
-const saved = readSnapshot();
-if (gradeSnapshot.status === 'grading' && saved?.status === 'grading') {
-  pollJob(saved.jobId, saved.questionId, saved.code, saved.startedAt);
+export function resetGrade(questionId: string) {
+  stopTimer(questionId);
+  savedJobs = savedJobs.filter((item) => item.questionId !== questionId);
+  savedDone = savedDone.filter((item) => item.questionId !== questionId);
+  delete grades[questionId];
+  persist();
+  emit();
+}
+
+export const cancelGrade = resetGrade;
+
+/** 正在批改中的题号，左目录用来显示「批改中」。 */
+export function getGradingIds(): string[] {
+  return Object.entries(snapshot)
+    .filter(([, entry]) => entry.status === 'grading')
+    .map(([id]) => id);
+}
+
+/* 刷新后把所有没跑完的任务接回来继续轮询 */
+for (const job of savedJobs) {
+  poll(job.questionId, job.jobId, job.code, job.startedAt);
 }

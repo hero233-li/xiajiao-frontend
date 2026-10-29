@@ -26,7 +26,8 @@ import {
 import { runSql, type SqlOutcome } from '../../lib/sqlRunner';
 import {
   cancelGrade as cancelGradeJob,
-  getGrade,
+  getGrades,
+  getLastView,
   getPassed,
   resetGrade,
   startGrade,
@@ -224,13 +225,11 @@ function QuestionPanel({
   const [javaRun, setJavaRun] = useState<JavaRunState | null>(null);
   const [javaWindow, setJavaWindow] = useState(false);
   const [runnerReady, setRunnerReady] = useState(DEV);
-  const gradeJob = useSyncExternalStore(subscribeGrade, getGrade);
+  const grades = useSyncExternalStore(subscribeGrade, getGrades);
   const [gradeTick, setGradeTick] = useState(0);
-  // 批改任务挂在模块上：切到别的页面回来还在，只有属于本页的题才显示
-  const grade =
-    gradeJob.status !== 'idle' && gradeJob.questionId !== question.id
-      ? ({ status: 'idle', questionId: null } as const)
-      : gradeJob;
+  // 每道题各自一份批改状态，互不挤占
+  const entry = grades[question.id];
+  const grade = entry ?? ({ status: 'idle' } as const);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -304,7 +303,7 @@ function QuestionPanel({
   }
 
   function cancelGrade() {
-    cancelGradeJob();
+    cancelGradeJob(question.id);
   }
 
   async function handleStop() {
@@ -379,7 +378,9 @@ function QuestionPanel({
             ) : (
               <Sparkles size={13} strokeWidth={2} />
             )}
-            {grade.status === 'grading' ? `批改中 ${gradeTick} 秒` : 'AI 批改'}
+            {grade.status === 'grading'
+              ? `${grade.queued ? '排队中' : '批改中'} ${gradeTick} 秒`
+              : 'AI 批改'}
           </button>
           {javaWindow && (
             <button
@@ -411,7 +412,7 @@ function QuestionPanel({
             <>
               <button
                 type="button"
-                onClick={() => resetGrade()}
+                onClick={() => resetGrade(question.id)}
                 className="pill text-brand flex items-center gap-1.5 px-3.5 py-1 text-[12px]"
               >
                 <PencilLine size={13} strokeWidth={2} />
@@ -447,7 +448,11 @@ function QuestionPanel({
         {grade.status === 'grading' && (
           <div className="text-secondary flex flex-wrap items-center gap-3 bg-[var(--iris-2)] px-4 py-2 text-[13px] sm:px-5">
             <Loader2 size={14} strokeWidth={2} className="text-brand animate-spin" />
-            <span>AI 正在逐条对照评分点看你的代码，已等 {gradeTick} 秒</span>
+            <span>
+              {grade.status === 'grading' && grade.queued
+                ? `排在别的批改后面等，已等 ${gradeTick} 秒`
+                : `AI 正在逐条对照评分点看你的代码，已等 ${gradeTick} 秒`}
+            </span>
             <button
               type="button"
               onClick={cancelGrade}
@@ -676,9 +681,12 @@ function QuestionPanel({
 
 export function LabPage() {
   // 刷新后如果还有批改在跑/刚跑完，回到那一卷那一题
-  const restored = getGrade();
-  const restoredView = restored.status === 'idle' ? undefined : restored.view;
-  const restoredQuestionId = restored.status === 'idle' ? '' : restored.questionId;
+  const initialGrades = getGrades();
+  const restoredView = getLastView();
+  const restoredQuestionId =
+    Object.entries(initialGrades).find(([, entry]) => entry.status === 'grading')?.[0] ??
+    Object.keys(initialGrades)[0] ??
+    '';
 
   const [tab, setTab] = useState<'java' | 'sql'>(restoredView?.tab ?? 'sql');
   const [javaSetIndex, setJavaSetIndex] = useState(() => {
@@ -700,6 +708,7 @@ export function LabPage() {
           ? sqlMockSetC
           : sqlSet;
   const passed = useSyncExternalStore(subscribePassed, getPassed);
+  const liveGrades = useSyncExternalStore(subscribeGrade, getGrades);
   const activeSet: LabSet = tab === 'java' ? javaSets[javaSetIndex] : sqlActiveSet;
 
   useEffect(() => {
@@ -715,6 +724,7 @@ export function LabPage() {
     [activeSet, selectedId],
   );
 
+  const gradingCount = Object.values(liveGrades).filter((entry) => entry.status === 'grading').length;
   const days = daysUntil(EXAM_DAY);
 
   return (
@@ -798,10 +808,17 @@ export function LabPage() {
             <BadgeCheck size={13} strokeWidth={2} className="text-[var(--green-10)]" />
             已合格 {activeSet.questions.filter((item) => passed.has(item.id)).length}/
             {activeSet.questions.length}
+            {gradingCount > 0 && (
+              <span className="text-brand ml-1 flex items-center gap-1">
+                <Loader2 size={11} strokeWidth={2} className="animate-spin" />
+                {gradingCount} 个批改中
+              </span>
+            )}
           </p>
           <nav className="flex flex-col gap-0.5">
             {activeSet.questions.map((item) => {
               const active = item.id === question.id;
+              const live = liveGrades[item.id];
               return (
                 <button
                   key={item.id}
@@ -816,14 +833,22 @@ export function LabPage() {
                     <span className="min-w-0">
                       <span className="tabular-nums">{item.no}.</span> {item.title}
                     </span>
-                    {passed.has(item.id) && (
+                    {live?.status === 'grading' ? (
+                      <span
+                        className="text-brand mt-0.5 shrink-0"
+                        aria-label={live.queued ? '排队中' : '批改中'}
+                        title={live.queued ? '排队中' : '批改中'}
+                      >
+                        <Loader2 size={13} strokeWidth={2} className="animate-spin" />
+                      </span>
+                    ) : passed.has(item.id) ? (
                       <BadgeCheck
                         size={14}
                         strokeWidth={2}
                         className="mt-0.5 shrink-0 text-[var(--green-10)]"
                         aria-label="已合格"
                       />
-                    )}
+                    ) : null}
                   </span>
                 </button>
               );
