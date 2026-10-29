@@ -488,11 +488,15 @@ function QuestionPanel({
             )}
             <span className="font-medium">{frozen.result.verdict === 'pass' ? '合格' : '不合格'}</span>
             <span className="opacity-80">
-              {frozen.result.marks.length > 0
-                ? `共 ${frozen.result.marks.length} 处问题`
-                : frozen.result.verdict === 'pass'
+              {(() => {
+                const lines = new Set(frozen.result.marks.map((mark) => mark.line)).size;
+                if (lines > 0)
+                  return `共 ${lines} 行有问题${frozen.result.issues.length ? `，另有 ${frozen.result.issues.length} 条整体问题` : ''}`;
+                if (frozen.result.issues.length > 0) return `另有 ${frozen.result.issues.length} 条整体问题`;
+                return frozen.result.verdict === 'pass'
                   ? '没有发现具体错误'
-                  : '但没指出具体位置，建议再批一次'}
+                  : '但没指出具体位置，建议再批一次';
+              })()}
             </span>
             <span className="opacity-80">批改用时 {frozen.seconds} 秒</span>
             <span className="opacity-80">点「重做」可以改，改完再批一次</span>
