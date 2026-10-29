@@ -183,8 +183,8 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <section className="glass px-4 py-4 sm:px-5">
+    <div className="flex flex-col gap-4 lg:h-full lg:min-h-0">
+      <section className="glass px-4 py-4 sm:px-5 lg:shrink-0">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="text-muted text-[13px] tabular-nums">第 {question.no} 题</span>
           <h2 className="text-ink text-[17px] font-semibold">{question.title}</h2>
@@ -192,7 +192,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
         </div>
         <p className="text-secondary mt-3 text-[14px] leading-6">{question.requirement}</p>
 
-        <ul className="mt-3 flex flex-col gap-1.5">
+        <ul className="mt-3 flex flex-col gap-1.5 lg:grid lg:grid-cols-2 lg:gap-x-6">
           {question.checks.map((check) => (
             <li key={check} className="text-secondary flex gap-2 text-[13px] leading-5">
               <span className="text-brand mt-0.5 shrink-0">
@@ -204,7 +204,8 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
         </ul>
       </section>
 
-      <section className="glass overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 lg:overflow-y-auto lg:pr-1">
+      <section className="glass shrink-0 overflow-hidden lg:flex lg:min-h-[240px] lg:flex-1 lg:flex-col">
         <div className="border-line/70 flex flex-wrap items-center gap-2 border-b px-4 py-2.5 sm:px-5">
           <span className="text-secondary text-[13px]">{question.fileName}</span>
           <span className="text-muted ml-auto text-[12px]">{question.engine ?? 'Java'}</span>
@@ -273,7 +274,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
               ? '写 SQL，点运行，结果直接出现在下面。'
               : '在这里写，写完复制到 Eclipse 跑。'
           }
-          className="text-ink placeholder:text-muted block h-72 w-full resize-y bg-transparent px-4 py-3 font-mono text-[13px] leading-6 outline-none sm:h-80 sm:px-5"
+          className="text-ink placeholder:text-muted block h-72 w-full resize-y bg-transparent px-4 py-3 font-mono text-[13px] leading-6 outline-none sm:h-80 sm:px-5 lg:h-auto lg:min-h-0 lg:flex-1 lg:resize-none"
         />
 
         {question.mode === 'mysql' && (
@@ -287,14 +288,13 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
           <p className="text-muted border-line/70 border-t px-4 py-2.5 text-[12px] leading-5 sm:px-5">
             {runnerReady ? (
               <>
-                本机运行器已连上：点「运行」会用本机 JDK 编译执行，命令行程序回显输出、界面程序弹窗（运行器：
-                <code className="text-secondary">node ~/IDEA/自考/tools/java-runner.mjs</code>
-                ）。不开运行器也能下载下来跑：<code className="text-secondary">tools/run-java.sh</code>。
+                点「运行」在本机 JDK 执行（命令行回显输出、界面程序弹窗）；不想开运行器就下载用{' '}
+                <code className="text-secondary">tools/run-java.sh</code>。
               </>
             ) : (
               <>
-                Java 题在本地跑：复制或下载代码，用 Eclipse 运行，或者在终端跑
-                <code className="text-secondary">tools/run-java.sh</code>。数据库题可以直接在这里执行。
+                复制或下载代码，用 Eclipse 运行，或终端跑
+                <code className="text-secondary">tools/run-java.sh</code>。数据库题可直接在这里执行。
               </>
             )}
           </p>
@@ -398,13 +398,14 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
         </section>
       )}
 
-      <details className="glass group px-4 py-3 sm:px-5">
+      <details className="glass group shrink-0 px-4 py-3 sm:px-5">
         <summary className="text-secondary flex cursor-pointer items-center gap-1.5 text-[13px] marker:content-none">
           <ChevronDown size={14} strokeWidth={1.8} className="transition-transform group-open:rotate-180" />
           参考答案
         </summary>
         <pre className="text-ink mt-3 overflow-x-auto font-mono text-[12.5px] leading-6">{question.answer}</pre>
       </details>
+      </div>
     </div>
   );
 }
@@ -430,7 +431,7 @@ export function LabPage() {
   const days = daysUntil(EXAM_DAY);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 lg:h-[calc(100dvh-13.75rem)] lg:overflow-hidden">
       <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
         <h1 className="text-ink text-[22px] font-semibold">实践演练</h1>
         <p className="text-secondary text-[13px]">
@@ -498,8 +499,8 @@ export function LabPage() {
           ))}
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[210px_minmax(0,1fr)]">
-        <aside className="glass p-2 lg:sticky lg:top-5 lg:max-h-[calc(100vh-2.5rem)] lg:overflow-y-auto">
+      <div className="grid items-start gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[210px_minmax(0,1fr)] lg:items-stretch">
+        <aside className="glass p-2 lg:h-full lg:overflow-y-auto">
           <p className="text-muted px-2 pt-1 pb-2 text-[12px]">{activeSet.note}</p>
           <nav className="flex flex-col gap-0.5">
             {activeSet.questions.map((item) => {
