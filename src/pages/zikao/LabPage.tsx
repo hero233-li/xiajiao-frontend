@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import {
   AlertTriangle,
   BadgeCheck,
@@ -16,6 +16,15 @@ import {
 } from 'lucide-react';
 import { javaSets, sqlMockSet, sqlSet, type LabQuestion, type LabSet } from '../../data/lab';
 import { runSql, type SqlOutcome } from '../../lib/sqlRunner';
+import {
+  cancelGrade as cancelGradeJob,
+  getGrade,
+  getPassed,
+  resetGrade,
+  startGrade,
+  subscribeGrade,
+  subscribePassed,
+} from '../../lib/labStore';
 
 /** 实践课上机考试：2026-10-31（周六）。 */
 const EXAM_DAY = new Date(2026, 9, 31);
@@ -25,42 +34,6 @@ function daysUntil(target: Date) {
   start.setHours(0, 0, 0, 0);
   const end = new Date(target.getFullYear(), target.getMonth(), target.getDate());
   return Math.round((end.getTime() - start.getTime()) / 86400000);
-}
-
-/** 批改判合格后记下来，左侧目录会打勾（本机存储，换浏览器要重新批）。 */
-const PASS_KEY = 'xj.lab.pass';
-
-function loadPassed(): Set<string> {
-  try {
-    const raw = localStorage.getItem(PASS_KEY);
-    const list: unknown = raw ? JSON.parse(raw) : [];
-    return new Set(Array.isArray(list) ? list.filter((id): id is string => typeof id === 'string') : []);
-  } catch {
-    return new Set();
-  }
-}
-
-function savePassed(passed: Set<string>) {
-  localStorage.setItem(PASS_KEY, JSON.stringify([...passed]));
-}
-
-let passedSnapshot = loadPassed();
-const passedListeners = new Set<() => void>();
-
-function subscribePassed(listener: () => void) {
-  passedListeners.add(listener);
-  return () => passedListeners.delete(listener);
-}
-
-function getPassed() {
-  return passedSnapshot;
-}
-
-function markPassed(id: string) {
-  if (passedSnapshot.has(id)) return;
-  passedSnapshot = new Set(passedSnapshot).add(id);
-  savePassed(passedSnapshot);
-  passedListeners.forEach((listener) => listener());
 }
 
 function useDraft(question: LabQuestion) {
@@ -88,7 +61,6 @@ function useDraft(question: LabQuestion) {
  */
 const JAVA_RUNNER = 'http://127.0.0.1:18791';
 /** AI 批改走同源反代：线上由 nginx 注入令牌转到宿主 lab-grader，本地开发由 vite 代理到线上。 */
-const GRADE_ENDPOINT = '/lab-grade/grade';
 
 interface GradeMark {
   line: number | null;
@@ -104,11 +76,6 @@ interface GradeResult {
   summary: string;
 }
 
-type GradeState =
-  | { status: 'idle' }
-  | { status: 'grading' }
-  | { status: 'done'; result: GradeResult; seconds: number; code: string }
-  | { status: 'error'; message: string };
 /**
  * 本机 Java 运行器是否在线：开发时默认按「可用」处理，线上页面探测一下
  * （只在你自己的 Mac 上开着运行器时才连得上）。
@@ -240,9 +207,13 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
   const [javaRun, setJavaRun] = useState<JavaRunState | null>(null);
   const [javaWindow, setJavaWindow] = useState(false);
   const [runnerReady, setRunnerReady] = useState(DEV);
-  const [grade, setGrade] = useState<GradeState>({ status: 'idle' });
+  const gradeJob = useSyncExternalStore(subscribeGrade, getGrade);
   const [gradeTick, setGradeTick] = useState(0);
-  const gradeAbort = useRef<AbortController | null>(null);
+  // 批改任务挂在模块上：切到别的页面回来还在，只有属于本页的题才显示
+  const grade =
+    gradeJob.status !== 'idle' && gradeJob.questionId !== question.id
+      ? ({ status: 'idle', questionId: null } as const)
+      : gradeJob;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -264,16 +235,20 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
 
   useEffect(() => {
     if (grade.status !== 'grading') return;
-    const timer = window.setInterval(() => setGradeTick((v) => v + 1), 1000);
+    const startedAt = grade.startedAt;
+    setGradeTick(Math.max(0, Math.round((Date.now() - startedAt) / 1000)));
+    const timer = window.setInterval(
+      () => setGradeTick(Math.max(0, Math.round((Date.now() - startedAt) / 1000))),
+      1000,
+    );
     return () => window.clearInterval(timer);
-  }, [grade.status]);
+  }, [grade.status, grade.status === 'grading' ? grade.startedAt : 0]);
 
   useEffect(() => {
     setOutcome(null);
     setJavaRun(null);
     stopJava().catch(() => {});
     setJavaWindow(false);
-    setGrade({ status: 'idle' });
   }, [question.id]);
 
   const frozen = grade.status === 'done' ? grade : null;
@@ -297,55 +272,19 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
     }
   }
 
-  async function handleGrade() {
-    const code = draft.trim();
-    if (!code) return;
-    setGrade({ status: 'grading' });
-    setGradeTick(0);
-    const startedAt = Date.now();
-    const controller = new AbortController();
-    gradeAbort.current = controller;
-    const timer = window.setTimeout(() => controller.abort(), 170_000);
-    try {
-      const response = await fetch(GRADE_ENDPOINT, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          title: question.title,
-          requirement: question.requirement,
-          checks: question.checks,
-          code,
-          lang: question.mode ? 'sql' : 'java',
-        }),
-        signal: controller.signal,
-      });
-      const data = (await response.json().catch(() => null)) as
-        | (GradeResult & { ok?: boolean; error?: string })
-        | null;
-      if (!response.ok || !data?.ok) throw new Error(data?.error ?? `批改服务返回 ${response.status}`);
-      setGrade({
-        status: 'done',
-        result: data,
-        seconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)),
-        code,
-      });
-      if (data.verdict === 'pass') markPassed(question.id);
-    } catch (error) {
-      const aborted = error instanceof DOMException && error.name === 'AbortError';
-      setGrade({
-        status: 'error',
-        message: aborted ? '等太久了，模型可能排队，稍后再试一次' : error instanceof Error ? error.message : String(error),
-      });
-    } finally {
-      window.clearTimeout(timer);
-      gradeAbort.current = null;
-    }
+  function handleGrade() {
+    startGrade({
+      questionId: question.id,
+      title: question.title,
+      requirement: question.requirement,
+      checks: question.checks,
+      code: draft,
+      lang: question.mode ? 'sql' : 'java',
+    });
   }
 
   function cancelGrade() {
-    gradeAbort.current?.abort();
-    gradeAbort.current = null;
-    setGrade({ status: 'idle' });
+    cancelGradeJob();
   }
 
   async function handleStop() {
@@ -452,7 +391,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
             <>
               <button
                 type="button"
-                onClick={() => setGrade({ status: 'idle' })}
+                onClick={() => resetGrade()}
                 className="pill text-brand flex items-center gap-1.5 px-3.5 py-1 text-[12px]"
               >
                 <PencilLine size={13} strokeWidth={2} />
