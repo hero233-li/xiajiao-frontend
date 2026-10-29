@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   AlertTriangle,
   BadgeCheck,
@@ -32,6 +32,7 @@ import {
   startGrade,
   subscribeGrade,
   subscribePassed,
+  type LabView,
 } from '../../lib/labStore';
 
 /** 实践课上机考试：2026-10-31（周六）。 */
@@ -209,7 +210,15 @@ function FrozenPaper({ code, result }: { code: string; result: GradeResult | nul
   );
 }
 
-function QuestionPanel({ question, template }: { question: LabQuestion; template: string }) {
+function QuestionPanel({
+  question,
+  template,
+  view,
+}: {
+  question: LabQuestion;
+  template: string;
+  view: LabView;
+}) {
   const [outcome, setOutcome] = useState<SqlOutcome | null>(null);
   const [running, setRunning] = useState(false);
   const [javaRun, setJavaRun] = useState<JavaRunState | null>(null);
@@ -284,6 +293,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
 
   function handleGrade() {
     startGrade({
+      view,
       questionId: question.id,
       title: question.title,
       requirement: question.requirement,
@@ -659,12 +669,21 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
 }
 
 export function LabPage() {
-  const [tab, setTab] = useState<'java' | 'sql'>('sql');
-  const [javaSetIndex, setJavaSetIndex] = useState(() =>
-    Math.max(0, javaSets.findIndex((set) => set.id === 'java-mock')),
-  );
-  const [sqlPaper, setSqlPaper] = useState<'real' | 'a' | 'b' | 'c'>('a');
-  const [selectedId, setSelectedId] = useState(javaSets[0].questions[0].id);
+  // 刷新后如果还有批改在跑/刚跑完，回到那一卷那一题
+  const restored = getGrade();
+  const restoredView = restored.status === 'idle' ? undefined : restored.view;
+  const restoredQuestionId = restored.status === 'idle' ? '' : restored.questionId;
+
+  const [tab, setTab] = useState<'java' | 'sql'>(restoredView?.tab ?? 'sql');
+  const [javaSetIndex, setJavaSetIndex] = useState(() => {
+    const index = restoredView?.javaSetId
+      ? javaSets.findIndex((set) => set.id === restoredView.javaSetId)
+      : -1;
+    return index >= 0 ? index : Math.max(0, javaSets.findIndex((set) => set.id === 'java-mock'));
+  });
+  const [sqlPaper, setSqlPaper] = useState<'real' | 'a' | 'b' | 'c'>(restoredView?.sqlPaper ?? 'a');
+  const [selectedId, setSelectedId] = useState(restoredQuestionId || javaSets[0].questions[0].id);
+  const skipReset = useRef(Boolean(restoredQuestionId));
 
   const sqlActiveSet =
     sqlPaper === 'a'
@@ -678,6 +697,10 @@ export function LabPage() {
   const activeSet: LabSet = tab === 'java' ? javaSets[javaSetIndex] : sqlActiveSet;
 
   useEffect(() => {
+    if (skipReset.current) {
+      skipReset.current = false;
+      return;
+    }
     setSelectedId(tab === 'java' ? javaSets[javaSetIndex].questions[0].id : sqlActiveSet.questions[0].id);
   }, [tab, javaSetIndex, sqlActiveSet]);
 
@@ -802,7 +825,16 @@ export function LabPage() {
           </nav>
         </aside>
 
-        <QuestionPanel question={question} template={question.starter ?? ''} key={question.id} />
+        <QuestionPanel
+          question={question}
+          template={question.starter ?? ''}
+          view={{
+            tab,
+            javaSetId: tab === 'java' ? javaSets[javaSetIndex].id : undefined,
+            sqlPaper: tab === 'sql' ? sqlPaper : undefined,
+          }}
+          key={question.id}
+        />
       </div>
     </div>
   );

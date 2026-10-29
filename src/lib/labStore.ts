@@ -9,11 +9,25 @@ export interface GradeResult {
   summary: string;
 }
 
+/** 刷新后要回到哪张卷、哪道题。 */
+export interface LabView {
+  tab: 'java' | 'sql';
+  javaSetId?: string;
+  sqlPaper?: 'real' | 'a' | 'b' | 'c';
+}
+
 export type GradeJob =
   | { status: 'idle'; questionId: null }
-  | { status: 'grading'; questionId: string; code: string; startedAt: number }
-  | { status: 'done'; questionId: string; code: string; result: GradeResult; seconds: number }
-  | { status: 'error'; questionId: string; message: string };
+  | { status: 'grading'; questionId: string; code: string; startedAt: number; view?: LabView }
+  | {
+      status: 'done';
+      questionId: string;
+      code: string;
+      result: GradeResult;
+      seconds: number;
+      view?: LabView;
+    }
+  | { status: 'error'; questionId: string; message: string; view?: LabView };
 
 const JOB_ENDPOINT = '/lab-grade/jobs';
 const PASS_KEY = 'xj.lab.pass';
@@ -60,7 +74,14 @@ export function markPassed(id: string) {
 /* ---------------- 批改任务 ---------------- */
 
 type SavedSnapshot =
-  | { status: 'grading'; jobId: string; questionId: string; code: string; startedAt: number }
+  | {
+      status: 'grading';
+      jobId: string;
+      questionId: string;
+      code: string;
+      startedAt: number;
+      view?: LabView;
+    }
   | {
       status: 'done';
       questionId: string;
@@ -68,6 +89,7 @@ type SavedSnapshot =
       result: GradeResult;
       seconds: number;
       savedAt: number;
+      view?: LabView;
     };
 
 function readSnapshot(): SavedSnapshot | null {
@@ -96,16 +118,27 @@ function restore(): GradeJob {
       writeSnapshot(null);
       return { status: 'idle', questionId: null };
     }
+    currentView = saved.view;
     return {
       status: 'done',
       questionId: saved.questionId,
       code: saved.code,
       result: saved.result,
       seconds: saved.seconds,
+      view: saved.view,
     };
   }
-  return { status: 'grading', questionId: saved.questionId, code: saved.code, startedAt: saved.startedAt };
+  currentView = saved.view;
+  return {
+    status: 'grading',
+    questionId: saved.questionId,
+    code: saved.code,
+    startedAt: saved.startedAt,
+    view: saved.view,
+  };
 }
+
+let currentView: LabView | undefined;
 
 let gradeSnapshot: GradeJob = restore();
 const gradeListeners = new Set<() => void>();
@@ -146,15 +179,15 @@ function finish(
   result: GradeResult,
   seconds: number,
 ) {
-  writeSnapshot({ status: 'done', questionId, code, result, seconds, savedAt: Date.now() });
+  writeSnapshot({ status: 'done', questionId, code, result, seconds, savedAt: Date.now(), view: currentView });
   if (result.verdict === 'pass') markPassed(questionId);
-  emitGrade({ status: 'done', questionId, code, result, seconds });
+  emitGrade({ status: 'done', questionId, code, result, seconds, view: currentView });
 }
 
 function failJob(questionId: string, message: string) {
   stopPolling();
   writeSnapshot(null);
-  emitGrade({ status: 'error', questionId, message });
+  emitGrade({ status: 'error', questionId, message, view: currentView });
 }
 
 function pollJob(jobId: string, questionId: string, code: string, startedAt: number) {
@@ -192,6 +225,7 @@ function pollJob(jobId: string, questionId: string, code: string, startedAt: num
 
 export interface GradeInput {
   questionId: string;
+  view?: LabView;
   title: string;
   requirement: string;
   checks: string[];
@@ -204,8 +238,9 @@ export function startGrade(input: GradeInput) {
   const code = input.code.trim();
   if (code.length < 20) return;
   stopPolling();
+  currentView = input.view;
   const startedAt = Date.now();
-  emitGrade({ status: 'grading', questionId: input.questionId, code, startedAt });
+  emitGrade({ status: 'grading', questionId: input.questionId, code, startedAt, view: currentView });
 
   void (async () => {
     try {
@@ -232,6 +267,7 @@ export function startGrade(input: GradeInput) {
         questionId: input.questionId,
         code,
         startedAt,
+        view: currentView,
       });
       pollJob(data.jobId, input.questionId, code, startedAt);
     } catch (error) {
