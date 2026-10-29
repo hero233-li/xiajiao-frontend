@@ -164,7 +164,12 @@ function FrozenPaper({ code, result }: { code: string; result: GradeResult }) {
     const push = (line: number | null, mark: LineMark) => {
       if (!line) return;
       const list = map.get(line) ?? [];
-      list.push(mark);
+      // 同一行同一意思只留一条：模型经常会重复说同一件事
+      const key = mark.text.trim().replace(/\s+/g, '').slice(0, 8);
+      const duplicated = list.some(
+        (item) => item.text.trim().replace(/\s+/g, '').slice(0, 8) === key,
+      );
+      if (!duplicated && list.length < 3) list.push(mark);
       map.set(line, list);
     };
     for (const point of result.points) push(point.line, { ok: point.ok, text: point.why || point.point });
