@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   AlertTriangle,
   BadgeCheck,
@@ -25,6 +25,42 @@ function daysUntil(target: Date) {
   start.setHours(0, 0, 0, 0);
   const end = new Date(target.getFullYear(), target.getMonth(), target.getDate());
   return Math.round((end.getTime() - start.getTime()) / 86400000);
+}
+
+/** 批改判合格后记下来，左侧目录会打勾（本机存储，换浏览器要重新批）。 */
+const PASS_KEY = 'xj.lab.pass';
+
+function loadPassed(): Set<string> {
+  try {
+    const raw = localStorage.getItem(PASS_KEY);
+    const list: unknown = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(list) ? list.filter((id): id is string => typeof id === 'string') : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function savePassed(passed: Set<string>) {
+  localStorage.setItem(PASS_KEY, JSON.stringify([...passed]));
+}
+
+let passedSnapshot = loadPassed();
+const passedListeners = new Set<() => void>();
+
+function subscribePassed(listener: () => void) {
+  passedListeners.add(listener);
+  return () => passedListeners.delete(listener);
+}
+
+function getPassed() {
+  return passedSnapshot;
+}
+
+function markPassed(id: string) {
+  if (passedSnapshot.has(id)) return;
+  passedSnapshot = new Set(passedSnapshot).add(id);
+  savePassed(passedSnapshot);
+  passedListeners.forEach((listener) => listener());
 }
 
 function useDraft(question: LabQuestion) {
@@ -293,6 +329,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
         seconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)),
         code,
       });
+      if (data.verdict === 'pass') markPassed(question.id);
     } catch (error) {
       const aborted = error instanceof DOMException && error.name === 'AbortError';
       setGrade({
@@ -677,6 +714,7 @@ export function LabPage() {
   const [selectedId, setSelectedId] = useState(javaSets[0].questions[0].id);
 
   const sqlActiveSet = sqlPaper === 'mock' ? sqlMockSet : sqlSet;
+  const passed = useSyncExternalStore(subscribePassed, getPassed);
   const activeSet: LabSet = tab === 'java' ? javaSets[javaSetIndex] : sqlActiveSet;
 
   useEffect(() => {
@@ -761,7 +799,12 @@ export function LabPage() {
 
       <div className="grid items-start gap-4 lg:grid-cols-[210px_minmax(0,1fr)]">
         <aside className="glass p-2 lg:sticky lg:top-5 lg:max-h-[calc(100dvh-2.5rem)] lg:overflow-y-auto">
-          <p className="text-muted px-2 pt-1 pb-2 text-[12px]">{activeSet.note}</p>
+          <p className="text-muted px-2 pt-1 text-[12px] leading-5">{activeSet.note}</p>
+          <p className="text-secondary flex items-center gap-1.5 px-2 pt-2 pb-2 text-[12px] tabular-nums">
+            <BadgeCheck size={13} strokeWidth={2} className="text-[var(--green-10)]" />
+            已合格 {activeSet.questions.filter((item) => passed.has(item.id)).length}/
+            {activeSet.questions.length}
+          </p>
           <nav className="flex flex-col gap-0.5">
             {activeSet.questions.map((item) => {
               const active = item.id === question.id;
@@ -775,7 +818,19 @@ export function LabPage() {
                     active ? 'bg-brand-soft text-brand-ink font-medium' : 'text-secondary hover:text-ink'
                   }`}
                 >
-                  <span className="tabular-nums">{item.no}.</span> {item.title}
+                  <span className="flex items-start gap-1.5">
+                    <span className="min-w-0">
+                      <span className="tabular-nums">{item.no}.</span> {item.title}
+                    </span>
+                    {passed.has(item.id) && (
+                      <BadgeCheck
+                        size={14}
+                        strokeWidth={2}
+                        className="mt-0.5 shrink-0 text-[var(--green-10)]"
+                        aria-label="已合格"
+                      />
+                    )}
+                  </span>
                 </button>
               );
             })}
