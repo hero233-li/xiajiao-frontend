@@ -54,22 +54,17 @@ const JAVA_RUNNER = 'http://127.0.0.1:18791';
 /** AI 批改走同源反代：线上由 nginx 注入令牌转到宿主 lab-grader，本地开发由 vite 代理到线上。 */
 const GRADE_ENDPOINT = '/lab-grade/grade';
 
-interface GradePoint {
-  point: string;
-  ok: boolean;
+interface GradeMark {
+  line: number | null;
   why: string;
-  line: number | null;
-}
-
-interface GradeIssue {
-  text: string;
-  line: number | null;
 }
 
 interface GradeResult {
   verdict: 'pass' | 'fail';
-  points: GradePoint[];
-  issues: GradeIssue[];
+  /** 卷面上的问题批注：只在有问题的行上出现 */
+  marks: GradeMark[];
+  /** 定位不到行号的问题 */
+  issues: string[];
   summary: string;
 }
 
@@ -152,28 +147,16 @@ function download(name: string, text: string) {
   URL.revokeObjectURL(url);
 }
 
-interface LineMark {
-  ok: boolean;
-  text: string;
-}
-
-/** 冻结后的「原卷」：逐行显示学生代码，并在对应行下面标出哪里对、哪里错。 */
+/** 冻结后的「原卷」：逐行显示学生代码，有问题的那一行下面挂批注。 */
 function FrozenPaper({ code, result }: { code: string; result: GradeResult }) {
   const marks = useMemo(() => {
-    const map = new Map<number, LineMark[]>();
-    const push = (line: number | null, mark: LineMark) => {
-      if (!line) return;
-      const list = map.get(line) ?? [];
-      // 同一行同一意思只留一条：模型经常会重复说同一件事
-      const key = mark.text.trim().replace(/\s+/g, '').slice(0, 8);
-      const duplicated = list.some(
-        (item) => item.text.trim().replace(/\s+/g, '').slice(0, 8) === key,
-      );
-      if (!duplicated && list.length < 3) list.push(mark);
-      map.set(line, list);
-    };
-    for (const point of result.points) push(point.line, { ok: point.ok, text: point.why || point.point });
-    for (const issue of result.issues) push(issue.line, { ok: false, text: issue.text });
+    const map = new Map<number, string[]>();
+    for (const mark of result.marks) {
+      if (!mark.line) continue;
+      const list = map.get(mark.line) ?? [];
+      if (!list.includes(mark.why) && list.length < 2) list.push(mark.why);
+      map.set(mark.line, list);
+    }
     return map;
   }, [result]);
 
@@ -184,9 +167,7 @@ function FrozenPaper({ code, result }: { code: string; result: GradeResult }) {
       {lines.map((text, index) => {
         const number = index + 1;
         const lineMarks = marks.get(number) ?? [];
-        const hasBad = lineMarks.some((mark) => !mark.ok);
-        const hasGood = lineMarks.some((mark) => mark.ok);
-        const tone = hasBad ? 'bg-[var(--red-2)]' : hasGood ? 'bg-[var(--green-2)]' : '';
+        const tone = lineMarks.length > 0 ? 'bg-[var(--red-2)]' : '';
         return (
           <div key={number} className={`rounded-[6px] ${tone}`}>
             <div className="flex items-start gap-3 px-2">
@@ -199,21 +180,13 @@ function FrozenPaper({ code, result }: { code: string; result: GradeResult }) {
             </div>
             {lineMarks.length > 0 && (
               <ul className="flex flex-col gap-1 pt-1 pr-2 pb-1.5 pl-10">
-                {lineMarks.map((mark, markIndex) => (
+                {lineMarks.map((text, markIndex) => (
                   <li
                     key={markIndex}
-                    className={`flex items-start gap-1.5 rounded-[8px] px-2 py-1 text-[12px] leading-5 ${
-                      mark.ok
-                        ? 'bg-[var(--green-3)] text-[var(--green-11)]'
-                        : 'bg-[var(--red-3)] text-[var(--red-11)]'
-                    }`}
+                    className="flex items-start gap-1.5 rounded-[8px] bg-[var(--red-3)] px-2 py-1 text-[12px] leading-5 text-[var(--red-11)]"
                   >
-                    {mark.ok ? (
-                      <Check size={12} strokeWidth={2.6} className="mt-1 shrink-0" />
-                    ) : (
-                      <XCircle size={12} strokeWidth={2.4} className="mt-0.5 shrink-0" />
-                    )}
-                    <span className="min-w-0">{mark.text}</span>
+                    <XCircle size={12} strokeWidth={2.4} className="mt-0.5 shrink-0" />
+                    <span className="min-w-0">{text}</span>
                   </li>
                 ))}
               </ul>
@@ -478,6 +451,11 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
               <XCircle size={15} strokeWidth={2.2} />
             )}
             <span className="font-medium">{frozen.result.verdict === 'pass' ? '合格' : '不合格'}</span>
+            <span className="opacity-80">
+              {frozen.result.marks.length > 0
+                ? `共 ${frozen.result.marks.length} 处问题`
+                : '没有发现具体错误'}
+            </span>
             <span className="opacity-80">批改用时 {frozen.seconds} 秒</span>
             <span className="opacity-80">点「重做」可以改，改完再批一次</span>
           </div>
@@ -555,16 +533,14 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
 
           {grade.status === 'done' && (
             <div className="flex flex-col gap-2">
-              {grade.result.issues.filter((issue) => !issue.line).length > 0 && (
+              {grade.result.issues.length > 0 && (
                 <ul className="flex flex-col gap-1.5">
-                  {grade.result.issues
-                    .filter((issue) => !issue.line)
-                    .map((issue, index) => (
-                      <li key={index} className="text-danger flex items-start gap-2 text-[13px] leading-6">
-                        <AlertTriangle size={13} strokeWidth={2} className="mt-1 shrink-0" />
-                        <span className="min-w-0">{issue.text}</span>
-                      </li>
-                    ))}
+                  {grade.result.issues.map((issue, index) => (
+                    <li key={index} className="text-danger flex items-start gap-2 text-[13px] leading-6">
+                      <AlertTriangle size={13} strokeWidth={2} className="mt-1 shrink-0" />
+                      <span className="min-w-0">{issue}</span>
+                    </li>
+                  ))}
                 </ul>
               )}
               {grade.result.summary && (
