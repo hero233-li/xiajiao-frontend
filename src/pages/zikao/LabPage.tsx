@@ -389,7 +389,8 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
               <span>
                 {outcome.error}
                 <span className="text-muted mt-1 block text-[12px]">
-                  若报语法错，多半是 MySQL 与 SQLite 的写法差异（例如 comment、delimiter、signal）。
+                  若报 unrecognized token 或 near，先检查这两处：建表列清单要用圆括号，语句之间用分号；
+                  再考虑 MySQL 与 SQLite 的写法差异（comment、delimiter、signal）。
                 </span>
               </span>
             </p>
