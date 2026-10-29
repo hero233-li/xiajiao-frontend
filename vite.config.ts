@@ -14,6 +14,8 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       proxy: {
         '/api': { target, changeOrigin: true },
+        // 实践演练的 AI 批改：本地开发也走线上同一条反代，不必在 Mac 上再起一套批改服务。
+        '/lab-grade': { target, changeOrigin: true },
         '/exam-countdown-source': {
           target: 'https://ce.sjtu.edu.cn',
           changeOrigin: true,

@@ -1,5 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Check, ChevronDown, Copy, Download, Loader2, Play, RotateCcw, Square } from 'lucide-react';
+import {
+  AlertTriangle,
+  BadgeCheck,
+  Check,
+  ChevronDown,
+  Copy,
+  Download,
+  Loader2,
+  Play,
+  RotateCcw,
+  Sparkles,
+  Square,
+  XCircle,
+} from 'lucide-react';
 import { javaSets, sqlMockSet, sqlSet, type LabQuestion, type LabSet } from '../../data/lab';
 import { runSql, type SqlOutcome } from '../../lib/sqlRunner';
 
@@ -37,6 +50,27 @@ function useDraft(question: LabQuestion) {
  * 线上不提供服务器编译（用户决定不要那套环境），Java 题给出本机跑法即可。
  */
 const JAVA_RUNNER = 'http://127.0.0.1:18791';
+/** AI 批改走同源反代：线上由 nginx 注入令牌转到宿主 lab-grader，本地开发由 vite 代理到线上。 */
+const GRADE_ENDPOINT = '/lab-grade/grade';
+
+interface GradePoint {
+  point: string;
+  ok: boolean;
+  why: string;
+}
+
+interface GradeResult {
+  verdict: 'pass' | 'fail';
+  points: GradePoint[];
+  issues: string[];
+  summary: string;
+}
+
+type GradeState =
+  | { status: 'idle' }
+  | { status: 'grading' }
+  | { status: 'done'; result: GradeResult; seconds: number }
+  | { status: 'error'; message: string };
 /**
  * 本机 Java 运行器是否在线：开发时默认按「可用」处理，线上页面探测一下
  * （只在你自己的 Mac 上开着运行器时才连得上）。
@@ -117,6 +151,8 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
   const [javaRun, setJavaRun] = useState<JavaRunState | null>(null);
   const [javaWindow, setJavaWindow] = useState(false);
   const [runnerReady, setRunnerReady] = useState(DEV);
+  const [grade, setGrade] = useState<GradeState>({ status: 'idle' });
+  const [gradeTick, setGradeTick] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -137,10 +173,17 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
   }, []);
 
   useEffect(() => {
+    if (grade.status !== 'grading') return;
+    const timer = window.setInterval(() => setGradeTick((v) => v + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, [grade.status]);
+
+  useEffect(() => {
     setOutcome(null);
     setJavaRun(null);
     stopJava().catch(() => {});
     setJavaWindow(false);
+    setGrade({ status: 'idle' });
   }, [question.id]);
 
   const sqlMode = question.mode === 'ddl' || question.mode === 'query';
@@ -160,6 +203,43 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
       }
     } finally {
       setRunning(false);
+    }
+  }
+
+  async function handleGrade() {
+    const code = draft.trim();
+    if (!code) return;
+    setGrade({ status: 'grading' });
+    setGradeTick(0);
+    const startedAt = Date.now();
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 170_000);
+    try {
+      const response = await fetch(GRADE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          title: question.title,
+          requirement: question.requirement,
+          checks: question.checks,
+          code,
+          lang: question.mode ? 'sql' : 'java',
+        }),
+        signal: controller.signal,
+      });
+      const data = (await response.json().catch(() => null)) as
+        | (GradeResult & { ok?: boolean; error?: string })
+        | null;
+      if (!response.ok || !data?.ok) throw new Error(data?.error ?? `批改服务返回 ${response.status}`);
+      setGrade({ status: 'done', result: data, seconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)) });
+    } catch (error) {
+      const aborted = error instanceof DOMException && error.name === 'AbortError';
+      setGrade({
+        status: 'error',
+        message: aborted ? '等太久了，模型可能排队，稍后再试一次' : error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      window.clearTimeout(timer);
     }
   }
 
@@ -224,6 +304,19 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
               运行
             </button>
           )}
+          <button
+            type="button"
+            onClick={handleGrade}
+            disabled={grade.status === 'grading' || !draft.trim()}
+            className="pill text-brand flex items-center gap-1.5 px-3.5 py-1 text-[12px] disabled:opacity-50"
+          >
+            {grade.status === 'grading' ? (
+              <Loader2 size={13} strokeWidth={2} className="animate-spin" />
+            ) : (
+              <Sparkles size={13} strokeWidth={2} />
+            )}
+            {grade.status === 'grading' ? `批改中 ${gradeTick} 秒` : 'AI 批改'}
+          </button>
           {javaWindow && (
             <button
               type="button"
@@ -304,6 +397,99 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
           </p>
         )}
       </section>
+
+      {grade.status !== 'idle' && (
+        <section className="glass px-4 py-3 sm:px-5">
+          {grade.status === 'grading' && (
+            <p className="text-secondary flex items-center gap-2 text-[13px]">
+              <Loader2 size={14} strokeWidth={2} className="text-brand animate-spin" />
+              AI 正在逐条对照评分点看你的代码，通常十秒左右。已等 {gradeTick} 秒。
+            </p>
+          )}
+
+          {grade.status === 'error' && (
+            <div className="flex flex-col gap-2">
+              <p className="text-danger flex items-start gap-2 text-[13px]">
+                <AlertTriangle size={14} strokeWidth={2} className="mt-1 shrink-0" />
+                批改失败：{grade.message}
+              </p>
+              <button
+                type="button"
+                onClick={handleGrade}
+                className="text-secondary hover:text-ink flex w-fit items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px]"
+              >
+                <RotateCcw size={12} strokeWidth={2} />
+                再试一次
+              </button>
+            </div>
+          )}
+
+          {grade.status === 'done' && (
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-medium ${
+                    grade.result.verdict === 'pass'
+                      ? 'bg-[var(--green-3)] text-[var(--green-11)]'
+                      : 'bg-[var(--red-3)] text-[var(--red-11)]'
+                  }`}
+                >
+                  {grade.result.verdict === 'pass' ? (
+                    <BadgeCheck size={15} strokeWidth={2.2} />
+                  ) : (
+                    <XCircle size={15} strokeWidth={2.2} />
+                  )}
+                  {grade.result.verdict === 'pass' ? '合格' : '不合格'}
+                </span>
+                <span className="text-muted text-[12px]">批改用时 {grade.seconds} 秒</span>
+                <button
+                  type="button"
+                  onClick={handleGrade}
+                  className="text-secondary hover:text-ink ml-auto flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px]"
+                >
+                  <RotateCcw size={12} strokeWidth={2} />
+                  重新批改
+                </button>
+              </div>
+
+              {grade.result.points.length > 0 && (
+                <ul className="flex flex-col gap-1.5 lg:grid lg:grid-cols-2 lg:gap-x-6">
+                  {grade.result.points.map((item, index) => (
+                    <li key={index} className="flex items-start gap-2 text-[13px] leading-6">
+                      {item.ok ? (
+                        <Check size={14} strokeWidth={2.4} className="mt-1 shrink-0 text-[var(--green-11)]" />
+                      ) : (
+                        <XCircle size={14} strokeWidth={2.2} className="text-danger mt-1 shrink-0" />
+                      )}
+                      <span className="min-w-0">
+                        <span className={item.ok ? 'text-secondary' : 'text-ink'}>{item.point}</span>
+                        {item.why && <span className="text-muted"> {item.why}</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {grade.result.issues.length > 0 && (
+                <ul className="flex flex-col gap-1.5">
+                  {grade.result.issues.map((issue, index) => (
+                    <li key={index} className="text-danger flex items-start gap-2 text-[13px] leading-6">
+                      <AlertTriangle size={13} strokeWidth={2} className="mt-1 shrink-0" />
+                      <span className="min-w-0">{issue}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {grade.result.summary && (
+                <p className="text-secondary border-line/70 border-t pt-2 text-[13px] leading-6">
+                  {grade.result.summary}
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+      )}
 
       {javaRun && (
         <section className="glass px-4 py-3 sm:px-5">
