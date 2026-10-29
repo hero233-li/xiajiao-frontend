@@ -7,6 +7,7 @@ import {
   Copy,
   Download,
   Loader2,
+  PencilLine,
   Play,
   RotateCcw,
   Sparkles,
@@ -57,19 +58,25 @@ interface GradePoint {
   point: string;
   ok: boolean;
   why: string;
+  line: number | null;
+}
+
+interface GradeIssue {
+  text: string;
+  line: number | null;
 }
 
 interface GradeResult {
   verdict: 'pass' | 'fail';
   points: GradePoint[];
-  issues: string[];
+  issues: GradeIssue[];
   summary: string;
 }
 
 type GradeState =
   | { status: 'idle' }
   | { status: 'grading' }
-  | { status: 'done'; result: GradeResult; seconds: number }
+  | { status: 'done'; result: GradeResult; seconds: number; code: string }
   | { status: 'error'; message: string };
 /**
  * 本机 Java 运行器是否在线：开发时默认按「可用」处理，线上页面探测一下
@@ -145,6 +152,74 @@ function download(name: string, text: string) {
   URL.revokeObjectURL(url);
 }
 
+interface LineMark {
+  ok: boolean;
+  text: string;
+}
+
+/** 冻结后的「原卷」：逐行显示学生代码，并在对应行下面标出哪里对、哪里错。 */
+function FrozenPaper({ code, result }: { code: string; result: GradeResult }) {
+  const marks = useMemo(() => {
+    const map = new Map<number, LineMark[]>();
+    const push = (line: number | null, mark: LineMark) => {
+      if (!line) return;
+      const list = map.get(line) ?? [];
+      list.push(mark);
+      map.set(line, list);
+    };
+    for (const point of result.points) push(point.line, { ok: point.ok, text: point.why || point.point });
+    for (const issue of result.issues) push(issue.line, { ok: false, text: issue.text });
+    return map;
+  }, [result]);
+
+  const lines = code.replace(/\r\n/g, '\n').split('\n');
+
+  return (
+    <div className="max-h-[640px] overflow-auto px-1 py-2">
+      {lines.map((text, index) => {
+        const number = index + 1;
+        const lineMarks = marks.get(number) ?? [];
+        const hasBad = lineMarks.some((mark) => !mark.ok);
+        const hasGood = lineMarks.some((mark) => mark.ok);
+        const tone = hasBad ? 'bg-[var(--red-2)]' : hasGood ? 'bg-[var(--green-2)]' : '';
+        return (
+          <div key={number} className={`rounded-[6px] ${tone}`}>
+            <div className="flex items-start gap-3 px-2">
+              <span className="text-muted w-7 shrink-0 pt-0.5 text-right text-[11px] tabular-nums select-none">
+                {number}
+              </span>
+              <code className="text-ink min-w-0 flex-1 py-0.5 font-mono text-[12.5px] leading-5 whitespace-pre-wrap break-words">
+                {text || ' '}
+              </code>
+            </div>
+            {lineMarks.length > 0 && (
+              <ul className="flex flex-col gap-1 pt-1 pr-2 pb-1.5 pl-10">
+                {lineMarks.map((mark, markIndex) => (
+                  <li
+                    key={markIndex}
+                    className={`flex items-start gap-1.5 rounded-[8px] px-2 py-1 text-[12px] leading-5 ${
+                      mark.ok
+                        ? 'bg-[var(--green-3)] text-[var(--green-11)]'
+                        : 'bg-[var(--red-3)] text-[var(--red-11)]'
+                    }`}
+                  >
+                    {mark.ok ? (
+                      <Check size={12} strokeWidth={2.6} className="mt-1 shrink-0" />
+                    ) : (
+                      <XCircle size={12} strokeWidth={2.4} className="mt-0.5 shrink-0" />
+                    )}
+                    <span className="min-w-0">{mark.text}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function QuestionPanel({ question, template }: { question: LabQuestion; template: string }) {
   const [outcome, setOutcome] = useState<SqlOutcome | null>(null);
   const [running, setRunning] = useState(false);
@@ -186,6 +261,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
     setGrade({ status: 'idle' });
   }, [question.id]);
 
+  const frozen = grade.status === 'done' ? grade : null;
   const sqlMode = question.mode === 'ddl' || question.mode === 'query';
   const runnable = sqlMode || (!question.mode && runnerReady);
 
@@ -231,7 +307,12 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
         | (GradeResult & { ok?: boolean; error?: string })
         | null;
       if (!response.ok || !data?.ok) throw new Error(data?.error ?? `批改服务返回 ${response.status}`);
-      setGrade({ status: 'done', result: data, seconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)) });
+      setGrade({
+        status: 'done',
+        result: data,
+        seconds: Math.max(1, Math.round((Date.now() - startedAt) / 1000)),
+        code,
+      });
     } catch (error) {
       const aborted = error instanceof DOMException && error.name === 'AbortError';
       setGrade({
@@ -289,7 +370,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
         <div className="border-line/70 flex flex-wrap items-center gap-2 border-b px-4 py-2.5 sm:px-5">
           <span className="text-secondary text-[13px]">{question.fileName}</span>
           <span className="text-muted ml-auto text-[12px]">{question.engine ?? 'Java'}</span>
-          {runnable && (
+          {runnable && !frozen && (
             <button
               type="button"
               onClick={handleRun}
@@ -308,7 +389,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
             type="button"
             onClick={handleGrade}
             disabled={grade.status === 'grading' || !draft.trim()}
-            className="pill text-brand flex items-center gap-1.5 px-3.5 py-1 text-[12px] disabled:opacity-50"
+            className={`pill text-brand flex items-center gap-1.5 px-3.5 py-1 text-[12px] disabled:opacity-50 ${frozen ? 'hidden' : ''}`}
           >
             {grade.status === 'grading' ? (
               <Loader2 size={13} strokeWidth={2} className="animate-spin" />
@@ -343,6 +424,26 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
             <Download size={13} strokeWidth={1.8} />
             下载
           </button>
+          {frozen && (
+            <>
+              <button
+                type="button"
+                onClick={() => setGrade({ status: 'idle' })}
+                className="pill text-brand flex items-center gap-1.5 px-3.5 py-1 text-[12px]"
+              >
+                <PencilLine size={13} strokeWidth={2} />
+                重做
+              </button>
+              <button
+                type="button"
+                onClick={handleGrade}
+                className="text-secondary hover:text-ink flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px]"
+              >
+                <RotateCcw size={12} strokeWidth={2} />
+                再次批改
+              </button>
+            </>
+          )}
           <button
             type="button"
             onClick={() => {
@@ -350,7 +451,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
               setResetHint(true);
               window.setTimeout(() => setResetHint(false), 1500);
             }}
-            className="text-secondary hover:text-ink flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px]"
+            className={`text-secondary hover:text-ink flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px] ${frozen ? 'hidden' : ''}`}
           >
             <RotateCcw size={13} strokeWidth={1.8} />
             {resetHint ? '已填好' : '填模板'}
@@ -358,6 +459,28 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
           {copied && <span className="text-brand text-[12px]">已复制</span>}
         </div>
 
+        {frozen && (
+          <div
+            className={`flex flex-wrap items-center gap-2 px-4 py-2 text-[13px] sm:px-5 ${
+              frozen.result.verdict === 'pass'
+                ? 'bg-[var(--green-3)] text-[var(--green-11)]'
+                : 'bg-[var(--red-3)] text-[var(--red-11)]'
+            }`}
+          >
+            {frozen.result.verdict === 'pass' ? (
+              <BadgeCheck size={15} strokeWidth={2.2} />
+            ) : (
+              <XCircle size={15} strokeWidth={2.2} />
+            )}
+            <span className="font-medium">{frozen.result.verdict === 'pass' ? '合格' : '不合格'}</span>
+            <span className="opacity-80">批改用时 {frozen.seconds} 秒</span>
+            <span className="opacity-80">点「重做」可以改，改完再批一次</span>
+          </div>
+        )}
+
+        {frozen ? (
+          <FrozenPaper code={frozen.code} result={frozen.result} />
+        ) : (
         <textarea
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
@@ -369,6 +492,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
           }
           className="text-ink placeholder:text-muted block h-72 w-full resize-y bg-transparent px-4 py-3 font-mono text-[13px] leading-6 outline-none sm:h-80 sm:px-5 lg:h-[calc(100dvh-22rem)] lg:min-h-[380px] lg:max-h-[720px] lg:resize-y"
         />
+        )}
 
         {question.mode === 'mysql' && (
           <p className="text-muted border-line/70 border-t px-4 py-2.5 text-[12px] leading-5 sm:px-5">
@@ -398,7 +522,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
         )}
       </section>
 
-      {grade.status !== 'idle' && (
+      {(grade.status === 'grading' || grade.status === 'error' || grade.status === 'done') && (
         <section className="glass px-4 py-3 sm:px-5">
           {grade.status === 'grading' && (
             <p className="text-secondary flex items-center gap-2 text-[13px]">
@@ -425,66 +549,21 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
           )}
 
           {grade.status === 'done' && (
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-medium ${
-                    grade.result.verdict === 'pass'
-                      ? 'bg-[var(--green-3)] text-[var(--green-11)]'
-                      : 'bg-[var(--red-3)] text-[var(--red-11)]'
-                  }`}
-                >
-                  {grade.result.verdict === 'pass' ? (
-                    <BadgeCheck size={15} strokeWidth={2.2} />
-                  ) : (
-                    <XCircle size={15} strokeWidth={2.2} />
-                  )}
-                  {grade.result.verdict === 'pass' ? '合格' : '不合格'}
-                </span>
-                <span className="text-muted text-[12px]">批改用时 {grade.seconds} 秒</span>
-                <button
-                  type="button"
-                  onClick={handleGrade}
-                  className="text-secondary hover:text-ink ml-auto flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px]"
-                >
-                  <RotateCcw size={12} strokeWidth={2} />
-                  重新批改
-                </button>
-              </div>
-
-              {grade.result.points.length > 0 && (
-                <ul className="flex flex-col gap-1.5 lg:grid lg:grid-cols-2 lg:gap-x-6">
-                  {grade.result.points.map((item, index) => (
-                    <li key={index} className="flex items-start gap-2 text-[13px] leading-6">
-                      {item.ok ? (
-                        <Check size={14} strokeWidth={2.4} className="mt-1 shrink-0 text-[var(--green-11)]" />
-                      ) : (
-                        <XCircle size={14} strokeWidth={2.2} className="text-danger mt-1 shrink-0" />
-                      )}
-                      <span className="min-w-0">
-                        <span className={item.ok ? 'text-secondary' : 'text-ink'}>{item.point}</span>
-                        {item.why && <span className="text-muted"> {item.why}</span>}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {grade.result.issues.length > 0 && (
+            <div className="flex flex-col gap-2">
+              {grade.result.issues.filter((issue) => !issue.line).length > 0 && (
                 <ul className="flex flex-col gap-1.5">
-                  {grade.result.issues.map((issue, index) => (
-                    <li key={index} className="text-danger flex items-start gap-2 text-[13px] leading-6">
-                      <AlertTriangle size={13} strokeWidth={2} className="mt-1 shrink-0" />
-                      <span className="min-w-0">{issue}</span>
-                    </li>
-                  ))}
+                  {grade.result.issues
+                    .filter((issue) => !issue.line)
+                    .map((issue, index) => (
+                      <li key={index} className="text-danger flex items-start gap-2 text-[13px] leading-6">
+                        <AlertTriangle size={13} strokeWidth={2} className="mt-1 shrink-0" />
+                        <span className="min-w-0">{issue.text}</span>
+                      </li>
+                    ))}
                 </ul>
               )}
-
               {grade.result.summary && (
-                <p className="text-secondary border-line/70 border-t pt-2 text-[13px] leading-6">
-                  {grade.result.summary}
-                </p>
+                <p className="text-secondary text-[13px] leading-6">{grade.result.summary}</p>
               )}
             </div>
           )}
