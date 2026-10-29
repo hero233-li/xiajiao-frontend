@@ -183,8 +183,8 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
   };
 
   return (
-    <div className="flex flex-col gap-4 lg:h-full lg:min-h-0">
-      <section className="glass px-4 py-3 sm:px-5 lg:shrink-0">
+    <div className="flex flex-col gap-4">
+      <section className="glass px-4 py-3 sm:px-5 lg:sticky lg:top-3 lg:z-20 lg:bg-[rgba(255,255,255,0.9)]">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="text-muted text-[13px] tabular-nums">第 {question.no} 题</span>
           <h2 className="text-ink text-[17px] font-semibold">{question.title}</h2>
@@ -204,8 +204,8 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
         </ul>
       </section>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 lg:overflow-y-auto lg:pr-1">
-      <section className="glass shrink-0 overflow-hidden lg:flex lg:min-h-[240px] lg:flex-1 lg:flex-col">
+      <div className="flex flex-col gap-4">
+      <section className="glass overflow-hidden lg:flex lg:flex-col">
         <div className="border-line/70 flex flex-wrap items-center gap-2 border-b px-4 py-2.5 sm:px-5">
           <span className="text-secondary text-[13px]">{question.fileName}</span>
           <span className="text-muted ml-auto text-[12px]">{question.engine ?? 'Java'}</span>
@@ -274,7 +274,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
               ? '写 SQL，点运行，结果直接出现在下面。'
               : '在这里写，写完复制到 Eclipse 跑。'
           }
-          className="text-ink placeholder:text-muted block h-72 w-full resize-y bg-transparent px-4 py-3 font-mono text-[13px] leading-6 outline-none sm:h-80 sm:px-5 lg:h-auto lg:min-h-[320px] lg:flex-1 lg:resize-none"
+          className="text-ink placeholder:text-muted block h-72 w-full resize-y bg-transparent px-4 py-3 font-mono text-[13px] leading-6 outline-none sm:h-80 sm:px-5 lg:h-[calc(100dvh-22rem)] lg:min-h-[380px] lg:max-h-[720px] lg:resize-y"
         />
 
         {question.mode === 'mysql' && (
@@ -435,7 +435,7 @@ export function LabPage() {
   const days = daysUntil(EXAM_DAY);
 
   return (
-    <div className="flex flex-col gap-4 lg:h-[calc(100dvh-13.75rem)] lg:overflow-hidden">
+    <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <h1 className="text-ink text-[22px] font-semibold">实践演练</h1>
         <p className="text-secondary text-[13px]">
@@ -503,8 +503,8 @@ export function LabPage() {
         </div>
       </div>
 
-      <div className="grid items-start gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[210px_minmax(0,1fr)] lg:items-stretch">
-        <aside className="glass p-2 lg:h-full lg:overflow-y-auto">
+      <div className="grid items-start gap-4 lg:grid-cols-[210px_minmax(0,1fr)]">
+        <aside className="glass p-2 lg:sticky lg:top-5 lg:max-h-[calc(100dvh-2.5rem)] lg:overflow-y-auto">
           <p className="text-muted px-2 pt-1 pb-2 text-[12px]">{activeSet.note}</p>
           <nav className="flex flex-col gap-0.5">
             {activeSet.questions.map((item) => {
