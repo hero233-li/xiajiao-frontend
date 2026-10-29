@@ -14,7 +14,15 @@ import {
   Square,
   XCircle,
 } from 'lucide-react';
-import { javaSets, sqlMockSet, sqlSet, type LabQuestion, type LabSet } from '../../data/lab';
+import {
+  javaSets,
+  sqlMockSet,
+  sqlMockSetB,
+  sqlMockSetC,
+  sqlSet,
+  type LabQuestion,
+  type LabSet,
+} from '../../data/lab';
 import { runSql, type SqlOutcome } from '../../lib/sqlRunner';
 import {
   cancelGrade as cancelGradeJob,
@@ -151,10 +159,10 @@ function download(name: string, text: string) {
 }
 
 /** 冻结后的「原卷」：逐行显示学生代码，有问题的那一行下面挂批注。 */
-function FrozenPaper({ code, result }: { code: string; result: GradeResult }) {
+function FrozenPaper({ code, result }: { code: string; result: GradeResult | null }) {
   const marks = useMemo(() => {
     const map = new Map<number, string[]>();
-    for (const mark of result.marks) {
+    for (const mark of result?.marks ?? []) {
       if (!mark.line) continue;
       const list = map.get(mark.line) ?? [];
       if (!list.includes(mark.why) && list.length < 2) list.push(mark.why);
@@ -251,6 +259,8 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
     setJavaWindow(false);
   }, [question.id]);
 
+  // 点「批改」就冻住编辑区（批改中 + 已完成都锁），只有「重做」才解冻
+  const locked = grade.status === 'grading' || grade.status === 'done' ? grade : null;
   const frozen = grade.status === 'done' ? grade : null;
   const sqlMode = question.mode === 'ddl' || question.mode === 'query';
   const runnable = sqlMode || (!question.mode && runnerReady);
@@ -333,7 +343,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
         <div className="border-line/70 flex flex-wrap items-center gap-2 border-b px-4 py-2.5 sm:px-5">
           <span className="text-secondary text-[13px]">{question.fileName}</span>
           <span className="text-muted ml-auto text-[12px]">{question.engine ?? 'Java'}</span>
-          {runnable && !frozen && (
+          {runnable && !locked && (
             <button
               type="button"
               onClick={handleRun}
@@ -352,7 +362,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
             type="button"
             onClick={handleGrade}
             disabled={grade.status === 'grading' || draft.trim().length < 20}
-            className={`pill text-brand flex items-center gap-1.5 px-3.5 py-1 text-[12px] disabled:opacity-50 ${frozen ? 'hidden' : ''}`}
+            className={`pill text-brand flex items-center gap-1.5 px-3.5 py-1 text-[12px] disabled:opacity-50 ${locked ? 'hidden' : ''}`}
           >
             {grade.status === 'grading' ? (
               <Loader2 size={13} strokeWidth={2} className="animate-spin" />
@@ -387,7 +397,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
             <Download size={13} strokeWidth={1.8} />
             下载
           </button>
-          {frozen && (
+          {locked && (
             <>
               <button
                 type="button"
@@ -397,14 +407,16 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
                 <PencilLine size={13} strokeWidth={2} />
                 重做
               </button>
-              <button
-                type="button"
-                onClick={handleGrade}
-                className="text-secondary hover:text-ink flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px]"
-              >
-                <RotateCcw size={12} strokeWidth={2} />
-                再次批改
-              </button>
+              {frozen && (
+                <button
+                  type="button"
+                  onClick={handleGrade}
+                  className="text-secondary hover:text-ink flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px]"
+                >
+                  <RotateCcw size={12} strokeWidth={2} />
+                  再次批改
+                </button>
+              )}
             </>
           )}
           <button
@@ -414,7 +426,7 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
               setResetHint(true);
               window.setTimeout(() => setResetHint(false), 1500);
             }}
-            className={`text-secondary hover:text-ink flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px] ${frozen ? 'hidden' : ''}`}
+            className={`text-secondary hover:text-ink flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-[12px] ${locked ? 'hidden' : ''}`}
           >
             <RotateCcw size={13} strokeWidth={1.8} />
             {resetHint ? '已填好' : '填模板'}
@@ -475,8 +487,8 @@ function QuestionPanel({ question, template }: { question: LabQuestion; template
           </div>
         )}
 
-        {frozen ? (
-          <FrozenPaper code={frozen.code} result={frozen.result} />
+        {locked ? (
+          <FrozenPaper code={locked.code} result={frozen ? frozen.result : null} />
         ) : (
         <textarea
           value={draft}
@@ -651,10 +663,17 @@ export function LabPage() {
   const [javaSetIndex, setJavaSetIndex] = useState(() =>
     Math.max(0, javaSets.findIndex((set) => set.id === 'java-mock')),
   );
-  const [sqlPaper, setSqlPaper] = useState<'real' | 'mock'>('mock');
+  const [sqlPaper, setSqlPaper] = useState<'real' | 'a' | 'b' | 'c'>('a');
   const [selectedId, setSelectedId] = useState(javaSets[0].questions[0].id);
 
-  const sqlActiveSet = sqlPaper === 'mock' ? sqlMockSet : sqlSet;
+  const sqlActiveSet =
+    sqlPaper === 'a'
+      ? sqlMockSet
+      : sqlPaper === 'b'
+        ? sqlMockSetB
+        : sqlPaper === 'c'
+          ? sqlMockSetC
+          : sqlSet;
   const passed = useSyncExternalStore(subscribePassed, getPassed);
   const activeSet: LabSet = tab === 'java' ? javaSets[javaSetIndex] : sqlActiveSet;
 
@@ -702,7 +721,9 @@ export function LabPage() {
         {tab === 'sql' &&
           (
             [
-              ['mock', '模拟卷'],
+              ['a', '模拟卷 A'],
+              ['b', '模拟卷 B'],
+              ['c', '模拟卷 C'],
               ['real', '真题 2017-04'],
             ] as const
           ).map(([key, label]) => (
