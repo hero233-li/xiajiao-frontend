@@ -153,9 +153,11 @@ function FrozenPaper({ code, result }: { code: string; result: GradeResult | nul
 function QuestionPanel({
   question,
   view,
+  preface,
 }: {
   question: LabQuestion;
   view: LabView;
+  preface?: string[];
 }) {
   const grades = useSyncExternalStore(subscribeGrade, getGrades);
   const [gradeTick, setGradeTick] = useState(0);
@@ -224,6 +226,17 @@ function QuestionPanel({
 
   return (
     <div className="flex flex-col gap-4">
+      {preface && preface.length > 0 && (
+        <details open className="glass px-4 py-3 sm:px-5 lg:shrink-0">
+          <summary className="text-secondary cursor-pointer text-[13px]">试卷说明（库里的表结构）</summary>
+          <ul className="text-secondary mt-2 flex flex-col gap-1 text-[12px] leading-5">
+            {preface.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+
       <section className="glass px-4 py-3 sm:px-5 lg:sticky lg:top-3 lg:z-20 lg:bg-[rgba(255,255,255,0.9)]">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="text-muted text-[13px] tabular-nums">第 {question.no} 题</span>
@@ -587,6 +600,7 @@ export function LabPage() {
 
         <QuestionPanel
           question={question}
+          preface={activeSet.preface}
           view={{
             tab,
             javaSetId: tab === 'java' ? javaSets[javaSetIndex].id : undefined,

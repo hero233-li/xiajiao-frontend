@@ -26,6 +26,8 @@ export interface LabSet {
   note: string;
   /** 真题卷：题干照原卷，不展示额外评分点 */
   hideChecks?: boolean;
+  /** 原卷前言里的库表说明（原样照抄，不算提示） */
+  preface?: string[];
   questions: LabQuestion[];
 }
 
@@ -1956,6 +1958,11 @@ export const sqlSet: LabSet = {
   name: '数据库 2017-04 卷',
   hideChecks: true,
   note: '打开 SQL Server，建立名为 School 的数据库，在其中建 StudentInfo、ClassInfo、MajorInfo 三张表。语句写在 1.sql 里，考试结束上传，可以重复提交覆盖。',
+  preface: [
+    'StudentInfo：学生编号 StudentId int 主键；学生姓名 StudentName varchar(20) 唯一；学生性别 StudentSex nchar(1)，在「男」「女」中取值；学生年龄 StudentAge smallint，大于 18 岁；学生成绩 StudentMark smallint；入学时间 EntranceDate smalldatetime；班级编号 ClassId char(5) 外键。备注：假设一个学生只有一个成绩。',
+    'ClassInfo：班级编号 ClassId char(5)；班级人数 ClassNumber int，允许空；专业编号 MajorId int。',
+    'MajorInfo：专业编号 MajorId int；专业名称 Major varchar(20)。',
+  ],
   questions: [
     {
       id: 'sql-1',
