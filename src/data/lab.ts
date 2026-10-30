@@ -1343,10 +1343,301 @@ const javaMockC: LabSet = {
   ],
 };
 
+const javaD1 = raw`public class Transpose {
+    public static void main(String[] args) {
+        int[][] a = { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } };
+        int[][] t = new int[a.length][a[0].length];
+        for (int i = 0; i < a.length; i++) {
+            for (int j = 0; j < a[i].length; j++) {
+                t[j][i] = a[i][j];
+            }
+        }
+        for (int i = 0; i < t.length; i++) {
+            for (int j = 0; j < t[i].length; j++) {
+                System.out.print(t[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+}`;
+
+const javaD2 = raw`public class WordCount {
+    public static void main(String[] args) {
+        String text = "java is a simple object oriented language";
+        String[] words = text.trim().split("\\s+");
+        String longest = "";
+        for (String w : words) {
+            if (w.length() > longest.length()) {
+                longest = w;
+            }
+        }
+        System.out.println("单词数 " + words.length + "，最长 " + longest);
+    }
+}`;
+
+const javaD3 = raw`public class Recursion {
+    static long fact(int n) {
+        return n <= 1 ? 1 : n * fact(n - 1);
+    }
+
+    static int fib(int n) {
+        if (n <= 2) {
+            return 1;
+        }
+        return fib(n - 1) + fib(n - 2);
+    }
+
+    public static void main(String[] args) {
+        System.out.println("5! = " + fact(5));
+        for (int i = 1; i <= 10; i++) {
+            System.out.print(fib(i) + " ");
+        }
+        System.out.println();
+    }
+}`;
+
+const javaD4 = raw`import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class CharCountMap {
+    public static void main(String[] args) {
+        String text = "hello world";
+        Map<Character, Integer> map = new HashMap<>();
+        for (char c : text.toCharArray()) {
+            if (c == ' ') {
+                continue;
+            }
+            map.put(c, map.getOrDefault(c, 0) + 1);
+        }
+        List<Map.Entry<Character, Integer>> list = new ArrayList<>(map.entrySet());
+        list.sort((a, b) -> b.getValue() - a.getValue());
+        for (Map.Entry<Character, Integer> e : list) {
+            System.out.println(e.getKey() + " : " + e.getValue());
+        }
+    }
+}`;
+
+const javaE1 = raw`interface Payable {
+    double pay();
+}
+
+class Employee implements Payable {
+    private final double salary;
+
+    Employee(double salary) {
+        this.salary = salary;
+    }
+
+    public double pay() {
+        return salary;
+    }
+}
+
+class HourlyWorker implements Payable {
+    private final int hours;
+    private final double rate;
+
+    HourlyWorker(int hours, double rate) {
+        this.hours = hours;
+        this.rate = rate;
+    }
+
+    public double pay() {
+        return hours * rate;
+    }
+}
+
+public class PayDemo {
+    public static void main(String[] args) {
+        Payable[] staff = { new Employee(8000), new HourlyWorker(120, 60) };
+        for (Payable p : staff) {
+            System.out.printf("%.2f%n", p.pay());
+        }
+    }
+}`;
+
+const javaE2 = raw`import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class SafeRead {
+    public static void main(String[] args) {
+        try {
+            String text = Files.readString(Path.of("nofile.txt"));
+            System.out.println(text);
+        } catch (IOException e) {
+            System.out.println("文件读不到：" + e.getMessage());
+        }
+
+        try {
+            int a = 10;
+            int b = 0;
+            System.out.println(a / b);
+        } catch (ArithmeticException e) {
+            System.out.println("除数不能为 0");
+        } finally {
+            System.out.println("结束");
+        }
+    }
+}`;
+
+const javaE3 = raw`import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+
+public class DateCalc {
+    public static void main(String[] args) {
+        LocalDate exam = LocalDate.parse("2027-04-17");
+        LocalDate today = LocalDate.now();
+        long days = ChronoUnit.DAYS.between(today, exam);
+        System.out.println("从今天到 " + exam + " 还有 " + days + " 天");
+    }
+}`;
+
+const javaE4 = raw`import java.awt.BorderLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+public class TodoWindow extends JFrame {
+    private final JTextField input = new JTextField(16);
+    private final JTextArea list = new JTextArea(8, 24);
+
+    public TodoWindow() {
+        super("待办清单");
+        list.setEditable(false);
+
+        JPanel top = new JPanel();
+        JButton add = new JButton("添加");
+        add.addActionListener(e -> {
+            String text = input.getText().trim();
+            if (!text.isEmpty()) {
+                list.append(text + "\n");
+                input.setText("");
+            }
+        });
+        top.add(input);
+        top.add(add);
+
+        getContentPane().add(top, BorderLayout.NORTH);
+        getContentPane().add(new JScrollPane(list), BorderLayout.CENTER);
+
+        setSize(320, 240);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        new TodoWindow();
+    }
+}`;
+
+const javaMockD: LabSet = {
+  id: 'java-mock-d',
+  name: '模拟卷 D',
+  note: '二维数组、字符串、递归与集合。',
+  questions: [
+    {
+      id: 'java-md-1',
+      no: 1,
+      title: '二维数组：矩阵转置',
+      score: '25 分',
+      fileName: 'Transpose.java',
+      requirement: '有一个 3×3 的整数矩阵，写出转置矩阵并按行打印。',
+      checks: ['两层循环遍历原矩阵', '转置时行列下标互换', '按行输出，每行结束后换行'],
+      answer: javaD1,
+    },
+    {
+      id: 'java-md-2',
+      no: 2,
+      title: '字符串：单词数与最长单词',
+      score: '25 分',
+      fileName: 'WordCount.java',
+      requirement: '给出一句英文，统计单词个数，并找出长度最长的那个单词。',
+      checks: ['split 用正则 \\s+ 切分', 'trim 去掉首尾空白', '遍历比较长度取最长'],
+      answer: javaD2,
+    },
+    {
+      id: 'java-md-3',
+      no: 3,
+      title: '递归：阶乘与斐波那契',
+      score: '25 分',
+      fileName: 'Recursion.java',
+      requirement: '用递归写阶乘与斐波那契数列，输出 5 的阶乘和前 10 项斐波那契数。',
+      checks: ['递归要有出口（n<=1 或 n<=2）', '递归式正确', '用循环打印前 10 项'],
+      answer: javaD3,
+    },
+    {
+      id: 'java-md-4',
+      no: 4,
+      title: '集合：统计字符出现次数',
+      score: '25 分',
+      fileName: 'CharCountMap.java',
+      requirement: '用 HashMap 统计一个字符串里每个非空格字符出现的次数，按次数从高到低输出。',
+      checks: ['HashMap 键是字符、值是次数', 'getOrDefault 累加', '按值排序用 entrySet + sort'],
+      answer: javaD4,
+    },
+  ],
+};
+
+const javaMockE: LabSet = {
+  id: 'java-mock-e',
+  name: '模拟卷 E',
+  note: '接口、异常、日期与综合界面。',
+  questions: [
+    {
+      id: 'java-me-1',
+      no: 1,
+      title: '接口与多态：Payable',
+      score: '25 分',
+      fileName: 'PayDemo.java',
+      requirement: '定义接口 Payable（方法 pay），让月薪员工与小时工各实现它，用接口数组调用并打印各自工资。',
+      checks: ['interface 声明 pay()', '两个实现类都写 public double pay()', '接口引用指向实现类对象'],
+      answer: javaE1,
+    },
+    {
+      id: 'java-me-2',
+      no: 2,
+      title: '异常处理：读文件与除零',
+      score: '25 分',
+      fileName: 'SafeRead.java',
+      requirement: '读取一个可能不存在的文件并捕获异常，另外演示除零异常的捕获，最后在 finally 里打印结束。',
+      checks: ['try-catch 捕获 IOException', '异常后给用户可读提示', '除零走 ArithmeticException', 'finally 一定执行'],
+      answer: javaE2,
+    },
+    {
+      id: 'java-me-3',
+      no: 3,
+      title: '日期：距考试还有多少天',
+      score: '25 分',
+      fileName: 'DateCalc.java',
+      requirement: '解析 yyyy-MM-dd 格式的日期字符串，计算它距今天还有多少天并输出。',
+      checks: ['LocalDate.parse 解析字符串', 'ChronoUnit.DAYS.between 算差值', '结果按整数打印'],
+      answer: javaE3,
+    },
+    {
+      id: 'java-me-4',
+      no: 4,
+      title: '综合界面：待办清单',
+      score: '25 分',
+      fileName: 'TodoWindow.java',
+      requirement: '用 JFrame 做窗口：上方输入框和「添加」按钮，中间文本区显示清单，点按钮把输入内容追加到文本区。',
+      checks: ['JTextField + JButton + JTextArea', 'addActionListener 里读取并追加', 'JScrollPane 包文本区', 'setSize + setDefaultCloseOperation + setVisible'],
+      answer: javaE4,
+    },
+  ],
+};
+
 export const javaSets: LabSet[] = [
   javaMockA,
   javaMockB,
   javaMockC,
+  javaMockD,
+  javaMockE,
   {
     id: 'java-a',
     name: '真题 A 卷',
@@ -2827,5 +3118,478 @@ export const sqlMockSetC: LabSet = {
     },
   ],
 };
+export const sqlMockSetD: LabSet = {
+  id: 'sql-mock-d-04736',
+  name: '模拟卷 D',
+  note: '按 04736 考纲第一、三、四块出的 D 卷：建表、多条件查询、连接与分组、视图与索引、更新、触发器与存储过程。满分 100，前 10 题可在页内直接跑。',
+  questions: [
+    {
+      id: 'sql-d-1',
+      no: 1,
+      title: '建表：教师表与默认值',
+      score: '8 分',
+      fileName: 'd01-teacher.sql',
+      engine: 'SQL',
+      mode: 'ddl',
+      dataset: 'school',
+      requirement:
+        '在 school 库里建一张 teacherinfo 表：教师编号 tid（整数，主键）、姓名 tname（varchar(20)，非空）、职称 title（varchar(10)，默认值为「讲师」）、入职日期 hiredate（date）。',
+      checks: ['主键在 tid 上', 'tname 加 not null', "title 用 default '讲师'", 'hiredate 用 date 类型'],
+      answer: raw`create table teacherinfo (
+  tid      integer primary key,
+  tname    varchar(20) not null,
+  title    varchar(10) default '讲师',
+  hiredate date
+);`,
+    },
+    {
+      id: 'sql-d-2',
+      no: 2,
+      title: '条件查询：区间与姓氏',
+      score: '8 分',
+      fileName: 'd02-between.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'school',
+      requirement: '查询成绩在 85 到 96 之间（含两端）且姓张的学生的姓名、班级编号和成绩。',
+      checks: ['用 between 表示闭区间', "姓氏用 like '张%'", '两个条件同时成立'],
+      answer: raw`select studentname, classid, studentmark
+from studentinfo
+where studentmark between 85 and 96
+  and studentname like '张%';`,
+    },
+    {
+      id: 'sql-d-3',
+      no: 3,
+      title: '分组统计：每班人数与平均分',
+      score: '8 分',
+      fileName: 'd03-group.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'school',
+      requirement: '按班级统计人数与平均分，输出班级编号、人数、平均分（保留两位小数），并按平均分从高到低排列。',
+      checks: ['group by 班级编号', 'count(*) 算人数', 'round(avg(...), 2) 保留两位', 'order by 平均分 desc'],
+      answer: raw`select classid,
+       count(*) as 人数,
+       round(avg(studentmark), 2) as 平均分
+from studentinfo
+group by classid
+order by 平均分 desc;`,
+    },
+    {
+      id: 'sql-d-4',
+      no: 4,
+      title: '分组后筛选：平均分低于 70',
+      score: '8 分',
+      fileName: 'd04-having.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'school',
+      requirement: '找出平均分低于 70 分的班级，输出班级编号和平均分（保留两位小数）。',
+      checks: ['对分组结果筛选要用 having', 'avg 不能出现在 where 里', '平均分保留两位'],
+      answer: raw`select classid, round(avg(studentmark), 2) as 平均分
+from studentinfo
+group by classid
+having avg(studentmark) < 70;`,
+    },
+    {
+      id: 'sql-d-5',
+      no: 5,
+      title: '子查询：高于全校平均分',
+      score: '8 分',
+      fileName: 'd05-subquery.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'school',
+      requirement: '查询成绩高于全校平均分的学生姓名和成绩。',
+      checks: ['子查询先算出全校平均分', '外层用 > 比较', '平均分那条不需要出现在结果里'],
+      answer: raw`select studentname, studentmark
+from studentinfo
+where studentmark > (select avg(studentmark) from studentinfo);`,
+    },
+    {
+      id: 'sql-d-6',
+      no: 6,
+      title: '相关子查询：全班都及格的班级',
+      score: '8 分',
+      fileName: 'd06-notexists.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'school',
+      requirement: '用 not exists 查出全班都没有不及格（成绩低于 60）学生的班级编号。',
+      checks: ['not exists 里做关联', '关联条件用班级编号', '不及格条件放在子查询里', '题目点名要 not exists，别用 not in'],
+      answer: raw`select c.classid
+from classinfo c
+where not exists (
+  select 1
+  from studentinfo s
+  where s.classid = c.classid
+    and s.studentmark < 60
+);`,
+    },
+    {
+      id: 'sql-d-7',
+      no: 7,
+      title: '联合查询：两个条件合并',
+      score: '8 分',
+      fileName: 'd07-union.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'school',
+      requirement: '查出男生成绩大于 90 分、或女生成绩大于 95 分的学生姓名、性别和成绩，两条查询用 union 合并。',
+      checks: ['用 union 合并两条 select', '两条的列数和顺序一致', '不要用 or 代替 union'],
+      answer: raw`select studentname, studentsex, studentmark
+from studentinfo
+where studentsex = '男' and studentmark > 90
+union
+select studentname, studentsex, studentmark
+from studentinfo
+where studentsex = '女' and studentmark > 95;`,
+    },
+    {
+      id: 'sql-d-8',
+      no: 8,
+      title: '视图：班级统计',
+      score: '8 分',
+      fileName: 'd08-view.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'school',
+      requirement: '创建一个视图 v_class_stat，包含班级编号、人数、平均分（保留两位小数），然后查询这个视图。',
+      checks: ['create view 名字正确', '视图里做分组统计', '建完再 select * 验证'],
+      answer: raw`create view v_class_stat as
+select classid,
+       count(*) as 人数,
+       round(avg(studentmark), 2) as 平均分
+from studentinfo
+group by classid;
 
-export default { javaSets, sqlSet, sqlMockSet, sqlMockSetB, sqlMockSetC };
+select * from v_class_stat;`,
+    },
+    {
+      id: 'sql-d-9',
+      no: 9,
+      title: '索引：给成绩列建索引',
+      score: '8 分',
+      fileName: 'd09-index.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'school',
+      requirement: '给 studentinfo 表的 studentmark 列建一个普通索引，索引名为 idx_student_mark。',
+      checks: ['create index 语法', '索引名与列名正确', '建立在 studentinfo 表上'],
+      answer: raw`create index idx_student_mark on studentinfo(studentmark);`,
+    },
+    {
+      id: 'sql-d-10',
+      no: 10,
+      title: '数据更新：成绩低于 60 分加 5 分',
+      score: '8 分',
+      fileName: 'd10-update.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'school',
+      requirement:
+        '把成绩低于 60 分的学生成绩统一加 5 分，加分后不能超过 100；改完查询学生成绩确认结果。',
+      checks: ['where 只筛低于 60 分的行', '加分后要封顶 100', '改完用 select 确认'],
+      answer: raw`update studentinfo
+set studentmark = case when studentmark + 5 > 100 then 100 else studentmark + 5 end
+where studentmark < 60;
+
+select studentname, studentmark
+from studentinfo
+order by studentmark;`,
+    },
+    {
+      id: 'sql-d-11',
+      no: 11,
+      title: '触发器：成绩不能为负',
+      score: '10 分',
+      fileName: 'd11-trigger.sql',
+      engine: 'SQL',
+      mode: 'mysql',
+      dataset: 'school',
+      requirement:
+        '给 studentinfo 表写一个 before insert 触发器 trg_student_mark：插入记录时如果成绩是负数，就把它改成 0 再插入。',
+      checks: ['delimiter // 包住触发器体', 'before insert on studentinfo for each row', '用 if ... then set new.studentmark = 0', '这条是 MySQL 专属写法，页内跑不了'],
+      answer: raw`delimiter //
+create trigger trg_student_mark
+before insert on studentinfo
+for each row
+begin
+  if new.studentmark < 0 then
+    set new.studentmark = 0;
+  end if;
+end //
+delimiter ;`,
+    },
+    {
+      id: 'sql-d-12',
+      no: 12,
+      title: '存储过程：按班级统计',
+      score: '10 分',
+      fileName: 'd12-proc.sql',
+      engine: 'SQL',
+      mode: 'mysql',
+      dataset: 'school',
+      requirement:
+        '写一个存储过程 proc_class_stat，传入班级编号，用两个 out 参数返回该班人数和平均分。',
+      checks: ['delimiter // 包住过程体', 'in 班级编号、out 人数、out 平均分', '过程体里用 select ... into', '调用时用 set @x 接收 out 参数'],
+      answer: raw`delimiter //
+create procedure proc_class_stat(
+  in  p_classid char(5),
+  out p_count   int,
+  out p_avg     decimal(5,2)
+)
+begin
+  select count(*), round(avg(studentmark), 2)
+    into p_count, p_avg
+  from studentinfo
+  where classid = p_classid;
+end //
+delimiter ;
+
+call proc_class_stat('G0208', @cnt, @avg);
+select @cnt as 人数, @avg as 平均分;`,
+    },
+  ],
+};
+
+export const sqlMockSetE: LabSet = {
+  id: 'sql-mock-e-04736',
+  name: '模拟卷 E',
+  note: '按 04736 考纲出的 E 卷，数据换成图书借阅库：建表、区间查询、三表连接、分组、子查询、视图、索引、删除、触发器与存储函数。满分 100。',
+  questions: [
+    {
+      id: 'sql-e-1',
+      no: 1,
+      title: '建表：订单表与检查约束',
+      score: '8 分',
+      fileName: 'e01-order.sql',
+      engine: 'SQL',
+      mode: 'ddl',
+      dataset: 'library',
+      requirement:
+        '建一张 orderinfo 表：订单号 oid（整数，主键）、图书编号 bookid（整数，非空）、数量 qty（整数，默认 1，且必须大于 0）、下单日期 orderdate（date）。',
+      checks: ['oid 主键', 'bookid 加 not null', 'qty 有 default 1 与 check (qty > 0)', 'orderdate 用 date'],
+      answer: raw`create table orderinfo (
+  oid       integer primary key,
+  bookid    integer not null,
+  qty       integer default 1 check (qty > 0),
+  orderdate date
+);`,
+    },
+    {
+      id: 'sql-e-2',
+      no: 2,
+      title: '条件查询：价格区间与库存',
+      score: '8 分',
+      fileName: 'e02-range.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'library',
+      requirement: '查出价格在 30 到 60 元之间、且库存大于 1 的图书编号、书名和价格。',
+      checks: ['价格用 between 30 and 60', '库存用 total > 1', '两个条件同时满足'],
+      answer: raw`select bookid, title, price
+from book
+where price between 30 and 60
+  and total > 1;`,
+    },
+    {
+      id: 'sql-e-3',
+      no: 3,
+      title: '三表连接：借阅明细',
+      score: '8 分',
+      fileName: 'e03-join.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'library',
+      requirement: '列出每条借阅记录的读者姓名、书名和借阅日期，按借阅日期从早到晚排列。',
+      checks: ['borrow 分别连 reader 与 book', '两个连接条件都写全', '按借阅日期排序'],
+      answer: raw`select r.readername, b.title, br.borrowdate
+from borrow br
+join reader r on r.readerid = br.readerid
+join book b on b.bookid = br.bookid
+order by br.borrowdate;`,
+    },
+    {
+      id: 'sql-e-4',
+      no: 4,
+      title: '分组统计：借阅次数',
+      score: '8 分',
+      fileName: 'e04-count.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'library',
+      requirement: '统计每本书被借阅的次数，只列出被借过 2 次及以上的，输出书名和次数并按次数从高到低排列。',
+      checks: ['按书分组', 'count(*) 算次数', 'having 筛 2 次及以上', '按次数排序'],
+      answer: raw`select b.title, count(*) as 次数
+from borrow br
+join book b on b.bookid = br.bookid
+group by b.bookid, b.title
+having count(*) >= 2
+order by 次数 desc;`,
+    },
+    {
+      id: 'sql-e-5',
+      no: 5,
+      title: '子查询：谁借过这本书',
+      score: '8 分',
+      fileName: 'e05-in.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'library',
+      requirement: '查出借过《数据库系统概论》的读者姓名。',
+      checks: ['内层查出该书对应的读者编号', '外层用 in 匹配', '书名条件放在内层'],
+      answer: raw`select readername
+from reader
+where readerid in (
+  select br.readerid
+  from borrow br
+  join book b on b.bookid = br.bookid
+  where b.title = '数据库系统概论'
+);`,
+    },
+    {
+      id: 'sql-e-6',
+      no: 6,
+      title: '相关子查询：没借过某本书的读者',
+      score: '8 分',
+      fileName: 'e06-notexists.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'library',
+      requirement: '用 not exists 查出没有借过《人间词话》的读者姓名。',
+      checks: ['not exists 做关联', '关联条件用读者编号', '书名条件写在子查询里', '题目要求 not exists'],
+      answer: raw`select r.readername
+from reader r
+where not exists (
+  select 1
+  from borrow br
+  join book b on b.bookid = br.bookid
+  where br.readerid = r.readerid
+    and b.title = '人间词话'
+);`,
+    },
+    {
+      id: 'sql-e-7',
+      no: 7,
+      title: '联合查询：贵书与仅一本',
+      score: '8 分',
+      fileName: 'e07-union.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'library',
+      requirement: '查出价格高于 80 元的图书，以及库存只有 1 本的图书，两类结果用 union 合并，输出书名和价格。',
+      checks: ['两条 select 列一致', '用 union 合并', '两条条件分别是价格与库存'],
+      answer: raw`select title, price from book where price > 80
+union
+select title, price from book where total = 1;`,
+    },
+    {
+      id: 'sql-e-8',
+      no: 8,
+      title: '视图：逾期未还',
+      score: '8 分',
+      fileName: 'e08-view.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'library',
+      requirement:
+        '创建视图 v_late，包含逾期未还的借阅记录：借阅号、书名、读者姓名、应还日期；条件是还没归还且应还日期早于今天。然后查询这个视图。',
+      checks: ['returndate is null 表示未归还', "duedate < date('now') 表示逾期", '视图连三张表', '建完 select * 验证'],
+      answer: raw`create view v_late as
+select br.borrowid, b.title, r.readername, br.duedate
+from borrow br
+join book b on b.bookid = br.bookid
+join reader r on r.readerid = br.readerid
+where br.returndate is null
+  and br.duedate < date('now');
+
+select * from v_late;`,
+    },
+    {
+      id: 'sql-e-9',
+      no: 9,
+      title: '索引：按读者查借阅',
+      score: '8 分',
+      fileName: 'e09-index.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'library',
+      requirement: '给 borrow 表的 readerid 列建一个普通索引，索引名为 idx_borrow_reader。',
+      checks: ['create index 语法', '建在 borrow 表上', '索引名正确'],
+      answer: raw`create index idx_borrow_reader on borrow(readerid);`,
+    },
+    {
+      id: 'sql-e-10',
+      no: 10,
+      title: '数据删除：清理旧记录',
+      score: '8 分',
+      fileName: 'e10-delete.sql',
+      engine: 'SQL',
+      mode: 'query',
+      dataset: 'library',
+      requirement: '删除 2026 年 4 月之前借出、并且已经归还的借阅记录；删完统计 borrow 表还剩多少行。',
+      checks: ['where 同时限定借出日期与已归还', '用 delete 而不是 truncate', "日期比较用 '2026-04-01'", '删完 count(*) 确认'],
+      answer: raw`delete from borrow
+where borrowdate < '2026-04-01'
+  and returndate is not null;
+
+select count(*) as 剩余记录 from borrow;`,
+    },
+    {
+      id: 'sql-e-11',
+      no: 11,
+      title: '触发器：库存为 0 时拒绝借阅',
+      score: '10 分',
+      fileName: 'e11-trigger.sql',
+      engine: 'SQL',
+      mode: 'mysql',
+      dataset: 'library',
+      requirement:
+        '写一个 before insert 触发器 trg_borrow_stock：插入借阅记录时，如果这本书的库存 total 已经是 0，就报错「库存不足」并拒绝这次插入。',
+      checks: ['delimiter // 包住触发器体', 'before insert on borrow for each row', 'select total into 变量 判断', '用 signal sqlstate 抛错', '这条是 MySQL 专属写法，页内跑不了'],
+      answer: raw`delimiter //
+create trigger trg_borrow_stock
+before insert on borrow
+for each row
+begin
+  declare stock int;
+  select total into stock from book where bookid = new.bookid;
+  if stock <= 0 then
+    signal sqlstate '45000' set message_text = '库存不足';
+  end if;
+end //
+delimiter ;`,
+    },
+    {
+      id: 'sql-e-12',
+      no: 12,
+      title: '存储函数：在借数量',
+      score: '10 分',
+      fileName: 'e12-func.sql',
+      engine: 'SQL',
+      mode: 'mysql',
+      dataset: 'library',
+      requirement:
+        '写一个存储函数 fn_borrowing，传入读者编号，返回该读者当前未归还的借书数量。',
+      checks: ['delimiter // 包住函数体', 'returns int + deterministic', '用 select count(*) into 返回', '调用时 select fn_borrowing(1)', '这条是 MySQL 专属写法，页内跑不了'],
+      answer: raw`delimiter //
+create function fn_borrowing(p_reader int)
+returns int
+deterministic
+begin
+  declare cnt int;
+  select count(*) into cnt
+  from borrow
+  where readerid = p_reader and returndate is null;
+  return cnt;
+end //
+delimiter ;
+
+select fn_borrowing(1) as 在借数量;`,
+    },
+  ],
+};
+
+export default { javaSets, sqlMockSetD, sqlMockSetE, sqlSet, sqlMockSet, sqlMockSetB, sqlMockSetC };
