@@ -1228,7 +1228,7 @@ export const javaSets: LabSet[] = [
   {
     id: 'java-mock',
     name: '模拟卷',
-    note: '按 13216 考纲（2025-12 版）出的模拟卷：上机 1 小时，两级计分（合格/不合格）。算法题可在本机直接跑。',
+    note: '按 13216 考纲（2025-12 版）出的模拟卷：上机 1 小时，两级计分（合格/不合格）。',
     questions: [
       {
         id: 'java-mock-1',
@@ -1884,7 +1884,7 @@ select @times;`;
 export const sqlMockSet: LabSet = {
   id: 'sql-mock-04736',
   name: '模拟卷',
-  note: '按 04736 考纲（2019 修订）出的模拟卷：闭卷 1 小时，满分 100。数据是图书借阅库，可在页内直接跑。',
+  note: '按 04736 考纲（2019 修订）出的模拟卷：闭卷 1 小时，满分 100。',
   questions: [
     {
       id: 'mock-1',
@@ -2544,7 +2544,7 @@ delimiter ;`;
 export const sqlMockSetC: LabSet = {
   id: 'sql-mock-c-04736',
   name: '模拟卷 C',
-  note: '按 04736 考纲第一块出的 C 卷：SQL 交互操作综合（建表、各类查询、视图、索引）。满分 100，前 11 题可在页内直接跑。',
+  note: '按 04736 考纲第一块出的 C 卷：SQL 交互操作综合（建表、各类查询、视图、索引）。满分 100。',
   questions: [
     {
       id: 'mock-c-1',
