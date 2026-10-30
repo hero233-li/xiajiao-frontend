@@ -29,6 +29,8 @@ const PASS_KEY = 'xj.lab.pass';
 const SNAPSHOT_KEY = 'xj.lab.jobs.v2';
 const LEGACY_KEY = 'xj.lab.grade.v1';
 const POLL_MS = 1500;
+/** 单道题最多等这么久，超过就当失败让用户重试，别无限转。 */
+const WAIT_CAP_MS = 200_000;
 /** 已完成的结果留一天，刷新还能看到批注。 */
 const KEEP_DONE_MS = 24 * 60 * 60 * 1000;
 
@@ -212,6 +214,10 @@ function poll(questionId: string, jobId: string, code: string, startedAt: number
   jobOf.set(questionId, jobId);
   const tick = async () => {
     if (jobOf.get(questionId) !== jobId) return;
+    if (Date.now() - startedAt > WAIT_CAP_MS) {
+      fail(questionId, code, '等太久了，服务可能卡住了，点「再次批改」重试');
+      return;
+    }
     try {
       const response = await fetch(`${JOB_ENDPOINT}/${jobId}`, { cache: 'no-store' });
       const data = (await response.json().catch(() => null)) as

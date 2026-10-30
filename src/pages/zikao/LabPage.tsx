@@ -315,7 +315,7 @@ function QuestionPanel({
             <Loader2 size={14} strokeWidth={2} className="text-brand animate-spin" />
             <span>
               {grade.status === 'grading' && grade.queued
-                ? `排在别的批改后面等，已等 ${gradeTick} 秒`
+                ? `排队中，前面的批改还在跑，已等 ${gradeTick} 秒`
                 : `AI 正在逐条对照评分点看你的代码，已等 ${gradeTick} 秒`}
             </span>
             <button
