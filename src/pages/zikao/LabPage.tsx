@@ -32,8 +32,8 @@ import {
   type LabView,
 } from '../../lib/labStore';
 
-/** 实践课上机考试：2026-10-31（周六）。 */
-const EXAM_DAY = new Date(2026, 9, 31);
+/** 实践课上机考试：2026-11-01。 */
+const EXAM_DAY = new Date(2026, 10, 1);
 
 function daysUntil(target: Date) {
   const start = new Date();
@@ -470,7 +470,7 @@ export function LabPage() {
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <h1 className="text-ink text-[22px] font-semibold">实践演练</h1>
         <p className="text-secondary text-[13px]">
-          10 月 31 日考试
+          11 月 01 日考试
           {days > 0 ? `，还有 ${days} 天` : '，今天就是考试日'}
         </p>
 
