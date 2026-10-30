@@ -212,6 +212,7 @@ function fail(questionId: string, code: string, message: string, retryable = tru
 function poll(questionId: string, jobId: string, code: string, startedAt: number) {
   stopTimer(questionId);
   jobOf.set(questionId, jobId);
+  let networkErrors = 0;
   const tick = async () => {
     if (jobOf.get(questionId) !== jobId) return;
     if (Date.now() - startedAt > WAIT_CAP_MS) {
@@ -247,6 +248,7 @@ function poll(questionId: string, jobId: string, code: string, startedAt: number
         return;
       }
       const entry = grades[questionId];
+      networkErrors = 0;
       const queued = data.status === 'queued';
       if (entry && entry.status === 'grading' && entry.queued !== queued) {
         grades[questionId] = { ...entry, queued };
@@ -257,7 +259,21 @@ function poll(questionId: string, jobId: string, code: string, startedAt: number
         window.setTimeout(() => void tick(), POLL_MS),
       );
     } catch (error) {
-      fail(questionId, code, error instanceof Error ? error.message : String(error));
+      // 轮询偶尔会因为网络/热更新断一下：连续错几次才认为真的断了
+      const offline = error instanceof TypeError;
+      networkErrors += 1;
+      if (offline && networkErrors <= 5) {
+        timers.set(
+          questionId,
+          window.setTimeout(() => void tick(), POLL_MS),
+        );
+        return;
+      }
+      fail(
+        questionId,
+        code,
+        offline ? '网络断了，已停止等待，点「再次批改」重来' : error instanceof Error ? error.message : String(error),
+      );
     }
   };
   void tick();
@@ -284,28 +300,43 @@ export function startGrade(input: GradeInput) {
   emit();
 
   void (async () => {
-    try {
-      const response = await fetch(JOB_ENDPOINT, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          title: input.title,
-          requirement: input.requirement,
-          checks: input.checks,
+    const payload = JSON.stringify({
+      title: input.title,
+      requirement: input.requirement,
+      checks: input.checks,
+      code,
+      lang: input.lang,
+    });
+    // 网络抖一下（切网、开发服务器热更新）不该直接判死：先自己再试一次
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const response = await fetch(JOB_ENDPOINT, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: payload,
+        });
+        const data = (await response.json().catch(() => null)) as
+          | { ok?: boolean; jobId?: string; error?: string }
+          | null;
+        if (!response.ok || !data?.ok || !data.jobId) {
+          throw new Error(data?.error ?? `批改服务返回 ${response.status}`);
+        }
+        remember({ questionId, jobId: data.jobId, code, startedAt, view: input.view });
+        poll(questionId, data.jobId, code, startedAt);
+        return;
+      } catch (error) {
+        const offline = error instanceof TypeError;
+        if (offline && attempt === 0) {
+          await new Promise((resolve) => window.setTimeout(resolve, 1200));
+          continue;
+        }
+        fail(
+          questionId,
           code,
-          lang: input.lang,
-        }),
-      });
-      const data = (await response.json().catch(() => null)) as
-        | { ok?: boolean; jobId?: string; error?: string }
-        | null;
-      if (!response.ok || !data?.ok || !data.jobId) {
-        throw new Error(data?.error ?? `批改服务返回 ${response.status}`);
+          offline ? '网络断了，没连上批改服务，点「再次批改」重来' : error instanceof Error ? error.message : String(error),
+        );
+        return;
       }
-      remember({ questionId, jobId: data.jobId, code, startedAt, view: input.view });
-      poll(questionId, data.jobId, code, startedAt);
-    } catch (error) {
-      fail(questionId, code, error instanceof Error ? error.message : String(error));
     }
   })();
 }
