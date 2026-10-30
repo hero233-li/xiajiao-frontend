@@ -1061,175 +1061,37 @@ public class CharCount {
     }
 }`;
 
-export const javaSets: LabSet[] = [
-  {
-    id: 'java-a',
-    name: 'A 卷',
-    note: '180 分钟，4 题各 25 分。窗口与 IO 是主考点。',
-    questions: [
-      {
-        id: 'java-a-1',
-        no: 1,
-        title: 'JFrame 窗口 + 字符串数组排序',
-        score: '25 分',
-        fileName: 'Test1.java',
-      starter: javaStarterA1,
-        requirement:
-          '编写图形界面程序：类继承 JFrame，窗口 400×160，标题「第一题」，内容面板 BorderLayout，中间放 10 行 20 列的 JTextArea。定义 5 个元素的字符串数组，用 JOptionPane.showInputDialog 逐个赋值，用 Arrays.sort 升序排序，把排序前和排序后的结果显示在文本区。',
-        checks: [
-          '类继承 JFrame，标题「第一题」，setSize(400, 160)',
-          '内容面板用 BorderLayout，JTextArea(10, 20) 放在 CENTER',
-          'String[5] 循环 5 次 showInputDialog 赋值',
-          'Arrays.sort(str) 升序',
-          '文本区先 setText 排序前、再 append 排序后',
-        ],
-        answer: javaA1,
-      },
-      {
-        id: 'java-a-2',
-        no: 2,
-        title: 'File + 字节流写读文件',
-        score: '25 分',
-        fileName: 'Test2.java',
-      starter: javaStarterA2,
-        requirement:
-          '命令行程序：用 File 的 mkdirs() 创建目录树 d:\\xxx\\yyy\\zzz，用 createNewFile() 建 1.txt；用 getBytes() 把「I like java.」转成字节数组，用 FileOutputStream.write(byte[]) 写入；再把 26 个大写字母写入该文件；最后用 FileInputStream 读回并在命令行显示。',
-        checks: [
-          'new File("d:\\\\xxx\\\\yyy\\\\zzz").mkdirs()',
-          'createNewFile() 建 1.txt',
-          'getBytes() + FileOutputStream.write 写入 "I like java."',
-          '循环写入 26 个字母（题目写大写 A-Z）',
-          'FileInputStream 逐字节读回，print((char) b)',
-          '所有流 close()，main 声明 throws IOException',
-        ],
-        answer: javaA2,
-      },
-      {
-        id: 'java-a-3',
-        no: 3,
-        title: '三个按钮 + 文本区字体颜色背景',
-        score: '25 分',
-        fileName: 'Test3.java',
-      starter: javaStarterA3,
-        requirement:
-          'JFrame 400×300，标题「第3题」，BorderLayout：北边放 3 个按钮，中间放 20 行 20 列 JTextArea，字体「楷体_gb2312」普通体 30 号。按钮1 追加一行「java程序设计」；按钮2 弹颜色选择对话框设文字颜色；按钮3 弹颜色选择对话框设文本区背景色。',
-        checks: [
-          'setTitle 通过构造 super(str)，标题「第3题」，setSize(400, 300)',
-          '北边 JPanel 里 3 个按钮（JPanel 默认 FlowLayout）',
-          'text.setFont(new Font("楷体_gb2312", Font.PLAIN, 30))',
-          '按钮1 text.append("java程序设计\\n")',
-          '按钮2 JColorChooser.showDialog + setForeground',
-          '按钮3 同法 + setBackground',
-        ],
-        answer: javaA3,
-      },
-      {
-        id: 'java-a-4',
-        no: 4,
-        title: '绘图面板 + 菜单保存 JPG',
-        score: '25 分',
-        fileName: 'Test4.java',
-      starter: javaStarterA4,
-        requirement:
-          '两个类：DrawPanel 继承 JPanel，白底 400×400，实现鼠标移动监听，拖动时十字光标并在 paint 里沿路径画 3.0f 的线，图形先画在 BufferedImage 再显示；Test4 继承 JFrame，400×400，标题「第4题」，菜单 File 下 New/Save/Exit 带快捷键，New 清空画布，Save 用 JFileChooser 存 jpg，Exit 退出。',
-        checks: [
-          'DrawPanel 白底、getPreferredSize 返回 400×400',
-          'implements MouseMotionListener，mouseDragged 里 CROSSHAIR_CURSOR',
-          'paint 里 BasicStroke(3.0f) 按点连线，最后还是 drawImage(buffImage)',
-          'Test4 标题「第4题」，BorderLayout 中间放 DrawPanel',
-          'JMenuBar + JMenu("File") + 三个 JMenuItem，均 setMnemonic',
-          'New 置 CLEAR 并 repaint；Save 写 jpg；Exit System.exit(0)',
-        ],
-        answer: javaA4,
-      },
-    ],
-  },
-  {
-    id: 'java-b',
-    name: 'B 卷',
-    note: '同一套考点，题面换成命令行 + 鼠标事件 + 菜单。',
-    questions: [
-      {
-        id: 'java-b-1',
-        no: 1,
-        title: '命令行输入 + 自定义二进制方法',
-        score: '25 分',
-        fileName: 'Test1.java',
-      starter: javaStarterB1,
-        requirement:
-          '命令行程序：读取输入的长整数并求二进制表示，输入 quit 退出。求二进制并在一行输出必须由自定义方法 static void printBinary(long i) 完成。',
-        checks: [
-          'BufferedReader(new InputStreamReader(System.in)) 读行',
-          'while(true) 循环，输入 quit 时 break',
-          'Long.parseLong 转换，main 声明 throws IOException',
-          '自定义 static void printBinary(long i)',
-          '按位从高位到低位输出（答案用 63..0 位）',
-        ],
-        answer: javaB1,
-      },
-      {
-        id: 'java-b-2',
-        no: 2,
-        title: '字符流读写 + 加行号',
-        score: '25 分',
-        fileName: 'Test2.java',
-      starter: javaStarterB2,
-        requirement:
-          '命令行程序：用 FileReader 链接 BufferedReader 读取源程序每一行；用 FileWriter 链接 BufferedWriter 把每一行加行号后写入当前目录 1.txt。',
-        checks: [
-          'FileReader + BufferedReader 读源文件',
-          'FileWriter + BufferedWriter 写 1.txt',
-          'readLine() 循环到 null，每行写「序号: 内容」',
-          'bw.newLine() 换行，flush()',
-          '四个流都 close()',
-        ],
-        answer: javaB2,
-      },
-      {
-        id: 'java-b-3',
-        no: 3,
-        title: '面板子类 + 右键画圆',
-        score: '25 分',
-        fileName: 'Test3.java',
-      starter: javaStarterB3,
-        requirement:
-          '继承 JPanel，白底，实现 MouseListener：点击鼠标右键，在以点击处为中心画半径 50 像素的红色填充圆，其余鼠标事件不处理。面板子类自带 main：创建 JFrame 300×200，标题「第3题」，BorderLayout 中间放该面板并 pack()。',
-        checks: [
-          'extends JPanel implements MouseListener，白底',
-          'mouseClicked 里取 e.getX()/getY() 存坐标并 repaint',
-          'paint 里 fillOval(x-50, y-50, 100, 100)，setColor(Color.red)',
-          'getPreferredSize 返回 300×200',
-          'main 里 JFrame("第3题") + BorderLayout.CENTER + pack() + setVisible',
-          'MouseListener 五个方法全部实现（空方法也要写）',
-        ],
-        answer: javaB3,
-      },
-      {
-        id: 'java-b-4',
-        no: 4,
-        title: '带滚动条文本区 + 36 选 7',
-        score: '25 分',
-        fileName: 'Test4.java',
-      starter: javaStarterB4,
-        requirement:
-          'JFrame 600×400，标题「第4题」，BorderLayout 中间放 20 行 20 列带滚动条的 JTextArea，字体「楷体_gb2312」粗体 20。菜单 File 下 4 项 New/Get7Num/Save/Exit 带快捷键：New 清空；Get7Num 随机生成 7 个 1~36 不重复整数并追加到文本区一行；Save 用 JFileChooser 按显示格式存文本；Exit 退出。',
-        checks: [
-          'new JScrollPane(text) 放在 CENTER',
-          'text.setFont(new Font("楷体_gb2312", Font.BOLD, 20))',
-          'JMenuBar + File 菜单 + 4 个菜单项，都设 setMnemonic',
-          'Get7Num 用 Vector 或循环去重取 7 个数（1~36）',
-          'Save 用 FileWriter + BufferedWriter 写 text.getText()',
-          'Exit System.exit(0)',
-        ],
-        answer: javaB4,
-      },
-    ],
-  },
-  {
-    id: 'java-mock',
-    name: '模拟卷',
-    note: '按 13216 考纲（2025-12 版）出的模拟卷：上机 1 小时，两级计分（合格/不合格）。',
-    questions: [
+const javaMock12 = raw`import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+public class ScoreFile {
+    public static void main(String[] args) throws IOException {
+        String[] names = { "张三", "李四", "王五", "赵六", "钱七" };
+        int[] marks = { 88, 92, 76, 65, 80 };
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < names.length; i++) {
+            sb.append(names[i]).append(',').append(marks[i]).append('\n');
+        }
+
+        Path file = Path.of("scores.txt");
+        Files.writeString(file, sb.toString(), StandardCharsets.UTF_8);
+
+        List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
+        int sum = 0;
+        for (String line : lines) {
+            sum += Integer.parseInt(line.split(",")[1].trim());
+        }
+        double avg = sum * 1.0 / lines.size();
+        System.out.println("共 " + lines.size() + " 行");
+        System.out.printf("平均分 %.2f%n", avg);
+    }
+}`;
+
+const javaMockQuestions: LabQuestion[] = [
       {
         id: 'java-mock-1',
         no: 1,
@@ -1418,11 +1280,237 @@ export const javaSets: LabSet[] = [
         ],
         answer: javaMock11,
       },
+      {
+        id: 'java-mock-12',
+        no: 12,
+        title: '文件读写：写入 scores.txt 再读回统计',
+        score: '10 分',
+        fileName: 'ScoreFile.java',
+        starter: javaMockStarter,
+        requirement:
+          '把 5 个学生的姓名和成绩写进 scores.txt，每行「姓名,分数」；写完从文件读回，打印行数和平均分。',
+        checks: [
+          '用 BufferedWriter 或 Files.write 写文件，编码 UTF-8',
+          '每行格式固定为「姓名,分数」，用逗号分隔',
+          '读回时用 split(",") 拆两半并解析成绩',
+          '关闭流（try-with-resources 最省事）',
+          '平均分先累加再除，注意整数除法的坑',
+        ],
+        answer: javaMock12,
+      },
+];
+
+const pickJava = (index: number, id: string, no: number): LabQuestion => ({
+  ...javaMockQuestions[index],
+  id,
+  no,
+  score: '25 分',
+});
+
+const javaMockA: LabSet = {
+  id: 'java-mock-a',
+  name: '模拟卷 A',
+  note: '基础语法与算法：字符统计、水仙花、完数、素数。',
+  questions: [
+    pickJava(0, 'java-ma-1', 1),
+    pickJava(1, 'java-ma-2', 2),
+    pickJava(2, 'java-ma-3', 3),
+    pickJava(3, 'java-ma-4', 4),
+  ],
+};
+
+const javaMockB: LabSet = {
+  id: 'java-mock-b',
+  name: '模拟卷 B',
+  note: '数组、类与线程：取位、冒泡排序、继承、多线程。',
+  questions: [
+    pickJava(4, 'java-mb-1', 1),
+    pickJava(5, 'java-mb-2', 2),
+    pickJava(6, 'java-mb-3', 3),
+    pickJava(9, 'java-mb-4', 4),
+  ],
+};
+
+const javaMockC: LabSet = {
+  id: 'java-mock-c',
+  name: '模拟卷 C',
+  note: '界面与文件：Swing 按钮、绘图、Applet、文件读写。',
+  questions: [
+    pickJava(7, 'java-mc-1', 1),
+    pickJava(8, 'java-mc-2', 2),
+    pickJava(10, 'java-mc-3', 3),
+    pickJava(11, 'java-mc-4', 4),
+  ],
+};
+
+export const javaSets: LabSet[] = [
+  javaMockA,
+  javaMockB,
+  javaMockC,
+  {
+    id: 'java-a',
+    name: '真题 A 卷',
+    note: '180 分钟，4 题各 25 分。窗口与 IO 是主考点。',
+    questions: [
+      {
+        id: 'java-a-1',
+        no: 1,
+        title: 'JFrame 窗口 + 字符串数组排序',
+        score: '25 分',
+        fileName: 'Test1.java',
+      starter: javaStarterA1,
+        requirement:
+          '编写图形界面程序：类继承 JFrame，窗口 400×160，标题「第一题」，内容面板 BorderLayout，中间放 10 行 20 列的 JTextArea。定义 5 个元素的字符串数组，用 JOptionPane.showInputDialog 逐个赋值，用 Arrays.sort 升序排序，把排序前和排序后的结果显示在文本区。',
+        checks: [
+          '类继承 JFrame，标题「第一题」，setSize(400, 160)',
+          '内容面板用 BorderLayout，JTextArea(10, 20) 放在 CENTER',
+          'String[5] 循环 5 次 showInputDialog 赋值',
+          'Arrays.sort(str) 升序',
+          '文本区先 setText 排序前、再 append 排序后',
+        ],
+        answer: javaA1,
+      },
+      {
+        id: 'java-a-2',
+        no: 2,
+        title: 'File + 字节流写读文件',
+        score: '25 分',
+        fileName: 'Test2.java',
+      starter: javaStarterA2,
+        requirement:
+          '命令行程序：用 File 的 mkdirs() 创建目录树 d:\\xxx\\yyy\\zzz，用 createNewFile() 建 1.txt；用 getBytes() 把「I like java.」转成字节数组，用 FileOutputStream.write(byte[]) 写入；再把 26 个大写字母写入该文件；最后用 FileInputStream 读回并在命令行显示。',
+        checks: [
+          'new File("d:\\\\xxx\\\\yyy\\\\zzz").mkdirs()',
+          'createNewFile() 建 1.txt',
+          'getBytes() + FileOutputStream.write 写入 "I like java."',
+          '循环写入 26 个字母（题目写大写 A-Z）',
+          'FileInputStream 逐字节读回，print((char) b)',
+          '所有流 close()，main 声明 throws IOException',
+        ],
+        answer: javaA2,
+      },
+      {
+        id: 'java-a-3',
+        no: 3,
+        title: '三个按钮 + 文本区字体颜色背景',
+        score: '25 分',
+        fileName: 'Test3.java',
+      starter: javaStarterA3,
+        requirement:
+          'JFrame 400×300，标题「第3题」，BorderLayout：北边放 3 个按钮，中间放 20 行 20 列 JTextArea，字体「楷体_gb2312」普通体 30 号。按钮1 追加一行「java程序设计」；按钮2 弹颜色选择对话框设文字颜色；按钮3 弹颜色选择对话框设文本区背景色。',
+        checks: [
+          'setTitle 通过构造 super(str)，标题「第3题」，setSize(400, 300)',
+          '北边 JPanel 里 3 个按钮（JPanel 默认 FlowLayout）',
+          'text.setFont(new Font("楷体_gb2312", Font.PLAIN, 30))',
+          '按钮1 text.append("java程序设计\\n")',
+          '按钮2 JColorChooser.showDialog + setForeground',
+          '按钮3 同法 + setBackground',
+        ],
+        answer: javaA3,
+      },
+      {
+        id: 'java-a-4',
+        no: 4,
+        title: '绘图面板 + 菜单保存 JPG',
+        score: '25 分',
+        fileName: 'Test4.java',
+      starter: javaStarterA4,
+        requirement:
+          '两个类：DrawPanel 继承 JPanel，白底 400×400，实现鼠标移动监听，拖动时十字光标并在 paint 里沿路径画 3.0f 的线，图形先画在 BufferedImage 再显示；Test4 继承 JFrame，400×400，标题「第4题」，菜单 File 下 New/Save/Exit 带快捷键，New 清空画布，Save 用 JFileChooser 存 jpg，Exit 退出。',
+        checks: [
+          'DrawPanel 白底、getPreferredSize 返回 400×400',
+          'implements MouseMotionListener，mouseDragged 里 CROSSHAIR_CURSOR',
+          'paint 里 BasicStroke(3.0f) 按点连线，最后还是 drawImage(buffImage)',
+          'Test4 标题「第4题」，BorderLayout 中间放 DrawPanel',
+          'JMenuBar + JMenu("File") + 三个 JMenuItem，均 setMnemonic',
+          'New 置 CLEAR 并 repaint；Save 写 jpg；Exit System.exit(0)',
+        ],
+        answer: javaA4,
+      },
+    ],
+  },
+  {
+    id: 'java-b',
+    name: '真题 B 卷',
+    note: '同一套考点，题面换成命令行 + 鼠标事件 + 菜单。',
+    questions: [
+      {
+        id: 'java-b-1',
+        no: 1,
+        title: '命令行输入 + 自定义二进制方法',
+        score: '25 分',
+        fileName: 'Test1.java',
+      starter: javaStarterB1,
+        requirement:
+          '命令行程序：读取输入的长整数并求二进制表示，输入 quit 退出。求二进制并在一行输出必须由自定义方法 static void printBinary(long i) 完成。',
+        checks: [
+          'BufferedReader(new InputStreamReader(System.in)) 读行',
+          'while(true) 循环，输入 quit 时 break',
+          'Long.parseLong 转换，main 声明 throws IOException',
+          '自定义 static void printBinary(long i)',
+          '按位从高位到低位输出（答案用 63..0 位）',
+        ],
+        answer: javaB1,
+      },
+      {
+        id: 'java-b-2',
+        no: 2,
+        title: '字符流读写 + 加行号',
+        score: '25 分',
+        fileName: 'Test2.java',
+      starter: javaStarterB2,
+        requirement:
+          '命令行程序：用 FileReader 链接 BufferedReader 读取源程序每一行；用 FileWriter 链接 BufferedWriter 把每一行加行号后写入当前目录 1.txt。',
+        checks: [
+          'FileReader + BufferedReader 读源文件',
+          'FileWriter + BufferedWriter 写 1.txt',
+          'readLine() 循环到 null，每行写「序号: 内容」',
+          'bw.newLine() 换行，flush()',
+          '四个流都 close()',
+        ],
+        answer: javaB2,
+      },
+      {
+        id: 'java-b-3',
+        no: 3,
+        title: '面板子类 + 右键画圆',
+        score: '25 分',
+        fileName: 'Test3.java',
+      starter: javaStarterB3,
+        requirement:
+          '继承 JPanel，白底，实现 MouseListener：点击鼠标右键，在以点击处为中心画半径 50 像素的红色填充圆，其余鼠标事件不处理。面板子类自带 main：创建 JFrame 300×200，标题「第3题」，BorderLayout 中间放该面板并 pack()。',
+        checks: [
+          'extends JPanel implements MouseListener，白底',
+          'mouseClicked 里取 e.getX()/getY() 存坐标并 repaint',
+          'paint 里 fillOval(x-50, y-50, 100, 100)，setColor(Color.red)',
+          'getPreferredSize 返回 300×200',
+          'main 里 JFrame("第3题") + BorderLayout.CENTER + pack() + setVisible',
+          'MouseListener 五个方法全部实现（空方法也要写）',
+        ],
+        answer: javaB3,
+      },
+      {
+        id: 'java-b-4',
+        no: 4,
+        title: '带滚动条文本区 + 36 选 7',
+        score: '25 分',
+        fileName: 'Test4.java',
+      starter: javaStarterB4,
+        requirement:
+          'JFrame 600×400，标题「第4题」，BorderLayout 中间放 20 行 20 列带滚动条的 JTextArea，字体「楷体_gb2312」粗体 20。菜单 File 下 4 项 New/Get7Num/Save/Exit 带快捷键：New 清空；Get7Num 随机生成 7 个 1~36 不重复整数并追加到文本区一行；Save 用 JFileChooser 按显示格式存文本；Exit 退出。',
+        checks: [
+          'new JScrollPane(text) 放在 CENTER',
+          'text.setFont(new Font("楷体_gb2312", Font.BOLD, 20))',
+          'JMenuBar + File 菜单 + 4 个菜单项，都设 setMnemonic',
+          'Get7Num 用 Vector 或循环去重取 7 个数（1~36）',
+          'Save 用 FileWriter + BufferedWriter 写 text.getText()',
+          'Exit System.exit(0)',
+        ],
+        answer: javaB4,
+      },
     ],
   },
 ];
-
-
 
 /* --------------------------- 数据库上机 --------------------------- */
 

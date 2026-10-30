@@ -426,7 +426,7 @@ export function LabPage() {
     const index = restoredView?.javaSetId
       ? javaSets.findIndex((set) => set.id === restoredView.javaSetId)
       : -1;
-    return index >= 0 ? index : Math.max(0, javaSets.findIndex((set) => set.id === 'java-mock'));
+    return index >= 0 ? index : Math.max(0, javaSets.findIndex((set) => set.id === 'java-mock-a'));
   });
   const [sqlPaper, setSqlPaper] = useState<'real' | 'a' | 'b' | 'c'>(restoredView?.sqlPaper ?? 'a');
   const [selectedId, setSelectedId] = useState(restoredQuestionId || javaSets[0].questions[0].id);
@@ -516,7 +516,7 @@ export function LabPage() {
         {tab === 'java' &&
           [...javaSets]
             .map((set, index) => ({ set, index }))
-            .sort((a, b) => Number(b.set.id === 'java-mock') - Number(a.set.id === 'java-mock'))
+            .sort((a, b) => Number(b.set.id === 'java-mock-a') - Number(a.set.id === 'java-mock-a'))
             .map(({ set, index }) => (
             <button
               key={set.id}
