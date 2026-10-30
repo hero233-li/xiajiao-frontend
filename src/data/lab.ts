@@ -1276,7 +1276,7 @@ export const javaSets: LabSet[] = [
           '真因子：从 1 到 n-1 逐个试除',
           '累加因子与 n 比较',
           '答案：6、28、496',
-          '因子串拼接建议用 StringBuilder',
+          '重复执行时结果正确，不因残留状态出错',
         ],
         answer: javaMock3,
       },
@@ -1308,8 +1308,7 @@ export const javaSets: LabSet[] = [
           '取位用取模：n % 10 得个位，n / 10 去掉个位',
           '逆序可以用 StringBuilder 边取边 append',
           '位数与各位和都在同一个循环里累计',
-          '负数先取绝对值',
-        ],
+          ],
         answer: javaMock5,
       },
       {
@@ -2031,7 +2030,7 @@ export const sqlMockSet: LabSet = {
       checks: [
         'update ... set ... where ...，where 条件两个都要写',
         "SQLite 用 date(duedate, '+30 day')；MySQL 用 date_add(duedate, interval 30 day)",
-        'update 之前先 select 看看会影响哪些行',
+        '改完 select 查借阅表确认结果',
       ],
       answer: mockQ10,
       starter: mockStarterQuery,
@@ -2654,7 +2653,6 @@ export const sqlMockSetC: LabSet = {
       checks: [
         '子查询只取文学类图书的 price',
         'MySQL 写法是 price > all (子查询)，页内用 max 等价',
-        '注意 all 与 any 的区别',
         'order by price',
       ],
       answer: mockC7,
