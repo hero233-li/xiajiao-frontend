@@ -14,10 +14,7 @@ import {
 } from 'lucide-react';
 import {
   javaSets,
-  sqlMockSetB,
-  sqlMockSetC,
-  sqlMockSetD,
-  sqlMockSetE,
+  sqlMockPapers,
   sqlSet,
   type LabQuestion,
   type LabSet,
@@ -440,22 +437,14 @@ export function LabPage() {
     const index = restoredView?.javaSetId
       ? javaSets.findIndex((set) => set.id === restoredView.javaSetId)
       : -1;
-    return index >= 0 ? index : Math.max(0, javaSets.findIndex((set) => set.id === 'java-mock-a'));
+    return index >= 0 ? index : 0;
   });
-  const [sqlPaper, setSqlPaper] = useState<'real' | 'b' | 'c' | 'd' | 'e'>(
-    restoredView?.sqlPaper ?? 'b',
-  );
+  const [sqlPaper, setSqlPaper] = useState<number>(restoredView?.sqlPaper ?? 0);
   const [selectedId, setSelectedId] = useState(restoredQuestionId || javaSets[0].questions[0].id);
   const skipReset = useRef(Boolean(restoredQuestionId));
 
-  const sqlPapers = [
-    { key: 'b', label: '模拟卷 B', set: sqlMockSetB },
-    { key: 'c', label: '模拟卷 C', set: sqlMockSetC },
-    { key: 'd', label: '模拟卷 D', set: sqlMockSetD },
-    { key: 'e', label: '模拟卷 E', set: sqlMockSetE },
-    { key: 'real', label: '真题 2017-04', set: sqlSet },
-  ] as const;
-  const sqlActiveSet = sqlPapers.find((item) => item.key === sqlPaper)?.set ?? sqlMockSetB;
+  const sqlPapers = [...sqlMockPapers, sqlSet];
+  const sqlActiveSet = sqlPapers[sqlPaper] ?? sqlPapers[0];
   const passed = useSyncExternalStore(subscribePassed, getPassed);
   const liveGrades = useSyncExternalStore(subscribeGrade, getGrades);
   const activeSet: LabSet = tab === 'java' ? javaSets[javaSetIndex] : sqlActiveSet;
@@ -507,25 +496,24 @@ export function LabPage() {
         ))}
 
         {tab === 'sql' &&
-          sqlPapers.map(({ key, label }) => (
+          sqlPapers.map((item, index) => (
             <button
-              key={key}
+              key={item.id}
               type="button"
-              onClick={() => setSqlPaper(key)}
+              onClick={() => setSqlPaper(index)}
               className={`rounded-full px-3.5 py-1.5 text-[13px] transition-colors ${
-                sqlPaper === key
+                sqlPaper === index
                   ? 'pill pill--solid'
                   : 'text-secondary hover:text-ink border border-line'
               }`}
             >
-              {label}
+              {item.name}
             </button>
           ))}
 
         {tab === 'java' &&
-          [...javaSets]
+          javaSets
             .map((set, index) => ({ set, index }))
-            .sort((a, b) => Number(b.set.id === 'java-mock-a') - Number(a.set.id === 'java-mock-a'))
             .map(({ set, index }) => (
             <button
               key={set.id}

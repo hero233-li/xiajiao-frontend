@@ -14,7 +14,7 @@ export interface GradeResult {
 export interface LabView {
   tab: 'java' | 'sql';
   javaSetId?: string;
-  sqlPaper?: 'real' | 'b' | 'c' | 'd' | 'e';
+  sqlPaper?: number;
 }
 
 export type GradeEntry =

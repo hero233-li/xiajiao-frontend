@@ -152,6 +152,20 @@ function toSqlite(sql: string) {
     .replace(/^\s*delimiter\s+\S+\s*;?\s*$/gim, '')
     .replace(/comment\s+'(?:[^']|'')*'/gi, '')
     .replace(/^\s*(?:drop\s+database|create\s+database|use)\b[^;]*;\s*$/gim, '')
+    // MySQL 方言 → SQLite：自增写法、当前日期函数
+    .replace(/\bprimary\s+key\s+auto_increment\b/gi, 'primary key')
+    .replace(/\bauto_increment\s+primary\s+key\b/gi, 'primary key')
+    // datediff 要先于 curdate 翻译，否则括号里的 curdate 已经变成函数调用
+    .replace(
+      /datediff\s*\(\s*curdate\s*\(\s*\)\s*,\s*([\w.]+)\s*\)/gi,
+      "cast(julianday('now', 'localtime') - julianday($1) as integer)",
+    )
+    .replace(
+      /datediff\s*\(\s*([\w.]+)\s*,\s*([\w.]+)\s*\)/gi,
+      'cast(julianday($1) - julianday($2) as integer)',
+    )
+    .replace(/\bcurdate\s*\(\s*\)/gi, "date('now', 'localtime')")
+    .replace(/\bnow\s*\(\s*\)/gi, "datetime('now', 'localtime')")
     .trim();
 }
 
