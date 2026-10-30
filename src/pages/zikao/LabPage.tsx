@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import {
   javaSets,
-  sqlMockSet,
   sqlMockSetB,
   sqlMockSetC,
   sqlMockSetD,
@@ -430,21 +429,20 @@ export function LabPage() {
       : -1;
     return index >= 0 ? index : Math.max(0, javaSets.findIndex((set) => set.id === 'java-mock-a'));
   });
-  const [sqlPaper, setSqlPaper] = useState<'real' | 'a' | 'b' | 'c' | 'd' | 'e'>(
-    restoredView?.sqlPaper ?? 'a',
+  const [sqlPaper, setSqlPaper] = useState<'real' | 'b' | 'c' | 'd' | 'e'>(
+    restoredView?.sqlPaper ?? 'b',
   );
   const [selectedId, setSelectedId] = useState(restoredQuestionId || javaSets[0].questions[0].id);
   const skipReset = useRef(Boolean(restoredQuestionId));
 
   const sqlPapers = [
-    { key: 'a', label: '模拟卷 A', set: sqlMockSet },
     { key: 'b', label: '模拟卷 B', set: sqlMockSetB },
     { key: 'c', label: '模拟卷 C', set: sqlMockSetC },
     { key: 'd', label: '模拟卷 D', set: sqlMockSetD },
     { key: 'e', label: '模拟卷 E', set: sqlMockSetE },
     { key: 'real', label: '真题 2017-04', set: sqlSet },
   ] as const;
-  const sqlActiveSet = sqlPapers.find((item) => item.key === sqlPaper)?.set ?? sqlSet;
+  const sqlActiveSet = sqlPapers.find((item) => item.key === sqlPaper)?.set ?? sqlMockSetB;
   const passed = useSyncExternalStore(subscribePassed, getPassed);
   const liveGrades = useSyncExternalStore(subscribeGrade, getGrades);
   const activeSet: LabSet = tab === 'java' ? javaSets[javaSetIndex] : sqlActiveSet;
