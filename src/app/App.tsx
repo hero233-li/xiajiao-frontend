@@ -7,7 +7,6 @@ import { LoginPage } from '../pages/LoginPage';
 import { Placeholder } from '../pages/Placeholder';
 import { CoursesPage } from '../pages/zikao/CoursesPage';
 import { SchedulePage } from '../pages/zikao/SchedulePage';
-import { LabPage } from '../pages/zikao/LabPage';
 import { PostgradSubjectsPage } from '../pages/kaoyan/SubjectsPage';
 import { EnglishSchedulePage } from '../pages/english/EnglishSchedulePage';
 import { RoadmapPage } from '../pages/code/RoadmapPage';
@@ -39,7 +38,6 @@ export function App() {
         <Route path="/zikao/schedule" element={<SchedulePage />} />
         <Route path="/zikao/exams" element={<Placeholder title="历年试卷" note="历年真题与答案解析，稍后补充。" />} />
         <Route path="/zikao/plan" element={<Placeholder title="学习计划" note="按考期倒排的学习安排，稍后补充。" />} />
-        <Route path="/zikao/lab" element={<LabPage />} />
         <Route path="/courses" element={<Navigate to="/zikao/courses" replace />} />
         <Route path="/kaoyan/subjects" element={<PostgradSubjectsPage />} />
         <Route path="/english/schedule" element={<EnglishSchedulePage />} />
