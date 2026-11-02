@@ -82,6 +82,7 @@ export function AiPractical() {
   const [history, setHistory] = useState<SavedResult[]>(() => loadJson<SavedResult[]>(RESULT_KEY, []));
   const [error, setError] = useState('');
   const [openCode, setOpenCode] = useState<string>(AI_PRACTICAL_ITEMS[0]?.code ?? '');
+  const [expandAll, setExpandAll] = useState(false);
   const [showRef, setShowRef] = useState<string>('');
 
   const startedAt = useRef<number>(0);
@@ -115,6 +116,7 @@ export function AiPractical() {
     setSeconds(0);
     setResult(null);
     setError('');
+    setExpandAll(true);
     setPhase('writing');
   }, []);
 
@@ -129,6 +131,7 @@ export function AiPractical() {
       return;
     }
     if (timer.current) window.clearInterval(timer.current);
+    setExpandAll(true);
     setPhase('grading');
     setError('');
     setResult(null);
@@ -301,8 +304,15 @@ export function AiPractical() {
           item={item}
           value={answers[item.code] ?? ''}
           onChange={(v) => setAnswers((prev) => ({ ...prev, [item.code]: v }))}
-          open={openCode === item.code}
-          onToggle={() => setOpenCode((c) => (c === item.code ? '' : item.code))}
+          open={expandAll || openCode === item.code}
+          onToggle={() => {
+            if (expandAll) {
+              setExpandAll(false);
+              setOpenCode(item.code);
+              return;
+            }
+            setOpenCode((c) => (c === item.code ? '' : item.code));
+          }}
           result={result?.items.find((r) => r.code === item.code)}
           showRef={showRef === item.code}
           onToggleRef={() => setShowRef((c) => (c === item.code ? '' : item.code))}
