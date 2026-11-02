@@ -607,11 +607,16 @@ export function AiTrainerPage() {
                           <span>
                             我的答案：
                             <b className={mine.length ? 'text-danger-ink' : 'text-muted'}>
-                              {mine.length ? mine.join('') : '未作答'}
+                              {mine.length
+                                ? mine.map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v)).join('')
+                                : '未作答'}
                             </b>
                           </span>
                           <span>
-                            正确答案：<b className="text-success-ink">{q.key.join('')}</b>
+                            正确答案：
+                            <b className="text-success-ink">
+                              {q.key.map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v)).join('')}
+                            </b>
                           </span>
                           {q.type !== 'tf'
                             ? q.shown
