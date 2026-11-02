@@ -7,7 +7,7 @@ def load(dirn):
         for a in json.load(io.open(f,encoding='utf-8'))['answers']:
             ans[(typ,off+int(a['no']))]=a['ans'].strip().upper()
     return ans
-A=load('answers'); B=load('answers2')
+A=load('answers'); B=load('answers2'); C=load('answers3')
 adj={}
 if os.path.exists('.ai3/adjudicated.json'):
     for a in json.load(io.open('.ai3/adjudicated.json',encoding='utf-8'))['answers']:
@@ -30,12 +30,16 @@ for q in bank:
     elif k in adj:
         a=adj[k]; ans=['T'] if (typ=='tf' and a=='T') else (['F'] if typ=='tf' else list(a)); ver=False; stat['adj']+=1
     else:
-        a=A.get(k) or B.get(k)
-        a2=B.get(k)
-        ans=['T'] if (typ=='tf' and a=='T') else (['F'] if typ=='tf' else list(a or 'A'))
+        from collections import Counter
+        votes=[x for x in (A.get(k),B.get(k),C.get(k)) if x]
+        if votes:
+            top,cnt=Counter(votes).most_common(1)[0]
+            if cnt>=2: a=top; stat['agree']+=1
+            else: a=A.get(k) or votes[0]; stat['only1']+=1
+        else:
+            a='T' if typ=='tf' else 'A'
+        ans=['T'] if (typ=='tf' and a=='T') else (['F'] if typ=='tf' else list(a))
         ver=False
-        if a and a2 and ''.join(sorted(a))==''.join(sorted(a2)): stat['agree']+=1
-        else: stat['only1']+=1
     opts=','.join("{key:'%s',text:%s}"%(kk,json.dumps(tt,ensure_ascii=False)) for kk,tt in q['opts'])
     rows.append("  { id: '%s', type: '%s', stem: %s, %sanswer: [%s], verified: %s },"%(
         f"ai3-{typ}-{q['no']}", typ, json.dumps(q['stem'],ensure_ascii=False),
