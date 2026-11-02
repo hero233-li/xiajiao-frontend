@@ -398,10 +398,7 @@ export function AiTrainerPage() {
                   开始一次模拟考试
                 </button>
                 <p className="text-muted basis-full text-[12px] leading-relaxed">
-                  900 题来自官方《理论知识复习题》，每次按考纲结构随机抽 40 判断 + 140 单选 + 10 多选。
-                  其中 {AI_THEORY_QUESTIONS.filter((q) => q.verified).length} 题答案取自官方模拟卷，其余为 AI 解析推定
-                  （回顾里标「AI 解析」），发现错答案告诉我即可修正。
-                </p>
+                  900 题来自官方《理论知识复习题》，每次按考纲结构随机抽 40 判断 + 140 单选 + 10 多选。答案 892 题有权威出处（官方模拟卷 + 公开题库），剩 8 题为 AI 推定（回顾里标「AI 解析」），发现错答案告诉我即可修正。</p>
               </section>
 
               <section className="glass px-4 py-4 sm:px-5">

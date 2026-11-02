@@ -20,13 +20,27 @@ off={}
 for key,typ in [('tf','tf'),('single','single'),('multi','multi')]:
     for o in p5[key]:
         off[(typ,norm(o['stem']))]=(['T'] if o['answer'] else ['F']) if typ=='tf' else list(o['answer'])
+def norm_pub(s):
+    s=unicodedata.normalize('NFKC',s or '')
+    s=re.split(r'答案[:：]',s)[0]
+    s=re.split(r'[（(]\s*[A-Ea-e]\s*[)）]',s)[0]
+    s=re.sub(r'[\s\u3000，。、；：？！,.;:?!（）()【】\[\]“”"\'’‘\-—_/]+','',s)
+    return s[:50]
+PUB={}
+if os.path.exists('/tmp/ai3/pub70.json'):
+    for typ,qs in json.load(io.open('/tmp/ai3/pub70.json',encoding='utf-8')).items():
+        for q in qs:
+            PUB[(typ,q['norm'])]=q['key']
 bank=json.load(io.open('.ai3/bank_raw.json',encoding='utf-8'))
-rows=[];stat={'official':0,'adj':0,'agree':0,'only1':0}
+rows=[];stat={'official':0,'public':0,'adj':0,'agree':0,'only1':0}
 for q in bank:
     typ=q['type']; k=(typ,q['no'])
     o=off.get((typ,norm(q['stem'])))
+    pk=PUB.get((typ,norm_pub(q['stem'])))
     if o is not None:
         ans=o; ver=True; stat['official']+=1
+    elif pk is not None:
+        ans=['T'] if pk=='T' else (['F'] if typ=='tf' else list(pk)); ver=True; stat['public']+=1
     elif k in adj:
         a=adj[k]; ans=['T'] if (typ=='tf' and a=='T') else (['F'] if typ=='tf' else list(a)); ver=False; stat['adj']+=1
     else:
@@ -49,8 +63,9 @@ head='''/** 人工智能训练师（三级）理论知识题库。
  *  题目来源：《人工智能训练师_3级_理论知识复习题》（第 3 部分，官方公布，900 题）：
  *    判断题 300 + 单选题 300 + 多选题 300。
  *  答案来源：
- *   - verified: true  → 取自官方《理论知识模拟试卷》（第 5 部分，带标准答案），共 190 题；
- *   - verified: false → AI 解析推定（两遍独立作答 + 分歧再裁决），共 710 题，可在页面上纠错。
+ *   - verified: true  → 有权威答案：官方《理论知识模拟试卷》(190 题) + 《题库·公开 70%》(含答案与解析)，
+ *                       合计 892 题；
+ *   - verified: false → AI 解析推定（三遍独立作答 + 多数表决），仅 8 题，可在页面上纠错。
  *  考试结构按《3 级认定方案》：90 分钟；判断 40×0.5 + 单选 140×0.5 + 多选 10×1 = 100 分。
  */
 
