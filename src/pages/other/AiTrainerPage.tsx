@@ -397,6 +397,11 @@ export function AiTrainerPage() {
                 <button type="button" onClick={start} className="pill pill--solid px-5 py-2.5 text-[14px]">
                   开始一次模拟考试
                 </button>
+                <p className="text-muted basis-full text-[12px] leading-relaxed">
+                  900 题来自官方《理论知识复习题》，每次按考纲结构随机抽 40 判断 + 140 单选 + 10 多选。
+                  其中 {AI_THEORY_QUESTIONS.filter((q) => q.verified).length} 题答案取自官方模拟卷，其余为 AI 解析推定
+                  （回顾里标「AI 解析」），发现错答案告诉我即可修正。
+                </p>
               </section>
 
               <section className="glass px-4 py-4 sm:px-5">
@@ -601,6 +606,11 @@ export function AiTrainerPage() {
                           <span className={mine.length ? 'text-danger-ink' : 'text-muted'}>
                             {mine.length ? '答错' : '未作答'}
                           </span>
+                          {q.verified === false ? (
+                            <span className="text-muted rounded-full bg-warn-soft px-2 py-0.5">
+                              AI 解析
+                            </span>
+                          ) : null}
                         </div>
                         <p className="text-ink mt-2 text-[14px] leading-relaxed">{q.stem}</p>
                         <div className="text-secondary mt-2 flex flex-col gap-1 text-[13px]">
