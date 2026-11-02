@@ -11,7 +11,7 @@ import { PostgradSubjectsPage } from '../pages/kaoyan/SubjectsPage';
 import { EnglishSchedulePage } from '../pages/english/EnglishSchedulePage';
 import { RoadmapPage } from '../pages/code/RoadmapPage';
 import { TrackPage } from '../pages/code/TrackPage';
-import { CertPage } from '../pages/other/CertPage';
+import { AiTrainerPage } from '../pages/other/AiTrainerPage';
 
 function RequireAuth() {
   const session = useSession();
@@ -95,7 +95,7 @@ export function App() {
             />
           }
         />
-        <Route path="/other/ai-trainer" element={<CertPage />} />
+        <Route path="/other/ai-trainer" element={<AiTrainerPage />} />
         <Route path="/exams" element={<Placeholder title="历年试卷" note="试卷列表、成绩与工作台。" />} />
         <Route path="/settings" element={<Placeholder title="设置" note="账号与偏好。" />} />
         <Route path="*" element={<NotFound />} />
