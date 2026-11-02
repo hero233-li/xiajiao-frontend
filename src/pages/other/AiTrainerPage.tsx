@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, Clock, RotateCcw, X } from 'lucide-react';
+import { AiPractical } from './AiPractical';
 import {
   AI_THEORY_MINUTES,
   AI_THEORY_PLAN,
@@ -354,14 +355,7 @@ export function AiTrainerPage() {
         </section>
       ) : null}
 
-      {tab === 'skill' ? (
-        <section className="glass px-4 py-6 sm:px-5">
-          <p className="text-ink text-[14px]">实操部分准备中：6 道操作题（业务分析 30 分钟 25 分、智能训练 2 题各 15/20 分、智能系统设计 2 题各 15/20 分、培训与指导 10 分钟 5 分）。</p>
-          <p className="text-muted mt-2 text-[12px]">
-            题目将从《第 4 部分 操作技能复习题》《第 6 部分 操作技能模拟试卷》整理，含参考作答要点。
-          </p>
-        </section>
-      ) : null}
+      {tab === 'skill' ? <AiPractical /> : null}
 
       {tab === 'theory' ? (
         <>
