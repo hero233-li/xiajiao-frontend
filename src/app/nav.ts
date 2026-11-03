@@ -36,7 +36,7 @@ export const navGroups: { title: string; items: NavItem[] }[] = [
           { to: '/zikao/courses', label: '自考我的科目' },
           { to: '/zikao/schedule', label: '考试日程' },
           { to: '/zikao/exams', label: '历年试卷' },
-          { to: '/zikao/plan', label: '学习计划' },
+          { to: '/zikao/plan', label: '本期计划' },
         ],
       },
       {
