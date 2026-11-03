@@ -77,6 +77,9 @@ export function DailyPage() {
   const [publishTitle, setPublishTitle] = useState('');
   const [publishBody, setPublishBody] = useState('');
   const [copied, setCopied] = useState(false);
+  const [xhsBusy, setXhsBusy] = useState(false);
+  const [xhsMessage, setXhsMessage] = useState('');
+  const [xhsQr, setXhsQr] = useState<string | null>(null);
   const timer = useRef<number | null>(null);
 
   const entry = store[current] ?? { did: '', blocked: '', next: '', updatedAt: 0 };
@@ -179,6 +182,144 @@ export function DailyPage() {
     }
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
+  }
+
+  /** 生成封面 dataURL（发布用，不下载）。 */
+  async function coverDataUrl(): Promise<string | null> {
+    const width = 900;
+    const height = 1200;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context) return null;
+    const gradient = context.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, '#8b93f8');
+    gradient.addColorStop(0.55, '#b39bf2');
+    gradient.addColorStop(1, '#f0b0d4');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, width, height);
+    const date = parseKey(current);
+    const week = WEEKDAYS[date.getDay()];
+    const pad = 72;
+    context.fillStyle = 'rgba(255,255,255,0.92)';
+    context.font = '500 32px "PingFang SC", "Microsoft YaHei", sans-serif';
+    context.fillText(
+      `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} 周${week}`,
+      pad,
+      130,
+    );
+    context.fillStyle = 'rgba(255,255,255,0.66)';
+    context.font = '600 24px "PingFang SC", "Microsoft YaHei", sans-serif';
+    context.textAlign = 'right';
+    context.fillText('菲比啾比卷卷卷', width - pad, 130);
+    context.textAlign = 'left';
+    context.fillStyle = '#ffffff';
+    context.font = '700 60px "PingFang SC", "Microsoft YaHei", sans-serif';
+    const title = publishTitle.trim() || '今天也在推进';
+    const chars = [...title];
+    const lines: string[] = [];
+    let line = '';
+    for (const char of chars) {
+      if (context.measureText(line + char).width > width - pad * 2) {
+        lines.push(line);
+        line = char;
+        if (lines.length === 3) break;
+      } else {
+        line += char;
+      }
+    }
+    if (lines.length < 3 && line) lines.push(line);
+    const titleTop = 340;
+    lines.forEach((text, index) => {
+      context.fillText(text, pad, titleTop + index * 80);
+    });
+    const clauseOf = (text: string) => {
+      const value = text.trim().split('\n')[0]?.split(/[，。；、！？,;!?]/)[0]?.trim() ?? '';
+      return value.length > 24 ? `${value.slice(0, 24)}…` : value;
+    };
+    const bullets = [
+      entry.blocked.trim() ? `卡点：${clauseOf(entry.blocked)}` : '',
+      entry.next.trim() ? `明天：${clauseOf(entry.next)}` : '',
+    ].filter(Boolean);
+    if (bullets.length > 0) {
+      context.fillStyle = 'rgba(255,255,255,0.86)';
+      context.font = '500 27px "PingFang SC", "Microsoft YaHei", sans-serif';
+      bullets.forEach((text, index) => {
+        context.fillText(text, pad, titleTop + lines.length * 80 + 30 + index * 52);
+      });
+    }
+    const image = new Image();
+    image.src = qGirl;
+    try {
+      await image.decode();
+      const size = 360;
+      context.drawImage(image, width - pad - size, height - pad - size + 20, size, size);
+    } catch {
+      /* 贴纸失败不影响发布 */
+    }
+    context.fillStyle = 'rgba(255,255,255,0.9)';
+    context.font = '500 28px "PingFang SC", "Microsoft YaHei", sans-serif';
+    context.fillText(streak > 0 ? `连续记录 ${streak} 天` : '今天开始记录', pad, height - 120);
+    return canvas.toDataURL('image/png');
+  }
+
+  /** 真正发到小红书：没登录就先弹二维码。 */
+  async function publishToXhs() {
+    if (xhsBusy) return;
+    setXhsBusy(true);
+    setXhsMessage('正在发到小红书…');
+    try {
+      const cover = await coverDataUrl();
+      if (!cover) {
+        setXhsMessage('封面生成失败');
+        return;
+      }
+      const send = async () => {
+        const res = await fetch('/xhs/publish', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            title: publishTitle.trim() || '今天也在推进',
+            body: publishBody,
+            images: [{ name: `日报-${current}.png`, mimeType: 'image/png', dataUrl: cover }],
+          }),
+        });
+        return (await res.json()) as { ok?: boolean; code?: string; message?: string };
+      };
+
+      let result = await send();
+      if (result.code === 'NEED_LOGIN') {
+        const qr = (await (await fetch('/xhs/login/qr', { method: 'GET' })).json()) as { png?: string };
+        if (!qr.png) {
+          setXhsMessage('拿二维码失败，稍后再试');
+          return;
+        }
+        setXhsQr(`data:image/png;base64,${qr.png}`);
+        setXhsMessage('小红书还没登录：用小红书 App 扫下面的二维码，扫完会自动继续发布。');
+        for (let i = 0; i < 40; i += 1) {
+          await new Promise((resolve) => window.setTimeout(resolve, 3000));
+          const status = (await (await fetch('/xhs/status', { cache: 'no-store' })).json()) as {
+            loggedIn?: boolean;
+          };
+          if (status.loggedIn) break;
+        }
+        setXhsQr(null);
+        setXhsMessage('登录成功，继续发布…');
+        result = await send();
+      }
+
+      if (result.ok) {
+        setXhsMessage(result.message || '已发布');
+        markPublished();
+      } else {
+        setXhsMessage(`没发出去：${result.message || '未知原因'}`);
+      }
+    } catch (error) {
+      setXhsMessage(`发不出去：${String((error as Error).message).slice(0, 80)}`);
+    } finally {
+      setXhsBusy(false);
+    }
   }
 
   function markPublished() {
@@ -540,10 +681,18 @@ export function DailyPage() {
             </a>
             <button
               type="button"
-              onClick={markPublished}
-              className="pill pill--solid flex items-center gap-1.5 px-4 py-1.5 text-[13px]"
+              onClick={publishToXhs}
+              disabled={xhsBusy}
+              className="pill pill--solid flex items-center gap-1.5 px-4 py-1.5 text-[13px] disabled:opacity-60"
             >
               <Send size={13} strokeWidth={2} />
+              {xhsBusy ? '发布中…' : '发到小红书'}
+            </button>
+            <button
+              type="button"
+              onClick={markPublished}
+              className="text-secondary hover:text-ink flex items-center gap-1.5 rounded-full border border-line px-4 py-1.5 text-[13px]"
+            >
               标记已发布
             </button>
             <button
@@ -558,6 +707,24 @@ export function DailyPage() {
               按今天重写一版
             </button>
           </div>
+
+          {(xhsMessage || xhsQr) && (
+            <div className="border-line/70 mt-3 flex flex-col gap-3 border-t pt-3">
+              {xhsMessage && <p className="text-secondary text-[12.5px] leading-5">{xhsMessage}</p>}
+              {xhsQr && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <img
+                    src={xhsQr}
+                    alt="小红书登录二维码"
+                    className="size-[196px] rounded-xl bg-white p-1"
+                  />
+                  <p className="text-muted max-w-[280px] text-[12px] leading-5">
+                    小红书 App →「我」→ 右上角扫一扫。二维码两分钟有效，过期就再点一次「发到小红书」。
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           <p className="text-muted mt-3 text-[12px] leading-5">
             现在这一版接的是「复制文案 + 打开发布页」，粘贴就能发。要做到点一下真发出去，得接小红书的发布接口或登录态，那部分放到后端再做。
