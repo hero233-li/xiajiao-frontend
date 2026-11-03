@@ -815,6 +815,11 @@ export function AiTrainerPage() {
           {paper && !result ? (
             <>
               <section className="glass flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5">
+                {paper.mode === 'wrongs' ? (
+                  <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5 text-[12px]">
+                    错题复盘
+                  </span>
+                ) : null}
                 <span className="text-brand-ink flex items-center gap-1.5 text-[15px] font-semibold tabular-nums">
                   <Clock className="size-4" />
                   {splitTime(left)}
@@ -957,7 +962,7 @@ export function AiTrainerPage() {
                 {paper.mode === 'wrongs' ? (
                   <div>
                     <p className="text-ink text-[26px] leading-none font-semibold tabular-nums">
-                      还剩 {wrongs.length} 题
+                      {wrongs.length ? `还剩 ${wrongs.length} 题` : '错题已清空'}
                     </p>
                     <p className="text-secondary mt-2 text-[13px]">
                       本轮答对 {result.correct} 题 · 未过 {result.wrong + result.blank} 题 · 用时{' '}
