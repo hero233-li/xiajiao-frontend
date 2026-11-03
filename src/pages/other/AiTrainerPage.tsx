@@ -8,6 +8,7 @@ import {
   type AiQuestion,
   type AiQuestionType,
 } from '../../data/aiTrainer';
+import { cloudPull, cloudPut } from '../../lib/aiSync';
 
 /* ---------------------------------- 工具 ---------------------------------- */
 
@@ -153,6 +154,9 @@ function loadResume(): Paper | null {
 
 /** 交卷时把答错的题记下来：下次考前必须先全部做对，才解锁新卷。 */
 const WRONG_KEY = 'xj.ai.wrongs.v1';
+/** 云端整份文档（考试记录 + 错题本），换设备也能接上。 */
+const CLOUD_KEY = 'ai-trainer';
+const CLOUD_META_KEY = 'xj.ai.meta.v1';
 
 interface WrongEntry {
   qid: string;
@@ -407,6 +411,7 @@ export function AiTrainerPage() {
     saveWrongs(nextWrongs);
     setWrongs(nextWrongs);
 
+    let nextRecords = records;
     if (!isWrongRun) {
       const rec: ExamRecord = {
         id: paper.id,
@@ -415,14 +420,16 @@ export function AiTrainerPage() {
         seconds: spent,
         passed: scored.score >= 60,
       };
-      const next = [rec, ...loadRecords()].slice(0, 30);
-      localStorage.setItem(STORE_KEY, JSON.stringify(next));
-      setRecords(next);
+      nextRecords = [rec, ...loadRecords()].slice(0, 30);
+      localStorage.setItem(STORE_KEY, JSON.stringify(nextRecords));
+      setRecords(nextRecords);
     }
+    localStorage.setItem(CLOUD_META_KEY, String(Date.now()));
+    void cloudPut(CLOUD_KEY, { records: nextRecords, wrongs: nextWrongs });
     localStorage.removeItem(PROGRESS_KEY);
     localStorage.removeItem(RESUME_KEY);
     setResult(scored);
-  }, [paper, picked, left, wrongs]);
+  }, [paper, picked, left, wrongs, records]);
 
   // 作答过程随时落盘，刷新/关页可续做
   useEffect(() => {
@@ -574,6 +581,27 @@ export function AiTrainerPage() {
       JSON.stringify({ id: fresh.id, startedAt: fresh.startedAt, left: fresh.seconds }),
     );
   };
+
+  // 换设备也能接上：进页面先取云端那份，比本机新就覆盖本地
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const remote = await cloudPull<{ records?: ExamRecord[]; wrongs?: WrongEntry[] }>(CLOUD_KEY);
+      if (!alive || !remote) return;
+      const localAt = Number(localStorage.getItem(CLOUD_META_KEY) ?? 0);
+      if (remote.updatedAt <= localAt) return;
+      const recs = Array.isArray(remote.data.records) ? remote.data.records.slice(0, 30) : [];
+      const wrs = Array.isArray(remote.data.wrongs) ? remote.data.wrongs.filter((e) => e && typeof e.qid === 'string') : [];
+      localStorage.setItem(STORE_KEY, JSON.stringify(recs));
+      saveWrongs(wrs);
+      localStorage.setItem(CLOUD_META_KEY, String(remote.updatedAt));
+      setRecords(recs);
+      setWrongs(wrs);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const startWrongs = (list: WrongEntry[] = wrongs) => {
     const fresh = buildWrongPaper(list);

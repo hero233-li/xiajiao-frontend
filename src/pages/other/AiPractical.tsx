@@ -6,11 +6,14 @@ import {
   AI_PRACTICAL_TOTAL,
   type PracticalItem,
 } from '../../data/aiPractical';
+import { cloudPull, cloudPut } from '../../lib/aiSync';
 
 /* ---------------------------------- 存储 ---------------------------------- */
 
 const DRAFT_KEY = 'xj.ai.practical.draft.v1';
 const RESULT_KEY = 'xj.ai.practical.results.v1';
+const CLOUD_KEY = 'ai-practical';
+const CLOUD_META_KEY = 'xj.ai.practical.meta.v1';
 const POST_URL = '/lab-grade/practical';
 
 type Answers = Record<string, string>;
@@ -167,6 +170,8 @@ export function AiPractical() {
           setHistory((prev) => {
             const next = [saved, ...prev].slice(0, 20);
             saveJson(RESULT_KEY, next);
+            localStorage.setItem(CLOUD_META_KEY, String(Date.now()));
+            void cloudPut(CLOUD_KEY, { results: next });
             return next;
           });
           setPhase('done');
@@ -182,6 +187,23 @@ export function AiPractical() {
       window.clearInterval(ticker);
     }
   }, [answers, written]);
+
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const remote = await cloudPull<{ results?: SavedResult[] }>(CLOUD_KEY);
+      if (!alive || !remote) return;
+      const localAt = Number(localStorage.getItem(CLOUD_META_KEY) ?? 0);
+      if (remote.updatedAt <= localAt) return;
+      const list = Array.isArray(remote.data.results) ? remote.data.results.slice(0, 20) : [];
+      saveJson(RESULT_KEY, list);
+      localStorage.setItem(CLOUD_META_KEY, String(remote.updatedAt));
+      setHistory(list);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const reset = useCallback(() => {
     if (!window.confirm('清空本次作答？')) return;
