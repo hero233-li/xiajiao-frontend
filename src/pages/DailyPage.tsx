@@ -539,8 +539,7 @@ export function DailyPage() {
             <button
               type="button"
               onClick={openPublish}
-              disabled={isEmpty(entry)}
-              className="pill pill--solid flex items-center gap-1.5 px-4 py-1.5 text-[13px] disabled:opacity-50"
+              className="pill pill--solid flex items-center gap-1.5 px-4 py-1.5 text-[13px]"
             >
               <Send size={13} strokeWidth={2} />
               发布
@@ -727,7 +726,7 @@ export function DailyPage() {
           )}
 
           <p className="text-muted mt-3 text-[12px] leading-5">
-            现在这一版接的是「复制文案 + 打开发布页」，粘贴就能发。要做到点一下真发出去，得接小红书的发布接口或登录态，那部分放到后端再做。
+            「发到小红书」会在服务器的浏览器里自动上传封面、填标题正文并点发布；第一次要扫码登录一次（登录态存在服务器上）。想手动发就用上面的复制文案 / 下载封面。
           </p>
         </section>
       )}
