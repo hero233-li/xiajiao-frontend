@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import qGirl from '../assets/q-girl.svg';
+import { TodayPlan } from '../components/TodayPlan';
 import { Check, ChevronLeft, ChevronRight, ClipboardCopy, ExternalLink, ImageDown, Send, Trash2 } from 'lucide-react';
 
 /**
@@ -464,6 +465,8 @@ export function DailyPage() {
           )}
         </section>
       </div>
+
+      <TodayPlan dateKey={current} />
 
       {publishOpen && (
         <section className="glass px-4 py-4 sm:px-5">
