@@ -653,6 +653,24 @@ export function AiTrainerPage() {
     setPending(null);
   };
 
+  const clearAll = () => {
+    if (!window.confirm('清空这台设备与云端的全部记录（成绩 + 错题本）？清完就像没做过题一样。')) return;
+    localStorage.removeItem(STORE_KEY);
+    localStorage.removeItem(WRONG_KEY);
+    localStorage.removeItem(PROGRESS_KEY);
+    localStorage.removeItem(RESUME_KEY);
+    localStorage.setItem(CLOUD_META_KEY, String(Date.now()));
+    setRecords([]);
+    setWrongs([]);
+    setResult(null);
+    setReview(false);
+    setPaper(null);
+    setPicked({});
+    setMarked({});
+    setPending(null);
+    void cloudPut(CLOUD_KEY, { records: [], wrongs: [] });
+  };
+
   const reset = () => {
     setPaper(null);
     setResult(null);
@@ -772,6 +790,15 @@ export function AiTrainerPage() {
                       开始一次模拟考试
                     </button>
                   )}
+                  {records.length || wrongs.length ? (
+                    <button
+                      type="button"
+                      onClick={clearAll}
+                      className="text-muted hover:text-danger-ink px-1 text-[12px] transition"
+                    >
+                      清空记录
+                    </button>
+                  ) : null}
                 </div>
                 <p className="text-muted basis-full text-[12px] leading-relaxed">
                   900 题来自官方《理论知识复习题》，每次按考纲结构随机抽 40 判断 + 140 单选 + 10 多选。答案 892 题有权威出处（官方模拟卷 + 公开题库），剩 8 题为 AI 推定（回顾里标「AI 解析」），发现错答案告诉我即可修正。</p>
@@ -828,7 +855,16 @@ export function AiTrainerPage() {
 
               {records.length ? (
                 <section className="glass px-4 py-4 sm:px-5">
-                  <h2 className="text-ink text-[14px] font-semibold">历史成绩</h2>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h2 className="text-ink text-[14px] font-semibold">历史成绩</h2>
+                    <button
+                      type="button"
+                      onClick={clearAll}
+                      className="text-muted hover:text-danger-ink text-[12px] transition"
+                    >
+                      清空记录
+                    </button>
+                  </div>
                   <div className="mt-3 flex flex-col">
                     {records.slice(0, 10).map((rec) => (
                       <div

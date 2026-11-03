@@ -114,6 +114,20 @@ export function AiPractical() {
     };
   }, [phase]);
 
+  const clearAll = useCallback(() => {
+    if (!window.confirm('清空这台设备与云端的实操记录？作答草稿也会一起清掉。')) return;
+    localStorage.removeItem(RESULT_KEY);
+    localStorage.removeItem(DRAFT_KEY);
+    localStorage.setItem(CLOUD_META_KEY, String(Date.now()));
+    setHistory([]);
+    setResult(null);
+    setError('');
+    setPhase('idle');
+    setAnswers({});
+    setSeconds(0);
+    void cloudPut(CLOUD_KEY, { history: [] });
+  }, []);
+
   const begin = useCallback(() => {
     startedAt.current = Date.now();
     setSeconds(0);
@@ -247,6 +261,15 @@ export function AiPractical() {
             </span>
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-2">
+            {history.length ? (
+              <button
+                type="button"
+                onClick={clearAll}
+                className="text-muted hover:text-danger-ink px-1 text-[12px] transition"
+              >
+                清空记录
+              </button>
+            ) : null}
             {phase === 'idle' || phase === 'done' || phase === 'error' ? (
               <button type="button" className="pill pill--solid px-4 py-2 text-[13px]" onClick={begin}>
                 <Play size={14} className="mr-1.5" />
