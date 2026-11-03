@@ -47,6 +47,11 @@ interface Paper {
   startedAt: string;
   questions: ExamQuestion[];
   seconds: number;
+  /** 恢复进度时带上 */
+  left?: number;
+  cursor?: number;
+  picks?: Record<string, string[]>;
+  marks?: Record<string, boolean>;
 }
 
 interface ExamRecord {
@@ -88,6 +93,47 @@ function buildPaper(): Paper {
     questions: picked,
     seconds: AI_THEORY_MINUTES * 60,
   };
+}
+
+/** 中途刷新/关页后能接着做：存题序、选项顺序、已选、标记、剩余时间。 */
+const RESUME_KEY = 'xj.ai.exam.resume.v2';
+
+interface ResumeState {
+  id: string;
+  startedAt: string;
+  seconds: number;
+  left: number;
+  cursor: number;
+  picks: Record<string, string[]>;
+  marks: Record<string, boolean>;
+  items: { qid: string; shown: { key: string; text: string }[]; key: string[] }[];
+}
+
+function saveResume(state: ResumeState) {
+  try {
+    localStorage.setItem(RESUME_KEY, JSON.stringify(state));
+  } catch {
+    /* 配额满就算了 */
+  }
+}
+
+function loadResume(): Paper | null {
+  try {
+    const raw = localStorage.getItem(RESUME_KEY);
+    if (!raw) return null;
+    const st = JSON.parse(raw) as ResumeState;
+    if (!st?.items?.length) return null;
+    const byId = new Map(AI_THEORY_QUESTIONS.map((q) => [q.id, q]));
+    const questions: ExamQuestion[] = [];
+    for (const it of st.items) {
+      const base = byId.get(it.qid);
+      if (!base) return null;
+      questions.push({ ...base, shown: it.shown, key: it.key });
+    }
+    return { id: st.id, startedAt: st.startedAt, questions, seconds: st.seconds, left: st.left, cursor: st.cursor, picks: st.picks, marks: st.marks } as Paper;
+  } catch {
+    return null;
+  }
 }
 
 function scoreOf(paper: Paper, picked: Record<string, string[]>) {
@@ -272,9 +318,25 @@ export function AiTrainerPage() {
     const next = [rec, ...loadRecords()].slice(0, 30);
     localStorage.setItem(STORE_KEY, JSON.stringify(next));
     localStorage.removeItem(PROGRESS_KEY);
+    localStorage.removeItem(RESUME_KEY);
     setRecords(next);
     setResult(scored);
   }, [paper, picked, left]);
+
+  // 作答过程随时落盘，刷新/关页可续做
+  useEffect(() => {
+    if (!paper || result) return;
+    saveResume({
+      id: paper.id,
+      startedAt: paper.startedAt,
+      seconds: paper.seconds,
+      left,
+      cursor,
+      picks: picked,
+      marks: marked,
+      items: paper.questions.map((q) => ({ qid: q.id, shown: q.shown, key: q.key })),
+    });
+  }, [paper, result, left, cursor, picked, marked]);
 
   const submit = useCallback(() => {
     if (!paper || submitted.current) return;
@@ -411,6 +473,27 @@ export function AiTrainerPage() {
     );
   };
 
+  const [pending, setPending] = useState<Paper | null>(() => {
+    const st = loadResume();
+    return st && st.questions.length ? st : null;
+  });
+  const resumable = !paper && !result ? pending : null;
+
+  const resume = () => {
+    const st = pending ?? loadResume();
+    if (!st) return;
+    submitted.current = false;
+    setPaper(st);
+    setPicked(st.picks ?? {});
+    setMarked(st.marks ?? {});
+    setCursor(st.cursor ?? 0);
+    setLeft(st.left ?? st.seconds);
+    setResult(null);
+    setReview(false);
+    // 已恢复过纸面，清掉 pending 避免首页按钮残留
+    setPending(null);
+  };
+
   const reset = () => {
     setPaper(null);
     setResult(null);
@@ -508,9 +591,16 @@ export function AiTrainerPage() {
                     <p className="text-secondary mt-2 text-[13px]">平均分</p>
                   </div>
                 </div>
-                <button type="button" onClick={start} className="pill pill--solid px-5 py-2.5 text-[14px]">
-                  开始一次模拟考试
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {resumable ? (
+                    <button type="button" onClick={resume} className="pill px-4 py-2.5 text-[14px]">
+                      继续上次（剩 {splitTime(resumable.left ?? 0)}）
+                    </button>
+                  ) : null}
+                  <button type="button" onClick={start} className="pill pill--solid px-5 py-2.5 text-[14px]">
+                    开始一次模拟考试
+                  </button>
+                </div>
                 <p className="text-muted basis-full text-[12px] leading-relaxed">
                   900 题来自官方《理论知识复习题》，每次按考纲结构随机抽 40 判断 + 140 单选 + 10 多选。答案 892 题有权威出处（官方模拟卷 + 公开题库），剩 8 题为 AI 推定（回顾里标「AI 解析」），发现错答案告诉我即可修正。</p>
               </section>
@@ -629,7 +719,10 @@ export function AiTrainerPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      if (window.confirm('放弃这次考试？已作答不会保存。')) setPaper(null);
+                      if (window.confirm('放弃这次考试？已作答不会保存。')) {
+                        localStorage.removeItem(RESUME_KEY);
+                        setPaper(null);
+                      }
                     }}
                     className="text-muted ml-auto text-[12px] hover:underline"
                   >
