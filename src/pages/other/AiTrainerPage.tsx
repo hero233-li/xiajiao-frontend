@@ -140,6 +140,8 @@ function QuestionCard({
   picked,
   onPick,
   revealed,
+  marked,
+  onToggleMark,
 }: {
   question: ExamQuestion;
   index: number;
@@ -147,6 +149,8 @@ function QuestionCard({
   picked: string[];
   onPick: (value: string) => void;
   revealed: boolean;
+  marked?: boolean;
+  onToggleMark?: () => void;
 }) {
   const isMulti = question.type === 'multi';
   const correctSet = new Set(question.key);
@@ -160,6 +164,15 @@ function QuestionCard({
         <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5 text-[12px]">
           {TYPE_LABEL[question.type]}
         </span>
+        {onToggleMark ? (
+          <button
+            type="button"
+            onClick={onToggleMark}
+            className={`pill ml-auto px-2.5 py-1 text-[12px] ${marked ? 'pill--solid' : ''}`}
+          >
+            {marked ? '已标记' : '标记待定'}
+          </button>
+        ) : null}
       </div>
 
       <p className="text-ink text-[15px] leading-relaxed">{question.stem}</p>
@@ -233,14 +246,18 @@ export function AiTrainerPage() {
   );
   const [records, setRecords] = useState<ExamRecord[]>(() => loadRecords());
   const [review, setReview] = useState(false);
+  const [marked, setMarked] = useState<Record<string, boolean>>({});
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [jump, setJump] = useState('');
   const submitted = useRef(false);
+  const nextTimer = useRef<number | null>(null);
 
   const answered = useMemo(
     () => (paper ? paper.questions.filter((q) => (picked[q.id] ?? []).length > 0).length : 0),
     [paper, picked],
   );
 
-  const submit = useCallback(() => {
+  const doSubmit = useCallback(() => {
     if (!paper || submitted.current) return;
     submitted.current = true;
     const scored = scoreOf(paper, picked);
@@ -259,6 +276,103 @@ export function AiTrainerPage() {
     setResult(scored);
   }, [paper, picked, left]);
 
+  const submit = useCallback(() => {
+    if (!paper || submitted.current) return;
+    const blank = paper.questions.length - answered;
+    if (blank > 0 && !window.confirm(`还有 ${blank} 题没作答，确定交卷？`)) return;
+    doSubmit();
+  }, [paper, answered, doSubmit]);
+
+  /** 选完就走：判断题/单选题自动跳到下一题，多选题留给用户确认。 */
+  const advance = useCallback(
+    (delay = 200) => {
+      if (!paper) return;
+      if (nextTimer.current) window.clearTimeout(nextTimer.current);
+      nextTimer.current = window.setTimeout(() => {
+        setCursor((c) => Math.min(paper.questions.length - 1, c + 1));
+      }, delay);
+    },
+    [paper],
+  );
+
+  const pick = useCallback(
+    (value: string) => {
+      const q = paper?.questions[cursor];
+      if (!q) return;
+      setPicked((prev) => {
+        const current = prev[q.id] ?? [];
+        if (q.type === 'multi') {
+          const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
+          return { ...prev, [q.id]: next };
+        }
+        return { ...prev, [q.id]: [value] };
+      });
+      if (q.type !== 'multi') advance();
+    },
+    [paper, cursor, advance],
+  );
+
+  const toggleMark = useCallback(() => {
+    const q = paper?.questions[cursor];
+    if (!q) return;
+    setMarked((prev) => ({ ...prev, [q.id]: !prev[q.id] }));
+  }, [paper, cursor]);
+
+  const goto = useCallback(
+    (index: number) => {
+      if (!paper) return;
+      setCursor(Math.max(0, Math.min(paper.questions.length - 1, index)));
+    },
+    [paper],
+  );
+
+  // 切题后回到题目顶部（长题干时不用手动往上滚）
+  useEffect(() => {
+    if (!paper || result) return;
+    document.getElementById('ai-question-card')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }, [cursor, paper, result]);
+
+  // 键盘：A–E / 1–5 选，T/F 判断题，←/→ 上下题，Enter 下一题，M 标记，Esc 收起答题卡
+  useEffect(() => {
+    if (!paper || result) return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const q = paper.questions[cursor];
+      const key = e.key.toUpperCase();
+      if (key === 'ARROWRIGHT' || key === 'ENTER') {
+        e.preventDefault();
+        goto(cursor + 1);
+        return;
+      }
+      if (key === 'ARROWLEFT') {
+        e.preventDefault();
+        goto(cursor - 1);
+        return;
+      }
+      if (key === 'M') {
+        e.preventDefault();
+        toggleMark();
+        return;
+      }
+      if (key === 'ESCAPE') {
+        setSheetOpen(false);
+        return;
+      }
+      if (q.type === 'tf') {
+        if (key === 'T' || key === '1') return pick('T');
+        if (key === 'F' || key === '2') return pick('F');
+        return;
+      }
+      const letter =
+        /^[A-E]$/.test(key) ? key : /^[1-5]$/.test(key) ? String.fromCharCode(64 + Number(key)) : '';
+      if (letter && q.shown.some((o) => o.key === letter)) pick(letter);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [paper, result, cursor, pick, goto, toggleMark]);
+
   // 倒计时
   useEffect(() => {
     if (!paper || result) return;
@@ -275,8 +389,9 @@ export function AiTrainerPage() {
   }, [paper, result]);
 
   useEffect(() => {
-    if (paper && !result && left === 0 && answered >= 0) submit();
-  }, [left, paper, result, answered, submit]);
+    // 时间到直接交卷，不走确认框
+    if (paper && !result && left === 0) doSubmit();
+  }, [left, paper, result, doSubmit]);
 
   const start = () => {
     const fresh = buildPaper();
@@ -287,6 +402,9 @@ export function AiTrainerPage() {
     setLeft(fresh.seconds);
     setResult(null);
     setReview(false);
+    setMarked({});
+    setSheetOpen(false);
+    setJump('');
     localStorage.setItem(
       PROGRESS_KEY,
       JSON.stringify({ id: fresh.id, startedAt: fresh.startedAt, left: fresh.seconds }),
@@ -298,6 +416,8 @@ export function AiTrainerPage() {
     setResult(null);
     setPicked({});
     setCursor(0);
+    setMarked({});
+    setSheetOpen(false);
     submitted.current = false;
   };
 
@@ -457,35 +577,33 @@ export function AiTrainerPage() {
                     style={{ width: `${(answered / paper.questions.length) * 100}%` }}
                   />
                 </div>
+                {Object.values(marked).filter(Boolean).length ? (
+                  <span className="text-brand-ink text-[12px]">
+                    标记 {Object.values(marked).filter(Boolean).length}
+                  </span>
+                ) : null}
                 <button
                   type="button"
-                  onClick={submit}
-                  className="pill pill--solid ml-auto px-4 py-1.5 text-[13px]"
+                  onClick={() => setSheetOpen((v) => !v)}
+                  className="pill ml-auto px-3 py-1.5 text-[13px]"
                 >
+                  {sheetOpen ? '收起答题卡' : '答题卡'}
+                </button>
+                <button type="button" onClick={submit} className="pill pill--solid px-4 py-1.5 text-[13px]">
                   交卷
                 </button>
               </section>
 
-              <section className="glass px-4 py-5 sm:px-5">
+              <section id="ai-question-card" className="glass px-4 py-5 sm:px-5">
                 <QuestionCard
                   question={paper.questions[cursor]}
                   index={cursor}
                   total={paper.questions.length}
                   picked={picked[paper.questions[cursor].id] ?? []}
                   revealed={false}
-                  onPick={(value) => {
-                    const q = paper.questions[cursor];
-                    setPicked((prev) => {
-                      const current = prev[q.id] ?? [];
-                      if (q.type === 'multi') {
-                        const next = current.includes(value)
-                          ? current.filter((v) => v !== value)
-                          : [...current, value];
-                        return { ...prev, [q.id]: next };
-                      }
-                      return { ...prev, [q.id]: [value] };
-                    });
-                  }}
+                  onPick={pick}
+                  marked={Boolean(marked[paper.questions[cursor].id])}
+                  onToggleMark={toggleMark}
                 />
 
                 <div className="mt-5 flex items-center gap-2">
@@ -505,9 +623,14 @@ export function AiTrainerPage() {
                   >
                     下一题 <ChevronRight className="size-4" />
                   </button>
+                  <span className="text-muted hidden text-[12px] sm:inline">
+                    A–E / 1–5 选，T/F 判断，←→ 换题，Enter 下一题，M 标记
+                  </span>
                   <button
                     type="button"
-                    onClick={() => setPaper(null)}
+                    onClick={() => {
+                      if (window.confirm('放弃这次考试？已作答不会保存。')) setPaper(null);
+                    }}
                     className="text-muted ml-auto text-[12px] hover:underline"
                   >
                     放弃这次
@@ -515,30 +638,62 @@ export function AiTrainerPage() {
                 </div>
               </section>
 
-              <section className="glass px-4 py-4 sm:px-5">
-                <h2 className="text-ink text-[13px] font-semibold">答题卡</h2>
-                <div className="mt-3 flex flex-wrap gap-1">
-                  {paper.questions.map((q, index) => {
-                    const done = (picked[q.id] ?? []).length > 0;
-                    return (
-                      <button
-                        key={q.id}
-                        type="button"
-                        onClick={() => setCursor(index)}
-                        className={`size-7 rounded-md text-[11px] tabular-nums transition ${
-                          index === cursor
-                            ? 'bg-brand text-white'
-                            : done
-                              ? 'bg-brand-soft text-brand-ink'
-                              : 'bg-line/60 text-muted'
-                        }`}
-                      >
-                        {index + 1}
+              {sheetOpen ? (
+                <section className="glass px-4 py-4 sm:px-5">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h2 className="text-ink text-[13px] font-semibold">答题卡</h2>
+                    <span className="text-muted text-[12px]">
+                      已答 {answered}/{paper.questions.length} · 标记{' '}
+                      {Object.values(marked).filter(Boolean).length}
+                    </span>
+                    <form
+                      className="ml-auto flex items-center gap-1.5"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const n = Number(jump);
+                        if (Number.isFinite(n) && n >= 1) goto(n - 1);
+                        setJump('');
+                      }}
+                    >
+                      <input
+                        className="field w-16 px-2 py-1 text-[12px] tabular-nums"
+                        inputMode="numeric"
+                        placeholder="跳题"
+                        value={jump}
+                        onChange={(e) => setJump(e.target.value.replace(/\D/g, ''))}
+                      />
+                      <button type="submit" className="pill px-2.5 py-1 text-[12px]">
+                        跳转
                       </button>
-                    );
-                  })}
-                </div>
-              </section>
+                    </form>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {paper.questions.map((q, index) => {
+                      const done = (picked[q.id] ?? []).length > 0;
+                      const isMarked = Boolean(marked[q.id]);
+                      return (
+                        <button
+                          key={q.id}
+                          type="button"
+                          onClick={() => goto(index)}
+                          className={`relative size-7 rounded-md text-[11px] tabular-nums transition ${
+                            index === cursor
+                              ? 'bg-brand text-white'
+                              : done
+                                ? 'bg-brand-soft text-brand-ink'
+                                : 'bg-line/60 text-muted'
+                          } ${isMarked ? 'ring-brand/70 ring-1' : ''}`}
+                        >
+                          {index + 1}
+                          {isMarked ? (
+                            <span className="bg-brand absolute top-0.5 right-0.5 size-1 rounded-full" />
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : null}
             </>
           ) : null}
 
