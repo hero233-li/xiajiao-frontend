@@ -582,21 +582,35 @@ export function AiTrainerPage() {
     );
   };
 
-  // 换设备也能接上：进页面先取云端那份，比本机新就覆盖本地
+  // 双向同步：云端更新就拉下来；本机更新（或云端还是空的）就把它推上去
   useEffect(() => {
     let alive = true;
     void (async () => {
       const remote = await cloudPull<{ records?: ExamRecord[]; wrongs?: WrongEntry[] }>(CLOUD_KEY);
-      if (!alive || !remote) return;
+      if (!alive) return;
+      const localRecs = loadRecords();
+      const localWrongs = loadWrongs();
       const localAt = Number(localStorage.getItem(CLOUD_META_KEY) ?? 0);
-      if (remote.updatedAt <= localAt) return;
-      const recs = Array.isArray(remote.data.records) ? remote.data.records.slice(0, 30) : [];
-      const wrs = Array.isArray(remote.data.wrongs) ? remote.data.wrongs.filter((e) => e && typeof e.qid === 'string') : [];
-      localStorage.setItem(STORE_KEY, JSON.stringify(recs));
-      saveWrongs(wrs);
-      localStorage.setItem(CLOUD_META_KEY, String(remote.updatedAt));
-      setRecords(recs);
-      setWrongs(wrs);
+      const hasLocal = localRecs.length > 0 || localWrongs.length > 0;
+
+      if (remote && remote.updatedAt > localAt) {
+        const recs = Array.isArray(remote.data.records) ? remote.data.records.slice(0, 30) : [];
+        const wrs = Array.isArray(remote.data.wrongs)
+          ? remote.data.wrongs.filter((e) => e && typeof e.qid === 'string')
+          : [];
+        localStorage.setItem(STORE_KEY, JSON.stringify(recs));
+        saveWrongs(wrs);
+        localStorage.setItem(CLOUD_META_KEY, String(remote.updatedAt));
+        setRecords(recs);
+        setWrongs(wrs);
+        return;
+      }
+      // 本机有数据而云端为空/更旧：直接把本机推上去（老记录一次性上云）
+      if (hasLocal && (!remote || remote.updatedAt < localAt || localAt === 0)) {
+        const now = Date.now();
+        localStorage.setItem(CLOUD_META_KEY, String(now));
+        void cloudPut(CLOUD_KEY, { records: localRecs, wrongs: localWrongs });
+      }
     })();
     return () => {
       alive = false;

@@ -192,13 +192,20 @@ export function AiPractical() {
     let alive = true;
     void (async () => {
       const remote = await cloudPull<{ results?: SavedResult[] }>(CLOUD_KEY);
-      if (!alive || !remote) return;
+      if (!alive) return;
+      const localList = loadJson<SavedResult[]>(RESULT_KEY, []);
       const localAt = Number(localStorage.getItem(CLOUD_META_KEY) ?? 0);
-      if (remote.updatedAt <= localAt) return;
-      const list = Array.isArray(remote.data.results) ? remote.data.results.slice(0, 20) : [];
-      saveJson(RESULT_KEY, list);
-      localStorage.setItem(CLOUD_META_KEY, String(remote.updatedAt));
-      setHistory(list);
+      if (remote && remote.updatedAt > localAt) {
+        const list = Array.isArray(remote.data.results) ? remote.data.results.slice(0, 20) : [];
+        saveJson(RESULT_KEY, list);
+        localStorage.setItem(CLOUD_META_KEY, String(remote.updatedAt));
+        setHistory(list);
+        return;
+      }
+      if (localList.length && (!remote || remote.updatedAt < localAt || localAt === 0)) {
+        localStorage.setItem(CLOUD_META_KEY, String(Date.now()));
+        void cloudPut(CLOUD_KEY, { results: localList });
+      }
     })();
     return () => {
       alive = false;
