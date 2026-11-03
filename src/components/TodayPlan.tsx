@@ -137,7 +137,7 @@ export function TodayPlan({ dateKey }: { dateKey: string }) {
         <span className="text-muted text-[12px]">
           还剩 {daysLeftInPhase(phase, dateKey)} 天 · 今天 {doneDaily}/{dailyItems.length}
         </span>
-        <span className="text-muted ml-auto text-[12px]">只勾真正做完的，没做完留空</span>
+        <span className="text-muted ml-auto hidden text-[12px] sm:inline">只勾真正做完的，没做完留空</span>
       </div>
       {phase.note && <p className="text-secondary mt-1 text-[12px]">{phase.note}</p>}
 
