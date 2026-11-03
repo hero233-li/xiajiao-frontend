@@ -126,6 +126,9 @@ export function AiPractical() {
     setAnswers({});
     setSeconds(0);
     void cloudPut(CLOUD_KEY, { history: [] });
+    window.setTimeout(() => {
+      void cloudPut(CLOUD_KEY, { history: [] });
+    }, 900);
   }, []);
 
   const begin = useCallback(() => {

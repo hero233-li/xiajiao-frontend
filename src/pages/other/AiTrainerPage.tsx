@@ -668,7 +668,11 @@ export function AiTrainerPage() {
     setPicked({});
     setMarked({});
     setPending(null);
+    // 清空要压过可能还在飞的「上云」请求：先推一次，再补一次
     void cloudPut(CLOUD_KEY, { records: [], wrongs: [] });
+    window.setTimeout(() => {
+      void cloudPut(CLOUD_KEY, { records: [], wrongs: [] });
+    }, 900);
   };
 
   const reset = () => {
