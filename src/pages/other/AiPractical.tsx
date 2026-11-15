@@ -674,7 +674,7 @@ export function AiPractical() {
                       <td className="border border-[var(--border)] px-1 py-1">
                         <a
                           className="text-brand"
-                          href={API + '/materials/' + encodeURIComponent(paper[current]?.code ?? '') + '/' + encodeURIComponent(name)}
+                          href={API + '/materials/' + encodeURIComponent(paper[current]?.code ?? '') + '/' + name.split('/').map(encodeURIComponent).join('/')}
                           download={name}
                         >
                           下载
@@ -695,7 +695,7 @@ export function AiPractical() {
                 </a>
                 <a
                   className="pill pill--solid px-2.5 py-1 text-[12px]"
-                  href={'/jupyter/lab/tree/' + encodeURIComponent('素材/' + (paper[current]?.code ?? '')) + '?token=' + jupyterToken}
+                  href={'/jupyter/lab/tree/' + encodeURIComponent('素材') + '/' + encodeURIComponent(paper[current]?.code ?? '') + '?token=' + jupyterToken}
                   target="_blank"
                   rel="noreferrer"
                 >
