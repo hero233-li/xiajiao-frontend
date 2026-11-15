@@ -760,15 +760,17 @@ export function AiPractical() {
                   <ExternalLink size={12} className="mr-1" />
                   答题卷工具
                 </a>
-                <a
-                  className="pill px-2.5 py-1 text-[12px]"
-                  href={'/jupyter/notebooks/' + encodeURIComponent('素材') + '/' + encodeURIComponent(paper[current]?.code ?? '') + '/' + encodeURIComponent((paper[current]?.code ?? '') + '.ipynb') + '?token=' + jupyterToken}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <ExternalLink size={12} className="mr-1" />
-                  打开本题 notebook
-                </a>
+                {(currentPage?.files ?? []).some((n) => n === (paper[current]?.code ?? '') + '.ipynb') ? (
+                  <a
+                    className="pill px-2.5 py-1 text-[12px]"
+                    href={'/jupyter/notebooks/' + encodeURIComponent('素材') + '/' + encodeURIComponent(paper[current]?.code ?? '') + '/' + encodeURIComponent((paper[current]?.code ?? '') + '.ipynb') + '?token=' + jupyterToken}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink size={12} className="mr-1" />
+                    打开本题 notebook
+                  </a>
+                ) : null}
                 {REF_CODES.has(paper[current]?.code ?? '') ? (
                   <a
                     className="pill px-2.5 py-1 text-[12px]"
@@ -782,7 +784,7 @@ export function AiPractical() {
                 ) : null}
               </div>
               <p className="text-muted mt-2 text-[12px] leading-relaxed">
-                现在是经典 notebook 界面（和考场同款）：导出用 File → Download as → HTML(.html)。考场里 jupyter 的工作目录是 D:\jupyter_notebook，本题素材目录就相当于那个位置（平台把素材解压到考生文件夹后在里面起 jupyter，效果一样）。
+                现在是经典 notebook 界面（和考场同款）：导出用 File → Download as → HTML(.html)。考场里 jupyter 的工作目录是 D:\jupyter_notebook，本题素材目录就相当于那个位置（平台把素材解压到考生文件夹后在里面起 jupyter，效果一样）。本题没有发 notebook 框架的（写 docx 的那几类），在「在 jupyter 中作答」里用 New → Python 3 自己新建即可。
               </p>
               <p className="text-muted mt-1 text-[12px] leading-relaxed">
                 参考做法是 AI 照着试题单写的一份可运行代码，只用来对照思路。建议先自己写完再看，真考不提供这个。
