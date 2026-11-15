@@ -1,0 +1,539 @@
+﻿ClientID,Your age,How do you describe your current level of fitness ?,How often do you exercise ?,How important is exercise to you ?,How healthy do you consider yourself ?
+H0001,17,below average,1-2 times a week,not important,1.0
+H0002,59,above average,3-4 times a week,not important,2.0
+H0003,33,excellent,every day,somewhat important,4.0
+H0004,58,average,never,very important,5.0
+H0005,26,excellent,every day,very important,4.0
+H0006,66,excellent,every day,somewhat important,4.0
+H0007,35,above average,never,important,4.0
+H0008,55,excellent,every day,very important,2.0
+H0009,53,poor,never,important,10.0
+H0010,34,average,never,very important,6.0
+H0011,50,above average,1-2 times a week,not important,1.0
+H0012,58,average,every day,somewhat important,7.0
+H0013,51,poor,3-4 times a week,very important,5.0
+H0014,29,above average,never,somewhat important,10.0
+H0015,25,poor,1-2 times a week,somewhat important,4.0
+H0016,41,above average,3-4 times a week,important,3.0
+H0017,65,poor,3-4 times a week,not important,8.0
+H0018,37,poor,every day,not important,8.0
+H0019,59,poor,1-2 times a week,somewhat important,5.0
+H0020,21,poor,never,somewhat important,1.0
+H0021,25,above average,1-2 times a week,important,8.0
+H0022,27,average,every day,very important,3.0
+H0023,21,above average,every day,very important,6.0
+H0024,unknown,poor,3-4 times a week,important,9.0
+H0025,21,below average,never,somewhat important,6.0
+H0026,25,below average,1-2 times a week,somewhat important,2.0
+H0027,51,poor,3-4 times a week,somewhat important,5.0
+H0028,27,excellent,never,somewhat important,8.0
+H0029,63,above average,every day,important,3.0
+H0030,39,below average,never,important,6.0
+H0031,unknown,below average,3-4 times a week,not important,3.0
+H0032,70,below average,1-2 times a week,somewhat important,4.0
+H0033,29,excellent,never,very important,6.0
+H0034,66,above average,3-4 times a week,very important,9.0
+H0035,33,below average,3-4 times a week,somewhat important,7.0
+H0036,68,average,every day,important,9.0
+H0037,57,above average,never,not important,1.0
+H0038,56,below average,3-4 times a week,somewhat important,10.0
+H0039,28,excellent,3-4 times a week,important,6.0
+H0040,36,above average,1-2 times a week,important,1.0
+H0041,65,average,never,somewhat important,2.0
+H0042,35,below average,1-2 times a week,important,1.0
+H0043,51,below average,never,very important,5.0
+H0044,33,above average,3-4 times a week,somewhat important,4.0
+H0045,34,above average,never,somewhat important,1.0
+H0046,62,below average,3-4 times a week,very important,2.0
+H0047,65,below average,3-4 times a week,very important,10.0
+H0048,38,above average,every day,somewhat important,10.0
+H0049,34,below average,every day,not important,1.0
+H0050,40,average,3-4 times a week,somewhat important,8.0
+H0051,40,average,never,important,7.0
+H0052,36,below average,1-2 times a week,not important,4.0
+H0053,35,average,every day,important,9.0
+H0054,46,below average,1-2 times a week,not important,10.0
+H0055,18,above average,never,somewhat important,8.0
+H0056,47,below average,3-4 times a week,not important,3.0
+H0057,52,average,never,somewhat important,9.0
+H0058,65,above average,3-4 times a week,somewhat important,8.0
+H0059,19,excellent,every day,very important,7.0
+H0060,67,above average,1-2 times a week,not important,8.0
+H0061,33,poor,every day,not important,6.0
+H0062,56,poor,never,not important,9.0
+H0063,18,poor,1-2 times a week,important,10.0
+H0064,52,above average,3-4 times a week,very important,2.0
+H0065,36,above average,1-2 times a week,very important,5.0
+H0066,66,excellent,never,not important,4.0
+H0067,42,excellent,3-4 times a week,important,7.0
+H0068,66,poor,3-4 times a week,somewhat important,4.0
+H0069,47,excellent,3-4 times a week,not important,2.0
+H0070,29,above average,never,somewhat important,1.0
+H0071,54,poor,never,important,6.0
+H0072,67,poor,every day,not important,10.0
+H0073,unknown,average,3-4 times a week,not important,1.0
+H0074,42,excellent,1-2 times a week,somewhat important,9.0
+H0075,23,above average,3-4 times a week,important,6.0
+H0076,60,poor,3-4 times a week,somewhat important,1.0
+H0077,22,above average,3-4 times a week,not important,2.0
+H0078,35,excellent,never,very important,5.0
+H0079,55,excellent,never,important,1.0
+H0080,18,average,1-2 times a week,not important,9.0
+H0081,69,excellent,3-4 times a week,important,1.0
+H0082,52,poor,3-4 times a week,somewhat important,9.0
+H0083,33,poor,3-4 times a week,not important,9.0
+H0084,58,poor,1-2 times a week,important,8.0
+H0085,60,average,3-4 times a week,important,3.0
+H0086,68,below average,3-4 times a week,not important,8.0
+H0087,54,poor,1-2 times a week,very important,9.0
+H0088,27,poor,every day,very important,5.0
+H0089,43,below average,every day,important,8.0
+H0090,67,below average,3-4 times a week,important,9.0
+H0091,42,excellent,every day,not important,6.0
+H0092,32,average,1-2 times a week,very important,3.0
+H0093,23,poor,3-4 times a week,not important,5.0
+H0094,25,average,3-4 times a week,very important,2.0
+H0095,30,below average,3-4 times a week,somewhat important,8.0
+H0096,32,average,3-4 times a week,very important,6.0
+H0097,42,excellent,never,somewhat important,5.0
+H0098,45,below average,3-4 times a week,not important,6.0
+H0099,51,above average,every day,somewhat important,4.0
+H0100,49,average,every day,very important,1.0
+H0101,60,excellent,1-2 times a week,somewhat important,7.0
+H0102,38,poor,every day,not important,6.0
+H0103,23,poor,never,very important,5.0
+H0104,68,excellent,never,very important,1.0
+H0105,40,excellent,1-2 times a week,not important,1.0
+H0106,16,below average,3-4 times a week,important,3.0
+H0107,41,above average,every day,important,7.0
+H0108,39,above average,3-4 times a week,important,6.0
+H0109,18,average,never,very important,7.0
+H0110,45,average,3-4 times a week,not important,6.0
+H0111,31,average,never,not important,6.0
+H0112,44,poor,never,important,4.0
+H0113,44,poor,3-4 times a week,very important,1.0
+H0114,16,excellent,1-2 times a week,somewhat important,7.0
+H0115,52,below average,1-2 times a week,important,7.0
+H0116,67,above average,3-4 times a week,somewhat important,5.0
+H0117,31,poor,every day,important,8.0
+H0118,66,above average,3-4 times a week,not important,6.0
+H0119,35,above average,never,very important,5.0
+H0120,69,above average,never,very important,6.0
+H0121,69,excellent,1-2 times a week,somewhat important,1.0
+H0122,34,poor,3-4 times a week,not important,8.0
+H0123,33,above average,1-2 times a week,somewhat important,10.0
+H0124,52,above average,every day,not important,3.0
+H0125,51,average,1-2 times a week,somewhat important,4.0
+H0126,64,below average,1-2 times a week,very important,4.0
+H0127,35,poor,never,not important,1.0
+H0128,59,below average,1-2 times a week,very important,4.0
+H0129,65,excellent,never,very important,4.0
+H0130,27,poor,never,not important,9.0
+H0131,70,above average,every day,very important,3.0
+H0132,70,excellent,3-4 times a week,somewhat important,9.0
+H0133,34,poor,every day,important,4.0
+H0134,62,above average,every day,very important,1.0
+H0135,47,above average,every day,very important,1.0
+H0136,36,above average,never,important,5.0
+H0137,62,below average,never,not important,3.0
+H0138,58,excellent,every day,not important,9.0
+H0139,36,poor,1-2 times a week,somewhat important,10.0
+H0140,40,excellent,3-4 times a week,very important,2.0
+H0141,19,below average,3-4 times a week,important,5.0
+H0142,70,average,1-2 times a week,somewhat important,9.0
+H0143,57,average,3-4 times a week,important,6.0
+H0144,70,excellent,3-4 times a week,somewhat important,5.0
+H0145,50,excellent,3-4 times a week,very important,4.0
+H0146,unknown,average,never,very important,6.0
+H0147,50,below average,1-2 times a week,very important,10.0
+H0148,40,below average,every day,important,2.0
+H0149,66,poor,3-4 times a week,not important,2.0
+H0150,45,below average,every day,important,5.0
+H0151,42,poor,never,important,7.0
+H0152,54,average,3-4 times a week,not important,5.0
+H0153,16,excellent,every day,not important,9.0
+H0154,27,average,1-2 times a week,important,6.0
+H0155,70,excellent,3-4 times a week,very important,1.0
+H0156,57,average,never,important,3.0
+H0157,40,average,every day,not important,5.0
+H0158,70,below average,never,somewhat important,4.0
+H0159,49,below average,every day,somewhat important,5.0
+H0160,42,poor,3-4 times a week,very important,9.0
+H0161,63,above average,never,not important,6.0
+H0162,21,average,1-2 times a week,somewhat important,6.0
+H0163,60,below average,1-2 times a week,important,6.0
+H0164,21,below average,every day,not important,7.0
+H0165,70,average,never,somewhat important,7.0
+H0166,45,above average,every day,somewhat important,9.0
+H0167,36,above average,never,not important,9.0
+H0168,65,below average,never,very important,7.0
+H0169,21,poor,1-2 times a week,somewhat important,2.0
+H0170,26,above average,every day,somewhat important,5.0
+H0171,23,excellent,never,very important,10.0
+H0172,49,poor,3-4 times a week,somewhat important,8.0
+H0173,62,above average,never,not important,10.0
+H0174,31,excellent,3-4 times a week,not important,5.0
+H0175,68,average,1-2 times a week,important,3.0
+H0176,62,poor,every day,not important,6.0
+H0177,51,average,3-4 times a week,important,6.0
+H0178,37,poor,never,important,6.0
+H0179,38,excellent,1-2 times a week,not important,6.0
+H0180,48,below average,never,somewhat important,8.0
+H0181,46,average,3-4 times a week,important,7.0
+H0182,41,average,3-4 times a week,important,7.0
+H0183,48,poor,1-2 times a week,important,3.0
+H0184,16,excellent,never,somewhat important,8.0
+H0185,18,above average,never,not important,7.0
+H0186,16,average,1-2 times a week,not important,6.0
+H0187,37,above average,3-4 times a week,somewhat important,2.0
+H0188,63,below average,every day,very important,5.0
+H0189,61,above average,3-4 times a week,not important,10.0
+H0190,49,average,every day,not important,7.0
+H0191,24,average,1-2 times a week,not important,
+H0192,59,poor,1-2 times a week,very important,
+H0193,34,poor,every day,somewhat important,3.0
+H0194,49,excellent,1-2 times a week,very important,5.0
+H0195,69,below average,every day,not important,
+H0196,16,average,never,important,5.0
+H0197,51,below average,1-2 times a week,somewhat important,9.0
+H0198,70,poor,every day,somewhat important,1.0
+H0199,23,excellent,never,important,5.0
+H0200,44,below average,3-4 times a week,very important,2.0
+H0201,26,poor,every day,very important,4.0
+H0202,31,average,1-2 times a week,not important,1.0
+H0203,36,below average,every day,important,8.0
+H0204,unknown,below average,every day,somewhat important,9.0
+H0205,33,poor,3-4 times a week,important,4.0
+H0206,60,average,every day,not important,3.0
+H0207,19,excellent,3-4 times a week,not important,9.0
+H0208,46,excellent,3-4 times a week,not important,8.0
+H0209,32,excellent,3-4 times a week,very important,10.0
+H0210,54,poor,3-4 times a week,very important,8.0
+H0211,60,average,3-4 times a week,important,8.0
+H0212,47,above average,every day,not important,3.0
+H0213,48,above average,every day,very important,4.0
+H0214,65,below average,every day,not important,7.0
+H0215,20,average,every day,not important,2.0
+H0216,62,poor,never,not important,6.0
+H0217,43,excellent,never,important,2.0
+H0218,52,above average,never,not important,10.0
+H0219,24,poor,1-2 times a week,important,10.0
+H0220,46,above average,1-2 times a week,somewhat important,10.0
+H0221,21,below average,3-4 times a week,important,3.0
+H0222,46,excellent,never,not important,1.0
+H0223,58,below average,1-2 times a week,not important,3.0
+H0224,17,below average,never,very important,2.0
+H0225,43,excellent,never,somewhat important,6.0
+H0226,32,above average,never,somewhat important,1.0
+H0227,47,excellent,1-2 times a week,somewhat important,8.0
+H0228,47,above average,3-4 times a week,important,7.0
+H0229,unknown,poor,1-2 times a week,somewhat important,10.0
+H0230,25,average,every day,not important,8.0
+H0231,36,poor,never,not important,8.0
+H0232,42,excellent,3-4 times a week,not important,9.0
+H0233,70,below average,every day,somewhat important,2.0
+H0234,53,poor,every day,not important,9.0
+H0235,28,poor,every day,somewhat important,2.0
+H0236,29,above average,every day,important,4.0
+H0237,21,poor,1-2 times a week,not important,8.0
+H0238,38,above average,never,important,9.0
+H0239,47,below average,1-2 times a week,somewhat important,9.0
+H0240,unknown,below average,3-4 times a week,very important,3.0
+H0241,34,excellent,never,not important,5.0
+H0242,37,poor,3-4 times a week,somewhat important,10.0
+H0243,59,average,3-4 times a week,important,5.0
+H0244,49,average,never,not important,6.0
+H0245,34,excellent,every day,very important,5.0
+H0246,33,poor,never,somewhat important,8.0
+H0247,67,average,1-2 times a week,not important,1.0
+H0248,68,poor,1-2 times a week,somewhat important,1.0
+H0249,66,average,never,very important,10.0
+H0250,18,poor,every day,somewhat important,3.0
+H0251,25,above average,3-4 times a week,very important,9.0
+H0252,33,excellent,never,not important,8.0
+H0253,55,above average,every day,not important,4.0
+H0254,16,above average,3-4 times a week,very important,4.0
+H0255,22,above average,3-4 times a week,somewhat important,6.0
+H0256,27,average,3-4 times a week,very important,10.0
+H0257,31,average,every day,very important,7.0
+H0258,38,poor,never,not important,1.0
+H0259,59,poor,3-4 times a week,very important,6.0
+H0260,27,below average,never,very important,3.0
+H0261,65,poor,never,very important,4.0
+H0262,55,below average,3-4 times a week,not important,4.0
+H0263,43,above average,every day,very important,7.0
+H0264,24,above average,never,somewhat important,4.0
+H0265,51,average,1-2 times a week,important,3.0
+H0266,61,below average,never,very important,5.0
+H0267,50,poor,every day,somewhat important,1.0
+H0268,64,below average,1-2 times a week,important,3.0
+H0269,34,average,1-2 times a week,very important,8.0
+H0270,18,poor,3-4 times a week,not important,1.0
+H0271,43,above average,1-2 times a week,very important,3.0
+H0272,64,poor,3-4 times a week,very important,9.0
+H0273,36,poor,every day,not important,8.0
+H0274,23,excellent,3-4 times a week,very important,2.0
+H0275,51,excellent,1-2 times a week,very important,10.0
+H0276,30,average,every day,not important,4.0
+H0277,53,above average,1-2 times a week,somewhat important,10.0
+H0278,61,average,3-4 times a week,not important,5.0
+H0279,60,below average,1-2 times a week,not important,
+H0280,45,excellent,1-2 times a week,somewhat important,3.0
+H0281,69,poor,never,important,6.0
+H0282,45,excellent,never,important,1.0
+H0283,45,excellent,3-4 times a week,very important,3.0
+H0284,16,below average,3-4 times a week,very important,6.0
+H0285,39,above average,1-2 times a week,not important,3.0
+H0286,17,excellent,never,somewhat important,8.0
+H0287,53,below average,3-4 times a week,somewhat important,9.0
+H0288,38,below average,every day,important,8.0
+H0289,51,excellent,every day,very important,1.0
+H0290,20,above average,1-2 times a week,very important,6.0
+H0291,66,above average,every day,important,2.0
+H0292,26,excellent,3-4 times a week,important,9.0
+H0293,59,average,every day,important,2.0
+H0294,29,below average,3-4 times a week,somewhat important,4.0
+H0295,60,average,3-4 times a week,somewhat important,6.0
+H0296,23,excellent,3-4 times a week,somewhat important,4.0
+H0297,62,excellent,3-4 times a week,not important,9.0
+H0298,37,below average,every day,important,8.0
+H0299,69,average,never,very important,7.0
+H0300,35,poor,1-2 times a week,important,10.0
+H0301,53,excellent,1-2 times a week,somewhat important,8.0
+H0302,36,above average,every day,somewhat important,5.0
+H0303,35,excellent,3-4 times a week,somewhat important,7.0
+H0304,28,poor,every day,important,3.0
+H0305,46,average,3-4 times a week,not important,9.0
+H0306,25,excellent,3-4 times a week,important,5.0
+H0307,27,poor,1-2 times a week,very important,1.0
+H0308,68,above average,every day,important,7.0
+H0309,32,above average,1-2 times a week,somewhat important,5.0
+H0310,29,excellent,never,important,9.0
+H0311,35,poor,never,important,7.0
+H0312,67,below average,1-2 times a week,important,8.0
+H0313,40,average,1-2 times a week,important,7.0
+H0314,30,average,every day,not important,10.0
+H0315,26,poor,3-4 times a week,not important,1.0
+H0316,36,above average,never,very important,3.0
+H0317,25,excellent,3-4 times a week,very important,8.0
+H0318,44,above average,every day,important,5.0
+H0319,25,excellent,never,somewhat important,9.0
+H0320,63,average,1-2 times a week,important,1.0
+H0321,54,excellent,3-4 times a week,somewhat important,4.0
+H0322,31,below average,never,very important,8.0
+H0323,45,poor,every day,important,1.0
+H0324,69,poor,1-2 times a week,important,1.0
+H0325,68,below average,every day,not important,1.0
+H0326,70,below average,1-2 times a week,not important,5.0
+H0327,22,poor,never,somewhat important,
+H0328,40,average,3-4 times a week,not important,5.0
+H0329,29,average,1-2 times a week,not important,8.0
+H0330,43,poor,1-2 times a week,somewhat important,10.0
+H0331,41,average,every day,important,3.0
+H0332,38,above average,every day,important,6.0
+H0333,23,average,3-4 times a week,very important,5.0
+H0334,16,excellent,every day,somewhat important,5.0
+H0335,22,poor,3-4 times a week,not important,2.0
+H0336,32,above average,1-2 times a week,important,9.0
+H0337,39,excellent,3-4 times a week,somewhat important,10.0
+H0338,59,above average,never,very important,7.0
+H0339,16,excellent,1-2 times a week,very important,7.0
+H0340,55,poor,never,somewhat important,2.0
+H0341,58,excellent,never,somewhat important,5.0
+H0342,26,average,1-2 times a week,somewhat important,1.0
+H0343,50,average,3-4 times a week,not important,3.0
+H0344,56,poor,1-2 times a week,very important,10.0
+H0345,27,excellent,never,not important,2.0
+H0346,37,poor,every day,important,8.0
+H0347,37,poor,1-2 times a week,important,5.0
+H0348,19,poor,never,important,3.0
+H0349,42,below average,3-4 times a week,very important,9.0
+H0350,24,below average,every day,important,6.0
+H0351,25,above average,3-4 times a week,important,10.0
+H0352,48,average,every day,important,7.0
+H0353,51,above average,3-4 times a week,somewhat important,
+H0354,24,poor,3-4 times a week,very important,2.0
+H0355,18,excellent,every day,important,5.0
+H0356,67,above average,never,not important,3.0
+H0357,57,above average,1-2 times a week,important,3.0
+H0358,39,excellent,3-4 times a week,important,6.0
+H0359,69,average,every day,very important,9.0
+H0360,69,poor,1-2 times a week,somewhat important,7.0
+H0361,53,above average,1-2 times a week,very important,1.0
+H0362,20,below average,1-2 times a week,somewhat important,3.0
+H0363,35,average,3-4 times a week,somewhat important,8.0
+H0364,24,poor,every day,important,2.0
+H0365,64,above average,3-4 times a week,very important,9.0
+H0366,62,excellent,1-2 times a week,not important,8.0
+H0367,68,below average,every day,important,10.0
+H0368,44,poor,never,not important,9.0
+H0369,56,below average,1-2 times a week,very important,3.0
+H0370,54,above average,3-4 times a week,not important,3.0
+H0371,63,below average,never,not important,10.0
+H0372,39,poor,1-2 times a week,very important,3.0
+H0373,35,above average,3-4 times a week,somewhat important,6.0
+H0374,21,average,never,somewhat important,7.0
+H0375,32,below average,1-2 times a week,important,7.0
+H0376,61,below average,1-2 times a week,not important,10.0
+H0377,20,below average,1-2 times a week,not important,1.0
+H0378,70,poor,never,not important,2.0
+H0379,47,below average,3-4 times a week,not important,1.0
+H0380,47,average,3-4 times a week,not important,6.0
+H0381,43,above average,never,somewhat important,8.0
+H0382,54,above average,never,somewhat important,3.0
+H0383,63,excellent,3-4 times a week,important,8.0
+H0384,23,average,never,not important,7.0
+H0385,58,average,every day,very important,3.0
+H0386,44,poor,1-2 times a week,important,5.0
+H0387,28,average,1-2 times a week,somewhat important,7.0
+H0388,26,below average,1-2 times a week,somewhat important,5.0
+H0389,32,excellent,never,important,9.0
+H0390,30,average,3-4 times a week,not important,6.0
+H0391,63,poor,1-2 times a week,not important,1.0
+H0392,20,excellent,never,somewhat important,4.0
+H0393,68,below average,every day,not important,4.0
+H0394,68,above average,never,important,6.0
+H0395,24,average,3-4 times a week,very important,6.0
+H0396,53,poor,never,not important,10.0
+H0397,47,above average,1-2 times a week,not important,10.0
+H0398,62,poor,every day,somewhat important,8.0
+H0399,29,below average,every day,not important,1.0
+H0400,50,average,3-4 times a week,somewhat important,6.0
+H0401,38,excellent,1-2 times a week,very important,6.0
+H0402,34,above average,1-2 times a week,not important,5.0
+H0403,16,poor,never,very important,4.0
+H0404,47,above average,never,not important,8.0
+H0405,30,poor,never,not important,10.0
+H0406,39,below average,every day,very important,5.0
+H0407,61,above average,every day,somewhat important,8.0
+H0408,57,poor,3-4 times a week,important,8.0
+H0409,40,excellent,1-2 times a week,somewhat important,7.0
+H0410,34,average,3-4 times a week,somewhat important,2.0
+H0411,48,average,1-2 times a week,not important,3.0
+H0412,42,excellent,never,important,9.0
+H0413,23,poor,1-2 times a week,important,6.0
+H0414,58,above average,never,not important,7.0
+H0415,54,excellent,1-2 times a week,important,5.0
+H0416,46,above average,3-4 times a week,important,2.0
+H0417,57,poor,1-2 times a week,somewhat important,8.0
+H0418,16,excellent,every day,very important,2.0
+H0419,44,poor,every day,very important,3.0
+H0420,30,poor,1-2 times a week,not important,8.0
+H0421,unknown,above average,3-4 times a week,important,9.0
+H0422,52,above average,3-4 times a week,very important,4.0
+H0423,44,above average,3-4 times a week,very important,5.0
+H0424,47,excellent,every day,very important,8.0
+H0425,18,average,1-2 times a week,not important,8.0
+H0426,54,excellent,1-2 times a week,not important,9.0
+H0427,50,above average,1-2 times a week,important,2.0
+H0428,66,above average,every day,somewhat important,7.0
+H0429,27,excellent,every day,not important,2.0
+H0430,61,poor,1-2 times a week,important,6.0
+H0431,37,average,every day,somewhat important,6.0
+H0432,63,below average,3-4 times a week,important,4.0
+H0433,25,above average,3-4 times a week,somewhat important,9.0
+H0434,41,excellent,every day,not important,1.0
+H0435,31,average,every day,somewhat important,5.0
+H0436,30,excellent,3-4 times a week,very important,9.0
+H0437,68,below average,every day,somewhat important,5.0
+H0438,64,average,never,not important,5.0
+H0439,54,poor,3-4 times a week,very important,3.0
+H0440,49,below average,3-4 times a week,very important,10.0
+H0441,20,average,3-4 times a week,very important,4.0
+H0442,60,above average,never,very important,5.0
+H0443,20,below average,3-4 times a week,very important,5.0
+H0444,70,above average,3-4 times a week,not important,3.0
+H0445,30,poor,3-4 times a week,somewhat important,5.0
+H0446,25,poor,3-4 times a week,very important,8.0
+H0447,66,average,3-4 times a week,not important,
+H0448,61,below average,never,somewhat important,3.0
+H0449,45,excellent,every day,very important,7.0
+H0450,67,excellent,1-2 times a week,not important,5.0
+H0451,55,poor,never,somewhat important,10.0
+H0452,unknown,below average,every day,very important,3.0
+H0453,17,excellent,1-2 times a week,not important,10.0
+H0454,52,below average,never,important,6.0
+H0455,66,below average,never,important,10.0
+H0456,31,excellent,every day,important,6.0
+H0457,24,above average,never,not important,1.0
+H0458,56,above average,1-2 times a week,very important,10.0
+H0459,16,excellent,every day,not important,5.0
+H0460,52,poor,never,not important,6.0
+H0461,19,above average,3-4 times a week,important,9.0
+H0462,61,average,every day,important,10.0
+H0463,34,average,never,important,7.0
+H0464,63,below average,3-4 times a week,important,6.0
+H0465,64,below average,1-2 times a week,important,7.0
+H0466,46,above average,1-2 times a week,not important,6.0
+H0467,60,poor,3-4 times a week,not important,3.0
+H0468,67,excellent,never,important,4.0
+H0469,65,average,every day,very important,3.0
+H0470,53,above average,never,very important,9.0
+H0471,45,above average,every day,somewhat important,8.0
+H0472,26,above average,every day,not important,4.0
+H0473,59,excellent,every day,not important,2.0
+H0474,19,above average,never,very important,3.0
+H0475,47,excellent,3-4 times a week,somewhat important,7.0
+H0476,41,average,1-2 times a week,not important,1.0
+H0477,37,above average,every day,not important,8.0
+H0478,56,average,3-4 times a week,somewhat important,4.0
+H0479,60,excellent,every day,important,7.0
+H0480,16,average,3-4 times a week,not important,5.0
+H0481,57,above average,every day,important,5.0
+H0482,24,excellent,never,not important,4.0
+H0483,32,below average,1-2 times a week,somewhat important,8.0
+H0484,61,above average,1-2 times a week,important,9.0
+H0485,40,excellent,never,not important,3.0
+H0486,44,average,3-4 times a week,very important,8.0
+H0487,unknown,poor,3-4 times a week,important,6.0
+H0488,54,above average,never,somewhat important,5.0
+H0489,35,poor,never,not important,3.0
+H0490,27,average,3-4 times a week,not important,2.0
+H0491,17,average,never,very important,2.0
+H0492,70,average,every day,not important,4.0
+H0493,28,poor,every day,not important,8.0
+H0494,22,below average,every day,very important,7.0
+H0495,26,above average,3-4 times a week,very important,9.0
+H0496,65,excellent,1-2 times a week,somewhat important,10.0
+H0497,55,excellent,every day,somewhat important,6.0
+H0498,67,above average,never,somewhat important,4.0
+H0499,16,poor,never,very important,8.0
+H0500,22,excellent,3-4 times a week,not important,3.0
+H0501,36,below average,never,very important,8.0
+H0502,31,above average,every day,not important,3.0
+H0503,62,average,every day,not important,8.0
+H0504,46,below average,every day,important,6.0
+H0505,67,excellent,1-2 times a week,somewhat important,
+H0506,29,excellent,every day,very important,3.0
+H0507,18,average,1-2 times a week,not important,1.0
+H0508,17,above average,3-4 times a week,very important,4.0
+H0509,64,poor,never,not important,1.0
+H0510,35,excellent,every day,not important,9.0
+H0511,25,excellent,never,not important,9.0
+H0512,39,poor,3-4 times a week,important,8.0
+H0513,42,excellent,3-4 times a week,important,9.0
+H0514,64,poor,3-4 times a week,important,7.0
+H0515,52,below average,1-2 times a week,very important,5.0
+H0516,47,poor,every day,very important,6.0
+H0517,44,above average,3-4 times a week,important,10.0
+H0518,45,excellent,every day,very important,6.0
+H0519,47,below average,every day,important,2.0
+H0520,29,above average,every day,very important,1.0
+H0175,68,average,1-2 times a week,important,3.0
+H0008,55,excellent,every day,very important,2.0
+H0057,52,average,never,somewhat important,9.0
+H0500,22,excellent,3-4 times a week,not important,3.0
+H0187,37,above average,3-4 times a week,somewhat important,2.0
+H0394,68,above average,never,important,6.0
+H0332,38,above average,every day,important,6.0
+H0017,65,poor,3-4 times a week,not important,8.0
+H0117,31,poor,every day,important,8.0
+H0128,59,below average,1-2 times a week,very important,4.0
+H0326,70,below average,1-2 times a week,not important,
+H0233,70,below average,every day,somewhat important,2.0
+H0113,44,poor,3-4 times a week,very important,1.0
+H0279,60,below average,1-2 times a week,not important,6.0
+H0316,36,above average,never,very important,3.0
+H0015,25,poor,1-2 times a week,somewhat important,4.0
+H0210,54,poor,3-4 times a week,very important,8.0
+H0376,61,below average,1-2 times a week,not important,
