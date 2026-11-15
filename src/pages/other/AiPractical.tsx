@@ -16,13 +16,11 @@ const RESULT_KEY = 'xj.ai.practical.results.v1';
 const CLOUD_KEY = 'ai-practical';
 const CLOUD_META_KEY = 'xj.ai.practical.meta.v1';
 const API = '/ai-lab';
+/* 有 AI 参考做法 notebook 的题号（素材目录里的 <code>_ref.ipynb） */
+const REF_CODES = new Set(['1.1.1', '2.1.1', '2.2.1', '3.1.1', '3.2.1', '4.1.1']);
 
 function paperSeconds(paper: PoolItem[]) {
   return paper.reduce((n, it) => n + Math.round(Number.parseFloat(it.minutes) * 60), 0);
-}
-
-function questionSeconds(item: PoolItem | undefined) {
-  return item ? Math.round(Number.parseFloat(item.minutes) * 60) : 0;
 }
 
 interface Block {
@@ -68,16 +66,10 @@ interface SavedResult extends PaperResult {
   seconds: number;
   codes: string[];
 }
-interface Clock {
-  active: number;
-  spent: number[];
-  since: number;
-}
 interface Session {
   id: string;
   codes: string[];
   startedAt: number;
-  clock?: Clock;
 }
 
 function loadJson<T>(key: string, fallback: T): T {
@@ -141,8 +133,6 @@ export function AiPractical() {
   const [tab, setTab] = useState<'upload' | 'materials'>('upload');
   const [uploads, setUploads] = useState<Record<string, UploadedFile[]>>({});
   const [remaining, setRemaining] = useState(0);
-  const [qRemain, setQRemain] = useState(0);
-  const clockRef = useRef<Clock>({ active: 0, spent: [], since: 0 });
   const tickedRef = useRef(0);
   const [result, setResult] = useState<PaperResult | null>(null);
   const [history, setHistory] = useState<SavedResult[]>(() => loadJson<SavedResult[]>(RESULT_KEY, []));
@@ -206,31 +196,20 @@ export function AiPractical() {
       localStorage.removeItem(SESSION_KEY);
       return;
     }
-    const clock = saved.clock ?? { active: 0, spent: [], since: saved.startedAt };
-    clockRef.current = clock;
     setPaper(found);
     setExam(saved);
     setRemaining(left);
-    setCurrent(clock.active);
+    setCurrent(0);
     setPhase('writing');
     void reloadFiles(saved.id, saved.codes);
   }, [reloadFiles]);
 
-  /* 总倒计时 + 本题倒计时 */
+  /* 全卷倒计时：考场只控总时长，分题时间是建议值 */
   useEffect(() => {
     if (phase !== 'writing' || !exam) return;
     const tick = () => {
-      const now = Date.now();
-      tickedRef.current = now;
-      setRemaining(paperSeconds(paper) - Math.floor((now - exam.startedAt) / 1000));
-      const clock = clockRef.current;
-      const item = paper[clock.active];
-      if (!item) {
-        setQRemain(0);
-        return;
-      }
-      const used = (clock.spent[clock.active] ?? 0) + Math.floor((now - clock.since) / 1000);
-      setQRemain(questionSeconds(item) - used);
+      tickedRef.current = Date.now();
+      setRemaining(paperSeconds(paper) - Math.floor((Date.now() - exam.startedAt) / 1000));
     };
     tick();
     const timer = window.setInterval(tick, 1000);
@@ -252,16 +231,13 @@ export function AiPractical() {
         id: sid,
         codes: nextPaper.map((p) => p.code),
         startedAt: now,
-        clock: { active: 0, spent: [], since: now },
       };
-      clockRef.current = session.clock as Clock;
       tickedRef.current = 0;
       setPaper(nextPaper);
       setExam(session);
       setCurrent(0);
       setTab('upload');
       setRemaining(paperSeconds(nextPaper));
-      setQRemain(questionSeconds(nextPaper[0]));
       setUploads({});
       setPhase('writing');
       saveJson(SESSION_KEY, session);
@@ -338,36 +314,6 @@ export function AiPractical() {
     [exam, paper],
   );
 
-  /* 交完当前题，进入下一题；最后一题交完自动交卷 */
-  const lockAndAdvance = useCallback(() => {
-    const clock = clockRef.current;
-    const now = Date.now();
-    const spent = clock.spent.slice();
-    spent[clock.active] = (spent[clock.active] ?? 0) + Math.floor((now - clock.since) / 1000);
-    const next = clock.active + 1;
-    clockRef.current = { active: next, spent, since: now };
-    setExam((prev) => {
-      if (!prev) return prev;
-      const updated: Session = { ...prev, clock: clockRef.current };
-      saveJson(SESSION_KEY, updated);
-      return updated;
-    });
-    if (next >= paper.length) {
-      void submit(true);
-      return;
-    }
-    setCurrent(next);
-    setTab('upload');
-    setQRemain(questionSeconds(paper[next]));
-  }, [paper, submit]);
-
-  /* 本题到点：锁定本题，进入下一题 */
-  useEffect(() => {
-    if (phase !== 'writing' || !tickedRef.current) return;
-    if (qRemain > 0 || clockRef.current.active >= paper.length) return;
-    lockAndAdvance();
-  }, [phase, qRemain, paper.length, lockAndAdvance]);
-
   /* 全卷到点：自动交卷 */
   useEffect(() => {
     if (phase !== 'writing' || !tickedRef.current || remaining > 0) return;
@@ -411,8 +357,6 @@ export function AiPractical() {
     setPaper([]);
     setUploads({});
     setRemaining(0);
-    setQRemain(0);
-    clockRef.current = { active: 0, spent: [], since: 0 };
     void cloudPut(CLOUD_KEY, { results: [] });
     window.setTimeout(() => void cloudPut(CLOUD_KEY, { results: [] }), 900);
   }, []);
@@ -469,9 +413,6 @@ export function AiPractical() {
   const currentPage = useMemo(() => pages.find((p) => p.code === paper[current]?.code), [pages, paper, current]);
   const currentFiles = uploads[paper[current]?.code ?? ''] ?? [];
   const overtime = remaining <= 5 * 60 && phase === 'writing';
-  const activeIdx = clockRef.current.active;
-  const qOvertime = qRemain <= 60 && phase === 'writing';
-  const lockedNow = phase === 'writing' && current !== activeIdx;
   const best = useMemo(() => (history.length ? Math.max(...history.map((h) => h.total)) : null), [history]);
   const uploadedTotal = useMemo(() => Object.values(uploads).reduce((n, fs) => n + fs.length, 0), [uploads]);
 
@@ -486,14 +427,14 @@ export function AiPractical() {
             按官方认定方案组卷：一场考核 {AI_PRACTICAL_COUNT} 题、120 分钟、100 分，题库共 {AI_PRACTICAL_POOL.length} 道官方真题。
             业务流程设计在 1.1/1.2 两组里抽一组（30 分钟 25 分），培训与指导在 4.1/4.2 里抽一组（10 分钟 5 分），
             数据清洗和标注（20 分钟 15 分）、模型开发与测试（20 分钟 20 分）、智能系统监控和优化（20 分钟 15 分）、
-            人机交互流程设计（20 分钟 20 分）四题必考。每题按官方考核时间单独计时，做完一题进下一题，不能回头改。
+            人机交互流程设计（20 分钟 20 分）四题必考。
           </p>
           <div className="text-muted mt-3 space-y-1.5 text-[13px] leading-relaxed">
-            <p>开始后计时不暂停，本题到点自动锁题进入下一题，全卷到点自动交卷，一份卷只能交一次。</p>
+            <p>规则同考场：全卷 120 分钟统一倒计时，中途不暂停；每题标的 20 或 30 分钟只是建议时间，六题之间可以自由来回改，到点自动交卷，一份卷只能交一次。</p>
             <p>每题左侧是官方试题单，右侧「素材下载」给本题全部素材（notebook 框架、数据集、答题卷、onnx 模型），解压或直接在网页里的 jupyter 打开即可作答。</p>
-            <p>作答完按「答案上传」表格逐项交文件：notebook 用 File → Download as → HTML(.html) 导出，截图存 jpg，报告存 docx，文件名照表格里的要求写。</p>
+            <p>作答完按「答案上传」表格逐项交文件：notebook 在 JupyterLab 里用 File → Save and Export Notebook As → HTML 导出（经典 notebook 界面是 File → Download as → HTML），截图存 jpg，报告存 docx，文件名照表格里的要求写。</p>
             <p>答题卷（docx）是 Word 二进制文件，jupyter 里双击它只会报 not UTF-8、看不到内容；点「素材下载」里的「预览答题卷」在浏览器里看原样。</p>
-            <p>交卷后按官方评分细则逐条给分，可对照每个评分点看理由。</p>
+            <p>交卷后按官方评分细则逐条给分，可对照每个评分点看理由。注意：判分由 AI 完成，主要看材料是否齐全、代码与文件名是否正确，看不出的内容（截图里画得对不对、文档写得好不好）它给不了分，所以分数不等于真实考场成绩。</p>
           </div>
           {error ? <p className="text-danger-ink mt-3 text-[13px]">{error}</p> : null}
           <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -575,18 +516,10 @@ export function AiPractical() {
           <span className="text-muted text-[13px]">
             已上传 {uploadedTotal} 个文件
           </span>
-          <span className="ml-auto flex items-baseline gap-4">
-            <span className="text-muted text-[12px]">
-              本题
-              <span className={'ml-1 text-[22px] font-semibold tabular-nums ' + (qOvertime ? 'text-danger-ink' : 'text-ink')}>
-                {fmt(qRemain)}
-              </span>
-            </span>
-            <span className="text-muted text-[12px]">
-              全卷
-              <span className={'ml-1 text-[22px] font-semibold tabular-nums ' + (overtime ? 'text-danger-ink' : 'text-brand')}>
-                {fmt(remaining)}
-              </span>
+          <span className="ml-auto flex items-baseline gap-2">
+            <span className="text-muted text-[12px]">全卷剩余</span>
+            <span className={'text-[22px] font-semibold tabular-nums ' + (overtime ? 'text-danger-ink' : 'text-brand')}>
+              {fmt(remaining)}
             </span>
           </span>
         </div>
@@ -594,21 +527,18 @@ export function AiPractical() {
           <Clock size={13} className="text-muted" />
           {paper.map((item, i) => {
             const n = (uploads[item.code] ?? []).length;
-            const done = i < activeIdx;
             return (
               <button
                 key={item.code}
                 type="button"
-                disabled={i > activeIdx}
                 onClick={() => {
                   setCurrent(i);
                   setTab('upload');
                 }}
                 className={
-                  'pill px-2.5 py-1 text-[12px] ' +
-                  (i === current ? 'pill--solid' : done ? 'text-muted' : n ? 'text-success-ink' : '')
+                  'pill px-2.5 py-1 text-[12px] ' + (i === current ? 'pill--solid' : n ? 'text-success-ink' : '')
                 }
-                title={done ? '已锁定，仅供回看' : i > activeIdx ? '还没轮到这一题' : '当前作答'}
+                title={'第 ' + (i + 1) + ' 题 ' + item.code + '，建议 ' + item.minutes + ' 分钟'}
               >
                 第 {i + 1} 题
                 {n ? ' ' + n : ''}
@@ -618,10 +548,7 @@ export function AiPractical() {
           <button
             type="button"
             className="pill ml-auto px-3 py-1.5 text-[12px]"
-            onClick={() => {
-              if (!window.confirm('进入下一题后本题不能再上传，确定？')) return;
-              lockAndAdvance();
-            }}
+            onClick={() => setCurrent((c) => Math.min(paper.length - 1, c + 1))}
           >
             <ChevronRight size={12} className="mr-1" />
             下一题
@@ -696,11 +623,6 @@ export function AiPractical() {
                 ))}
               </ul>
               <h3 className="text-ink mt-3 text-[14px] font-medium">答案上传</h3>
-              {lockedNow ? (
-                <p className="text-danger-ink mt-1 text-[12px]">
-                  本题已经锁定{current < activeIdx ? '（你已经进入下一题，这里只能回看）' : ''}，不能再上传。
-                </p>
-              ) : null}
               <table className="mt-1 w-full table-fixed text-[12px]">
                 <thead>
                   <tr className="text-muted">
@@ -718,7 +640,6 @@ export function AiPractical() {
                         <button
                           type="button"
                           className="pill px-2 py-0.5 text-[11px]"
-                          disabled={lockedNow}
                           onClick={() => fileRef.current?.click()}
                         >
                           <FileUp size={11} className="mr-1" />
@@ -739,7 +660,6 @@ export function AiPractical() {
                       <button
                         type="button"
                         className="text-muted hover:text-danger-ink"
-                        disabled={lockedNow}
                         onClick={() => void removeFile(f.name)}
                         aria-label="删除"
                       >
@@ -824,7 +744,7 @@ export function AiPractical() {
                 ) : null}
                 <a
                   className="pill pill--solid px-2.5 py-1 text-[12px]"
-                  href={'/jupyter/lab/tree/' + encodeURIComponent('素材') + '/' + encodeURIComponent(paper[current]?.code ?? '') + '?token=' + jupyterToken}
+                  href={'/jupyter/tree/' + encodeURIComponent('素材') + '/' + encodeURIComponent(paper[current]?.code ?? '') + '?token=' + jupyterToken}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -833,16 +753,39 @@ export function AiPractical() {
                 </a>
                 <a
                   className="pill px-2.5 py-1 text-[12px]"
-                  href={'/jupyter/lab/tree/' + encodeURIComponent('素材') + '/_tools/' + encodeURIComponent('答题卷.ipynb') + '?token=' + jupyterToken}
+                  href={'/jupyter/notebooks/' + encodeURIComponent('素材') + '/_tools/' + encodeURIComponent('答题卷.ipynb') + '?token=' + jupyterToken}
                   target="_blank"
                   rel="noreferrer"
                 >
                   <ExternalLink size={12} className="mr-1" />
                   答题卷工具
                 </a>
+                <a
+                  className="pill px-2.5 py-1 text-[12px]"
+                  href={'/jupyter/notebooks/' + encodeURIComponent('素材') + '/' + encodeURIComponent(paper[current]?.code ?? '') + '/' + encodeURIComponent((paper[current]?.code ?? '') + '.ipynb') + '?token=' + jupyterToken}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <ExternalLink size={12} className="mr-1" />
+                  打开本题 notebook
+                </a>
+                {REF_CODES.has(paper[current]?.code ?? '') ? (
+                  <a
+                    className="pill px-2.5 py-1 text-[12px]"
+                    href={'/jupyter/notebooks/' + encodeURIComponent('素材') + '/' + encodeURIComponent(paper[current]?.code ?? '') + '/' + encodeURIComponent((paper[current]?.code ?? '') + '_ref.ipynb') + '?token=' + jupyterToken}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <FileText size={12} className="mr-1" />
+                    参考做法（AI 生成）
+                  </a>
+                ) : null}
               </div>
               <p className="text-muted mt-2 text-[12px] leading-relaxed">
-                考场里 jupyter 的工作目录是 D:\jupyter_notebook，这里就是本题素材目录。改完记得把 notebook 导出成 html 再回「答案上传」交。
+                现在是经典 notebook 界面（和考场同款）：导出用 File → Download as → HTML(.html)。考场里 jupyter 的工作目录是 D:\jupyter_notebook，本题素材目录就相当于那个位置（平台把素材解压到考生文件夹后在里面起 jupyter，效果一样）。
+              </p>
+              <p className="text-muted mt-1 text-[12px] leading-relaxed">
+                参考做法是 AI 照着试题单写的一份可运行代码，只用来对照思路。建议先自己写完再看，真考不提供这个。
               </p>
               <p className="text-muted mt-1 text-[12px] leading-relaxed">
                 答题卷是 Word 二进制文件，jupyter 里双击它只会报「is not UTF-8 encoded」，看不到内容——那是加载不了，不是文件坏了。
@@ -903,6 +846,9 @@ function ResultCard({
         {seconds ? <span className="text-muted text-[12px]">交卷用时 {fmt(seconds)}</span> : null}
         {auto ? <span className="text-warn text-[12px]">到点自动交卷</span> : null}
       </div>
+      <p className="text-warn mt-2 text-[12px] leading-relaxed">
+        AI 判分只核对材料是否齐全、文件名和关键代码或字段是否对上；截图里画得对不对、文档写得好不好它看不出来。这个分数用来查漏，不等于真实考场成绩。
+      </p>
       {result.summary ? <p className="text-muted mt-2 text-[13px] leading-relaxed">{result.summary}</p> : null}
       <div className="mt-3 space-y-3">
         {result.items.map((it) => {
