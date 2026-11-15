@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Clock, Download, ExternalLink, FileUp, Loader2, Play, RotateCcw, Send, Trash2 } from 'lucide-react';
 import {
-  AI_PRACTICAL_MINUTES,
+  AI_PRACTICAL_COUNT,
   AI_PRACTICAL_POOL,
   AI_PRACTICAL_SECTIONS,
-  AI_PRACTICAL_TOTAL,
-  pickPracticalPaper,
+  pickPracticalTen,
   type PoolItem,
 } from '../../data/aiPracticalPool';
 import { cloudPull, cloudPut } from '../../lib/aiSync';
@@ -17,7 +16,14 @@ const RESULT_KEY = 'xj.ai.practical.results.v1';
 const CLOUD_KEY = 'ai-practical';
 const CLOUD_META_KEY = 'xj.ai.practical.meta.v1';
 const API = '/ai-lab';
-const LIMIT_SECONDS = AI_PRACTICAL_MINUTES * 60;
+
+function paperSeconds(paper: PoolItem[]) {
+  return paper.reduce((n, it) => n + Math.round(Number.parseFloat(it.minutes) * 60), 0);
+}
+
+function questionSeconds(item: PoolItem | undefined) {
+  return item ? Math.round(Number.parseFloat(item.minutes) * 60) : 0;
+}
 
 interface Block {
   kind: 'p' | 'table';
@@ -62,10 +68,16 @@ interface SavedResult extends PaperResult {
   seconds: number;
   codes: string[];
 }
+interface Clock {
+  active: number;
+  spent: number[];
+  since: number;
+}
 interface Session {
   id: string;
   codes: string[];
   startedAt: number;
+  clock?: Clock;
 }
 
 function loadJson<T>(key: string, fallback: T): T {
@@ -128,7 +140,10 @@ export function AiPractical() {
   const [current, setCurrent] = useState(0);
   const [tab, setTab] = useState<'upload' | 'materials'>('upload');
   const [uploads, setUploads] = useState<Record<string, UploadedFile[]>>({});
-  const [remaining, setRemaining] = useState(LIMIT_SECONDS);
+  const [remaining, setRemaining] = useState(0);
+  const [qRemain, setQRemain] = useState(0);
+  const clockRef = useRef<Clock>({ active: 0, spent: [], since: 0 });
+  const tickedRef = useRef(0);
   const [result, setResult] = useState<PaperResult | null>(null);
   const [history, setHistory] = useState<SavedResult[]>(() => loadJson<SavedResult[]>(RESULT_KEY, []));
   const [error, setError] = useState('');
@@ -181,32 +196,46 @@ export function AiPractical() {
   /* 恢复未完成的考试 */
   useEffect(() => {
     const saved = loadJson<Session | null>(SESSION_KEY, null);
-    if (!saved || !Array.isArray(saved.codes) || saved.codes.length !== AI_PRACTICAL_SECTIONS.length || !saved.startedAt) return;
-    const left = LIMIT_SECONDS - Math.floor((Date.now() - saved.startedAt) / 1000);
+    if (!saved || !Array.isArray(saved.codes) || saved.codes.length !== AI_PRACTICAL_COUNT || !saved.startedAt) return;
+    const found = saved.codes
+      .map((c) => AI_PRACTICAL_POOL.find((p) => p.code === c))
+      .filter((p): p is PoolItem => Boolean(p));
+    if (found.length !== AI_PRACTICAL_COUNT) return;
+    const left = paperSeconds(found) - Math.floor((Date.now() - saved.startedAt) / 1000);
     if (left <= 0) {
       localStorage.removeItem(SESSION_KEY);
       return;
     }
-    const found = saved.codes
-      .map((c) => AI_PRACTICAL_POOL.find((p) => p.code === c))
-      .filter((p): p is PoolItem => Boolean(p));
-    if (found.length !== AI_PRACTICAL_SECTIONS.length) return;
+    const clock = saved.clock ?? { active: 0, spent: [], since: saved.startedAt };
+    clockRef.current = clock;
     setPaper(found);
     setExam(saved);
     setRemaining(left);
-    setCurrent(0);
+    setCurrent(clock.active);
     setPhase('writing');
     void reloadFiles(saved.id, saved.codes);
   }, [reloadFiles]);
 
-  /* 倒计时 */
+  /* 总倒计时 + 本题倒计时 */
   useEffect(() => {
     if (phase !== 'writing' || !exam) return;
-    const tick = () => setRemaining(LIMIT_SECONDS - Math.floor((Date.now() - exam.startedAt) / 1000));
+    const tick = () => {
+      const now = Date.now();
+      tickedRef.current = now;
+      setRemaining(paperSeconds(paper) - Math.floor((now - exam.startedAt) / 1000));
+      const clock = clockRef.current;
+      const item = paper[clock.active];
+      if (!item) {
+        setQRemain(0);
+        return;
+      }
+      const used = (clock.spent[clock.active] ?? 0) + Math.floor((now - clock.since) / 1000);
+      setQRemain(questionSeconds(item) - used);
+    };
     tick();
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
-  }, [phase, exam]);
+  }, [phase, exam, paper]);
 
   const begin = useCallback(async () => {
     setError('');
@@ -216,14 +245,23 @@ export function AiPractical() {
     try {
       const all = pages.length ? pages : await loadPages();
       setPages(all);
-      const nextPaper = pickPracticalPaper();
+      const nextPaper = pickPracticalTen();
       const sid = 'e' + Date.now().toString(36);
-      const session: Session = { id: sid, codes: nextPaper.map((p) => p.code), startedAt: Date.now() };
+      const now = Date.now();
+      const session: Session = {
+        id: sid,
+        codes: nextPaper.map((p) => p.code),
+        startedAt: now,
+        clock: { active: 0, spent: [], since: now },
+      };
+      clockRef.current = session.clock as Clock;
+      tickedRef.current = 0;
       setPaper(nextPaper);
       setExam(session);
       setCurrent(0);
       setTab('upload');
-      setRemaining(LIMIT_SECONDS);
+      setRemaining(paperSeconds(nextPaper));
+      setQRemain(questionSeconds(nextPaper[0]));
       setUploads({});
       setPhase('writing');
       saveJson(SESSION_KEY, session);
@@ -246,7 +284,7 @@ export function AiPractical() {
       setWaitTick(0);
       localStorage.removeItem(SESSION_KEY);
       const ticker = window.setInterval(() => setWaitTick((n) => n + 1), 1000);
-      const elapsed = Math.min(LIMIT_SECONDS, Math.round((Date.now() - exam.startedAt) / 1000));
+      const elapsed = Math.min(paperSeconds(paper), Math.round((Date.now() - exam.startedAt) / 1000));
       try {
         const res = await fetch(API + '/grade', {
           method: 'POST',
@@ -300,8 +338,39 @@ export function AiPractical() {
     [exam, paper],
   );
 
+  /* 交完当前题，进入下一题；最后一题交完自动交卷 */
+  const lockAndAdvance = useCallback(() => {
+    const clock = clockRef.current;
+    const now = Date.now();
+    const spent = clock.spent.slice();
+    spent[clock.active] = (spent[clock.active] ?? 0) + Math.floor((now - clock.since) / 1000);
+    const next = clock.active + 1;
+    clockRef.current = { active: next, spent, since: now };
+    setExam((prev) => {
+      if (!prev) return prev;
+      const updated: Session = { ...prev, clock: clockRef.current };
+      saveJson(SESSION_KEY, updated);
+      return updated;
+    });
+    if (next >= paper.length) {
+      void submit(true);
+      return;
+    }
+    setCurrent(next);
+    setTab('upload');
+    setQRemain(questionSeconds(paper[next]));
+  }, [paper, submit]);
+
+  /* 本题到点：锁定本题，进入下一题 */
   useEffect(() => {
-    if (phase !== 'writing' || remaining > 0) return;
+    if (phase !== 'writing' || !tickedRef.current) return;
+    if (qRemain > 0 || clockRef.current.active >= paper.length) return;
+    lockAndAdvance();
+  }, [phase, qRemain, paper.length, lockAndAdvance]);
+
+  /* 全卷到点：自动交卷 */
+  useEffect(() => {
+    if (phase !== 'writing' || !tickedRef.current || remaining > 0) return;
     void submit(true);
   }, [phase, remaining, submit]);
 
@@ -341,7 +410,9 @@ export function AiPractical() {
     setExam(null);
     setPaper([]);
     setUploads({});
-    setRemaining(LIMIT_SECONDS);
+    setRemaining(0);
+    setQRemain(0);
+    clockRef.current = { active: 0, spent: [], since: 0 };
     void cloudPut(CLOUD_KEY, { results: [] });
     window.setTimeout(() => void cloudPut(CLOUD_KEY, { results: [] }), 900);
   }, []);
@@ -398,6 +469,9 @@ export function AiPractical() {
   const currentPage = useMemo(() => pages.find((p) => p.code === paper[current]?.code), [pages, paper, current]);
   const currentFiles = uploads[paper[current]?.code ?? ''] ?? [];
   const overtime = remaining <= 5 * 60 && phase === 'writing';
+  const activeIdx = clockRef.current.active;
+  const qOvertime = qRemain <= 60 && phase === 'writing';
+  const lockedNow = phase === 'writing' && current !== activeIdx;
   const best = useMemo(() => (history.length ? Math.max(...history.map((h) => h.total)) : null), [history]);
   const uploadedTotal = useMemo(() => Object.values(uploads).reduce((n, fs) => n + fs.length, 0), [uploads]);
 
@@ -409,12 +483,11 @@ export function AiPractical() {
         <section className="glass px-4 py-5 sm:px-6">
           <h2 className="text-ink text-[22px] font-semibold">人工智能训练师（三级）操作技能考核</h2>
           <p className="text-muted mt-2 text-[13px] leading-relaxed">
-            全卷 {AI_PRACTICAL_SECTIONS.length} 题 {AI_PRACTICAL_MINUTES} 分钟 {AI_PRACTICAL_TOTAL} 分，60 分合格。
-            项目 1 在 1.1 与 1.2 中抽一组抽一题，2.1、2.2、3.1、3.2 各一题，项目 4 在 4.1 与 4.2 中抽一组抽一题，
-            {AI_PRACTICAL_POOL.length} 道官方真题随机成卷。
+            从 {AI_PRACTICAL_POOL.length} 道官方真题里随机抽 {AI_PRACTICAL_COUNT} 题成卷，每题按官方考核时间单独计时，
+            全卷时长等于这 {AI_PRACTICAL_COUNT} 题的时长之和，做完一题进下一题，不能回头改。
           </p>
           <div className="text-muted mt-3 space-y-1.5 text-[13px] leading-relaxed">
-            <p>开始后计时不暂停，到点自动交卷，一份卷只能交一次。</p>
+            <p>开始后计时不暂停，本题到点自动锁题进入下一题，全卷到点自动交卷，一份卷只能交一次。</p>
             <p>每题左侧是官方试题单，右侧「素材下载」给本题全部素材（notebook 框架、数据集、答题卷、onnx 模型），解压或直接在网页里的 jupyter 打开即可作答。</p>
             <p>作答完按「答案上传」表格逐项交文件：notebook 用 File → Download as → HTML(.html) 导出，截图存 jpg，报告存 docx，文件名照表格里的要求写。</p>
             <p>交卷后按官方评分细则逐条给分，可对照每个评分点看理由。</p>
@@ -499,33 +572,58 @@ export function AiPractical() {
           <span className="text-muted text-[13px]">
             已上传 {uploadedTotal} 个文件
           </span>
-          <span className={'ml-auto text-[22px] font-semibold tabular-nums ' + (overtime ? 'text-danger-ink' : 'text-brand')}>
-            {fmt(remaining)}
+          <span className="ml-auto flex items-baseline gap-4">
+            <span className="text-muted text-[12px]">
+              本题
+              <span className={'ml-1 text-[22px] font-semibold tabular-nums ' + (qOvertime ? 'text-danger-ink' : 'text-ink')}>
+                {fmt(qRemain)}
+              </span>
+            </span>
+            <span className="text-muted text-[12px]">
+              全卷
+              <span className={'ml-1 text-[22px] font-semibold tabular-nums ' + (overtime ? 'text-danger-ink' : 'text-brand')}>
+                {fmt(remaining)}
+              </span>
+            </span>
           </span>
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <Clock size={13} className="text-muted" />
           {paper.map((item, i) => {
             const n = (uploads[item.code] ?? []).length;
+            const done = i < activeIdx;
             return (
               <button
                 key={item.code}
                 type="button"
+                disabled={i > activeIdx}
                 onClick={() => {
                   setCurrent(i);
                   setTab('upload');
                 }}
                 className={
                   'pill px-2.5 py-1 text-[12px] ' +
-                  (i === current ? 'pill--solid' : n ? 'text-success-ink' : '')
+                  (i === current ? 'pill--solid' : done ? 'text-muted' : n ? 'text-success-ink' : '')
                 }
+                title={done ? '已锁定，仅供回看' : i > activeIdx ? '还没轮到这一题' : '当前作答'}
               >
                 第 {i + 1} 题
                 {n ? ' ' + n : ''}
               </button>
             );
           })}
-          <button type="button" className="pill ml-auto px-3 py-1.5 text-[12px]" onClick={() => void submit(false)}>
+          <button
+            type="button"
+            className="pill ml-auto px-3 py-1.5 text-[12px]"
+            onClick={() => {
+              if (!window.confirm('进入下一题后本题不能再上传，确定？')) return;
+              lockAndAdvance();
+            }}
+          >
+            <ChevronRight size={12} className="mr-1" />
+            下一题
+          </button>
+          <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={() => void submit(false)}>
             <Send size={12} className="mr-1.5" />
             交卷
           </button>
@@ -595,6 +693,11 @@ export function AiPractical() {
                 ))}
               </ul>
               <h3 className="text-ink mt-3 text-[14px] font-medium">答案上传</h3>
+              {lockedNow ? (
+                <p className="text-danger-ink mt-1 text-[12px]">
+                  本题已经锁定{current < activeIdx ? '（你已经进入下一题，这里只能回看）' : ''}，不能再上传。
+                </p>
+              ) : null}
               <table className="mt-1 w-full table-fixed text-[12px]">
                 <thead>
                   <tr className="text-muted">
@@ -612,6 +715,7 @@ export function AiPractical() {
                         <button
                           type="button"
                           className="pill px-2 py-0.5 text-[11px]"
+                          disabled={lockedNow}
                           onClick={() => fileRef.current?.click()}
                         >
                           <FileUp size={11} className="mr-1" />
@@ -632,6 +736,7 @@ export function AiPractical() {
                       <button
                         type="button"
                         className="text-muted hover:text-danger-ink"
+                        disabled={lockedNow}
                         onClick={() => void removeFile(f.name)}
                         aria-label="删除"
                       >

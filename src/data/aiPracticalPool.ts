@@ -761,3 +761,21 @@ export function pickPracticalPaper(random: () => number = Math.random): PoolItem
 export function practicalPaperScore(paper: PoolItem[]): number {
   return paper.reduce((sum, item) => sum + item.score, 0);
 }
+
+/* 每场考试从 40 道真题里随机抽 10 题 */
+export const AI_PRACTICAL_COUNT = 10;
+
+export function pickPracticalTen(random: () => number = Math.random): PoolItem[] {
+  const deck = AI_PRACTICAL_POOL.slice();
+  for (let i = deck.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    const tmp = deck[i];
+    deck[i] = deck[j];
+    deck[j] = tmp;
+  }
+  return deck.slice(0, AI_PRACTICAL_COUNT).sort((a, b) => a.code.localeCompare(b.code));
+}
+
+export function practicalPaperSeconds(paper: PoolItem[]): number {
+  return paper.reduce((sum, item) => sum + Math.round(Number.parseFloat(item.minutes) * 60), 0);
+}
