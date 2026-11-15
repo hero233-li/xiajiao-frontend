@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Clock, Download, ExternalLink, FileUp, Loader2, Play, RotateCcw, Send, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Download, ExternalLink, FileText, FileUp, Loader2, Play, RotateCcw, Send, Trash2 } from 'lucide-react';
 import {
   AI_PRACTICAL_COUNT,
   AI_PRACTICAL_POOL,
@@ -492,7 +492,7 @@ export function AiPractical() {
             <p>开始后计时不暂停，本题到点自动锁题进入下一题，全卷到点自动交卷，一份卷只能交一次。</p>
             <p>每题左侧是官方试题单，右侧「素材下载」给本题全部素材（notebook 框架、数据集、答题卷、onnx 模型），解压或直接在网页里的 jupyter 打开即可作答。</p>
             <p>作答完按「答案上传」表格逐项交文件：notebook 用 File → Download as → HTML(.html) 导出，截图存 jpg，报告存 docx，文件名照表格里的要求写。</p>
-            <p>答题卷（docx）在 jupyter 里双击会报 not UTF-8，用素材里的「答题卷工具」按单元格填，或下载到本地用 Word 填后再上传。</p>
+            <p>答题卷（docx）是 Word 二进制文件，jupyter 里双击它只会报 not UTF-8、看不到内容；点「素材下载」里的「预览答题卷」在浏览器里看原样。</p>
             <p>交卷后按官方评分细则逐条给分，可对照每个评分点看理由。</p>
           </div>
           {error ? <p className="text-danger-ink mt-3 text-[13px]">{error}</p> : null}
@@ -779,7 +779,7 @@ export function AiPractical() {
                     <tr key={name}>
                       <td className="border border-[var(--border)] px-1 py-1 tabular-nums">{i + 1}</td>
                       <td className="border border-[var(--border)] px-1 py-1 break-all">{name}</td>
-                      <td className="border border-[var(--border)] px-1 py-1">
+                      <td className="border border-[var(--border)] px-1 py-1 whitespace-nowrap">
                         <a
                           className="text-brand"
                           href={API + '/materials/' + encodeURIComponent(paper[current]?.code ?? '') + '/' + name.split('/').map(encodeURIComponent).join('/')}
@@ -787,6 +787,16 @@ export function AiPractical() {
                         >
                           下载
                         </a>
+                        {name.endsWith('.docx') ? (
+                          <a
+                            className="text-brand ml-2"
+                            href={API + '/sheet/' + encodeURIComponent(paper[current]?.code ?? '')}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            预览
+                          </a>
+                        ) : null}
                       </td>
                     </tr>
                   ))}
@@ -801,6 +811,17 @@ export function AiPractical() {
                   <Download size={12} className="mr-1" />
                   打包下载
                 </a>
+                {(currentPage?.files ?? []).some((n) => n.endsWith('.docx')) ? (
+                  <a
+                    className="pill px-2.5 py-1 text-[12px]"
+                    href={API + '/sheet/' + encodeURIComponent(paper[current]?.code ?? '')}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <FileText size={12} className="mr-1" />
+                    预览答题卷
+                  </a>
+                ) : null}
                 <a
                   className="pill pill--solid px-2.5 py-1 text-[12px]"
                   href={'/jupyter/lab/tree/' + encodeURIComponent('素材') + '/' + encodeURIComponent(paper[current]?.code ?? '') + '?token=' + jupyterToken}
@@ -824,8 +845,8 @@ export function AiPractical() {
                 考场里 jupyter 的工作目录是 D:\jupyter_notebook，这里就是本题素材目录。改完记得把 notebook 导出成 html 再回「答案上传」交。
               </p>
               <p className="text-muted mt-1 text-[12px] leading-relaxed">
-                答题卷是 Word 文件，在 jupyter 里双击会报「is not UTF-8 encoded」——点「答题卷工具」，用代码把答案写进对应单元格再 save()；
-                或者右键 docx 下载，用 Word 填好再上传。
+                答题卷是 Word 二进制文件，jupyter 里双击它只会报「is not UTF-8 encoded」，看不到内容——那是加载不了，不是文件坏了。
+                用「预览答题卷」在浏览器里按原样看；要在网页里填就用「答题卷工具」按单元格写值再 save()；最省事是下载用 Word 填好再上传。
               </p>
             </div>
           )}
