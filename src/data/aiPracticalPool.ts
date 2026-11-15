@@ -762,18 +762,12 @@ export function practicalPaperScore(paper: PoolItem[]): number {
   return paper.reduce((sum, item) => sum + item.score, 0);
 }
 
-/* 每场考试从 40 道真题里随机抽 10 题 */
-export const AI_PRACTICAL_COUNT = 10;
+/* 指导手册：一场实操考核 6 题（项目1 抽一、项目4 抽一、其余必考各 1 题） */
+export const AI_PRACTICAL_COUNT = 6;
 
-export function pickPracticalTen(random: () => number = Math.random): PoolItem[] {
-  const deck = AI_PRACTICAL_POOL.slice();
-  for (let i = deck.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(random() * (i + 1));
-    const tmp = deck[i];
-    deck[i] = deck[j];
-    deck[j] = tmp;
-  }
-  return deck.slice(0, AI_PRACTICAL_COUNT).sort((a, b) => a.code.localeCompare(b.code));
+/* 组卷：与认定方案一致，六个考核单元各取一题，项目1/项目4 在两组间抽一组 */
+export function pickPracticalExamPaper(random: () => number = Math.random): PoolItem[] {
+  return pickPracticalPaper(random);
 }
 
 export function practicalPaperSeconds(paper: PoolItem[]): number {

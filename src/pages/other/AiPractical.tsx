@@ -4,7 +4,7 @@ import {
   AI_PRACTICAL_COUNT,
   AI_PRACTICAL_POOL,
   AI_PRACTICAL_SECTIONS,
-  pickPracticalTen,
+  pickPracticalExamPaper,
   type PoolItem,
 } from '../../data/aiPracticalPool';
 import { cloudPull, cloudPut } from '../../lib/aiSync';
@@ -245,7 +245,7 @@ export function AiPractical() {
     try {
       const all = pages.length ? pages : await loadPages();
       setPages(all);
-      const nextPaper = pickPracticalTen();
+      const nextPaper = pickPracticalExamPaper();
       const sid = 'e' + Date.now().toString(36);
       const now = Date.now();
       const session: Session = {
@@ -483,8 +483,10 @@ export function AiPractical() {
         <section className="glass px-4 py-5 sm:px-6">
           <h2 className="text-ink text-[22px] font-semibold">人工智能训练师（三级）操作技能考核</h2>
           <p className="text-muted mt-2 text-[13px] leading-relaxed">
-            从 {AI_PRACTICAL_POOL.length} 道官方真题里随机抽 {AI_PRACTICAL_COUNT} 题成卷，每题按官方考核时间单独计时，
-            全卷时长等于这 {AI_PRACTICAL_COUNT} 题的时长之和，做完一题进下一题，不能回头改。
+            按官方认定方案组卷：一场考核 {AI_PRACTICAL_COUNT} 题、120 分钟、100 分，题库共 {AI_PRACTICAL_POOL.length} 道官方真题。
+            业务流程设计在 1.1/1.2 两组里抽一组（30 分钟 25 分），培训与指导在 4.1/4.2 里抽一组（10 分钟 5 分），
+            数据清洗和标注（20 分钟 15 分）、模型开发与测试（20 分钟 20 分）、智能系统监控和优化（20 分钟 15 分）、
+            人机交互流程设计（20 分钟 20 分）四题必考。每题按官方考核时间单独计时，做完一题进下一题，不能回头改。
           </p>
           <div className="text-muted mt-3 space-y-1.5 text-[13px] leading-relaxed">
             <p>开始后计时不暂停，本题到点自动锁题进入下一题，全卷到点自动交卷，一份卷只能交一次。</p>
