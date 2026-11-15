@@ -492,6 +492,7 @@ export function AiPractical() {
             <p>开始后计时不暂停，本题到点自动锁题进入下一题，全卷到点自动交卷，一份卷只能交一次。</p>
             <p>每题左侧是官方试题单，右侧「素材下载」给本题全部素材（notebook 框架、数据集、答题卷、onnx 模型），解压或直接在网页里的 jupyter 打开即可作答。</p>
             <p>作答完按「答案上传」表格逐项交文件：notebook 用 File → Download as → HTML(.html) 导出，截图存 jpg，报告存 docx，文件名照表格里的要求写。</p>
+            <p>答题卷（docx）在 jupyter 里双击会报 not UTF-8，用素材里的「答题卷工具」按单元格填，或下载到本地用 Word 填后再上传。</p>
             <p>交卷后按官方评分细则逐条给分，可对照每个评分点看理由。</p>
           </div>
           {error ? <p className="text-danger-ink mt-3 text-[13px]">{error}</p> : null}
@@ -809,9 +810,22 @@ export function AiPractical() {
                   <ExternalLink size={12} className="mr-1" />
                   在 jupyter 中作答
                 </a>
+                <a
+                  className="pill px-2.5 py-1 text-[12px]"
+                  href={'/jupyter/lab/tree/' + encodeURIComponent('素材') + '/_tools/' + encodeURIComponent('答题卷.ipynb') + '?token=' + jupyterToken}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <ExternalLink size={12} className="mr-1" />
+                  答题卷工具
+                </a>
               </div>
               <p className="text-muted mt-2 text-[12px] leading-relaxed">
                 考场里 jupyter 的工作目录是 D:\jupyter_notebook，这里就是本题素材目录。改完记得把 notebook 导出成 html 再回「答案上传」交。
+              </p>
+              <p className="text-muted mt-1 text-[12px] leading-relaxed">
+                答题卷是 Word 文件，在 jupyter 里双击会报「is not UTF-8 encoded」——点「答题卷工具」，用代码把答案写进对应单元格再 save()；
+                或者右键 docx 下载，用 Word 填好再上传。
               </p>
             </div>
           )}
