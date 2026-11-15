@@ -5,7 +5,7 @@
 输出：frontend-v2/public/ai-practical/<code>/<文件...> + <code>.zip
       以及 src/data/aiPracticalAssets.ts 清单。
 """
-import json, os, random, sys, zipfile, datetime
+import json, os, random, sys, zipfile, datetime, zlib
 import numpy as np
 import pandas as pd
 
@@ -14,6 +14,7 @@ OUT = os.path.join(ROOT, 'public', 'ai-practical')
 MAN_TS = os.path.join(ROOT, 'src', 'data', 'aiPracticalAssets.ts')
 POOL = json.load(open('/tmp/ai3/pool.json', encoding='utf-8'))
 rng = np.random.default_rng(20261115)
+random.seed(20261115)
 
 def rint(n, lo, hi):
     return rng.integers(lo, hi + 1, n)
@@ -362,6 +363,11 @@ def write_docx(path, code, title, sheet):
         doc.add_paragraph(f'（{i}）{s}')
     doc.add_heading('二、答题区', level=2)
     doc.add_paragraph('（在此填写你的答案）')
+    fixed = datetime.datetime(2026, 1, 1)
+    doc.core_properties.created = fixed
+    doc.core_properties.modified = fixed
+    doc.core_properties.last_modified_by = 'ai3-practice'
+    doc.core_properties.author = 'ai3-practice'
     doc.save(path)
 
 def write_labels(path, n):
@@ -378,7 +384,7 @@ def write_labels(path, n):
 def write_img(path, size):
     from PIL import Image
     w, h = size
-    arr = (np.random.default_rng(abs(hash(path)) % 2**31).random((h, w, 3)) * 255).astype('uint8')
+    arr = (np.random.default_rng(zlib.crc32(path.encode()) % 2**31).random((h, w, 3)) * 255).astype('uint8')
     mode = 'RGB' if path.endswith(('.jpg', '.jpeg', '.png')) else 'L'
     Image.fromarray(arr, 'RGB').save(path, quality=92)
 
@@ -393,7 +399,7 @@ def write_onnx(path, spec):
     b1 = const('b1', np.zeros(8))
     w2 = const('w2', r.normal(0, 0.1, (16, 8, 3, 3)))
     b2 = const('b2', np.zeros(16))
-    w3 = const('w3', r.normal(0, 0.05, (classes, 16)))
+    w3 = const('w3', r.normal(0, 0.05, (16, classes)))
     b3 = const('b3', np.zeros(classes))
     nodes = [
         helper.make_node('Conv', ['input', 'w1', 'b1'], ['c1'], pads=[1, 1, 1, 1]),
@@ -463,7 +469,10 @@ for code, spec in ITEMS.items():
     zp = os.path.join(OUT, code + '.zip')
     with zipfile.ZipFile(zp, 'w', zipfile.ZIP_DEFLATED) as z:
         for n, _ in names:
-            z.write(os.path.join(d, n), n)
+            info = zipfile.ZipInfo(n, date_time=(2026, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            z.writestr(info, open(os.path.join(d, n), 'rb').read())
     manifest[code] = names
     print(code, len(names), 'files', sum(s for _, s in names) // 1024, 'KB')
 
