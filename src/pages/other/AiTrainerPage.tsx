@@ -195,9 +195,8 @@ interface DrillRun {
   questions: ExamQuestion[];
   cursor: number;
   picks: Record<string, string[]>;
-  /** 断言/单选选完即揭晓，多选点「看答案」后揭晓。 */
-  revealed: Record<string, boolean>;
-  finished: boolean;
+  /** 一局 10 题统一交一次卷，交卷后才揭晓对错并出本局总结。 */
+  submitted: boolean;
 }
 
 /** 中途刷新/关页后能接着做：存题序、选项顺序、已选、标记、剩余时间。 */
@@ -746,9 +745,10 @@ export function AiTrainerPage() {
     };
   }, []);
 
+  /** 刷题不改选项：选了就存着，交卷时才判断对错。 */
   const drillPick = (question: ExamQuestion, value: string) => {
     setDrill((prev) => {
-      if (!prev || prev.finished) return prev;
+      if (!prev || prev.submitted) return prev;
       const mine = prev.picks[question.id] ?? [];
       const next =
         question.type === 'multi'
@@ -756,17 +756,8 @@ export function AiTrainerPage() {
             ? mine.filter((v) => v !== value)
             : [...mine, value]
           : [value];
-      return {
-        ...prev,
-        picks: { ...prev.picks, [question.id]: next },
-        revealed:
-          question.type === 'multi' ? prev.revealed : { ...prev.revealed, [question.id]: true },
-      };
+      return { ...prev, picks: { ...prev.picks, [question.id]: next } };
     });
-  };
-
-  const drillReveal = (qid: string) => {
-    setDrill((prev) => (prev ? { ...prev, revealed: { ...prev.revealed, [qid]: true } } : prev));
   };
 
   /** 结算本题：答错记账、答对扣账，下次抽题权重随之变化。 */
@@ -782,13 +773,22 @@ export function AiTrainerPage() {
     });
   };
 
-  const drillNext = () => {
+  /** 交卷：整局一次结算，答错的记一笔、答对的扣一笔，进来本局总结。 */
+  const submitDrill = () => {
     const cur = drill;
-    if (!cur || cur.finished) return;
-    const q = cur.questions[cur.cursor];
-    if (q && cur.revealed[q.id] && (cur.picks[q.id] ?? []).length > 0) settleDrillQuestion(q, cur.picks[q.id] ?? []);
-    if (cur.cursor + 1 >= cur.questions.length) setDrill({ ...cur, finished: true });
-    else setDrill({ ...cur, cursor: cur.cursor + 1 });
+    if (!cur || cur.submitted) return;
+    for (const q of cur.questions) {
+      const mine = cur.picks[q.id] ?? [];
+      if (mine.length) settleDrillQuestion(q, mine);
+    }
+    setDrill({ ...cur, submitted: true });
+  };
+
+  const drillGo = (delta: number) => {
+    const cur = drill;
+    if (!cur || cur.submitted) return;
+    const next = Math.min(cur.questions.length - 1, Math.max(0, cur.cursor + delta));
+    if (next !== cur.cursor) setDrill({ ...cur, cursor: next });
   };
 
   const drillStats = useMemo(() => {
@@ -805,7 +805,7 @@ export function AiTrainerPage() {
   }, [drill]);
 
   const startDrill = () => {
-    setDrill({ questions: buildDrill(wrongs, drillMisses), cursor: 0, picks: {}, revealed: {}, finished: false });
+    setDrill({ questions: buildDrill(wrongs, drillMisses), cursor: 0, picks: {}, submitted: false });
   };
 
   const startWrongs = (list: WrongEntry[] = wrongs) => {
@@ -881,10 +881,8 @@ export function AiTrainerPage() {
     ? Math.round((records.reduce((sum, r) => sum + r.score, 0) / records.length) * 10) / 10
     : null;
 
-  const drillQ = drill && !drill.finished ? drill.questions[drill.cursor] : null;
+  const drillQ = drill && !drill.submitted ? drill.questions[drill.cursor] : null;
   const drillPicked: string[] = drill && drillQ ? (drill.picks[drillQ.id] ?? []) : [];
-  const drillShown = drill && drillQ ? Boolean(drill.revealed[drillQ.id]) : false;
-  const drillOK = drillQ ? isRight(drillQ, drillPicked) : false;
   const missCountOf = (qid: string) =>
     (wrongs.find((e) => e.qid === qid)?.misses ?? 0) + (drillMisses[qid]?.misses ?? 0);
   const drillHint = drillQ && missCountOf(drillQ.id) > 0 ? `错题 ×${missCountOf(drillQ.id)}` : '';
@@ -1111,16 +1109,24 @@ export function AiTrainerPage() {
                   <div className="flex items-baseline gap-2">
                     <h2 className="text-ink text-[14px] font-semibold">刷题模式</h2>
                     <span className="text-muted text-[12px] tabular-nums">
-                      {drill.finished ? '本局结束' : `第 ${drill.cursor + 1} / ${drill.questions.length} 题`}
+                      {drill.submitted ? '本局已交卷' : `第 ${drill.cursor + 1} / ${drill.questions.length} 题`}
                     </span>
                   </div>
                   <p className="text-secondary mt-1 text-[12px] leading-relaxed">
-                    10 题一局：做错过的题优先出，每局固定留 {DRILL_WRONG_SLOTS} 席给错题（当前有 {weightedCount} 道加权题，不够就按实际数量），剩下的从 {AI_THEORY_QUESTIONS.length} 题里按权重抽新题；错得越多权重越高，做对之后权重回落。不计时，答完立刻看答案。
+                    10 题一局，做完统一交一次卷：交卷后出本局总结和逐题解析，再开下一批。做错过的题优先出，每局固定留 {DRILL_WRONG_SLOTS} 席给错题（当前有 {weightedCount} 道加权题，不够就按实际数量），剩下的从 {AI_THEORY_QUESTIONS.length} 题里按权重抽；错得越多权重越高，做对之后回落。
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
-                  <span className="text-success-ink tabular-nums">对 {drillStats.right}</span>
-                  <span className="text-danger-ink tabular-nums">错 {drillStats.wrong}</span>
+                  {drill.submitted ? (
+                    <>
+                      <span className="text-success-ink tabular-nums">对 {drillStats.right}</span>
+                      <span className="text-danger-ink tabular-nums">错 {drillStats.wrong}</span>
+                    </>
+                  ) : (
+                    <span className="text-muted tabular-nums">
+                      已答 {drillStats.answered} / {drill.questions.length}
+                    </span>
+                  )}
                   <button
                     type="button"
                     onClick={() => setDrill(null)}
@@ -1131,32 +1137,78 @@ export function AiTrainerPage() {
                 </div>
               </section>
 
-              {drill.finished ? (
-                <section className="glass flex flex-wrap items-end justify-between gap-4 px-4 py-5 sm:px-5">
-                  <div>
-                    <p className="text-brand-ink text-[34px] leading-none font-semibold tabular-nums">
-                      {drillStats.right}
-                      <span className="text-muted ml-1 text-[14px] font-normal">
-                        / {drill.questions.length} 题答对
-                      </span>
-                    </p>
-                    <p className="text-secondary mt-2 text-[13px]">
-                      答错 {drillStats.wrong} 题 · 未作答 {drill.questions.length - drillStats.answered} 题
-                    </p>
-                    <p className="text-muted mt-1 text-[12px]">
-                      答错的题下次出现权重会提高，做对会回落；刷题不写进考试错题本、不计入历史成绩。
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button type="button" onClick={startDrill} className="pill pill--solid px-4 py-2 text-[13px]">
-                      <RotateCcw className="mr-1 inline size-3.5" />
-                      再来一局
-                    </button>
-                    <button type="button" onClick={() => setDrill(null)} className="pill px-4 py-2 text-[13px]">
-                      返回
-                    </button>
-                  </div>
-                </section>
+              {drill.submitted ? (
+                <>
+                  <section className="glass flex flex-wrap items-end justify-between gap-4 px-4 py-5 sm:px-5">
+                    <div>
+                      <p className="text-brand-ink text-[34px] leading-none font-semibold tabular-nums">
+                        {drillStats.right}
+                        <span className="text-muted ml-1 text-[14px] font-normal">
+                          / {drill.questions.length} 题答对
+                        </span>
+                      </p>
+                      <p className="text-secondary mt-2 text-[13px]">
+                        正确率 {Math.round((drillStats.right / drill.questions.length) * 100)}% · 答错{' '}
+                        {drillStats.wrong} 题 · 未作答 {drill.questions.length - drillStats.answered} 题
+                      </p>
+                      <p className="text-muted mt-1 text-[12px]">
+                        答错的题下次出现权重会提高，做对会回落；刷题不写进考试错题本、不计入历史成绩。
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={startDrill} className="pill pill--solid px-4 py-2 text-[13px]">
+                        <RotateCcw className="mr-1 inline size-3.5" />
+                        继续下一批
+                      </button>
+                      <button type="button" onClick={() => setDrill(null)} className="pill px-4 py-2 text-[13px]">
+                        返回
+                      </button>
+                    </div>
+                  </section>
+
+                  <section className="flex flex-col gap-3">
+                    {drill.questions.map((q, index) => {
+                      const mine = drill.picks[q.id] ?? [];
+                      const ok = isRight(q, mine);
+                      return (
+                        <div key={q.id} className="glass px-4 py-4 sm:px-5">
+                          <div className="flex items-baseline gap-2 text-[12px]">
+                            <span className="text-muted tabular-nums">第 {index + 1} 题</span>
+                            <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5">
+                              {TYPE_LABEL[q.type]}
+                            </span>
+                            <span className={ok ? 'text-success-ink' : mine.length ? 'text-danger-ink' : 'text-muted'}>
+                              {ok ? '答对' : mine.length ? '答错' : '未作答'}
+                            </span>
+                          </div>
+                          <p className="text-ink mt-2 text-[14px] leading-relaxed">{q.stem}</p>
+                          <div className="text-secondary mt-2 flex flex-col gap-1 text-[13px]">
+                            <span>
+                              我的答案：
+                              <b className={ok ? 'text-success-ink' : mine.length ? 'text-danger-ink' : 'text-muted'}>
+                                {mine.length ? mine.map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v)).join('') : '未作答'}
+                              </b>
+                            </span>
+                            <span>
+                              正确答案：
+                              <b className="text-success-ink">{answerText(q)}</b>
+                            </span>
+                            {q.type !== 'tf'
+                              ? q.shown
+                                  .filter((opt) => q.key.includes(opt.key) || mine.includes(opt.key))
+                                  .map((opt) => (
+                                    <span key={opt.key} className="text-muted">
+                                      {opt.key}. {opt.text}
+                                    </span>
+                                  ))
+                              : null}
+                          </div>
+                          <ExplainBlock id={q.id} />
+                        </div>
+                      );
+                    })}
+                  </section>
+                </>
               ) : drillQ ? (
                 <section className="glass px-4 py-5 sm:px-5">
                   <QuestionCard
@@ -1164,36 +1216,39 @@ export function AiTrainerPage() {
                     index={drill.cursor}
                     total={drill.questions.length}
                     picked={drillPicked}
-                    revealed={drillShown}
+                    revealed={false}
                     hint={drillHint}
                     onPick={(value) => drillPick(drillQ, value)}
                   />
-                  {drillShown ? <ExplainBlock id={drillQ.id} /> : null}
                   <div className="mt-5 flex flex-wrap items-center gap-3">
-                    {drillShown ? (
-                      <span className={`text-[13px] ${drillOK ? 'text-success-ink' : 'text-danger-ink'}`}>
-                        {drillOK ? '答对了' : '答错了'}
-                        {!drillOK ? <span className="text-secondary ml-1">正确答案 {answerText(drillQ)}</span> : null}
-                      </span>
-                    ) : drillQ.type === 'multi' ? (
-                      <button
-                        type="button"
-                        onClick={() => drillReveal(drillQ.id)}
-                        disabled={drillPicked.length === 0}
-                        className="pill px-3 py-1.5 text-[13px] disabled:opacity-40"
-                      >
-                        看答案
-                      </button>
-                    ) : (
-                      <span className="text-muted text-[12px]">选一个选项立刻看答案</span>
-                    )}
                     <button
                       type="button"
-                      onClick={drillNext}
+                      onClick={() => drillGo(-1)}
+                      disabled={drill.cursor === 0}
+                      className="pill px-3 py-1.5 text-[13px] disabled:opacity-40"
+                    >
+                      上一题
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => drillGo(1)}
+                      disabled={drill.cursor + 1 >= drill.questions.length}
+                      className="pill px-3 py-1.5 text-[13px] disabled:opacity-40"
+                    >
+                      下一题
+                      <ChevronRight className="ml-1 inline size-4" />
+                    </button>
+                    <span className="text-muted text-[12px]">做完 10 题再交卷，交卷后才看答案</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const blank = drill.questions.length - drillStats.answered;
+                        if (blank > 0 && !window.confirm(`还有 ${blank} 题没答，未作答的按答错计入本局，确定交卷？`)) return;
+                        submitDrill();
+                      }}
                       className="pill pill--solid ml-auto px-4 py-1.5 text-[13px]"
                     >
-                      {drill.cursor + 1 >= drill.questions.length ? '结束本局' : '下一题'}
-                      <ChevronRight className="ml-1 inline size-4" />
+                      交卷看本局总结
                     </button>
                   </div>
                 </section>
