@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronLeft, ChevronRight, Clock, RotateCcw, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Clock, Lightbulb, RotateCcw, X } from 'lucide-react';
 import { AiPractical } from './AiPractical';
 import {
   AI_THEORY_MINUTES,
@@ -8,6 +8,7 @@ import {
   type AiQuestion,
   type AiQuestionType,
 } from '../../data/aiTrainer';
+import { explainOf } from '../../data/aiTrainerExplain';
 import { cloudPull, cloudPut } from '../../lib/aiSync';
 
 /* ---------------------------------- 工具 ---------------------------------- */
@@ -376,6 +377,21 @@ function QuestionCard({
           {isMulti ? <p className="text-muted text-[12px]">多选题：选全才得分，多选少选都不得分。</p> : null}
         </div>
       )}
+    </div>
+  );
+}
+
+function ExplainBlock({ id }: { id: string }) {
+  const ex = explainOf(id);
+  if (!ex) return null;
+  return (
+    <div className="border-line mt-4 rounded-[14px] border px-3.5 py-3">
+      <div className="flex flex-wrap items-center gap-1.5 text-[12px]">
+        <Lightbulb className="text-brand-ink size-3.5" />
+        <span className="text-brand-ink font-medium">解析</span>
+        <span className="text-muted">{ex.ai ? 'AI 归纳，非官方答案' : '来源：官方题库'}</span>
+      </div>
+      <p className="text-secondary mt-1.5 text-[13px] leading-relaxed">{ex.text}</p>
     </div>
   );
 }
@@ -1032,6 +1048,7 @@ export function AiTrainerPage() {
                     revealed={drillShown}
                     onPick={(value) => drillPick(drillQ, value)}
                   />
+                  {drillShown ? <ExplainBlock id={drillQ.id} /> : null}
                   <div className="mt-5 flex flex-wrap items-center gap-3">
                     {drillShown ? (
                       <span className={`text-[13px] ${drillOK ? 'text-success-ink' : 'text-danger-ink'}`}>
@@ -1348,6 +1365,7 @@ export function AiTrainerPage() {
                                 ))
                             : null}
                         </div>
+                        <ExplainBlock id={q.id} />
                       </div>
                     );
                   })}
