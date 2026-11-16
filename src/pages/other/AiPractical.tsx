@@ -8,6 +8,8 @@ import {
   type PoolItem,
 } from '../../data/aiPracticalPool';
 import { cloudPull, cloudPut } from '../../lib/aiSync';
+import { answerOf } from '../../data/aiPracticalAnswers';
+import { sheetOf, type PracticalSheet, type SheetCell, type SheetPara } from '../../data/aiPracticalSheets';
 
 /* 与考场一致：平台发题、发素材、收文件；代码在 jupyter 里写，导出 html 后上传 */
 
@@ -16,6 +18,12 @@ const RESULT_KEY = 'xj.ai.practical.results.v1';
 const CLOUD_KEY = 'ai-practical';
 const CLOUD_META_KEY = 'xj.ai.practical.meta.v1';
 const API = '/ai-lab';
+/* 在线答题卷的草稿（按题号存一份字段值） */
+const SHEET_KEY = 'xj.ai.practical.sheets.v1';
+type SheetValues = Record<string, string>;
+function loadSheetDrafts(): Record<string, SheetValues> {
+  return loadJson<Record<string, SheetValues>>(SHEET_KEY, {});
+}
 /* 有 AI 参考做法 notebook 的题号（素材目录里的 <code>_ref.ipynb） */
 const REF_CODES = new Set(['1.1.1', '2.1.1', '2.2.1', '3.1.1', '3.2.1', '4.1.1']);
 
@@ -141,6 +149,7 @@ export function AiPractical() {
   const [waitTick, setWaitTick] = useState(0);
   const [autoSubmitted, setAutoSubmitted] = useState(false);
   const [jupyterToken, setJupyterToken] = useState('');
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const submitting = useRef(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -273,6 +282,8 @@ export function AiPractical() {
               score: it.score,
               sheet: it.sheet,
               rubric: it.rubric,
+              /* 第三方整理的参考要点，只作为判分时的对照，不要求学生逐字对上 */
+              ref: answerOf(it.code)?.text ?? '',
             })),
           }),
         });
@@ -412,6 +423,18 @@ export function AiPractical() {
 
   const currentPage = useMemo(() => pages.find((p) => p.code === paper[current]?.code), [pages, paper, current]);
   const currentFiles = uploads[paper[current]?.code ?? ''] ?? [];
+  const curCode = paper[current]?.code ?? '';
+  const pageFiles = currentPage?.files ?? [];
+  /* 有没有发 notebook 或数据集：决定这道题该不该出现 jupyter 入口（1.2.x、4.x 这类纯论述题没有） */
+  const hasNotebook = pageFiles.includes(curCode + '.ipynb');
+  const hasData = pageFiles.some((n) => /\.(csv|xlsx|xls)$/i.test(n));
+  const showJupyter = hasNotebook || hasData;
+  const hasSheet = pageFiles.some((n) => n.endsWith('.docx'));
+
+  /* 换题时把答题卷面板收起来 */
+  useEffect(() => {
+    setSheetOpen(false);
+  }, [curCode]);
   const overtime = remaining <= 5 * 60 && phase === 'writing';
   const best = useMemo(() => (history.length ? Math.max(...history.map((h) => h.total)) : null), [history]);
   const uploadedTotal = useMemo(() => Object.values(uploads).reduce((n, fs) => n + fs.length, 0), [uploads]);
@@ -433,7 +456,8 @@ export function AiPractical() {
             <p>规则同考场：全卷 120 分钟统一倒计时，中途不暂停；每题标的 20 或 30 分钟只是建议时间，六题之间可以自由来回改，到点自动交卷，一份卷只能交一次。</p>
             <p>每题左侧是官方试题单，右侧「素材下载」给本题全部素材（notebook 框架、数据集、答题卷、onnx 模型），解压或直接在网页里的 jupyter 打开即可作答。</p>
             <p>作答完按「答案上传」表格逐项交文件：notebook 在 JupyterLab 里用 File → Save and Export Notebook As → HTML 导出（经典 notebook 界面是 File → Download as → HTML），截图存 jpg，报告存 docx，文件名照表格里的要求写。</p>
-            <p>答题卷（docx）是 Word 二进制文件，jupyter 里双击它只会报 not UTF-8、看不到内容；点「素材下载」里的「预览答题卷」在浏览器里看原样。</p>
+            <p>要写答题卷的题不用下载 Word：点「素材下载」里的「在线填写答题卷」，按原卷的表格和空格逐处填，停手即自动存成 {"<题号>.docx"} 交上去。想照原样看就点「预览原卷」。</p>
+            <p>纯论述题（1.2.x、4.x）不会出现 jupyter 入口——那几题就是写文档；带 notebook 或数据集的题才有 jupyter。</p>
             <p>交卷后按官方评分细则逐条给分，可对照每个评分点看理由。注意：判分由 AI 完成，主要看材料是否齐全、代码与文件名是否正确，看不出的内容（截图里画得对不对、文档写得好不好）它给不了分，所以分数不等于真实考场成绩。</p>
           </div>
           {error ? <p className="text-danger-ink mt-3 text-[13px]">{error}</p> : null}
@@ -731,39 +755,41 @@ export function AiPractical() {
                   <Download size={12} className="mr-1" />
                   打包下载
                 </a>
-                {(currentPage?.files ?? []).some((n) => n.endsWith('.docx')) ? (
+                {hasSheet ? (
+                  <button
+                    type="button"
+                    className="pill pill--solid px-2.5 py-1 text-[12px]"
+                    onClick={() => setSheetOpen(true)}
+                  >
+                    <FileText size={12} className="mr-1" />
+                    在线填写答题卷
+                  </button>
+                ) : null}
+                {hasSheet ? (
                   <a
                     className="pill px-2.5 py-1 text-[12px]"
-                    href={API + '/sheet/' + encodeURIComponent(paper[current]?.code ?? '')}
+                    href={API + '/sheet/' + encodeURIComponent(curCode)}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <FileText size={12} className="mr-1" />
-                    预览答题卷
+                    预览原卷
                   </a>
                 ) : null}
-                <a
-                  className="pill pill--solid px-2.5 py-1 text-[12px]"
-                  href={'/jupyter/tree/' + encodeURIComponent('素材') + '/' + encodeURIComponent(paper[current]?.code ?? '') + '?token=' + jupyterToken}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <ExternalLink size={12} className="mr-1" />
-                  在 jupyter 中作答
-                </a>
-                <a
-                  className="pill px-2.5 py-1 text-[12px]"
-                  href={'/jupyter/notebooks/' + encodeURIComponent('素材') + '/_tools/' + encodeURIComponent('答题卷.ipynb') + '?token=' + jupyterToken}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <ExternalLink size={12} className="mr-1" />
-                  答题卷工具
-                </a>
-                {(currentPage?.files ?? []).some((n) => n === (paper[current]?.code ?? '') + '.ipynb') ? (
+                {showJupyter ? (
+                  <a
+                    className="pill pill--solid px-2.5 py-1 text-[12px]"
+                    href={'/jupyter/tree/' + encodeURIComponent('素材') + '/' + encodeURIComponent(curCode) + '?token=' + jupyterToken}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink size={12} className="mr-1" />
+                    在 jupyter 中作答
+                  </a>
+                ) : null}
+                {hasNotebook ? (
                   <a
                     className="pill px-2.5 py-1 text-[12px]"
-                    href={'/jupyter/notebooks/' + encodeURIComponent('素材') + '/' + encodeURIComponent(paper[current]?.code ?? '') + '/' + encodeURIComponent((paper[current]?.code ?? '') + '.ipynb') + '?token=' + jupyterToken}
+                    href={'/jupyter/notebooks/' + encodeURIComponent('素材') + '/' + encodeURIComponent(curCode) + '/' + encodeURIComponent(curCode + '.ipynb') + '?token=' + jupyterToken}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -771,10 +797,10 @@ export function AiPractical() {
                     打开本题 notebook
                   </a>
                 ) : null}
-                {REF_CODES.has(paper[current]?.code ?? '') ? (
+                {REF_CODES.has(curCode) ? (
                   <a
                     className="pill px-2.5 py-1 text-[12px]"
-                    href={'/jupyter/notebooks/' + encodeURIComponent('素材') + '/' + encodeURIComponent(paper[current]?.code ?? '') + '/' + encodeURIComponent((paper[current]?.code ?? '') + '_ref.ipynb') + '?token=' + jupyterToken}
+                    href={'/jupyter/notebooks/' + encodeURIComponent('素材') + '/' + encodeURIComponent(curCode) + '/' + encodeURIComponent(curCode + '_ref.ipynb') + '?token=' + jupyterToken}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -783,20 +809,40 @@ export function AiPractical() {
                   </a>
                 ) : null}
               </div>
-              <p className="text-muted mt-2 text-[12px] leading-relaxed">
-                现在是经典 notebook 界面（和考场同款）：导出用 File → Download as → HTML(.html)。考场里 jupyter 的工作目录是 D:\jupyter_notebook，本题素材目录就相当于那个位置（平台把素材解压到考生文件夹后在里面起 jupyter，效果一样）。本题没有发 notebook 框架的（写 docx 的那几类），在「在 jupyter 中作答」里用 New → Python 3 自己新建即可。
-              </p>
+              {showJupyter ? (
+                <p className="text-muted mt-2 text-[12px] leading-relaxed">
+                  现在是经典 notebook 界面（和考场同款）：导出用 File → Download as → HTML(.html)。考场里 jupyter 的工作目录是 D:\jupyter_notebook，本题素材目录就相当于那个位置（平台把素材解压到考生文件夹后在里面起 jupyter，效果一样）。本题没发 notebook 框架的，用 New → Python 3 自己新建即可。
+                </p>
+              ) : (
+                <p className="text-muted mt-2 text-[12px] leading-relaxed">
+                  本题是论述题，按试题单把答案写进答题卷就行，不用开 jupyter。点「在线填写答题卷」可以直接在网页里按原卷的表格和空格逐处填写，填完自动存成 {curCode}.docx 交上去，也可以下载原卷用 Word 填。
+                </p>
+              )}
               <p className="text-muted mt-1 text-[12px] leading-relaxed">
                 参考做法是 AI 照着试题单写的一份可运行代码，只用来对照思路。建议先自己写完再看，真考不提供这个。
               </p>
-              <p className="text-muted mt-1 text-[12px] leading-relaxed">
-                答题卷是 Word 二进制文件，jupyter 里双击它只会报「is not UTF-8 encoded」，看不到内容——那是加载不了，不是文件坏了。
-                用「预览答题卷」在浏览器里按原样看；要在网页里填就用「答题卷工具」按单元格写值再 save()；最省事是下载用 Word 填好再上传。
-              </p>
+              {hasSheet ? (
+                <p className="text-muted mt-1 text-[12px] leading-relaxed">
+                  答题卷是 Word 二进制文件，jupyter 里双击它只会报「is not UTF-8 encoded」，看不到内容——那是加载不了，不是文件坏了。
+                  想照原样看就点「预览原卷」；要打字就点「在线填写答题卷」，按字段填完自动存成 {curCode}.docx（这份就是判分用的答卷）。
+                </p>
+              ) : null}
             </div>
           )}
         </section>
       </div>
+
+      {sheetOpen && hasSheet ? (
+        <SheetEditor
+          key={curCode}
+          code={curCode}
+          exam={exam?.id ?? ''}
+          onClose={() => setSheetOpen(false)}
+          onSaved={() => {
+            if (exam) void reloadFiles(exam.id, exam.codes);
+          }}
+        />
+      ) : null}
 
       <div className="flex items-center gap-2">
         <button
@@ -855,6 +901,7 @@ function ResultCard({
       <div className="mt-3 space-y-3">
         {result.items.map((it) => {
           const meta = paper.find((p) => p.code === it.code) ?? AI_PRACTICAL_POOL.find((p) => p.code === it.code);
+          const ans = answerOf(it.code);
           return (
             <div key={it.code}>
               <div className="flex flex-wrap items-baseline gap-x-3">
@@ -887,10 +934,174 @@ function ResultCard({
                   })}
                 </ul>
               ) : null}
+              {ans ? (
+                <details className="mt-2">
+                  <summary className="text-brand cursor-pointer text-[12px]">参考答案（第三方整理，非官方）</summary>
+                  <pre className="text-secondary mt-1 font-sans text-[12.5px] leading-relaxed whitespace-pre-wrap">
+                    {ans.text}
+                  </pre>
+                  <p className="text-muted mt-1 text-[12px] leading-relaxed">{ans.note}</p>
+                </details>
+              ) : null}
             </div>
           );
         })}
       </div>
     </section>
+  );
+}
+
+/* -------------------------------- 在线答题卷 -------------------------------- */
+
+function SheetParaBlock({
+  block,
+  values,
+  set,
+}: {
+  block: SheetPara;
+  values: SheetValues;
+  set: (id: string, v: string) => void;
+}) {
+  const parts = block.parts;
+  if (!parts) {
+    return <p className="text-secondary text-[13px] leading-relaxed">{block.text}</p>;
+  }
+  return (
+    <p className="text-secondary text-[13px] leading-relaxed">
+      {parts.map((part, i) => (
+        <span key={i}>
+          {part}
+          {i < parts.length - 1 ? (
+            <input
+              className="border-line bg-surface-2 text-ink mx-1 min-w-[160px] rounded-md border px-2 py-0.5 text-[13px] outline-none"
+              value={values[block.id + '#' + i] ?? ''}
+              onChange={(e) => set(block.id + '#' + i, e.target.value)}
+            />
+          ) : null}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+function SheetEditor({
+  code,
+  exam,
+  onClose,
+  onSaved,
+}: {
+  code: string;
+  exam: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const sheet: PracticalSheet | null = sheetOf(code);
+  const [values, setValues] = useState<SheetValues>(() => loadSheetDrafts()[code] ?? {});
+  const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [msg, setMsg] = useState('');
+  const timer = useRef<number | null>(null);
+  const latest = useRef<SheetValues>(values);
+
+  const flush = useCallback(
+    async (next: SheetValues) => {
+      if (!exam) return;
+      setState('saving');
+      try {
+        const r = await fetch(API + '/save-sheet', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ exam, code, values: next }),
+        });
+        const d = await r.json().catch(() => null);
+        if (!r.ok || !d?.ok) throw new Error(d?.error ?? '保存失败');
+        setState('saved');
+        onSaved();
+      } catch (err) {
+        setState('error');
+        setMsg(err instanceof Error ? err.message : '保存失败');
+      }
+    },
+    [code, exam, onSaved],
+  );
+
+  const set = useCallback(
+    (id: string, v: string) => {
+      const next = { ...latest.current, [id]: v };
+      latest.current = next;
+      setValues(next);
+      const drafts = loadSheetDrafts();
+      drafts[code] = next;
+      saveJson(SHEET_KEY, drafts);
+      if (timer.current) window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => void flush(next), 900);
+    },
+    [code, flush],
+  );
+
+  const finish = useCallback(() => {
+    if (timer.current) window.clearTimeout(timer.current);
+    void flush(latest.current);
+    onClose();
+  }, [flush, onClose]);
+
+  if (!sheet) return null;
+  const filled = Object.values(values).filter((v) => v.trim()).length;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/45 px-3 py-6">
+      <div className="glass mx-auto w-full max-w-[880px] px-4 py-4 sm:px-6">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="text-ink text-[15px] font-semibold">答题卷 {code}</h3>
+            <p className="text-muted mt-0.5 text-[12px] leading-relaxed">
+              按原卷的表格和空格逐处填写，共 {sheet.fieldCount} 处，已填 {filled} 处。停手 1 秒自动保存成 {code}
+              .docx，这份就是判分用的答卷。
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="text-muted text-[12px]">
+              {state === 'saving' ? '保存中…' : state === 'saved' ? '已保存' : state === 'error' ? msg : ''}
+            </span>
+            <button type="button" className="pill pill--solid px-3 py-1.5 text-[12px]" onClick={finish}>
+              <Send size={12} className="mr-1" />
+              保存并关闭
+            </button>
+          </div>
+        </div>
+        <div className="mt-3 space-y-2">
+          {sheet.blocks.map((b) =>
+            b.kind === 'p' ? (
+              <SheetParaBlock key={b.id} block={b} values={values} set={set} />
+            ) : (
+              <div key={b.id} className="overflow-x-auto">
+                <table className="w-full border-collapse text-[12.5px]">
+                  <tbody>
+                    {b.rows.map((row: SheetCell[], ri: number) => (
+                      <tr key={ri}>
+                        {row.map((cell: SheetCell, ci: number) => (
+                          <td key={ci} className="border-line border px-2 py-1 align-top">
+                            {cell.field ? (
+                              <textarea
+                                className="text-ink w-full resize-y bg-transparent text-[12.5px] leading-relaxed outline-none"
+                                rows={2}
+                                placeholder="（填写处）"
+                                value={values[cell.field] ?? ''}
+                                onChange={(e) => set(cell.field, e.target.value)}
+                              />
+                            ) : (
+                              <span className="text-secondary whitespace-pre-wrap">{cell.text || '—'}</span>
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ),
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
