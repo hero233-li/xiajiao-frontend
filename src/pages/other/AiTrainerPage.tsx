@@ -70,25 +70,23 @@ interface ExamRecord {
 
 /* -------------------------------- 组卷与判分 -------------------------------- */
 
+/** 打乱选项并重排标号，返回一张可直接作答的题。 */
+function mixQuestion(q: AiQuestion): ExamQuestion {
+  if (q.type === 'tf') return { ...q, shown: [], key: q.answer };
+  const letters = ['A', 'B', 'C', 'D', 'E'];
+  const remap = new Map<string, string>();
+  const shown = shuffle(q.options ?? []).map((opt, index) => {
+    remap.set(opt.key, letters[index]);
+    return { key: letters[index], text: opt.text };
+  });
+  return { ...q, shown, key: q.answer.map((a) => remap.get(a) ?? a) };
+}
+
 function buildPaper(): Paper {
   const picked: ExamQuestion[] = [];
   for (const block of AI_THEORY_PLAN) {
     const pool = AI_THEORY_QUESTIONS.filter((q) => q.type === block.type);
-    const chosen = shuffle(pool).slice(0, Math.min(block.count, pool.length));
-    for (const q of chosen) {
-      if (q.type === 'tf') {
-        picked.push({ ...q, shown: [], key: q.answer });
-        continue;
-      }
-      const opts = shuffle(q.options ?? []);
-      const letters = ['A', 'B', 'C', 'D', 'E'];
-      const remap = new Map<string, string>();
-      const shown = opts.map((opt, index) => {
-        remap.set(opt.key, letters[index]);
-        return { key: letters[index], text: opt.text };
-      });
-      picked.push({ ...q, shown, key: q.answer.map((a) => remap.get(a) ?? a) });
-    }
+    for (const q of shuffle(pool).slice(0, Math.min(block.count, pool.length))) picked.push(mixQuestion(q));
   }
   return {
     id: `exam-${Date.now()}`,
@@ -96,6 +94,26 @@ function buildPaper(): Paper {
     questions: picked,
     seconds: AI_THEORY_MINUTES * 60,
   };
+}
+
+/* --------------------------------- 刷题模式 -------------------------------- */
+
+/** 一局 10 题，全库随机，不计时。 */
+const DRILL_COUNT = 10;
+
+function buildDrill(): ExamQuestion[] {
+  return shuffle(AI_THEORY_QUESTIONS)
+    .slice(0, DRILL_COUNT)
+    .map(mixQuestion);
+}
+
+interface DrillRun {
+  questions: ExamQuestion[];
+  cursor: number;
+  picks: Record<string, string[]>;
+  /** 断言/单选选完即揭晓，多选点「看答案」后揭晓。 */
+  revealed: Record<string, boolean>;
+  finished: boolean;
 }
 
 /** 中途刷新/关页后能接着做：存题序、选项顺序、已选、标记、剩余时间。 */
@@ -377,6 +395,7 @@ export function AiTrainerPage() {
   const [marked, setMarked] = useState<Record<string, boolean>>({});
   const [sheetOpen, setSheetOpen] = useState(false);
   const [jump, setJump] = useState('');
+  const [drill, setDrill] = useState<DrillRun | null>(null);
   const submitted = useRef(false);
   const nextTimer = useRef<number | null>(null);
 
@@ -617,6 +636,54 @@ export function AiTrainerPage() {
     };
   }, []);
 
+  const drillPick = (question: ExamQuestion, value: string) => {
+    setDrill((prev) => {
+      if (!prev || prev.finished) return prev;
+      const mine = prev.picks[question.id] ?? [];
+      const next =
+        question.type === 'multi'
+          ? mine.includes(value)
+            ? mine.filter((v) => v !== value)
+            : [...mine, value]
+          : [value];
+      return {
+        ...prev,
+        picks: { ...prev.picks, [question.id]: next },
+        revealed:
+          question.type === 'multi' ? prev.revealed : { ...prev.revealed, [question.id]: true },
+      };
+    });
+  };
+
+  const drillReveal = (qid: string) => {
+    setDrill((prev) => (prev ? { ...prev, revealed: { ...prev.revealed, [qid]: true } } : prev));
+  };
+
+  const drillNext = () => {
+    setDrill((prev) => {
+      if (!prev) return prev;
+      if (prev.cursor + 1 >= prev.questions.length) return { ...prev, finished: true };
+      return { ...prev, cursor: prev.cursor + 1 };
+    });
+  };
+
+  const drillStats = useMemo(() => {
+    if (!drill) return { right: 0, wrong: 0, answered: 0 };
+    let right = 0;
+    let wrong = 0;
+    for (const q of drill.questions) {
+      const mine = drill.picks[q.id] ?? [];
+      if (!mine.length) continue;
+      if (isRight(q, mine)) right += 1;
+      else wrong += 1;
+    }
+    return { right, wrong, answered: right + wrong };
+  }, [drill]);
+
+  const startDrill = () => {
+    setDrill({ questions: buildDrill(), cursor: 0, picks: {}, revealed: {}, finished: false });
+  };
+
   const startWrongs = (list: WrongEntry[] = wrongs) => {
     const fresh = buildWrongPaper(list);
     if (!fresh.questions.length) return;
@@ -690,6 +757,13 @@ export function AiTrainerPage() {
     ? Math.round((records.reduce((sum, r) => sum + r.score, 0) / records.length) * 10) / 10
     : null;
 
+  const drillQ = drill && !drill.finished ? drill.questions[drill.cursor] : null;
+  const drillPicked: string[] = drill && drillQ ? (drill.picks[drillQ.id] ?? []) : [];
+  const drillShown = drill && drillQ ? Boolean(drill.revealed[drillQ.id]) : false;
+  const drillOK = drillQ ? isRight(drillQ, drillPicked) : false;
+  const answerText = (q: ExamQuestion) =>
+    q.key.map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v)).join('');
+
   /* --------------------------------- 渲染 --------------------------------- */
 
   const tabs: { key: typeof tab; label: string }[] = [
@@ -743,7 +817,7 @@ export function AiTrainerPage() {
 
       {tab === 'theory' ? (
         <>
-          {!paper && !result ? (
+          {!paper && !result && !drill ? (
             <>
               <section className="glass flex flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-5">
                 <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
@@ -794,6 +868,9 @@ export function AiTrainerPage() {
                       开始一次模拟考试
                     </button>
                   )}
+                  <button type="button" onClick={startDrill} className="pill px-4 py-2.5 text-[14px]">
+                    刷题模式（10 题一局）
+                  </button>
                   {records.length || wrongs.length ? (
                     <button
                       type="button"
@@ -888,6 +965,99 @@ export function AiTrainerPage() {
                         </span>
                       </div>
                     ))}
+                  </div>
+                </section>
+              ) : null}
+            </>
+          ) : null}
+
+          {!paper && !result && drill ? (
+            <>
+              <section className="glass flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-2">
+                    <h2 className="text-ink text-[14px] font-semibold">刷题模式</h2>
+                    <span className="text-muted text-[12px] tabular-nums">
+                      {drill.finished ? '本局结束' : `第 ${drill.cursor + 1} / ${drill.questions.length} 题`}
+                    </span>
+                  </div>
+                  <p className="text-secondary mt-1 text-[12px] leading-relaxed">
+                    10 题一局，从 {AI_THEORY_QUESTIONS.length} 题全库随机抽，判断、单选、多选混在一起；不计时，答完立刻看答案，答错的题不进错题本。
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-3 text-[13px]">
+                  <span className="text-success-ink tabular-nums">对 {drillStats.right}</span>
+                  <span className="text-danger-ink tabular-nums">错 {drillStats.wrong}</span>
+                  <button
+                    type="button"
+                    onClick={() => setDrill(null)}
+                    className="text-muted hover:text-danger-ink text-[12px] transition"
+                  >
+                    退出刷题
+                  </button>
+                </div>
+              </section>
+
+              {drill.finished ? (
+                <section className="glass flex flex-wrap items-end justify-between gap-4 px-4 py-5 sm:px-5">
+                  <div>
+                    <p className="text-brand-ink text-[34px] leading-none font-semibold tabular-nums">
+                      {drillStats.right}
+                      <span className="text-muted ml-1 text-[14px] font-normal">
+                        / {drill.questions.length} 题答对
+                      </span>
+                    </p>
+                    <p className="text-secondary mt-2 text-[13px]">
+                      答错 {drillStats.wrong} 题 · 未作答 {drill.questions.length - drillStats.answered} 题
+                    </p>
+                    <p className="text-muted mt-1 text-[12px]">刷题不进错题本、不计入历史成绩，练手感用。</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={startDrill} className="pill pill--solid px-4 py-2 text-[13px]">
+                      <RotateCcw className="mr-1 inline size-3.5" />
+                      再来一局
+                    </button>
+                    <button type="button" onClick={() => setDrill(null)} className="pill px-4 py-2 text-[13px]">
+                      返回
+                    </button>
+                  </div>
+                </section>
+              ) : drillQ ? (
+                <section className="glass px-4 py-5 sm:px-5">
+                  <QuestionCard
+                    question={drillQ}
+                    index={drill.cursor}
+                    total={drill.questions.length}
+                    picked={drillPicked}
+                    revealed={drillShown}
+                    onPick={(value) => drillPick(drillQ, value)}
+                  />
+                  <div className="mt-5 flex flex-wrap items-center gap-3">
+                    {drillShown ? (
+                      <span className={`text-[13px] ${drillOK ? 'text-success-ink' : 'text-danger-ink'}`}>
+                        {drillOK ? '答对了' : '答错了'}
+                        {!drillOK ? <span className="text-secondary ml-1">正确答案 {answerText(drillQ)}</span> : null}
+                      </span>
+                    ) : drillQ.type === 'multi' ? (
+                      <button
+                        type="button"
+                        onClick={() => drillReveal(drillQ.id)}
+                        disabled={drillPicked.length === 0}
+                        className="pill px-3 py-1.5 text-[13px] disabled:opacity-40"
+                      >
+                        看答案
+                      </button>
+                    ) : (
+                      <span className="text-muted text-[12px]">选一个选项立刻看答案</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={drillNext}
+                      className="pill pill--solid ml-auto px-4 py-1.5 text-[13px]"
+                    >
+                      {drill.cursor + 1 >= drill.questions.length ? '结束本局' : '下一题'}
+                      <ChevronRight className="ml-1 inline size-4" />
+                    </button>
                   </div>
                 </section>
               ) : null}
