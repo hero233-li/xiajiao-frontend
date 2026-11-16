@@ -99,13 +99,96 @@ function buildPaper(): Paper {
 
 /* --------------------------------- 刷题模式 -------------------------------- */
 
-/** 一局 10 题，全库随机，不计时。 */
+/** 一局 10 题，不计时；抽题按权重：做错过的题更容易再出现，做对后权重回落。 */
 const DRILL_COUNT = 10;
+/** 每局固定留几席给错题（不够就按实际数量），剩下的按权重抽新题。 */
+const DRILL_WRONG_SLOTS = 4;
+/** 刷题自己的账本：qid → { misses, lastAt }。与考试错题本分开，只用来算抽题权重。 */
+const DRILL_MISS_KEY = 'xj.ai.drill.misses.v1';
+/** 权重参数：基础 1，考卷错过每记 +2（最多 3 次），刷题错过每记 +1.5（最多 4 次），三天内错过再 +2，封顶 12。 */
+const WEIGHT_BASE = 1;
+const WEIGHT_EXAM_MISS = 2;
+const WEIGHT_DRILL_MISS = 1.5;
+const WEIGHT_RECENT = 2;
+const WEIGHT_CAP = 12;
 
-function buildDrill(): ExamQuestion[] {
-  return shuffle(AI_THEORY_QUESTIONS)
-    .slice(0, DRILL_COUNT)
-    .map(mixQuestion);
+interface DrillMiss {
+  misses: number;
+  lastAt: string;
+}
+
+function loadDrillMisses(): Record<string, DrillMiss> {
+  try {
+    const raw = localStorage.getItem(DRILL_MISS_KEY);
+    if (!raw) return {};
+    const data = JSON.parse(raw) as Record<string, DrillMiss>;
+    if (!data || typeof data !== 'object') return {};
+    const out: Record<string, DrillMiss> = {};
+    for (const [qid, v] of Object.entries(data)) {
+      if (v && typeof v.misses === 'number' && v.misses > 0) out[qid] = { misses: v.misses, lastAt: v.lastAt ?? '' };
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+function saveDrillMisses(map: Record<string, DrillMiss>) {
+  try {
+    localStorage.setItem(DRILL_MISS_KEY, JSON.stringify(map));
+  } catch {
+    /* 配额满就算了 */
+  }
+}
+
+/** 一道题的抽中权重。examMisses 来自考试错题本，drillMisses 来自刷题本。 */
+function weightOf(qid: string, examMisses: Map<string, number>, drillMisses: Record<string, DrillMiss>) {
+  let w = WEIGHT_BASE;
+  const exam = examMisses.get(qid) ?? 0;
+  if (exam > 0) w += WEIGHT_EXAM_MISS * Math.min(exam, 3);
+  const drill = drillMisses[qid];
+  if (drill && drill.misses > 0) {
+    w += WEIGHT_DRILL_MISS * Math.min(drill.misses, 4);
+    const last = Date.parse(drill.lastAt);
+    if (Number.isFinite(last) && Date.now() - last < 3 * 24 * 3600 * 1000) w += WEIGHT_RECENT;
+  }
+  return Math.min(w, WEIGHT_CAP);
+}
+
+/** 按权重不放回抽样：越靠前的累积区间越宽，错题被抽中的概率更高。 */
+function pickWeighted(pool: AiQuestion[], count: number, examMisses: Map<string, number>, drillMisses: Record<string, DrillMiss>) {
+  const rest = pool.slice();
+  const weights = rest.map((q) => weightOf(q.id, examMisses, drillMisses));
+  const out: AiQuestion[] = [];
+  const target = Math.min(count, rest.length);
+  for (let n = 0; n < target; n += 1) {
+    let total = 0;
+    for (const w of weights) total += w;
+    let r = Math.random() * total;
+    let idx = 0;
+    for (let i = 0; i < rest.length; i += 1) {
+      r -= weights[i];
+      if (r <= 0) {
+        idx = i;
+        break;
+      }
+    }
+    out.push(rest[idx]);
+    rest.splice(idx, 1);
+    weights.splice(idx, 1);
+  }
+  return out;
+}
+
+function buildDrill(examWrongs: WrongEntry[], drillMisses: Record<string, DrillMiss>): ExamQuestion[] {
+  const examMisses = new Map(examWrongs.map((e) => [e.qid, e.misses]));
+  const hot = AI_THEORY_QUESTIONS.filter((q) => weightOf(q.id, examMisses, drillMisses) > WEIGHT_BASE);
+  const quota = Math.min(DRILL_WRONG_SLOTS, hot.length);
+  const wrongPart = quota > 0 ? pickWeighted(hot, quota, examMisses, drillMisses) : [];
+  const taken = new Set(wrongPart.map((q) => q.id));
+  const rest = AI_THEORY_QUESTIONS.filter((q) => !taken.has(q.id));
+  const fresh = pickWeighted(rest, DRILL_COUNT - wrongPart.length, examMisses, drillMisses);
+  return shuffle([...wrongPart, ...fresh]).map(mixQuestion);
 }
 
 interface DrillRun {
@@ -288,6 +371,7 @@ function QuestionCard({
   revealed,
   marked,
   onToggleMark,
+  hint,
 }: {
   question: ExamQuestion;
   index: number;
@@ -297,6 +381,8 @@ function QuestionCard({
   revealed: boolean;
   marked?: boolean;
   onToggleMark?: () => void;
+  /** 题号旁的角标，例如「错题 ×3」。 */
+  hint?: string;
 }) {
   const isMulti = question.type === 'multi';
   const correctSet = new Set(question.key);
@@ -310,6 +396,9 @@ function QuestionCard({
         <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5 text-[12px]">
           {TYPE_LABEL[question.type]}
         </span>
+        {hint ? (
+          <span className="bg-danger-soft text-danger rounded-full px-2 py-0.5 text-[12px]">{hint}</span>
+        ) : null}
         {onToggleMark ? (
           <button
             type="button"
@@ -412,6 +501,11 @@ export function AiTrainerPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [jump, setJump] = useState('');
   const [drill, setDrill] = useState<DrillRun | null>(null);
+  const [drillMisses, setDrillMisses] = useState<Record<string, DrillMiss>>(() => loadDrillMisses());
+
+  useEffect(() => {
+    saveDrillMisses(drillMisses);
+  }, [drillMisses]);
   const submitted = useRef(false);
   const nextTimer = useRef<number | null>(null);
 
@@ -675,12 +769,26 @@ export function AiTrainerPage() {
     setDrill((prev) => (prev ? { ...prev, revealed: { ...prev.revealed, [qid]: true } } : prev));
   };
 
-  const drillNext = () => {
-    setDrill((prev) => {
-      if (!prev) return prev;
-      if (prev.cursor + 1 >= prev.questions.length) return { ...prev, finished: true };
-      return { ...prev, cursor: prev.cursor + 1 };
+  /** 结算本题：答错记账、答对扣账，下次抽题权重随之变化。 */
+  const settleDrillQuestion = (q: ExamQuestion, mine: string[]) => {
+    const ok = isRight(q, mine);
+    setDrillMisses((cur) => {
+      const old = cur[q.id];
+      const misses = Math.max(0, (old?.misses ?? 0) + (ok ? -1 : 1));
+      const next = { ...cur };
+      if (misses === 0) delete next[q.id];
+      else next[q.id] = { misses, lastAt: ok ? (old?.lastAt ?? '') : new Date().toISOString() };
+      return next;
     });
+  };
+
+  const drillNext = () => {
+    const cur = drill;
+    if (!cur || cur.finished) return;
+    const q = cur.questions[cur.cursor];
+    if (q && cur.revealed[q.id] && (cur.picks[q.id] ?? []).length > 0) settleDrillQuestion(q, cur.picks[q.id] ?? []);
+    if (cur.cursor + 1 >= cur.questions.length) setDrill({ ...cur, finished: true });
+    else setDrill({ ...cur, cursor: cur.cursor + 1 });
   };
 
   const drillStats = useMemo(() => {
@@ -697,7 +805,7 @@ export function AiTrainerPage() {
   }, [drill]);
 
   const startDrill = () => {
-    setDrill({ questions: buildDrill(), cursor: 0, picks: {}, revealed: {}, finished: false });
+    setDrill({ questions: buildDrill(wrongs, drillMisses), cursor: 0, picks: {}, revealed: {}, finished: false });
   };
 
   const startWrongs = (list: WrongEntry[] = wrongs) => {
@@ -777,6 +885,15 @@ export function AiTrainerPage() {
   const drillPicked: string[] = drill && drillQ ? (drill.picks[drillQ.id] ?? []) : [];
   const drillShown = drill && drillQ ? Boolean(drill.revealed[drillQ.id]) : false;
   const drillOK = drillQ ? isRight(drillQ, drillPicked) : false;
+  const missCountOf = (qid: string) =>
+    (wrongs.find((e) => e.qid === qid)?.misses ?? 0) + (drillMisses[qid]?.misses ?? 0);
+  const drillHint = drillQ && missCountOf(drillQ.id) > 0 ? `错题 ×${missCountOf(drillQ.id)}` : '';
+  const weightedCount = useMemo(() => {
+    const examMisses = new Map(wrongs.map((e) => [e.qid, e.misses]));
+    let n = 0;
+    for (const q of AI_THEORY_QUESTIONS) if (weightOf(q.id, examMisses, drillMisses) > 1) n += 1;
+    return n;
+  }, [wrongs, drillMisses]);
   const answerText = (q: ExamQuestion) =>
     q.key.map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v)).join('');
 
@@ -885,7 +1002,7 @@ export function AiTrainerPage() {
                     </button>
                   )}
                   <button type="button" onClick={startDrill} className="pill px-4 py-2.5 text-[14px]">
-                    刷题模式（10 题一局）
+                    刷题模式（10 题一局，错题优先）
                   </button>
                   {records.length || wrongs.length ? (
                     <button
@@ -998,7 +1115,7 @@ export function AiTrainerPage() {
                     </span>
                   </div>
                   <p className="text-secondary mt-1 text-[12px] leading-relaxed">
-                    10 题一局，从 {AI_THEORY_QUESTIONS.length} 题全库随机抽，判断、单选、多选混在一起；不计时，答完立刻看答案，答错的题不进错题本。
+                    10 题一局：做错过的题优先出，每局固定留 {DRILL_WRONG_SLOTS} 席给错题（当前有 {weightedCount} 道加权题，不够就按实际数量），剩下的从 {AI_THEORY_QUESTIONS.length} 题里按权重抽新题；错得越多权重越高，做对之后权重回落。不计时，答完立刻看答案。
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
@@ -1026,7 +1143,9 @@ export function AiTrainerPage() {
                     <p className="text-secondary mt-2 text-[13px]">
                       答错 {drillStats.wrong} 题 · 未作答 {drill.questions.length - drillStats.answered} 题
                     </p>
-                    <p className="text-muted mt-1 text-[12px]">刷题不进错题本、不计入历史成绩，练手感用。</p>
+                    <p className="text-muted mt-1 text-[12px]">
+                      答错的题下次出现权重会提高，做对会回落；刷题不写进考试错题本、不计入历史成绩。
+                    </p>
                   </div>
                   <div className="flex gap-2">
                     <button type="button" onClick={startDrill} className="pill pill--solid px-4 py-2 text-[13px]">
@@ -1046,6 +1165,7 @@ export function AiTrainerPage() {
                     total={drill.questions.length}
                     picked={drillPicked}
                     revealed={drillShown}
+                    hint={drillHint}
                     onPick={(value) => drillPick(drillQ, value)}
                   />
                   {drillShown ? <ExplainBlock id={drillQ.id} /> : null}
