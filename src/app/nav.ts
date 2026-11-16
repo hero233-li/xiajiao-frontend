@@ -5,7 +5,6 @@ import {
   Code2,
   GraduationCap,
   Languages,
-  NotebookPen,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -27,7 +26,6 @@ export const navGroups: { title: string; items: NavItem[] }[] = [
     title: '学习',
     items: [
       { to: '/today', label: '备考计划', icon: CalendarCheck },
-      { to: '/daily', label: '日报', icon: NotebookPen },
       {
         to: '/zikao/courses',
         label: '自考',

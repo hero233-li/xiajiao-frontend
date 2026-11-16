@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppShell } from './AppShell';
 import { useSession } from '../lib/useSession';
-import { DailyPage } from '../pages/DailyPage';
 import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
 import { Placeholder } from '../pages/Placeholder';
@@ -34,7 +33,6 @@ export function App() {
       <Route element={<RequireAuth />}>
         <Route index element={<Navigate to="/today" replace />} />
         <Route path="/today" element={<HomePage />} />
-        <Route path="/daily" element={<DailyPage />} />
         <Route path="/zikao/courses" element={<CoursesPage />} />
         <Route path="/zikao/schedule" element={<SchedulePage />} />
         <Route path="/zikao/exams" element={<Placeholder title="历年试卷" note="历年真题与答案解析，稍后补充。" />} />
