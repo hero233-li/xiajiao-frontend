@@ -815,7 +815,10 @@ export function AiTrainerPage() {
       .map((id) => byId.get(id))
       .filter((q): q is AiQuestion => !!q)
       .map(mixQuestion);
-    if (!questions.length) return;
+    if (!questions.length) {
+      if (kind === 'today') window.alert('今天的任务已经做完了，明天再来；也可以点「自由练 10 题」练手。');
+      return;
+    }
     setGraded({});
     setDrill({ kind, questions, cursor: 0, picks: {}, submitted: false, labels });
   };
