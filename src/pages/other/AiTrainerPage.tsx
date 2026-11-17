@@ -10,6 +10,32 @@ import {
 } from '../../data/aiTrainer';
 import { explainOf } from '../../data/aiTrainerExplain';
 import { cloudPull, cloudPut } from '../../lib/aiSync';
+import {
+  answerCard,
+  batchFrom,
+  buildQueue,
+  bumpDay,
+  dayOf,
+  dueText,
+  gradeCard,
+  loadConf,
+  loadDaily,
+  loadQueue,
+  loadSrs,
+  masteryOf,
+  queueProgress,
+  saveConf,
+  saveDaily,
+  saveQueue,
+  saveSrs,
+  streakOf,
+  studiedCount,
+  type DayLog,
+  type DayQueue,
+  type SrsConf,
+  type SrsGrade,
+  type SrsMap,
+} from '../../lib/srs';
 
 /* ---------------------------------- 工具 ---------------------------------- */
 
@@ -97,106 +123,25 @@ function buildPaper(): Paper {
   };
 }
 
-/* --------------------------------- 刷题模式 -------------------------------- */
+/* --------------------------------- 背题模式 -------------------------------- */
 
-/** 一局 10 题，不计时；抽题按权重：做错过的题更容易再出现，做对后权重回落。 */
+/** 一批 10 题，不计时；做完统一交一次卷。 */
 const DRILL_COUNT = 10;
-/** 每局固定留几席给错题（不够就按实际数量），剩下的按权重抽新题。 */
-const DRILL_WRONG_SLOTS = 4;
-/** 刷题自己的账本：qid → { misses, lastAt }。与考试错题本分开，只用来算抽题权重。 */
-const DRILL_MISS_KEY = 'xj.ai.drill.misses.v1';
-/** 权重参数：基础 1，考卷错过每记 +2（最多 3 次），刷题错过每记 +1.5（最多 4 次），三天内错过再 +2，封顶 12。 */
-const WEIGHT_BASE = 1;
-const WEIGHT_EXAM_MISS = 2;
-const WEIGHT_DRILL_MISS = 1.5;
-const WEIGHT_RECENT = 2;
-const WEIGHT_CAP = 12;
+/** 每天新题量的可选档位。 */
+const NEW_PER_DAY_CHOICES = [10, 20, 30];
 
-interface DrillMiss {
-  misses: number;
-  lastAt: string;
-}
-
-function loadDrillMisses(): Record<string, DrillMiss> {
-  try {
-    const raw = localStorage.getItem(DRILL_MISS_KEY);
-    if (!raw) return {};
-    const data = JSON.parse(raw) as Record<string, DrillMiss>;
-    if (!data || typeof data !== 'object') return {};
-    const out: Record<string, DrillMiss> = {};
-    for (const [qid, v] of Object.entries(data)) {
-      if (v && typeof v.misses === 'number' && v.misses > 0) out[qid] = { misses: v.misses, lastAt: v.lastAt ?? '' };
-    }
-    return out;
-  } catch {
-    return {};
-  }
-}
-
-function saveDrillMisses(map: Record<string, DrillMiss>) {
-  try {
-    localStorage.setItem(DRILL_MISS_KEY, JSON.stringify(map));
-  } catch {
-    /* 配额满就算了 */
-  }
-}
-
-/** 一道题的抽中权重。examMisses 来自考试错题本，drillMisses 来自刷题本。 */
-function weightOf(qid: string, examMisses: Map<string, number>, drillMisses: Record<string, DrillMiss>) {
-  let w = WEIGHT_BASE;
-  const exam = examMisses.get(qid) ?? 0;
-  if (exam > 0) w += WEIGHT_EXAM_MISS * Math.min(exam, 3);
-  const drill = drillMisses[qid];
-  if (drill && drill.misses > 0) {
-    w += WEIGHT_DRILL_MISS * Math.min(drill.misses, 4);
-    const last = Date.parse(drill.lastAt);
-    if (Number.isFinite(last) && Date.now() - last < 3 * 24 * 3600 * 1000) w += WEIGHT_RECENT;
-  }
-  return Math.min(w, WEIGHT_CAP);
-}
-
-/** 按权重不放回抽样：越靠前的累积区间越宽，错题被抽中的概率更高。 */
-function pickWeighted(pool: AiQuestion[], count: number, examMisses: Map<string, number>, drillMisses: Record<string, DrillMiss>) {
-  const rest = pool.slice();
-  const weights = rest.map((q) => weightOf(q.id, examMisses, drillMisses));
-  const out: AiQuestion[] = [];
-  const target = Math.min(count, rest.length);
-  for (let n = 0; n < target; n += 1) {
-    let total = 0;
-    for (const w of weights) total += w;
-    let r = Math.random() * total;
-    let idx = 0;
-    for (let i = 0; i < rest.length; i += 1) {
-      r -= weights[i];
-      if (r <= 0) {
-        idx = i;
-        break;
-      }
-    }
-    out.push(rest[idx]);
-    rest.splice(idx, 1);
-    weights.splice(idx, 1);
-  }
-  return out;
-}
-
-function buildDrill(examWrongs: WrongEntry[], drillMisses: Record<string, DrillMiss>): ExamQuestion[] {
-  const examMisses = new Map(examWrongs.map((e) => [e.qid, e.misses]));
-  const hot = AI_THEORY_QUESTIONS.filter((q) => weightOf(q.id, examMisses, drillMisses) > WEIGHT_BASE);
-  const quota = Math.min(DRILL_WRONG_SLOTS, hot.length);
-  const wrongPart = quota > 0 ? pickWeighted(hot, quota, examMisses, drillMisses) : [];
-  const taken = new Set(wrongPart.map((q) => q.id));
-  const rest = AI_THEORY_QUESTIONS.filter((q) => !taken.has(q.id));
-  const fresh = pickWeighted(rest, DRILL_COUNT - wrongPart.length, examMisses, drillMisses);
-  return shuffle([...wrongPart, ...fresh]).map(mixQuestion);
-}
+const GRADE_LABEL: Record<SrsGrade, string> = { easy: '很熟', hard: '一般', unfamiliar: '不熟' };
 
 interface DrillRun {
+  /** today = 按今日任务队列出题；free = 自由练，全库随机 */
+  kind: 'today' | 'free';
   questions: ExamQuestion[];
   cursor: number;
   picks: Record<string, string[]>;
-  /** 一局 10 题统一交一次卷，交卷后才揭晓对错并出本局总结。 */
+  /** 一批 10 题统一交一次卷，交卷后才揭晓对错并出本批总结。 */
   submitted: boolean;
+  /** 这一批里每道题算复习还是新题 */
+  labels: Record<string, 'new' | 'review'>;
 }
 
 /** 中途刷新/关页后能接着做：存题序、选项顺序、已选、标记、剩余时间。 */
@@ -500,11 +445,45 @@ export function AiTrainerPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [jump, setJump] = useState('');
   const [drill, setDrill] = useState<DrillRun | null>(null);
-  const [drillMisses, setDrillMisses] = useState<Record<string, DrillMiss>>(() => loadDrillMisses());
+  const [srs, setSrs] = useState<SrsMap>(() => loadSrs());
+  const [daily, setDaily] = useState<Record<string, DayLog>>(() => loadDaily());
+  const [conf, setConf] = useState<SrsConf>(() => loadConf());
+  const [queue, setQueue] = useState<DayQueue | null>(() => loadQueue());
+  const [graded, setGraded] = useState<Record<string, SrsGrade>>({});
 
   useEffect(() => {
-    saveDrillMisses(drillMisses);
-  }, [drillMisses]);
+    saveSrs(srs);
+  }, [srs]);
+
+  useEffect(() => {
+    saveDaily(daily);
+  }, [daily]);
+
+  useEffect(() => {
+    saveConf(conf);
+  }, [conf]);
+
+  /** 今日队列一天只排一次：做完的题不再从队列里消失，进度才不会往回跳。 */
+  useEffect(() => {
+    const now = Date.now();
+    const today = dayOf(now);
+    const stale = !queue || queue.date !== today || queue.fresh.length < conf.newPerDay;
+    if (!stale) return;
+    const next = buildQueue(
+      srs,
+      AI_THEORY_QUESTIONS.map((q) => q.id),
+      now,
+      conf,
+    );
+    const same =
+      !!queue &&
+      queue.date === next.date &&
+      queue.due.join('|') === next.due.join('|') &&
+      queue.fresh.join('|') === next.fresh.join('|');
+    if (same) return;
+    saveQueue(next);
+    setQueue(next);
+  }, [queue, conf, srs]);
   const submitted = useRef(false);
   const nextTimer = useRef<number | null>(null);
 
@@ -760,28 +739,37 @@ export function AiTrainerPage() {
     });
   };
 
-  /** 结算本题：答错记账、答对扣账，下次抽题权重随之变化。 */
-  const settleDrillQuestion = (q: ExamQuestion, mine: string[]) => {
-    const ok = isRight(q, mine);
-    setDrillMisses((cur) => {
-      const old = cur[q.id];
-      const misses = Math.max(0, (old?.misses ?? 0) + (ok ? -1 : 1));
-      const next = { ...cur };
-      if (misses === 0) delete next[q.id];
-      else next[q.id] = { misses, lastAt: ok ? (old?.lastAt ?? '') : new Date().toISOString() };
-      return next;
-    });
-  };
-
-  /** 交卷：整局一次结算，答错的记一笔、答对的扣一笔，进来本局总结。 */
+  /** 交卷：整批一次结算，按对错推进卡片，并记当天账。 */
   const submitDrill = () => {
     const cur = drill;
     if (!cur || cur.submitted) return;
-    for (const q of cur.questions) {
-      const mine = cur.picks[q.id] ?? [];
-      if (mine.length) settleDrillQuestion(q, mine);
+    const now = Date.now();
+    const results = cur.questions.map((q) => ({ q, ok: isRight(q, cur.picks[q.id] ?? []) }));
+    const patch = { new: 0, review: 0, right: 0, wrong: 0 };
+    for (const r of results) {
+      if (cur.labels[r.q.id] === 'new') patch.new += 1;
+      else patch.review += 1;
+      if (r.ok) patch.right += 1;
+      else patch.wrong += 1;
     }
+    setSrs((prev) => {
+      const next = { ...prev };
+      for (const r of results) next[r.q.id] = answerCard(prev[r.q.id], r.ok, now);
+      return next;
+    });
+    setDaily((prev) => bumpDay(prev, dayOf(now), patch));
+    setGraded({});
     setDrill({ ...cur, submitted: true });
+  };
+
+  /** 交卷后按自己感觉微调这道题的间隔。 */
+  const regrade = (qid: string, grade: SrsGrade) => {
+    setSrs((prev) => {
+      const card = prev[qid];
+      if (!card) return prev;
+      return { ...prev, [qid]: gradeCard(card, grade, Date.now()) };
+    });
+    setGraded((prev) => ({ ...prev, [qid]: grade }));
   };
 
   const drillGo = (delta: number) => {
@@ -792,20 +780,44 @@ export function AiTrainerPage() {
   };
 
   const drillStats = useMemo(() => {
-    if (!drill) return { right: 0, wrong: 0, answered: 0 };
+    if (!drill) return { right: 0, wrong: 0, answered: 0, fresh: 0, review: 0 };
     let right = 0;
     let wrong = 0;
+    let fresh = 0;
+    let review = 0;
     for (const q of drill.questions) {
+      if (drill.labels[q.id] === 'new') fresh += 1;
+      else review += 1;
       const mine = drill.picks[q.id] ?? [];
       if (!mine.length) continue;
       if (isRight(q, mine)) right += 1;
       else wrong += 1;
     }
-    return { right, wrong, answered: right + wrong };
+    return { right, wrong, answered: right + wrong, fresh, review };
   }, [drill]);
 
-  const startDrill = () => {
-    setDrill({ questions: buildDrill(wrongs, drillMisses), cursor: 0, picks: {}, submitted: false });
+  const startDrill = (kind: 'today' | 'free' = 'today') => {
+    const now = Date.now();
+    const byId = new Map(AI_THEORY_QUESTIONS.map((q) => [q.id, q]));
+    let ids: string[] = [];
+    const labels: Record<string, 'new' | 'review'> = {};
+    if (kind === 'today' && queue) {
+      const batch = batchFrom(queue, srs, now, DRILL_COUNT);
+      ids = batch.ids;
+      Object.assign(labels, batch.labels);
+    } else {
+      ids = shuffle(AI_THEORY_QUESTIONS)
+        .slice(0, DRILL_COUNT)
+        .map((q) => q.id);
+      for (const id of ids) labels[id] = srs[id]?.box ? 'review' : 'new';
+    }
+    const questions = ids
+      .map((id) => byId.get(id))
+      .filter((q): q is AiQuestion => !!q)
+      .map(mixQuestion);
+    if (!questions.length) return;
+    setGraded({});
+    setDrill({ kind, questions, cursor: 0, picks: {}, submitted: false, labels });
   };
 
   const startWrongs = (list: WrongEntry[] = wrongs) => {
@@ -883,15 +895,31 @@ export function AiTrainerPage() {
 
   const drillQ = drill && !drill.submitted ? drill.questions[drill.cursor] : null;
   const drillPicked: string[] = drill && drillQ ? (drill.picks[drillQ.id] ?? []) : [];
-  const missCountOf = (qid: string) =>
-    (wrongs.find((e) => e.qid === qid)?.misses ?? 0) + (drillMisses[qid]?.misses ?? 0);
-  const drillHint = drillQ && missCountOf(drillQ.id) > 0 ? `错题 ×${missCountOf(drillQ.id)}` : '';
-  const weightedCount = useMemo(() => {
-    const examMisses = new Map(wrongs.map((e) => [e.qid, e.misses]));
-    let n = 0;
-    for (const q of AI_THEORY_QUESTIONS) if (weightOf(q.id, examMisses, drillMisses) > 1) n += 1;
-    return n;
-  }, [wrongs, drillMisses]);
+  const nowTs = Date.now();
+  const todayLabel = (() => {
+    const d = new Date(nowTs);
+    return d.getMonth() + 1 + ' 月 ' + d.getDate() + ' 日';
+  })();
+  const progress = useMemo(
+    () => (queue ? queueProgress(queue, srs, nowTs) : { dueTotal: 0, dueDone: 0, newTotal: 0, newDone: 0, left: 0 }),
+    [queue, srs, nowTs],
+  );
+  const todayTotal = progress.dueTotal + progress.newTotal;
+  const todayDone = progress.dueDone + progress.newDone;
+  const streak = useMemo(() => streakOf(daily, nowTs), [daily, nowTs]);
+  const studied = useMemo(() => studiedCount(srs), [srs]);
+  const mastery = useMemo(() => masteryOf(srs), [srs]);
+  const drillHint = (() => {
+    if (!drillQ) return '';
+    const parts: string[] = [];
+    if (drill?.labels[drillQ.id] === 'new') parts.push('新题');
+    else if (drill?.labels[drillQ.id] === 'review') parts.push('复习');
+    const miss = wrongs.find((e) => e.qid === drillQ.id)?.misses ?? 0;
+    if (miss > 0) parts.push('考卷错过 ' + miss + ' 次');
+    const card = srs[drillQ.id];
+    if (card && card.box > 0) parts.push('第 ' + card.box + ' 盒');
+    return parts.join('，');
+  })();
   const answerText = (q: ExamQuestion) =>
     q.key.map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v)).join('');
 
@@ -999,8 +1027,16 @@ export function AiTrainerPage() {
                       开始一次模拟考试
                     </button>
                   )}
-                  <button type="button" onClick={startDrill} className="pill px-4 py-2.5 text-[14px]">
-                    刷题模式（10 题一局，错题优先）
+                  <button
+                    type="button"
+                    onClick={() => startDrill('today')}
+                    disabled={progress.left === 0}
+                    className="pill px-4 py-2.5 text-[14px] disabled:opacity-40"
+                  >
+                    {progress.left === 0 ? '今日任务已完成' : '背题模式（还剩 ' + progress.left + ' 题）'}
+                  </button>
+                  <button type="button" onClick={() => startDrill('free')} className="pill px-4 py-2.5 text-[14px]">
+                    自由练 10 题
                   </button>
                   {records.length || wrongs.length ? (
                     <button
@@ -1014,6 +1050,59 @@ export function AiTrainerPage() {
                 </div>
                 <p className="text-muted basis-full text-[12px] leading-relaxed">
                   900 题来自官方《理论知识复习题》，每次按考纲结构随机抽 40 判断 + 140 单选 + 10 多选。答案 892 题有权威出处（官方模拟卷 + 公开题库），剩 8 题为 AI 推定（回顾里标「AI 解析」），发现错答案告诉我即可修正。</p>
+              </section>
+
+              <section className="glass px-4 py-4 sm:px-5">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 className="text-ink text-[14px] font-semibold">今日任务 {todayLabel}</h2>
+                  <span className="text-muted text-[12px] tabular-nums">连续打卡 {streak} 天</span>
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div className="border-line rounded-[14px] border px-3.5 py-3">
+                    <p className="text-ink text-[22px] leading-none font-semibold tabular-nums">
+                      {progress.newDone}
+                      <span className="text-muted ml-1 text-[13px] font-normal">/ {progress.newTotal} 新题</span>
+                    </p>
+                    <p className="text-secondary mt-2 text-[13px]">每天最多给 {conf.newPerDay} 道没见过的题</p>
+                  </div>
+                  <div className="border-line rounded-[14px] border px-3.5 py-3">
+                    <p className="text-brand-ink text-[22px] leading-none font-semibold tabular-nums">
+                      {progress.dueDone}
+                      <span className="text-muted ml-1 text-[13px] font-normal">/ {progress.dueTotal} 复习</span>
+                    </p>
+                    <p className="text-secondary mt-2 text-[13px]">按间隔重排到今天该回看的题</p>
+                  </div>
+                </div>
+                <div className="bg-surface-2 mt-3 h-1.5 overflow-hidden rounded-full">
+                  <div
+                    className="bg-brand h-full rounded-full transition-all"
+                    style={{
+                      width: (todayTotal ? Math.round((todayDone / todayTotal) * 100) : 0) + '%',
+                    }}
+                  />
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px]">
+                  <span className="text-secondary">
+                    已学 <b className="text-ink tabular-nums">{studied}</b> / {AI_THEORY_QUESTIONS.length} 题
+                  </span>
+                  <span className="text-muted">
+                    学习中 <b className="text-ink tabular-nums">{mastery.learning}</b>，已掌握{' '}
+                    <b className="text-ink tabular-nums">{mastery.mastered}</b>
+                  </span>
+                  <span className="text-muted">每天新题量</span>
+                  <span className="flex gap-1">
+                    {NEW_PER_DAY_CHOICES.map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setConf((c) => ({ ...c, newPerDay: n }))}
+                        className={'pill px-2.5 py-1 text-[12px]' + (conf.newPerDay === n ? ' pill--solid' : '')}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </span>
+                </div>
               </section>
 
               {wrongs.length ? (
@@ -1107,20 +1196,26 @@ export function AiTrainerPage() {
               <section className="glass flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
                 <div className="min-w-0">
                   <div className="flex items-baseline gap-2">
-                    <h2 className="text-ink text-[14px] font-semibold">刷题模式</h2>
+                    <h2 className="text-ink text-[14px] font-semibold">
+                      {drill.kind === 'today' ? '今日任务' : '自由练习'}
+                    </h2>
                     <span className="text-muted text-[12px] tabular-nums">
-                      {drill.submitted ? '本局已交卷' : `第 ${drill.cursor + 1} / ${drill.questions.length} 题`}
+                      {drill.submitted ? '本批已交卷' : '第 ' + (drill.cursor + 1) + ' / ' + drill.questions.length + ' 题'}
                     </span>
                   </div>
                   <p className="text-secondary mt-1 text-[12px] leading-relaxed">
-                    10 题一局，做完统一交一次卷：交卷后出本局总结和逐题解析，再开下一批。做错过的题优先出，每局固定留 {DRILL_WRONG_SLOTS} 席给错题（当前有 {weightedCount} 道加权题，不够就按实际数量），剩下的从 {AI_THEORY_QUESTIONS.length} 题里按权重抽；错得越多权重越高，做对之后回落。
+                    {drill.kind === 'today'
+                      ? '一批 ' +
+                        DRILL_COUNT +
+                        ' 题：先出今天该复习的，再补没学过的新题。做完统一交一次卷，交卷后逐题给解析，还能按自己感觉标很熟或不熟，下次什么时候再见面就按这个排。'
+                      : '从 ' + AI_THEORY_QUESTIONS.length + ' 题里随机抽 ' + DRILL_COUNT + ' 题练手，不写进今日任务。'}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
                   {drill.submitted ? (
                     <>
-                      <span className="text-success-ink tabular-nums">对 {drillStats.right}</span>
-                      <span className="text-danger-ink tabular-nums">错 {drillStats.wrong}</span>
+                      <span className="text-accent-green tabular-nums">对 {drillStats.right}</span>
+                      <span className="text-danger tabular-nums">错 {drillStats.wrong}</span>
                     </>
                   ) : (
                     <span className="text-muted tabular-nums">
@@ -1130,9 +1225,9 @@ export function AiTrainerPage() {
                   <button
                     type="button"
                     onClick={() => setDrill(null)}
-                    className="text-muted hover:text-danger-ink text-[12px] transition"
+                    className="text-muted hover:text-danger text-[12px] transition"
                   >
-                    退出刷题
+                    退出
                   </button>
                 </div>
               </section>
@@ -1148,17 +1243,23 @@ export function AiTrainerPage() {
                         </span>
                       </p>
                       <p className="text-secondary mt-2 text-[13px]">
-                        正确率 {Math.round((drillStats.right / drill.questions.length) * 100)}% · 答错{' '}
-                        {drillStats.wrong} 题 · 未作答 {drill.questions.length - drillStats.answered} 题
+                        正确率 {Math.round((drillStats.right / drill.questions.length) * 100)}%，答错{' '}
+                        {drillStats.wrong} 题，未作答 {drill.questions.length - drillStats.answered} 题
                       </p>
                       <p className="text-muted mt-1 text-[12px]">
-                        答错的题下次出现权重会提高，做对会回落；刷题不写进考试错题本、不计入历史成绩。
+                        本批新题 {drillStats.fresh} 道，复习 {drillStats.review} 道。答对的题下次间隔变长，答错的明天再来。
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <button type="button" onClick={startDrill} className="pill pill--solid px-4 py-2 text-[13px]">
+                      <button
+                        type="button"
+                        onClick={() => startDrill(drill.kind)}
+                        className="pill pill--solid px-4 py-2 text-[13px]"
+                      >
                         <RotateCcw className="mr-1 inline size-3.5" />
-                        继续下一批
+                        {drill.kind === 'today' && progress.left > 0
+                          ? '继续（还剩 ' + progress.left + ' 题）'
+                          : '再来一批'}
                       </button>
                       <button type="button" onClick={() => setDrill(null)} className="pill px-4 py-2 text-[13px]">
                         返回
@@ -1172,12 +1273,15 @@ export function AiTrainerPage() {
                       const ok = isRight(q, mine);
                       return (
                         <div key={q.id} className="glass px-4 py-4 sm:px-5">
-                          <div className="flex items-baseline gap-2 text-[12px]">
+                          <div className="flex flex-wrap items-baseline gap-2 text-[12px]">
                             <span className="text-muted tabular-nums">第 {index + 1} 题</span>
                             <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5">
                               {TYPE_LABEL[q.type]}
                             </span>
-                            <span className={ok ? 'text-success-ink' : mine.length ? 'text-danger-ink' : 'text-muted'}>
+                            <span className="border-line text-muted rounded-full border px-2 py-0.5">
+                              {drill.labels[q.id] === 'new' ? '新题' : '复习'}
+                            </span>
+                            <span className={ok ? 'text-accent-green' : mine.length ? 'text-danger' : 'text-muted'}>
                               {ok ? '答对' : mine.length ? '答错' : '未作答'}
                             </span>
                           </div>
@@ -1185,13 +1289,15 @@ export function AiTrainerPage() {
                           <div className="text-secondary mt-2 flex flex-col gap-1 text-[13px]">
                             <span>
                               我的答案：
-                              <b className={ok ? 'text-success-ink' : mine.length ? 'text-danger-ink' : 'text-muted'}>
-                                {mine.length ? mine.map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v)).join('') : '未作答'}
+                              <b className={ok ? 'text-accent-green' : mine.length ? 'text-danger' : 'text-muted'}>
+                                {mine.length
+                                  ? mine.map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v)).join('')
+                                  : '未作答'}
                               </b>
                             </span>
                             <span>
                               正确答案：
-                              <b className="text-success-ink">{answerText(q)}</b>
+                              <b className="text-accent-green">{answerText(q)}</b>
                             </span>
                             {q.type !== 'tf'
                               ? q.shown
@@ -1204,6 +1310,20 @@ export function AiTrainerPage() {
                               : null}
                           </div>
                           <ExplainBlock id={q.id} />
+                          <div className="border-line mt-3 flex flex-wrap items-center gap-2 border-t pt-3 text-[12px]">
+                            <span className="text-muted">这道题你有多熟</span>
+                            {(['easy', 'hard', 'unfamiliar'] as SrsGrade[]).map((g) => (
+                              <button
+                                key={g}
+                                type="button"
+                                onClick={() => regrade(q.id, g)}
+                                className={'pill px-2.5 py-1 text-[12px]' + (graded[q.id] === g ? ' pill--solid' : '')}
+                              >
+                                {GRADE_LABEL[g]}
+                              </button>
+                            ))}
+                            <span className="text-muted">下次复习 {dueText(srs[q.id], Date.now())}</span>
+                          </div>
                         </div>
                       );
                     })}
@@ -1238,17 +1358,17 @@ export function AiTrainerPage() {
                       下一题
                       <ChevronRight className="ml-1 inline size-4" />
                     </button>
-                    <span className="text-muted text-[12px]">做完 10 题再交卷，交卷后才看答案</span>
+                    <span className="text-muted text-[12px]">做完这一批再交卷，交卷后才看答案</span>
                     <button
                       type="button"
                       onClick={() => {
                         const blank = drill.questions.length - drillStats.answered;
-                        if (blank > 0 && !window.confirm(`还有 ${blank} 题没答，未作答的按答错计入本局，确定交卷？`)) return;
+                        if (blank > 0 && !window.confirm('还有 ' + blank + ' 题没答，未作答的按答错计入本批，确定交卷？')) return;
                         submitDrill();
                       }}
                       className="pill pill--solid ml-auto px-4 py-1.5 text-[13px]"
                     >
-                      交卷看本局总结
+                      交卷看本批总结
                     </button>
                   </div>
                 </section>
