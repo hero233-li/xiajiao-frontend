@@ -899,16 +899,10 @@ export function AiTrainerPage() {
   const drillQ = drill && !drill.submitted ? drill.questions[drill.cursor] : null;
   const drillPicked: string[] = drill && drillQ ? (drill.picks[drillQ.id] ?? []) : [];
   const nowTs = Date.now();
-  const todayLabel = (() => {
-    const d = new Date(nowTs);
-    return d.getMonth() + 1 + ' 月 ' + d.getDate() + ' 日';
-  })();
   const progress = useMemo(
     () => (queue ? queueProgress(queue, srs, nowTs) : { dueTotal: 0, dueDone: 0, newTotal: 0, newDone: 0, left: 0 }),
     [queue, srs, nowTs],
   );
-  const todayTotal = progress.dueTotal + progress.newTotal;
-  const todayDone = progress.dueDone + progress.newDone;
   const streak = useMemo(() => streakOf(daily, nowTs), [daily, nowTs]);
   const studied = useMemo(() => studiedCount(srs), [srs]);
   const mastery = useMemo(() => masteryOf(srs), [srs]);
@@ -1033,13 +1027,9 @@ export function AiTrainerPage() {
                   <button
                     type="button"
                     onClick={() => startDrill('today')}
-                    disabled={progress.left === 0}
-                    className="pill px-4 py-2.5 text-[14px] disabled:opacity-40"
+                    className="pill px-4 py-2.5 text-[14px]"
                   >
-                    {progress.left === 0 ? '今日任务已完成' : '背题模式（还剩 ' + progress.left + ' 题）'}
-                  </button>
-                  <button type="button" onClick={() => startDrill('free')} className="pill px-4 py-2.5 text-[14px]">
-                    自由练 10 题
+                    刷题模式（10 题一局）
                   </button>
                   {records.length || wrongs.length ? (
                     <button
@@ -1053,59 +1043,6 @@ export function AiTrainerPage() {
                 </div>
                 <p className="text-muted basis-full text-[12px] leading-relaxed">
                   900 题来自官方《理论知识复习题》，每次按考纲结构随机抽 40 判断 + 140 单选 + 10 多选。答案 892 题有权威出处（官方模拟卷 + 公开题库），剩 8 题为 AI 推定（回顾里标「AI 解析」），发现错答案告诉我即可修正。</p>
-              </section>
-
-              <section className="glass px-4 py-4 sm:px-5">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="text-ink text-[14px] font-semibold">今日任务 {todayLabel}</h2>
-                  <span className="text-muted text-[12px] tabular-nums">连续打卡 {streak} 天</span>
-                </div>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <div className="border-line rounded-[14px] border px-3.5 py-3">
-                    <p className="text-ink text-[22px] leading-none font-semibold tabular-nums">
-                      {progress.newDone}
-                      <span className="text-muted ml-1 text-[13px] font-normal">/ {progress.newTotal} 新题</span>
-                    </p>
-                    <p className="text-secondary mt-2 text-[13px]">每天最多给 {conf.newPerDay} 道没见过的题</p>
-                  </div>
-                  <div className="border-line rounded-[14px] border px-3.5 py-3">
-                    <p className="text-brand-ink text-[22px] leading-none font-semibold tabular-nums">
-                      {progress.dueDone}
-                      <span className="text-muted ml-1 text-[13px] font-normal">/ {progress.dueTotal} 复习</span>
-                    </p>
-                    <p className="text-secondary mt-2 text-[13px]">按间隔重排到今天该回看的题</p>
-                  </div>
-                </div>
-                <div className="bg-surface-2 mt-3 h-1.5 overflow-hidden rounded-full">
-                  <div
-                    className="bg-brand h-full rounded-full transition-all"
-                    style={{
-                      width: (todayTotal ? Math.round((todayDone / todayTotal) * 100) : 0) + '%',
-                    }}
-                  />
-                </div>
-                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px]">
-                  <span className="text-secondary">
-                    已学 <b className="text-ink tabular-nums">{studied}</b> / {AI_THEORY_QUESTIONS.length} 题
-                  </span>
-                  <span className="text-muted">
-                    学习中 <b className="text-ink tabular-nums">{mastery.learning}</b>，已掌握{' '}
-                    <b className="text-ink tabular-nums">{mastery.mastered}</b>
-                  </span>
-                  <span className="text-muted">每天新题量</span>
-                  <span className="flex gap-1">
-                    {NEW_PER_DAY_CHOICES.map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setConf((c) => ({ ...c, newPerDay: n }))}
-                        className={'pill px-2.5 py-1 text-[12px]' + (conf.newPerDay === n ? ' pill--solid' : '')}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                  </span>
-                </div>
               </section>
 
               {wrongs.length ? (
@@ -1234,6 +1171,41 @@ export function AiTrainerPage() {
                   </button>
                 </div>
               </section>
+
+              {drill.kind === 'today' ? (
+                <section className="glass flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 text-[13px] sm:px-5">
+                  <span className="text-secondary">
+                    今日新题 <b className="text-ink tabular-nums">{progress.newDone}</b> / {progress.newTotal}
+                  </span>
+                  <span className="text-secondary">
+                    今日复习 <b className="text-ink tabular-nums">{progress.dueDone}</b> / {progress.dueTotal}
+                  </span>
+                  <span className="text-muted tabular-nums">连续打卡 {streak} 天</span>
+                  <span className="text-muted tabular-nums">
+                    已学 {studied} 题，已掌握 {mastery.mastered} 题
+                  </span>
+                  <span className="text-muted">每天新题</span>
+                  <span className="flex gap-1">
+                    {NEW_PER_DAY_CHOICES.map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setConf((c) => ({ ...c, newPerDay: n }))}
+                        className={'pill px-2.5 py-1 text-[12px]' + (conf.newPerDay === n ? ' pill--solid' : '')}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => startDrill('free')}
+                    className="pill ml-auto px-3 py-1.5 text-[12px]"
+                  >
+                    自由练 10 题
+                  </button>
+                </section>
+              ) : null}
 
               {drill.submitted ? (
                 <>
