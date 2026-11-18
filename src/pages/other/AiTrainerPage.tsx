@@ -37,6 +37,7 @@ import {
   saveDaily,
   saveQueue,
   saveSrs,
+  startOfDay,
   streakOf,
   studiedCount,
   type DayLog,
@@ -833,9 +834,11 @@ export function AiTrainerPage() {
     let ids: string[] = [];
     const labels: Record<string, 'new' | 'review' | 'wrong'> = {};
     if (kind === 'today') {
+      const start = startOfDay(now);
+      const doneToday = (qid: string) => (srs[qid]?.lastAt ?? 0) >= start;
       for (const w of wrongList) {
         if (ids.length >= DRILL_COUNT) break;
-        if (labels[w.qid]) continue;
+        if (labels[w.qid] || doneToday(w.qid)) continue;
         ids.push(w.qid);
         labels[w.qid] = 'wrong';
       }
