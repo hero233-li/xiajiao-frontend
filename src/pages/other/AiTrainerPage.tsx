@@ -25,7 +25,6 @@ import {
   bumpDay,
   dayOf,
   dueText,
-  gradeCard,
   loadConf,
   loadDaily,
   loadQueue,
@@ -43,7 +42,6 @@ import {
   type DayLog,
   type DayQueue,
   type SrsConf,
-  type SrsGrade,
   type SrsMap,
 } from '../../lib/srs';
 
@@ -139,7 +137,6 @@ function buildPaper(): Paper {
 const DRILL_COUNT = 10;
 /** 每天新题量的可选档位。 */
 
-const GRADE_LABEL: Record<SrsGrade, string> = { easy: '很熟', hard: '一般', unfamiliar: '不熟' };
 
 interface DrillRun {
   /** today = 按今日任务队列出题；free = 自由练，全库随机 */
@@ -469,7 +466,6 @@ export function AiTrainerPage() {
   const [daily, setDaily] = useState<Record<string, DayLog>>(() => loadDaily());
   const [conf, setConf] = useState<SrsConf>(() => loadConf());
   const [queue, setQueue] = useState<DayQueue | null>(() => loadQueue());
-  const [graded, setGraded] = useState<Record<string, SrsGrade>>({});
   const [wrongBook, setWrongBook] = useState<WrongBook>(() => loadWrongBook());
   const [drillHome, setDrillHome] = useState(false);
   const [wrongOpen, setWrongOpen] = useState(false);
@@ -864,18 +860,7 @@ export function AiTrainerPage() {
       }
       return next;
     });
-    setGraded({});
     setDrill({ ...cur, submitted: true });
-  };
-
-  /** 交卷后按自己感觉微调这道题的间隔。 */
-  const regrade = (qid: string, grade: SrsGrade) => {
-    setSrs((prev) => {
-      const card = prev[qid];
-      if (!card) return prev;
-      return { ...prev, [qid]: gradeCard(card, grade, Date.now()) };
-    });
-    setGraded((prev) => ({ ...prev, [qid]: grade }));
   };
 
   const drillGo = (delta: number) => {
@@ -947,7 +932,6 @@ export function AiTrainerPage() {
       .filter((q): q is AiQuestion => !!q)
       .map(mixQuestion);
     if (!questions.length) return;
-    setGraded({});
     setDrillHome(true);
     setDrill({ kind, questions, cursor: 0, picks: {}, submitted: false, labels });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1359,7 +1343,7 @@ export function AiTrainerPage() {
                     {drill.kind === 'today'
                       ? '一批 ' +
                         DRILL_COUNT +
-                        ' 题：先出今天该复习的，再补没学过的新题。做完统一交一次卷，交卷后逐题给解析，还能按自己感觉标很熟或不熟，下次什么时候再见面就按这个排。'
+                        ' 题：先出错题集里今天还没做过的，再出到期该复习的，不够再补没学过的新题。做完统一交一次卷，交卷后逐题给解析；答错的直接进错题集，下次优先再出。'
                       : '从 ' + AI_THEORY_QUESTIONS.length + ' 题里随机抽 ' + DRILL_COUNT + ' 题练手，不写进今日任务。'}
                   </p>
                 </div>
@@ -1522,20 +1506,9 @@ export function AiTrainerPage() {
                               : null}
                           </div>
                           <ExplainBlock id={q.id} />
-                          <div className="border-line mt-3 flex flex-wrap items-center gap-2 border-t pt-3 text-[12px]">
-                            <span className="text-muted">这道题你有多熟</span>
-                            {(['easy', 'hard', 'unfamiliar'] as SrsGrade[]).map((g) => (
-                              <button
-                                key={g}
-                                type="button"
-                                onClick={() => regrade(q.id, g)}
-                                className={'pill px-2.5 py-1 text-[12px]' + (graded[q.id] === g ? ' pill--solid' : '')}
-                              >
-                                {GRADE_LABEL[g]}
-                              </button>
-                            ))}
-                            <span className="text-muted">下次复习 {dueText(srs[q.id], Date.now())}</span>
-                          </div>
+                          <p className="border-line text-muted mt-3 border-t pt-3 text-[12px]">
+                            下次复习 {dueText(srs[q.id], Date.now())}
+                          </p>
                         </div>
                       );
                     })}
