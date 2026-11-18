@@ -1288,7 +1288,7 @@ export function AiTrainerPage() {
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
-                  <span className="text-muted tabular-nums">连续打卡 {streak} 天</span>
+                  <span className="text-muted text-[12px]">{drillSyncedAt ? '云端已同步' : '只在本机'}</span>
                   <button
                     type="button"
                     onClick={closeDrill}
@@ -1297,19 +1297,6 @@ export function AiTrainerPage() {
                     退出
                   </button>
                 </div>
-              </section>
-
-              <section className="glass flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 text-[13px] sm:px-5">
-                <span className="text-danger font-semibold tabular-nums">错题集 {wrongList.length} 题</span>
-                <span className="text-secondary">
-                  今日已做 <b className="text-ink tabular-nums">{todayLog.new + todayLog.review}</b> 题（新 {todayLog.new}，复习 {todayLog.review}）
-                </span>
-                <span className="text-muted tabular-nums">
-                  已学 {studied} 题，已掌握 {mastery.mastered} 题
-                </span>
-                <span className="text-muted tabular-nums">
-                  {drillSyncedAt ? '云端已同步' : '只在本机'}
-                </span>
               </section>
 
               <div className="flex flex-wrap gap-2">
