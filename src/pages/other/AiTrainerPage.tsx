@@ -242,8 +242,16 @@ function saveWrongs(list: WrongEntry[]) {
   }
 }
 
+function lettersOf(list: string[]): string {
+  return [...list]
+    .sort()
+    .map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v))
+    .join('');
+}
+
 function isRight(q: ExamQuestion, mine: string[]) {
   return mine.length > 0 && mine.length === q.key.length && [...mine].sort().join('') === [...q.key].sort().join('');
+
 }
 
 /** 错题复盘卷：只取错题本里的题，选项重新打乱（等于重新出题）。 */
@@ -1039,8 +1047,7 @@ export function AiTrainerPage() {
     if (card && card.box > 0) parts.push('第 ' + card.box + ' 盒');
     return parts.join('，');
   })();
-  const answerText = (q: ExamQuestion) =>
-    q.key.map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v)).join('');
+  const answerText = (q: ExamQuestion) => lettersOf(q.key);
 
   /** 错题集列表：刷题入口页和刷题面板共用。 */
   const wrongBookSection = wrongList.length ? (
@@ -1496,7 +1503,7 @@ export function AiTrainerPage() {
                               我的答案：
                               <b className={ok ? 'text-accent-green' : mine.length ? 'text-danger' : 'text-muted'}>
                                 {mine.length
-                                  ? mine.map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v)).join('')
+                                  ? lettersOf(mine)
                                   : '未作答'}
                               </b>
                             </span>
@@ -1845,14 +1852,14 @@ export function AiTrainerPage() {
                             我的答案：
                             <b className={mine.length ? 'text-danger-ink' : 'text-muted'}>
                               {mine.length
-                                ? mine.map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v)).join('')
+                                ? lettersOf(mine)
                                 : '未作答'}
                             </b>
                           </span>
                           <span>
                             正确答案：
                             <b className="text-success-ink">
-                              {q.key.map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v)).join('')}
+                              {lettersOf(q.key)}
                             </b>
                           </span>
                           {q.type !== 'tf'
