@@ -22,7 +22,6 @@ import {
 import { cloudPull, cloudPut } from '../../lib/aiSync';
 import {
   answerCard,
-  batchFrom,
   buildQueue,
   bumpDay,
   dayOf,
@@ -35,7 +34,6 @@ import {
   masteryOf,
   mergeDaily,
   mergeSrs,
-  queueProgress,
   saveConf,
   saveDaily,
   saveQueue,
@@ -141,7 +139,6 @@ function buildPaper(): Paper {
 /** 一批 10 题，不计时；做完统一交一次卷。 */
 const DRILL_COUNT = 10;
 /** 每天新题量的可选档位。 */
-const NEW_PER_DAY_CHOICES = [10, 20, 30];
 
 const GRADE_LABEL: Record<SrsGrade, string> = { easy: '很熟', hard: '一般', unfamiliar: '不熟' };
 
@@ -904,47 +901,49 @@ export function AiTrainerPage() {
     setWrongOpen(false);
   };
 
-  /** 出题顺序：错题集里的题先上，再接到期复习，最后是没学过的新题。 */
+  /**
+   * 出题顺序：错题集里今天还没做过的 → 到期的复习题 → 没学过的新题 → 学过的随便补。
+   * 不设上限：够 10 题就收；全部做完也能靠「学过的随便补」一直刷下去。
+   */
   const startDrill = (kind: 'today' | 'free' = 'today') => {
     const now = Date.now();
     const byId = qById;
-    let ids: string[] = [];
+    const ids: string[] = [];
     const labels: Record<string, 'new' | 'review' | 'wrong'> = {};
+    const push = (qid: string, label: 'new' | 'review' | 'wrong') => {
+      if (ids.length >= DRILL_COUNT || labels[qid] || !byId.has(qid)) return;
+      ids.push(qid);
+      labels[qid] = label;
+    };
+    const start = startOfDay(now);
+    const doneToday = (qid: string) => (srs[qid]?.lastAt ?? 0) >= start;
+
     if (kind === 'today') {
-      const start = startOfDay(now);
-      const doneToday = (qid: string) => (srs[qid]?.lastAt ?? 0) >= start;
       for (const w of wrongList) {
-        if (ids.length >= DRILL_COUNT) break;
-        if (labels[w.qid] || doneToday(w.qid)) continue;
-        ids.push(w.qid);
-        labels[w.qid] = 'wrong';
+        if (!doneToday(w.qid)) push(w.qid, 'wrong');
       }
-      if (ids.length < DRILL_COUNT && queue) {
-        const rest = batchFrom(queue, srs, now, DRILL_COUNT - ids.length + wrongList.length);
-        for (const id of rest.ids) {
-          if (ids.length >= DRILL_COUNT) break;
-          if (labels[id]) continue;
-          ids.push(id);
-          labels[id] = rest.labels[id];
-        }
-      }
+      const due = Object.entries(srs)
+        .filter(([qid, card]) => card && card.due <= now && !doneToday(qid) && !labels[qid])
+        .sort((a, b) => a[1].due - b[1].due)
+        .map(([qid]) => qid);
+      for (const qid of due) push(qid, 'review');
+      for (const q of shuffle(AI_THEORY_QUESTIONS)) if (!srs[q.id]) push(q.id, 'new');
+      for (const q of shuffle(AI_THEORY_QUESTIONS)) push(q.id, 'review');
     } else {
-      ids = shuffle(AI_THEORY_QUESTIONS)
-        .slice(0, DRILL_COUNT)
-        .map((q) => q.id);
-      for (const id of ids) labels[id] = srs[id]?.box ? 'review' : 'new';
+      for (const q of shuffle(AI_THEORY_QUESTIONS).slice(0, DRILL_COUNT)) {
+        push(q.id, srs[q.id] ? 'review' : 'new');
+      }
     }
+
     const questions = ids
       .map((id) => byId.get(id))
       .filter((q): q is AiQuestion => !!q)
       .map(mixQuestion);
-    if (!questions.length) {
-      if (kind === 'today') window.alert('今天的任务已经做完了，明天再来；也可以点「自由练 10 题」练手。');
-      return;
-    }
+    if (!questions.length) return;
     setGraded({});
     setDrillHome(true);
     setDrill({ kind, questions, cursor: 0, picks: {}, submitted: false, labels });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const startWrongs = (list: WrongEntry[] = wrongs) => {
@@ -1023,10 +1022,7 @@ export function AiTrainerPage() {
   const drillQ = drill && !drill.submitted ? drill.questions[drill.cursor] : null;
   const drillPicked: string[] = drill && drillQ ? (drill.picks[drillQ.id] ?? []) : [];
   const nowTs = Date.now();
-  const progress = useMemo(
-    () => (queue ? queueProgress(queue, srs, nowTs) : { dueTotal: 0, dueDone: 0, newTotal: 0, newDone: 0, left: 0 }),
-    [queue, srs, nowTs],
-  );
+  const todayLog = daily[dayOf(nowTs)] ?? { new: 0, review: 0, right: 0, wrong: 0 };
   const streak = useMemo(() => streakOf(daily, nowTs), [daily, nowTs]);
   /** 错题集，错得多的排前面。 */
   const wrongList = useMemo(() => sortWrongs(wrongBook), [wrongBook]);
@@ -1191,7 +1187,7 @@ export function AiTrainerPage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => setDrillHome(true)}
+                    onClick={() => startDrill('today')}
                     className="pill px-4 py-2.5 text-[14px]"
                   >
                     刷题模式（10 题一局）
@@ -1320,29 +1316,13 @@ export function AiTrainerPage() {
               <section className="glass flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 text-[13px] sm:px-5">
                 <span className="text-danger font-semibold tabular-nums">错题集 {wrongList.length} 题</span>
                 <span className="text-secondary">
-                  今日新题 <b className="text-ink tabular-nums">{progress.newDone}</b> / {progress.newTotal}
-                </span>
-                <span className="text-secondary">
-                  今日复习 <b className="text-ink tabular-nums">{progress.dueDone}</b> / {progress.dueTotal}
+                  今日已做 <b className="text-ink tabular-nums">{todayLog.new + todayLog.review}</b> 题（新 {todayLog.new}，复习 {todayLog.review}）
                 </span>
                 <span className="text-muted tabular-nums">
                   已学 {studied} 题，已掌握 {mastery.mastered} 题
                 </span>
                 <span className="text-muted tabular-nums">
                   {drillSyncedAt ? '云端已同步' : '只在本机'}
-                </span>
-                <span className="text-muted">每天新题</span>
-                <span className="flex gap-1">
-                  {NEW_PER_DAY_CHOICES.map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => setConf((c) => ({ ...c, newPerDay: n }))}
-                      className={'pill px-2.5 py-1 text-[12px]' + (conf.newPerDay === n ? ' pill--solid' : '')}
-                    >
-                      {n}
-                    </button>
-                  ))}
                 </span>
               </section>
 
@@ -1414,27 +1394,11 @@ export function AiTrainerPage() {
               {drill.kind === 'today' ? (
                 <section className="glass flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 text-[13px] sm:px-5">
                   <span className="text-secondary">
-                    今日新题 <b className="text-ink tabular-nums">{progress.newDone}</b> / {progress.newTotal}
-                  </span>
-                  <span className="text-secondary">
-                    今日复习 <b className="text-ink tabular-nums">{progress.dueDone}</b> / {progress.dueTotal}
+                    今日已做 <b className="text-ink tabular-nums">{todayLog.new + todayLog.review}</b> 题（新 {todayLog.new}，复习 {todayLog.review}）
                   </span>
                   <span className="text-muted tabular-nums">连续打卡 {streak} 天</span>
                   <span className="text-muted tabular-nums">
                     已学 {studied} 题，已掌握 {mastery.mastered} 题
-                  </span>
-                  <span className="text-muted">每天新题</span>
-                  <span className="flex gap-1">
-                    {NEW_PER_DAY_CHOICES.map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setConf((c) => ({ ...c, newPerDay: n }))}
-                        className={'pill px-2.5 py-1 text-[12px]' + (conf.newPerDay === n ? ' pill--solid' : '')}
-                      >
-                        {n}
-                      </button>
-                    ))}
                   </span>
                   <button
                     type="button"
@@ -1487,9 +1451,7 @@ export function AiTrainerPage() {
                         className="pill pill--solid px-4 py-2 text-[13px]"
                       >
                         <RotateCcw className="mr-1 inline size-3.5" />
-                        {drill.kind === 'today' && progress.left > 0
-                          ? '继续（还剩 ' + progress.left + ' 题）'
-                          : '再来一批'}
+                        {'再来 ' + DRILL_COUNT + ' 题'}
                       </button>
                       <button type="button" onClick={closeDrill} className="pill px-4 py-2 text-[13px]">
                         返回
