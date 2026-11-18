@@ -145,6 +145,35 @@ interface DrillRun {
   submitted: boolean;
   /** 这一批里每道题算复习还是新题 */
   labels: Record<string, 'new' | 'review' | 'wrong'>;
+  /** 交卷复盘时重新选答案，选对并提交才算订正过 */
+  fixPicks: Record<string, string[]>;
+  /** 已经订正过的题 */
+  fixed: Record<string, boolean>;
+}
+
+/** 刷题会话存本地：刷新页面回到原来那一页，而不是回首页。 */
+const DRILL_SESSION_KEY = 'xj.ai.drill.session.v1';
+
+function loadDrillSession(): DrillRun | null {
+  try {
+    const raw = localStorage.getItem(DRILL_SESSION_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw) as DrillRun;
+    if (!data || !Array.isArray(data.questions) || !data.questions.length) return null;
+    if (!data.questions.every((q) => q && typeof q.id === 'string' && Array.isArray(q.shown))) return null;
+    return {
+      kind: data.kind === 'free' ? 'free' : 'today',
+      questions: data.questions,
+      cursor: Math.min(Math.max(Number(data.cursor) || 0, 0), data.questions.length - 1),
+      picks: data.picks ?? {},
+      submitted: !!data.submitted,
+      labels: data.labels ?? {},
+      fixPicks: data.fixPicks ?? {},
+      fixed: data.fixed ?? {},
+    };
+  } catch {
+    return null;
+  }
 }
 
 /** 中途刷新/关页后能接着做：存题序、选项顺序、已选、标记、剩余时间。 */
@@ -406,7 +435,9 @@ export function AiTrainerPage() {
   const [marked, setMarked] = useState<Record<string, boolean>>({});
   const [sheetOpen, setSheetOpen] = useState(false);
   const [jump, setJump] = useState('');
-  const [drill, setDrill] = useState<DrillRun | null>(null);
+  const [drill, setDrill] = useState<DrillRun | null>(() => loadDrillSession());
+  /** 复盘里提交了但还不对的题 */
+  const [fixBad, setFixBad] = useState<Record<string, boolean>>({});
   const [srs, setSrs] = useState<SrsMap>(() => loadSrs());
   const [daily, setDaily] = useState<Record<string, DayLog>>(() => loadDaily());
   const [conf, setConf] = useState<SrsConf>(() => loadConf());
@@ -414,6 +445,12 @@ export function AiTrainerPage() {
   const [wrongBook, setWrongBook] = useState<WrongBook>(() => loadWrongBook());
   const [drillHome, setDrillHome] = useState(false);
   const [wrongOpen, setWrongOpen] = useState(false);
+
+  // 刷题会话落盘：刷新、关标签页再回来都停在同一页
+  useEffect(() => {
+    if (drill) localStorage.setItem(DRILL_SESSION_KEY, JSON.stringify(drill));
+    else localStorage.removeItem(DRILL_SESSION_KEY);
+  }, [drill]);
 
   useEffect(() => {
     saveWrongBook(wrongBook);
@@ -879,6 +916,33 @@ export function AiTrainerPage() {
     return { right, wrong, answered: right + wrong, fresh, review };
   }, [drill]);
 
+  /** 复盘里还没订正的错题数：订正完才允许开下一批。 */
+  const unfixedCount = useMemo(() => {
+    if (!drill || !drill.submitted) return 0;
+    return drill.questions.filter((q) => !isRight(q, drill.picks[q.id] ?? []) && !drill.fixed[q.id]).length;
+  }, [drill]);
+
+  const drillFixPick = (q: ExamQuestion, key: string) => {
+    setDrill((prev) => {
+      if (!prev) return prev;
+      const mine = prev.fixPicks[q.id] ?? [];
+      const nextMine = q.type === 'multi' ? (mine.includes(key) ? mine.filter((v) => v !== key) : [...mine, key]) : [key];
+      return { ...prev, fixPicks: { ...prev.fixPicks, [q.id]: nextMine } };
+    });
+    setFixBad((prev) => (prev[q.id] ? { ...prev, [q.id]: false } : prev));
+  };
+
+  const drillFixSubmit = (q: ExamQuestion) => {
+    const mine = drill?.fixPicks[q.id] ?? [];
+    if (!mine.length) return;
+    if (!isRight(q, mine)) {
+      setFixBad((prev) => ({ ...prev, [q.id]: true }));
+      return;
+    }
+    setDrill((prev) => (prev ? { ...prev, fixed: { ...prev.fixed, [q.id]: true } } : prev));
+    setFixBad((prev) => ({ ...prev, [q.id]: false }));
+  };
+
   const closeDrill = () => {
     setDrill(null);
     setDrillHome(false);
@@ -958,7 +1022,7 @@ export function AiTrainerPage() {
       .map(mixQuestion);
     if (!questions.length) return;
     setDrillHome(true);
-    setDrill({ kind, questions, cursor: 0, picks: {}, submitted: false, labels });
+    setDrill({ kind, questions, cursor: 0, picks: {}, submitted: false, labels, fixPicks: {}, fixed: {} });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -970,6 +1034,8 @@ export function AiTrainerPage() {
     localStorage.removeItem(PROGRESS_KEY);
     localStorage.removeItem(RESUME_KEY);
     localStorage.setItem(CLOUD_META_KEY, String(Date.now()));
+    localStorage.removeItem(DRILL_SESSION_KEY);
+    setDrill(null);
     setRecords([]);
     setWrongs([]);
     setResult(null);
@@ -1309,10 +1375,11 @@ export function AiTrainerPage() {
                       <button
                         type="button"
                         onClick={() => startDrill(drill.kind)}
-                        className="pill pill--solid px-4 py-2 text-[13px]"
+                        disabled={unfixedCount > 0}
+                        className="pill pill--solid px-4 py-2 text-[13px] disabled:opacity-40"
                       >
                         <RotateCcw className="mr-1 inline size-3.5" />
-                        {'再来 ' + DRILL_COUNT + ' 题'}
+                        {unfixedCount > 0 ? '还剩 ' + unfixedCount + ' 题待订正' : '再来 ' + DRILL_COUNT + ' 题'}
                       </button>
                       <button type="button" onClick={closeDrill} className="pill px-4 py-2 text-[13px]">
                         返回
@@ -1383,6 +1450,46 @@ export function AiTrainerPage() {
                               : null}
                           </div>
                           <ExplainBlock id={q.id} />
+                          {ok ? null : drill.fixed[q.id] ? (
+                            <p className="text-accent-green mt-3 text-[13px] font-medium">已订正</p>
+                          ) : (
+                            <div className="border-line mt-3 rounded-[12px] border px-3.5 py-3">
+                              <p className="text-ink text-[13px] font-medium">重新选一遍，选对并提交才能做下一批</p>
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {(q.type === 'tf'
+                                  ? [
+                                      { key: 'T', text: '正确' },
+                                      { key: 'F', text: '错误' },
+                                    ]
+                                  : q.shown
+                                ).map((opt) => {
+                                  const active = (drill.fixPicks[q.id] ?? []).includes(opt.key);
+                                  return (
+                                    <button
+                                      key={opt.key}
+                                      type="button"
+                                      onClick={() => drillFixPick(q, opt.key)}
+                                      className={'pill px-3 py-1.5 text-[13px]' + (active ? ' pill--solid' : '')}
+                                    >
+                                      {q.type === 'tf' ? opt.text : opt.key + '. ' + opt.text}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <div className="mt-2 flex flex-wrap items-center gap-3">
+                                <button
+                                  type="button"
+                                  onClick={() => drillFixSubmit(q)}
+                                  className="pill pill--solid px-3 py-1 text-[12px]"
+                                >
+                                  提交
+                                </button>
+                                {fixBad[q.id] ? (
+                                  <span className="text-danger text-[12px]">还不对，再选一次。</span>
+                                ) : null}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
