@@ -1290,7 +1290,7 @@ export function AiTrainerPage() {
                 <div className="min-w-0">
                   <h2 className="text-ink text-[14px] font-semibold">刷题模式</h2>
                   <p className="text-secondary mt-1 text-[12px] leading-relaxed">
-                    每天先清错题，再做到期的复习题，最后补没学过的新题。一批 {DRILL_COUNT} 题，交卷后才看答案。
+                    每批 {DRILL_COUNT} 题，错题按权重占位，其余是新题，交卷后才看答案。
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
