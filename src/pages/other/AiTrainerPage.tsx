@@ -24,7 +24,6 @@ import {
   buildQueue,
   bumpDay,
   dayOf,
-  dueText,
   loadConf,
   loadDaily,
   loadQueue,
@@ -1424,9 +1423,6 @@ export function AiTrainerPage() {
                         正确率 {Math.round((drillStats.right / drill.questions.length) * 100)}%，答错{' '}
                         {drillStats.wrong} 题，未作答 {drill.questions.length - drillStats.answered} 题
                       </p>
-                      <p className="text-muted mt-1 text-[12px]">
-                        本批新题 {drillStats.fresh} 道，复习 {drillStats.review} 道。答对的题下次间隔变长，答错的明天再来。
-                      </p>
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -1506,9 +1502,6 @@ export function AiTrainerPage() {
                               : null}
                           </div>
                           <ExplainBlock id={q.id} />
-                          <p className="border-line text-muted mt-3 border-t pt-3 text-[12px]">
-                            下次复习 {dueText(srs[q.id], Date.now())}
-                          </p>
                         </div>
                       );
                     })}
