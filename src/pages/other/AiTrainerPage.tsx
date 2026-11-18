@@ -447,6 +447,67 @@ function ExplainBlock({ id }: { id: string }) {
   );
 }
 
+
+/** 复盘里的订正框：把错题重新选一遍，提交对了就从错题本里摘掉。 */
+function FixBox({ q, onFixed }: { q: ExamQuestion; onFixed: () => void }) {
+  const [picks, setPicks] = useState<string[]>([]);
+  const [tried, setTried] = useState(false);
+  const [done, setDone] = useState(false);
+  const tfOpts = [
+    { key: 'T', text: '正确' },
+    { key: 'F', text: '错误' },
+  ];
+  const opts = q.type === 'tf' ? tfOpts : q.shown;
+  const toggle = (key: string) => {
+    if (done) return;
+    setPicks((prev) => (q.type === 'multi' ? (prev.includes(key) ? prev.filter((v) => v !== key) : [...prev, key]) : [key]));
+  };
+  const submit = () => {
+    if (!picks.length || done) return;
+    setTried(true);
+    if (isRight(q, picks)) {
+      setDone(true);
+      onFixed();
+    }
+  };
+  return (
+    <div className="border-line mt-3 rounded-[14px] border px-3.5 py-3">
+      <div className="flex flex-col gap-2">
+        {opts.map((opt) => {
+          const active = picks.includes(opt.key);
+          const good = (tried || done) && q.key.includes(opt.key);
+          const bad = (tried || done) && active && !q.key.includes(opt.key);
+          return (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => toggle(opt.key)}
+              className={'glass px-3 py-2 text-left text-[13px] ' + (bad ? 'text-danger-ink' : good ? 'text-success-ink' : 'text-ink') + (active ? ' ring-brand/60 ring-1' : '')}
+            >
+              {q.type === 'tf' ? opt.text : opt.key + '. ' + opt.text}
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-2 flex items-center gap-2">
+        {done ? (
+          <span className="text-success-ink text-[12px]">订正完成</span>
+        ) : (
+          <button
+            type="button"
+            onClick={submit}
+            disabled={!picks.length}
+            className="pill pill--solid px-3 py-1.5 text-[12px] disabled:opacity-50"
+          >
+            提交
+          </button>
+        )}
+        {tried && !done ? <span className="text-danger-ink text-[12px]">答案：{lettersOf(q.key)}</span> : null}
+      </div>
+    </div>
+  );
+}
+
 export function AiTrainerPage() {
   const [tab, setTab] = useState<'theory' | 'skill' | 'info'>('theory');
   const [paper, setPaper] = useState<Paper | null>(null);
@@ -596,6 +657,7 @@ export function AiTrainerPage() {
 
     // 错题账本：错题复盘时做对的移除、没做对（含未作答）的留下；正式卷把新错的记进来
     let nextWrongs = wrongs;
+    const examWrongIds: string[] = [];
     if (isWrongRun) {
       const seen = new Set(paper.questions.map((q) => q.id));
       const stillBad = new Set(paper.questions.filter((q) => !isRight(q, picked[q.id] ?? [])).map((q) => q.id));
@@ -607,11 +669,19 @@ export function AiTrainerPage() {
         const mine = picked[q.id] ?? [];
         if (mine.length === 0 || isRight(q, mine)) continue;
         map.set(q.id, { qid: q.id, type: q.type, misses: (map.get(q.id)?.misses ?? 0) + 1, lastAt: now });
+        examWrongIds.push(q.id);
       }
       nextWrongs = [...map.values()];
     }
     saveWrongs(nextWrongs);
     setWrongs(nextWrongs);
+    if (examWrongIds.length) {
+      setWrongBook((book) => {
+        let next = book;
+        for (const qid of examWrongIds) next = addWrong(next, qid, Date.now());
+        return next;
+      });
+    }
 
     let nextRecords = records;
     if (!isWrongRun) {
@@ -632,6 +702,23 @@ export function AiTrainerPage() {
     localStorage.removeItem(RESUME_KEY);
     setResult(scored);
   }, [paper, picked, left, wrongs, records]);
+
+  /** 订正做对（复盘里提交或刷题模式里做对）：从考试错题本摘掉，解锁下一张卷。 */
+  const clearExamWrong = useCallback(
+    (qids: string[]) => {
+      if (!qids.length) return;
+      const drop = new Set(qids);
+      setWrongs((prev) => {
+        const next = prev.filter((e) => !drop.has(e.qid));
+        if (next.length === prev.length) return prev;
+        saveWrongs(next);
+        localStorage.setItem(CLOUD_META_KEY, String(Date.now()));
+        void cloudPut(CLOUD_KEY, { records, wrongs: next });
+        return next;
+      });
+    },
+    [records],
+  );
 
   // 作答过程随时落盘，刷新/关页可续做
   useEffect(() => {
@@ -873,6 +960,7 @@ export function AiTrainerPage() {
       }
       return next;
     });
+    clearExamWrong(results.filter((r) => r.ok).map((r) => r.q.id));
     setDrill({ ...cur, submitted: true });
   };
 
@@ -1186,15 +1274,13 @@ export function AiTrainerPage() {
                     </button>
                   ) : null}
                   {wrongs.length ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => startWrongs()}
-                        className="pill pill--solid px-5 py-2.5 text-[14px]"
-                      >
-                        先清错题（剩 {wrongs.length} 题）
-                      </button>
-                    </>
+                    <button
+                      type="button"
+                      onClick={() => startWrongs()}
+                      className="pill pill--solid px-5 py-2.5 text-[14px]"
+                    >
+                      订正错题（{wrongs.length} 题）
+                    </button>
                   ) : (
                     <button type="button" onClick={start} className="pill pill--solid px-5 py-2.5 text-[14px]">
                       开始一次模拟考试
@@ -1688,11 +1774,6 @@ export function AiTrainerPage() {
                       {result.score >= 60 ? '合格' : '不合格（60 分合格）'} · 用时{' '}
                       {splitTime(paper.seconds - left)}
                     </p>
-                    {result.wrong + result.blank > 0 ? (
-                      <p className="text-muted mt-1 text-[12px]">
-                        {result.wrong} 题做错已进错题本，开下一张卷前要先清完。
-                      </p>
-                    ) : null}
                   </div>
                 )}
                 <div className="flex gap-4 text-[13px]">
@@ -1797,6 +1878,11 @@ export function AiTrainerPage() {
                             : null}
                         </div>
                         <ExplainBlock id={q.id} />
+                        {wrongs.some((e) => e.qid === q.id) ? (
+                          <FixBox q={q} onFixed={() => clearExamWrong([q.id])} />
+                        ) : (
+                          <p className="text-success-ink mt-3 text-[12px]">已订正</p>
+                        )}
                       </div>
                     );
                   })}
