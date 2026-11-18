@@ -1006,6 +1006,9 @@ export function AiTrainerPage() {
     return { right, wrong, answered: right + wrong, fresh, review };
   }, [drill]);
 
+  /** 考卷错题还没在刷题模式里刷过的数量：没清完不让开新卷。 */
+  const pendingExamWrongs = wrongs.length;
+
   /** 复盘里还没订正的错题数：订正完才允许开下一批。 */
   const unfixedCount = useMemo(() => {
     if (!drill || !drill.submitted) return 0;
@@ -1054,6 +1057,8 @@ export function AiTrainerPage() {
       labels[qid] = label;
     };
     if (kind === 'today') {
+      // 考卷错题必须先在刷题模式里刷过一遍：每一批都先把它们放进来，刷过就从考卷错题本摘掉
+      for (const w of wrongs) push(w.qid, 'wrong');
       const freshIds = shuffle(AI_THEORY_QUESTIONS)
         .filter((q) => !srs[q.id] && !wrongBook[q.id])
         .map((q) => q.id);
@@ -1293,8 +1298,15 @@ export function AiTrainerPage() {
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <button type="button" onClick={start} className="pill pill--solid px-5 py-2.5 text-[14px]">
-                    开始一次模拟考试
+                  <button
+                    type="button"
+                    onClick={start}
+                    disabled={pendingExamWrongs > 0}
+                    className="pill pill--solid px-5 py-2.5 text-[14px] disabled:opacity-40"
+                  >
+                    {pendingExamWrongs > 0
+                      ? '先刷完 ' + pendingExamWrongs + ' 道考卷错题'
+                      : '开始一次模拟考试'}
                   </button>
                   <button
                     type="button"
