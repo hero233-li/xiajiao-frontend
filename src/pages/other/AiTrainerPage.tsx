@@ -9,6 +9,15 @@ import {
   type AiQuestionType,
 } from '../../data/aiTrainer';
 import { explainOf } from '../../data/aiTrainerExplain';
+import {
+  addWrong,
+  dropWrong,
+  loadWrongBook,
+  noteRight,
+  saveWrongBook,
+  sortWrongs,
+  type WrongBook,
+} from '../../lib/wrongbook';
 import { cloudPull, cloudPut } from '../../lib/aiSync';
 import {
   answerCard,
@@ -141,7 +150,7 @@ interface DrillRun {
   /** 一批 10 题统一交一次卷，交卷后才揭晓对错并出本批总结。 */
   submitted: boolean;
   /** 这一批里每道题算复习还是新题 */
-  labels: Record<string, 'new' | 'review'>;
+  labels: Record<string, 'new' | 'review' | 'wrong'>;
 }
 
 /** 中途刷新/关页后能接着做：存题序、选项顺序、已选、标记、剩余时间。 */
@@ -450,6 +459,13 @@ export function AiTrainerPage() {
   const [conf, setConf] = useState<SrsConf>(() => loadConf());
   const [queue, setQueue] = useState<DayQueue | null>(() => loadQueue());
   const [graded, setGraded] = useState<Record<string, SrsGrade>>({});
+  const [wrongBook, setWrongBook] = useState<WrongBook>(() => loadWrongBook());
+  const [drillHome, setDrillHome] = useState(false);
+  const [wrongOpen, setWrongOpen] = useState(false);
+
+  useEffect(() => {
+    saveWrongBook(wrongBook);
+  }, [wrongBook]);
 
   useEffect(() => {
     saveSrs(srs);
@@ -758,6 +774,14 @@ export function AiTrainerPage() {
       return next;
     });
     setDaily((prev) => bumpDay(prev, dayOf(now), patch));
+    setWrongBook((prev) => {
+      let next = prev;
+      for (const r of results) {
+        if (!r.ok) next = addWrong(next, r.q.id, now);
+        else if (next[r.q.id]) next = noteRight(next, r.q.id, now);
+      }
+      return next;
+    });
     setGraded({});
     setDrill({ ...cur, submitted: true });
   };
@@ -796,15 +820,34 @@ export function AiTrainerPage() {
     return { right, wrong, answered: right + wrong, fresh, review };
   }, [drill]);
 
+  const closeDrill = () => {
+    setDrill(null);
+    setDrillHome(false);
+    setWrongOpen(false);
+  };
+
+  /** 出题顺序：错题集里的题先上，再接到期复习，最后是没学过的新题。 */
   const startDrill = (kind: 'today' | 'free' = 'today') => {
     const now = Date.now();
-    const byId = new Map(AI_THEORY_QUESTIONS.map((q) => [q.id, q]));
+    const byId = qById;
     let ids: string[] = [];
-    const labels: Record<string, 'new' | 'review'> = {};
-    if (kind === 'today' && queue) {
-      const batch = batchFrom(queue, srs, now, DRILL_COUNT);
-      ids = batch.ids;
-      Object.assign(labels, batch.labels);
+    const labels: Record<string, 'new' | 'review' | 'wrong'> = {};
+    if (kind === 'today') {
+      for (const w of wrongList) {
+        if (ids.length >= DRILL_COUNT) break;
+        if (labels[w.qid]) continue;
+        ids.push(w.qid);
+        labels[w.qid] = 'wrong';
+      }
+      if (ids.length < DRILL_COUNT && queue) {
+        const rest = batchFrom(queue, srs, now, DRILL_COUNT - ids.length + wrongList.length);
+        for (const id of rest.ids) {
+          if (ids.length >= DRILL_COUNT) break;
+          if (labels[id]) continue;
+          ids.push(id);
+          labels[id] = rest.labels[id];
+        }
+      }
     } else {
       ids = shuffle(AI_THEORY_QUESTIONS)
         .slice(0, DRILL_COUNT)
@@ -820,6 +863,7 @@ export function AiTrainerPage() {
       return;
     }
     setGraded({});
+    setDrillHome(true);
     setDrill({ kind, questions, cursor: 0, picks: {}, submitted: false, labels });
   };
 
@@ -904,6 +948,9 @@ export function AiTrainerPage() {
     [queue, srs, nowTs],
   );
   const streak = useMemo(() => streakOf(daily, nowTs), [daily, nowTs]);
+  /** 错题集，错得多的排前面。 */
+  const wrongList = useMemo(() => sortWrongs(wrongBook), [wrongBook]);
+  const qById = useMemo(() => new Map(AI_THEORY_QUESTIONS.map((q) => [q.id, q])), []);
   const studied = useMemo(() => studiedCount(srs), [srs]);
   const mastery = useMemo(() => masteryOf(srs), [srs]);
   const drillHint = (() => {
@@ -919,6 +966,44 @@ export function AiTrainerPage() {
   })();
   const answerText = (q: ExamQuestion) =>
     q.key.map((v) => (v === 'T' ? '正确' : v === 'F' ? '错误' : v)).join('');
+
+  /** 错题集列表：刷题入口页和刷题面板共用。 */
+  const wrongBookSection = wrongList.length ? (
+    <section className="glass flex flex-col gap-2 px-4 py-4 sm:px-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="text-ink text-[14px] font-semibold">错题集 · {wrongList.length} 题</h3>
+        <p className="text-muted text-[12px]">
+          进了不会自己消失；做对只记一次「已对」，要真的清掉得点右边的移出。
+        </p>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        {wrongList.slice(0, 40).map((w, i) => {
+          const q = qById.get(w.qid);
+          return (
+            <div
+              key={w.qid}
+              className="border-danger flex flex-wrap items-center gap-2 rounded-[10px] border px-3 py-2 text-[12px]"
+            >
+              <span className="text-muted tabular-nums">{i + 1}</span>
+              <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5">
+                {q ? TYPE_LABEL[q.type] : '题目'}
+              </span>
+              <span className="text-ink min-w-0 flex-1 truncate">{q ? q.stem : w.qid}</span>
+              <span className="text-danger font-semibold tabular-nums">错 {w.misses} 次</span>
+              <span className="text-muted tabular-nums">已对 {w.right} 次</span>
+              <button
+                type="button"
+                onClick={() => setWrongBook((prev) => dropWrong(prev, w.qid))}
+                className="pill px-2 py-0.5 text-[11px]"
+              >
+                移出
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  ) : null;
 
   /* --------------------------------- 渲染 --------------------------------- */
 
@@ -1026,7 +1111,7 @@ export function AiTrainerPage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => startDrill('today')}
+                    onClick={() => setDrillHome(true)}
                     className="pill px-4 py-2.5 text-[14px]"
                   >
                     刷题模式（10 题一局）
@@ -1131,6 +1216,70 @@ export function AiTrainerPage() {
             </>
           ) : null}
 
+          {!paper && !result && !drill && drillHome ? (
+            <>
+              <section className="glass flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
+                <div className="min-w-0">
+                  <h2 className="text-ink text-[14px] font-semibold">刷题模式</h2>
+                  <p className="text-secondary mt-1 text-[12px] leading-relaxed">
+                    每天先清错题，再做到期的复习题，最后补没学过的新题。一批 {DRILL_COUNT} 题，交卷后才看答案。
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-3 text-[13px]">
+                  <span className="text-muted tabular-nums">连续打卡 {streak} 天</span>
+                  <button
+                    type="button"
+                    onClick={closeDrill}
+                    className="text-muted hover:text-danger text-[12px] transition"
+                  >
+                    退出
+                  </button>
+                </div>
+              </section>
+
+              <section className="glass flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 text-[13px] sm:px-5">
+                <span className="text-danger font-semibold tabular-nums">错题集 {wrongList.length} 题</span>
+                <span className="text-secondary">
+                  今日新题 <b className="text-ink tabular-nums">{progress.newDone}</b> / {progress.newTotal}
+                </span>
+                <span className="text-secondary">
+                  今日复习 <b className="text-ink tabular-nums">{progress.dueDone}</b> / {progress.dueTotal}
+                </span>
+                <span className="text-muted tabular-nums">
+                  已学 {studied} 题，已掌握 {mastery.mastered} 题
+                </span>
+                <span className="text-muted">每天新题</span>
+                <span className="flex gap-1">
+                  {NEW_PER_DAY_CHOICES.map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setConf((c) => ({ ...c, newPerDay: n }))}
+                      className={'pill px-2.5 py-1 text-[12px]' + (conf.newPerDay === n ? ' pill--solid' : '')}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </span>
+              </section>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => startDrill('today')}
+                  className="pill pill--solid px-5 py-2.5 text-[14px]"
+                >
+                  {wrongList.length ? '先做错题（' + wrongList.length + ' 题）' : '开始今日任务'}
+                </button>
+                <button type="button" onClick={() => startDrill('free')} className="pill px-4 py-2.5 text-[14px]">
+                  自由练 10 题
+                </button>
+              </div>
+
+              {wrongBookSection}
+            </>
+          ) : null}
+
           {!paper && !result && drill ? (
             <>
               <section className="glass flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
@@ -1164,7 +1313,14 @@ export function AiTrainerPage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => setDrill(null)}
+                    onClick={() => setWrongOpen((v) => !v)}
+                    className={'pill px-2.5 py-1 text-[12px]' + (wrongOpen ? ' pill--solid' : '')}
+                  >
+                    错题集 {wrongList.length}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeDrill}
                     className="text-muted hover:text-danger text-[12px] transition"
                   >
                     退出
@@ -1207,8 +1363,24 @@ export function AiTrainerPage() {
                 </section>
               ) : null}
 
+              {wrongOpen ? wrongBookSection : null}
+
               {drill.submitted ? (
                 <>
+                  {drillStats.wrong ? (
+                    <section className="bg-danger-soft border-danger flex flex-wrap items-center justify-between gap-3 rounded-[14px] border px-4 py-3 sm:px-5">
+                      <p className="text-danger text-[13px] font-semibold">
+                        本批答错 {drillStats.wrong} 题，已进错题集，下次刷题从错题集优先出
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setWrongOpen(true)}
+                        className="pill px-3 py-1.5 text-[12px]"
+                      >
+                        看错题集
+                      </button>
+                    </section>
+                  ) : null}
                   <section className="glass flex flex-wrap items-end justify-between gap-4 px-4 py-5 sm:px-5">
                     <div>
                       <p className="text-brand-ink text-[34px] leading-none font-semibold tabular-nums">
@@ -1236,7 +1408,7 @@ export function AiTrainerPage() {
                           ? '继续（还剩 ' + progress.left + ' 题）'
                           : '再来一批'}
                       </button>
-                      <button type="button" onClick={() => setDrill(null)} className="pill px-4 py-2 text-[13px]">
+                      <button type="button" onClick={closeDrill} className="pill px-4 py-2 text-[13px]">
                         返回
                       </button>
                     </div>
@@ -1246,17 +1418,37 @@ export function AiTrainerPage() {
                     {drill.questions.map((q, index) => {
                       const mine = drill.picks[q.id] ?? [];
                       const ok = isRight(q, mine);
+                      const tag = drill.labels[q.id];
                       return (
-                        <div key={q.id} className="glass px-4 py-4 sm:px-5">
-                          <div className="flex flex-wrap items-baseline gap-2 text-[12px]">
+                        <div
+                          key={q.id}
+                          className={
+                            ok
+                              ? 'glass border-l-accent-green rounded-[14px] border-l-4 px-4 py-4 sm:px-5'
+                              : 'glass bg-danger-soft border-l-danger border-danger/40 rounded-[14px] border border-l-4 px-4 py-4 sm:px-5'
+                          }
+                        >
+                          <div className="flex flex-wrap items-center gap-2 text-[12px]">
                             <span className="text-muted tabular-nums">第 {index + 1} 题</span>
                             <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5">
                               {TYPE_LABEL[q.type]}
                             </span>
-                            <span className="border-line text-muted rounded-full border px-2 py-0.5">
-                              {drill.labels[q.id] === 'new' ? '新题' : '复习'}
+                            <span
+                              className={
+                                tag === 'wrong'
+                                  ? 'bg-danger rounded-full px-2 py-0.5 font-semibold text-white'
+                                  : 'border-line text-muted rounded-full border px-2 py-0.5'
+                              }
+                            >
+                              {tag === 'wrong' ? '错题集' : tag === 'new' ? '新题' : '复习'}
                             </span>
-                            <span className={ok ? 'text-accent-green' : mine.length ? 'text-danger' : 'text-muted'}>
+                            <span
+                              className={
+                                ok
+                                  ? 'bg-accent-green rounded-full px-2 py-0.5 font-semibold text-white'
+                                  : 'bg-danger rounded-full px-2 py-0.5 font-semibold text-white'
+                              }
+                            >
                               {ok ? '答对' : mine.length ? '答错' : '未作答'}
                             </span>
                           </div>
