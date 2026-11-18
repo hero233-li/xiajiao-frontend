@@ -1188,7 +1188,7 @@ export function AiTrainerPage() {
         </p>
       </div>
       <div className="flex flex-col gap-1.5">
-        {wrongList.slice(0, 40).map((w, i) => {
+        {wrongList.map((w, i) => {
           const q = qById.get(w.qid);
           return (
             <div
