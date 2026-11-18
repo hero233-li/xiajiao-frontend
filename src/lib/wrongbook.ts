@@ -7,8 +7,10 @@ export interface WrongItem {
   right: number;
   firstAt: number;
   lastAt: number;
-  /** 最近一次做对是哪一天（YYYY-MM-DD），用于「今天做对过的错题本批不再出」。 */
+  /** 最近一次做对是哪一天（YYYY-MM-DD）。 */
   rightDay?: string;
+  /** 在理论模拟考试里做错的次数：考试的错题权重更高，刷题时更常出现。 */
+  exam: number;
 }
 
 export type WrongBook = Record<string, WrongItem>;
@@ -31,6 +33,7 @@ export function loadWrongBook(): WrongBook {
         firstAt: Number(v.firstAt) || Date.now(),
         lastAt: Number(v.lastAt) || Date.now(),
         rightDay: typeof v.rightDay === 'string' ? v.rightDay : undefined,
+        exam: Math.max(0, Number(v.exam) || 0),
       };
     }
     return out;
@@ -47,8 +50,8 @@ export function saveWrongBook(book: WrongBook) {
   }
 }
 
-/** 答错：进错题集或累加次数。已经在里面的不重置首次时间。 */
-export function addWrong(book: WrongBook, qid: string, now: number): WrongBook {
+/** 答错：进错题集或累加次数。已经在里面的不重置首次时间；考试错题额外记一次 exam。 */
+export function addWrong(book: WrongBook, qid: string, now: number, origin: 'drill' | 'exam' = 'drill'): WrongBook {
   const old = book[qid];
   return {
     ...book,
@@ -58,8 +61,15 @@ export function addWrong(book: WrongBook, qid: string, now: number): WrongBook {
       right: old?.right ?? 0,
       firstAt: old?.firstAt ?? now,
       lastAt: now,
+      rightDay: old?.rightDay,
+      exam: (old?.exam ?? 0) + (origin === 'exam' ? 1 : 0),
     },
   };
+}
+
+/** 出题权重：考试里错的题 3 倍起，错得越多越重。 */
+export function wrongWeight(item: WrongItem): number {
+  return (item.exam > 0 ? 3 : 1) * (1 + Math.min(item.misses, 6) * 0.5);
 }
 
 function dayKey(ts: number): string {
@@ -77,9 +87,11 @@ export function noteRight(book: WrongBook, qid: string, now: number): WrongBook 
 }
 
 
-/** 错得多的排前面，同样次数按最近错的排前面。 */
+/** 考试错题排前面，其次错得多的，同样次数按最近错的排前面。 */
 export function sortWrongs(book: WrongBook): WrongItem[] {
-  return Object.values(book).sort((a, b) => b.misses - a.misses || b.lastAt - a.lastAt);
+  return Object.values(book).sort(
+    (a, b) => (b.exam > 0 ? 1 : 0) - (a.exam > 0 ? 1 : 0) || b.misses - a.misses || b.lastAt - a.lastAt,
+  );
 }
 
 
@@ -90,7 +102,7 @@ export function mergeWrongBook(local: WrongBook, remote: WrongBook): WrongBook {
     if (!item || typeof item.misses !== 'number') continue;
     const mine = out[qid];
     if (!mine) {
-      out[qid] = { ...item, qid, rightDay: item.rightDay || undefined };
+      out[qid] = { ...item, qid, rightDay: item.rightDay || undefined, exam: Math.max(0, Number(item.exam) || 0) };
       continue;
     }
     out[qid] = {
@@ -100,6 +112,7 @@ export function mergeWrongBook(local: WrongBook, remote: WrongBook): WrongBook {
       firstAt: Math.min(mine.firstAt || item.firstAt, item.firstAt || mine.firstAt),
       lastAt: Math.max(mine.lastAt ?? 0, item.lastAt ?? 0),
       rightDay: [mine.rightDay, item.rightDay].filter(Boolean).sort().pop(),
+      exam: Math.max(mine.exam ?? 0, Number(item.exam) || 0),
     };
   }
   return out;

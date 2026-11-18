@@ -16,6 +16,7 @@ import {
   mergeWrongBook,
   saveWrongBook,
   sortWrongs,
+  wrongWeight,
   type WrongBook,
 } from '../../lib/wrongbook';
 import { cloudPull, cloudPut } from '../../lib/aiSync';
@@ -678,7 +679,7 @@ export function AiTrainerPage() {
     if (examWrongIds.length) {
       setWrongBook((book) => {
         let next = book;
-        for (const qid of examWrongIds) next = addWrong(next, qid, Date.now());
+        for (const qid of examWrongIds) next = addWrong(next, qid, Date.now(), 'exam');
         return next;
       });
     }
@@ -1036,9 +1037,19 @@ export function AiTrainerPage() {
           wrongSlots = Math.min(Math.max(wrongSlots, 3), 5, wrongCount);
         }
       }
-      for (const w of shuffle(wrongList.map((w) => w.qid))) {
-        if (ids.length >= wrongSlots) break;
-        push(w, 'wrong');
+      // 错题席位按权重抽：考试错题权重 3 倍起，错得越多越容易抽到。
+      const rest = [...wrongList];
+      while (ids.length < wrongSlots && rest.length) {
+        const weights = rest.map((w) => wrongWeight(w));
+        const totalWeight = weights.reduce((a, b) => a + b, 0);
+        let point = Math.random() * totalWeight;
+        let pickIndex = 0;
+        while (pickIndex < weights.length - 1 && point > weights[pickIndex]) {
+          point -= weights[pickIndex];
+          pickIndex += 1;
+        }
+        const picked = rest.splice(pickIndex, 1)[0];
+        push(picked.qid, 'wrong');
       }
       for (const qid of freshIds) push(qid, 'new');
       const due = Object.entries(srs)
@@ -1178,6 +1189,9 @@ export function AiTrainerPage() {
                 {q ? TYPE_LABEL[q.type] : '题目'}
               </span>
               <span className="text-ink min-w-0 flex-1 truncate">{q ? q.stem : w.qid}</span>
+              {w.exam > 0 ? (
+                <span className="bg-danger-soft text-danger rounded-full px-2 py-0.5">考试错题</span>
+              ) : null}
               <span className="text-danger font-semibold tabular-nums">错 {w.misses} 次</span>
               <span className="text-muted tabular-nums">已对 {w.right} 次</span>
               <span className="text-muted text-[11px]">留在错题集</span>
