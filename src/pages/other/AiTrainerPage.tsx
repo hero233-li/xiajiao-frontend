@@ -29,7 +29,6 @@ import {
   loadDaily,
   loadQueue,
   loadSrs,
-  masteryOf,
   mergeDaily,
   mergeSrs,
   saveConf,
@@ -37,8 +36,6 @@ import {
   saveQueue,
   saveSrs,
   startOfDay,
-  streakOf,
-  studiedCount,
   type DayLog,
   type DayQueue,
   type SrsConf,
@@ -1016,12 +1013,9 @@ export function AiTrainerPage() {
   const todayLog = daily[dayOf(nowTs)] ?? { new: 0, review: 0, right: 0, wrong: 0 };
   const drillDoneCount = Object.keys(srs).length;
   const drillPct = Math.min(100, Math.round((drillDoneCount / AI_THEORY_QUESTIONS.length) * 100));
-  const streak = useMemo(() => streakOf(daily, nowTs), [daily, nowTs]);
   /** 错题集，错得多的排前面。 */
   const wrongList = useMemo(() => sortWrongs(wrongBook), [wrongBook]);
   const qById = useMemo(() => new Map(AI_THEORY_QUESTIONS.map((q) => [q.id, q])), []);
-  const studied = useMemo(() => studiedCount(srs), [srs]);
-  const mastery = useMemo(() => masteryOf(srs), [srs]);
   const drillHint = (() => {
     if (!drillQ) return '';
     const parts: string[] = [];
@@ -1376,22 +1370,15 @@ export function AiTrainerPage() {
               </section>
 
               {drill.kind === 'today' ? (
-                <section className="glass flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 text-[13px] sm:px-5">
-                  <span className="text-secondary">
-                    今日已做 <b className="text-ink tabular-nums">{todayLog.new + todayLog.review}</b> 题（新 {todayLog.new}，复习 {todayLog.review}）
-                  </span>
-                  <span className="text-muted tabular-nums">连续打卡 {streak} 天</span>
-                  <span className="text-muted tabular-nums">
-                    已学 {studied} 题，已掌握 {mastery.mastered} 题
-                  </span>
+                <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => startDrill('free')}
-                    className="pill ml-auto px-3 py-1.5 text-[12px]"
+                    className="pill px-3 py-1.5 text-[12px]"
                   >
                     自由练 10 题
                   </button>
-                </section>
+                </div>
               ) : null}
 
               {wrongOpen ? wrongBookSection : null}
