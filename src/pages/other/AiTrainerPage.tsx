@@ -15,6 +15,7 @@ import {
   noteRight,
   mergeWrongBook,
   saveWrongBook,
+  isReviewing,
   sortWrongs,
   wrongWeight,
   type WrongBook,
@@ -1025,7 +1026,8 @@ export function AiTrainerPage() {
       const freshIds = shuffle(AI_THEORY_QUESTIONS)
         .filter((q) => !srs[q.id] && !wrongBook[q.id])
         .map((q) => q.id);
-      const wrongCount = wrongList.length;
+      const activeWrongs = wrongList.filter((w) => !isReviewing(w));
+      const wrongCount = activeWrongs.length;
       const freshCount = freshIds.length;
       // 错题席位：3 席起步，错题在全库未掌握里的占比越高越往 5 席靠；新题刷光就整批错题。
       let wrongSlots = 0;
@@ -1038,7 +1040,7 @@ export function AiTrainerPage() {
         }
       }
       // 错题席位按权重抽：考试错题权重 3 倍起，错得越多越容易抽到。
-      const rest = [...wrongList];
+      const rest = [...activeWrongs];
       while (ids.length < wrongSlots && rest.length) {
         const weights = rest.map((w) => wrongWeight(w));
         const totalWeight = weights.reduce((a, b) => a + b, 0);
@@ -1189,11 +1191,16 @@ export function AiTrainerPage() {
                 {q ? TYPE_LABEL[q.type] : '题目'}
               </span>
               <span className="text-ink min-w-0 flex-1 truncate">{q ? q.stem : w.qid}</span>
+              {isReviewing(w) ? (
+                <span className="bg-accent-green/15 text-accent-green rounded-full px-2 py-0.5">复习</span>
+              ) : (
+                <span className="bg-danger-soft text-danger rounded-full px-2 py-0.5">错题</span>
+              )}
               {w.exam > 0 ? (
                 <span className="bg-danger-soft text-danger rounded-full px-2 py-0.5">考试错题</span>
               ) : null}
-              <span className="text-danger font-semibold tabular-nums">错 {w.misses} 次</span>
-              <span className="text-muted tabular-nums">已对 {w.right} 次</span>
+              <span className="text-danger font-semibold tabular-nums">积分 {w.score.toFixed(1)}</span>
+              <span className="text-muted tabular-nums">错 {w.misses} 次 · 已对 {w.right} 次</span>
               <span className="text-muted text-[11px]">留在错题集</span>
             </div>
           );
