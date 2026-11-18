@@ -77,3 +77,25 @@ export function dropWrong(book: WrongBook, qid: string): WrongBook {
 export function sortWrongs(book: WrongBook): WrongItem[] {
   return Object.values(book).sort((a, b) => b.misses - a.misses || b.lastAt - a.lastAt);
 }
+
+
+/** 云端合并：错次与对次取大值，进集时间取早，最后一次取晚。 */
+export function mergeWrongBook(local: WrongBook, remote: WrongBook): WrongBook {
+  const out: WrongBook = { ...local };
+  for (const [qid, item] of Object.entries(remote ?? {})) {
+    if (!item || typeof item.misses !== 'number') continue;
+    const mine = out[qid];
+    if (!mine) {
+      out[qid] = { ...item, qid };
+      continue;
+    }
+    out[qid] = {
+      qid,
+      misses: Math.max(mine.misses, item.misses),
+      right: Math.max(mine.right ?? 0, Number(item.right) || 0),
+      firstAt: Math.min(mine.firstAt || item.firstAt, item.firstAt || mine.firstAt),
+      lastAt: Math.max(mine.lastAt ?? 0, item.lastAt ?? 0),
+    };
+  }
+  return out;
+}

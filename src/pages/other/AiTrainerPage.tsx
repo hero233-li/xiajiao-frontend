@@ -14,6 +14,7 @@ import {
   dropWrong,
   loadWrongBook,
   noteRight,
+  mergeWrongBook,
   saveWrongBook,
   sortWrongs,
   type WrongBook,
@@ -32,6 +33,8 @@ import {
   loadQueue,
   loadSrs,
   masteryOf,
+  mergeDaily,
+  mergeSrs,
   queueProgress,
   saveConf,
   saveDaily,
@@ -213,6 +216,9 @@ const WRONG_KEY = 'xj.ai.wrongs.v1';
 /** 云端整份文档（考试记录 + 错题本），换设备也能接上。 */
 const CLOUD_KEY = 'ai-trainer';
 const CLOUD_META_KEY = 'xj.ai.meta.v1';
+/** 刷题进度（卡片 / 每日账 / 错题集 / 每天新题量）的云同步槽位。 */
+const DRILL_CLOUD_KEY = 'ai-drill';
+const DRILL_META_KEY = 'xj.ai.drill.meta.v1';
 
 interface WrongEntry {
   qid: string;
@@ -479,6 +485,77 @@ export function AiTrainerPage() {
   useEffect(() => {
     saveConf(conf);
   }, [conf]);
+
+  /** 云端记录的最后同步时间，0 表示这次打开还没和云端打过交道。 */
+  const [drillSyncedAt, setDrillSyncedAt] = useState(0);
+  const drillSynced = useRef(false);
+
+  /** 开页先把云端刷题进度并进来（老设备上的数据也会一次性推上去）。 */
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const remote = await cloudPull<{
+        srs?: SrsMap;
+        daily?: Record<string, DayLog>;
+        wrongs?: WrongBook;
+        conf?: SrsConf;
+      }>(DRILL_CLOUD_KEY);
+      if (!alive) return;
+      const localAt = Number(localStorage.getItem(DRILL_META_KEY) ?? 0);
+      if (remote && remote.updatedAt > localAt) {
+        const nextSrs = mergeSrs(loadSrs(), remote.data.srs ?? {});
+        const nextDaily = mergeDaily(loadDaily(), remote.data.daily ?? {});
+        const nextWrong = mergeWrongBook(loadWrongBook(), remote.data.wrongs ?? {});
+        const rconf = remote.data.conf;
+        saveSrs(nextSrs);
+        setSrs(nextSrs);
+        saveDaily(nextDaily);
+        setDaily(nextDaily);
+        saveWrongBook(nextWrong);
+        setWrongBook(nextWrong);
+        if (rconf && Number(rconf.newPerDay) > 0) {
+          const nextConf: SrsConf = {
+            newPerDay: Math.round(Number(rconf.newPerDay)),
+            reviewCap: Math.round(Number(rconf.reviewCap) || loadConf().reviewCap),
+          };
+          saveConf(nextConf);
+          setConf(nextConf);
+        }
+        localStorage.setItem(DRILL_META_KEY, String(remote.updatedAt));
+        setDrillSyncedAt(remote.updatedAt);
+      } else {
+        const localSrs = loadSrs();
+        const localWrong = loadWrongBook();
+        if (Object.keys(localSrs).length > 0 || Object.keys(localWrong).length > 0) {
+          const now = Date.now();
+          localStorage.setItem(DRILL_META_KEY, String(now));
+          void cloudPut(DRILL_CLOUD_KEY, {
+            srs: localSrs,
+            daily: loadDaily(),
+            wrongs: localWrong,
+            conf: loadConf(),
+          });
+          setDrillSyncedAt(now);
+        }
+      }
+      drillSynced.current = true;
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  /** 刷题进度变了就节流推上去：错题集、卡片、每日账、每天新题量都跟着上云。 */
+  useEffect(() => {
+    if (!drillSynced.current) return;
+    const timer = window.setTimeout(() => {
+      const now = Date.now();
+      localStorage.setItem(DRILL_META_KEY, String(now));
+      void cloudPut(DRILL_CLOUD_KEY, { srs, daily, wrongs: wrongBook, conf });
+      setDrillSyncedAt(now);
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [srs, daily, wrongBook, conf]);
 
   /** 今日队列一天只排一次：做完的题不再从队列里消失，进度才不会往回跳。 */
   useEffect(() => {
@@ -1250,6 +1327,9 @@ export function AiTrainerPage() {
                 </span>
                 <span className="text-muted tabular-nums">
                   已学 {studied} 题，已掌握 {mastery.mastered} 题
+                </span>
+                <span className="text-muted tabular-nums">
+                  {drillSyncedAt ? '云端已同步' : '只在本机'}
                 </span>
                 <span className="text-muted">每天新题</span>
                 <span className="flex gap-1">

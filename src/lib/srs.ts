@@ -313,3 +313,49 @@ export function loadQueue(): DayQueue | null {
 export function saveQueue(queue: DayQueue) {
   writeJson(SRS_QUEUE_KEY, queue);
 }
+
+
+/** 云端合并：同一道题取复习时间更晚的卡片，次数取大值。 */
+export function mergeSrs(local: SrsMap, remote: SrsMap): SrsMap {
+  const out: SrsMap = { ...local };
+  for (const [qid, card] of Object.entries(remote ?? {})) {
+    if (!card || typeof card.box !== 'number') continue;
+    const mine = out[qid];
+    if (!mine) {
+      out[qid] = card;
+      continue;
+    }
+    const newer = (card.lastAt ?? 0) > (mine.lastAt ?? 0) || ((card.lastAt ?? 0) === (mine.lastAt ?? 0) && card.box > mine.box);
+    const win = newer ? card : mine;
+    const lose = newer ? mine : card;
+    out[qid] = {
+      ...win,
+      reps: Math.max(win.reps ?? 0, lose.reps ?? 0),
+      lapses: Math.max(win.lapses ?? 0, lose.lapses ?? 0),
+    };
+  }
+  return out;
+}
+
+/** 每日账合并：同一天取各项较大值。 */
+export function mergeDaily(local: Record<string, DayLog>, remote: Record<string, DayLog>): Record<string, DayLog> {
+  const out: Record<string, DayLog> = { ...local };
+  for (const [date, log] of Object.entries(remote ?? {})) {
+    if (!log) continue;
+    const mine = out[date];
+    out[date] = mine
+      ? {
+          new: Math.max(mine.new, Number(log.new) || 0),
+          review: Math.max(mine.review, Number(log.review) || 0),
+          right: Math.max(mine.right, Number(log.right) || 0),
+          wrong: Math.max(mine.wrong, Number(log.wrong) || 0),
+        }
+      : {
+          new: Number(log.new) || 0,
+          review: Number(log.review) || 0,
+          right: Number(log.right) || 0,
+          wrong: Number(log.wrong) || 0,
+        };
+  }
+  return out;
+}
