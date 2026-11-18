@@ -872,6 +872,14 @@ export function AiTrainerPage() {
     setDrill({ ...cur, submitted: true });
   };
 
+  /** 交卷按钮：还有未作答的题时先确认一次。 */
+  const askSubmitDrill = () => {
+    if (!drill || drill.submitted) return;
+    const blank = drill.questions.length - drillStats.answered;
+    if (blank > 0 && !window.confirm('还有 ' + blank + ' 题没答，未作答的按答错计入本批，确定交卷？')) return;
+    submitDrill();
+  };
+
   const drillGo = (delta: number) => {
     const cur = drill;
     if (!cur || cur.submitted) return;
@@ -1338,6 +1346,15 @@ export function AiTrainerPage() {
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
+                  {drill.submitted ? null : (
+                    <button
+                      type="button"
+                      onClick={askSubmitDrill}
+                      className="pill pill--solid px-4 py-1.5 text-[13px]"
+                    >
+                      交卷看本批总结
+                    </button>
+                  )}
                   {drill.submitted ? (
                     <>
                       <span className="text-accent-green tabular-nums">对 {drillStats.right}</span>
@@ -1525,18 +1542,6 @@ export function AiTrainerPage() {
                     >
                       下一题
                       <ChevronRight className="ml-1 inline size-4" />
-                    </button>
-                    <span className="text-muted text-[12px]">做完这一批再交卷，交卷后才看答案</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const blank = drill.questions.length - drillStats.answered;
-                        if (blank > 0 && !window.confirm('还有 ' + blank + ' 题没答，未作答的按答错计入本批，确定交卷？')) return;
-                        submitDrill();
-                      }}
-                      className="pill pill--solid ml-auto px-4 py-1.5 text-[13px]"
-                    >
-                      交卷看本批总结
                     </button>
                   </div>
                 </section>
