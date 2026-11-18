@@ -11,7 +11,6 @@ import {
 import { explainOf } from '../../data/aiTrainerExplain';
 import {
   addWrong,
-  dropWrong,
   loadWrongBook,
   noteRight,
   mergeWrongBook,
@@ -1049,7 +1048,7 @@ export function AiTrainerPage() {
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-ink text-[14px] font-semibold">错题集 · {wrongList.length} 题</h3>
         <p className="text-muted text-[12px]">
-          进了不会自己消失；做对只记一次「已对」，要真的清掉得点右边的移出。
+          进了就不出来：做对也不会消失，只多记一次「已对」；这里没有移出，题只会越攒越多。
         </p>
       </div>
       <div className="flex flex-col gap-1.5">
@@ -1067,13 +1066,7 @@ export function AiTrainerPage() {
               <span className="text-ink min-w-0 flex-1 truncate">{q ? q.stem : w.qid}</span>
               <span className="text-danger font-semibold tabular-nums">错 {w.misses} 次</span>
               <span className="text-muted tabular-nums">已对 {w.right} 次</span>
-              <button
-                type="button"
-                onClick={() => setWrongBook((prev) => dropWrong(prev, w.qid))}
-                className="pill px-2 py-0.5 text-[11px]"
-              >
-                移出
-              </button>
+              <span className="text-muted text-[11px]">留在错题集</span>
             </div>
           );
         })}

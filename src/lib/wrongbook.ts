@@ -66,12 +66,6 @@ export function noteRight(book: WrongBook, qid: string, now: number): WrongBook 
   return { ...book, [qid]: { ...old, right: old.right + 1, lastAt: now } };
 }
 
-export function dropWrong(book: WrongBook, qid: string): WrongBook {
-  if (!book[qid]) return book;
-  const next = { ...book };
-  delete next[qid];
-  return next;
-}
 
 /** 错得多的排前面，同样次数按最近错的排前面。 */
 export function sortWrongs(book: WrongBook): WrongItem[] {
