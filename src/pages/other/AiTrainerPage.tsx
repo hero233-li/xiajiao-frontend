@@ -171,35 +171,6 @@ function saveResume(state: ResumeState) {
   }
 }
 
-function loadResume(): Paper | null {
-  try {
-    const raw = localStorage.getItem(RESUME_KEY);
-    if (!raw) return null;
-    const st = JSON.parse(raw) as ResumeState;
-    if (!st?.items?.length) return null;
-    const byId = new Map(AI_THEORY_QUESTIONS.map((q) => [q.id, q]));
-    const questions: ExamQuestion[] = [];
-    for (const it of st.items) {
-      const base = byId.get(it.qid);
-      if (!base) return null;
-      questions.push({ ...base, shown: it.shown, key: it.key });
-    }
-    return {
-      id: st.id,
-      startedAt: st.startedAt,
-      questions,
-      seconds: st.seconds,
-      mode: st.mode === 'wrongs' ? 'wrongs' : 'exam',
-      left: st.left,
-      cursor: st.cursor,
-      picks: st.picks,
-      marks: st.marks,
-    } as Paper;
-  } catch {
-    return null;
-  }
-}
-
 /* --------------------------------- 错题本 --------------------------------- */
 
 /** 交卷时把答错的题记下来：下次考前必须先全部做对，才解锁新卷。 */
@@ -247,35 +218,6 @@ function lettersOf(list: string[]): string {
 function isRight(q: ExamQuestion, mine: string[]) {
   return mine.length > 0 && mine.length === q.key.length && [...mine].sort().join('') === [...q.key].sort().join('');
 
-}
-
-/** 错题复盘卷：只取错题本里的题，选项重新打乱（等于重新出题）。 */
-function buildWrongPaper(entries: WrongEntry[]): Paper {
-  const byId = new Map(AI_THEORY_QUESTIONS.map((q) => [q.id, q]));
-  const picked: ExamQuestion[] = [];
-  for (const entry of entries) {
-    const q = byId.get(entry.qid);
-    if (!q) continue;
-    if (q.type === 'tf') {
-      picked.push({ ...q, shown: [], key: q.answer });
-      continue;
-    }
-    const opts = shuffle(q.options ?? []);
-    const letters = ['A', 'B', 'C', 'D', 'E'];
-    const remap = new Map<string, string>();
-    const shown = opts.map((opt, index) => {
-      remap.set(opt.key, letters[index]);
-      return { key: letters[index], text: opt.text };
-    });
-    picked.push({ ...q, shown, key: q.answer.map((a) => remap.get(a) ?? a) });
-  }
-  return {
-    id: `wrongs-${Date.now()}`,
-    startedAt: new Date().toISOString(),
-    questions: picked,
-    seconds: Math.max(60, picked.length * 30),
-    mode: 'wrongs',
-  };
 }
 
 function scoreOf(paper: Paper, picked: Record<string, string[]>) {
@@ -449,66 +391,6 @@ function ExplainBlock({ id }: { id: string }) {
   );
 }
 
-
-/** 复盘里的订正框：把错题重新选一遍，提交对了就从错题本里摘掉。 */
-function FixBox({ q, onFixed }: { q: ExamQuestion; onFixed: () => void }) {
-  const [picks, setPicks] = useState<string[]>([]);
-  const [tried, setTried] = useState(false);
-  const [done, setDone] = useState(false);
-  const tfOpts = [
-    { key: 'T', text: '正确' },
-    { key: 'F', text: '错误' },
-  ];
-  const opts = q.type === 'tf' ? tfOpts : q.shown;
-  const toggle = (key: string) => {
-    if (done) return;
-    setPicks((prev) => (q.type === 'multi' ? (prev.includes(key) ? prev.filter((v) => v !== key) : [...prev, key]) : [key]));
-  };
-  const submit = () => {
-    if (!picks.length || done) return;
-    setTried(true);
-    if (isRight(q, picks)) {
-      setDone(true);
-      onFixed();
-    }
-  };
-  return (
-    <div className="border-line mt-3 rounded-[14px] border px-3.5 py-3">
-      <div className="flex flex-col gap-2">
-        {opts.map((opt) => {
-          const active = picks.includes(opt.key);
-          const good = (tried || done) && q.key.includes(opt.key);
-          const bad = (tried || done) && active && !q.key.includes(opt.key);
-          return (
-            <button
-              key={opt.key}
-              type="button"
-              onClick={() => toggle(opt.key)}
-              className={'glass px-3 py-2 text-left text-[13px] ' + (bad ? 'text-danger-ink' : good ? 'text-success-ink' : 'text-ink') + (active ? ' ring-brand/60 ring-1' : '')}
-            >
-              {q.type === 'tf' ? opt.text : opt.key + '. ' + opt.text}
-            </button>
-          );
-        })}
-      </div>
-      <div className="mt-2 flex items-center gap-2">
-        {done ? (
-          <span className="text-success-ink text-[12px]">订正完成</span>
-        ) : (
-          <button
-            type="button"
-            onClick={submit}
-            disabled={!picks.length}
-            className="pill pill--solid px-3 py-1.5 text-[12px] disabled:opacity-50"
-          >
-            提交
-          </button>
-        )}
-        {tried && !done ? <span className="text-danger-ink text-[12px]">答案：{lettersOf(q.key)}</span> : null}
-      </div>
-    </div>
-  );
-}
 
 export function AiTrainerPage() {
   const [tab, setTab] = useState<'theory' | 'skill' | 'info'>('theory');
@@ -962,7 +844,7 @@ export function AiTrainerPage() {
       }
       return next;
     });
-    clearExamWrong(results.filter((r) => r.ok).map((r) => r.q.id));
+    clearExamWrong(results.map((r) => r.q.id));
     setDrill({ ...cur, submitted: true });
   };
 
@@ -1076,41 +958,6 @@ export function AiTrainerPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const startWrongs = (list: WrongEntry[] = wrongs) => {
-    const fresh = buildWrongPaper(list);
-    if (!fresh.questions.length) return;
-    submitted.current = false;
-    setPaper(fresh);
-    setPicked({});
-    setCursor(0);
-    setLeft(fresh.seconds);
-    setResult(null);
-    setReview(false);
-    setMarked({});
-    setSheetOpen(false);
-    setJump('');
-  };
-
-  const [pending, setPending] = useState<Paper | null>(() => {
-    const st = loadResume();
-    return st && st.questions.length ? st : null;
-  });
-  const resumable = !paper && !result ? pending : null;
-
-  const resume = () => {
-    const st = pending ?? loadResume();
-    if (!st) return;
-    submitted.current = false;
-    setPaper(st);
-    setPicked(st.picks ?? {});
-    setMarked(st.marks ?? {});
-    setCursor(st.cursor ?? 0);
-    setLeft(st.left ?? st.seconds);
-    setResult(null);
-    setReview(false);
-    // 已恢复过纸面，清掉 pending 避免首页按钮残留
-    setPending(null);
-  };
 
   const clearAll = () => {
     if (!window.confirm('清空这台设备与云端的全部记录（成绩 + 错题本）？清完就像没做过题一样。')) return;
@@ -1126,7 +973,6 @@ export function AiTrainerPage() {
     setPaper(null);
     setPicked({});
     setMarked({});
-    setPending(null);
     // 清空要压过可能还在飞的「上云」请求：先推一次，再补一次
     void cloudPut(CLOUD_KEY, { records: [], wrongs: [] });
     window.setTimeout(() => {
@@ -1289,24 +1135,9 @@ export function AiTrainerPage() {
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  {resumable ? (
-                    <button type="button" onClick={resume} className="pill px-4 py-2.5 text-[14px]">
-                      继续上次（剩 {splitTime(resumable.left ?? 0)}）
-                    </button>
-                  ) : null}
-                  {wrongs.length ? (
-                    <button
-                      type="button"
-                      onClick={() => startWrongs()}
-                      className="pill pill--solid px-5 py-2.5 text-[14px]"
-                    >
-                      订正错题（{wrongs.length} 题）
-                    </button>
-                  ) : (
-                    <button type="button" onClick={start} className="pill pill--solid px-5 py-2.5 text-[14px]">
-                      开始一次模拟考试
-                    </button>
-                  )}
+                  <button type="button" onClick={start} className="pill pill--solid px-5 py-2.5 text-[14px]">
+                    开始一次模拟考试
+                  </button>
                   <button
                     type="button"
                     onClick={() => startDrill('today')}
@@ -1325,34 +1156,6 @@ export function AiTrainerPage() {
                   ) : null}
                 </div>
               </section>
-
-              {wrongs.length ? (
-                <section className="glass px-4 py-4 sm:px-5">
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <h2 className="text-ink text-[14px] font-semibold">
-                      错题复盘 · 待清 {wrongs.length} 题
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => startWrongs()}
-                      className="pill px-3 py-1.5 text-[13px]"
-                    >
-                      开始复盘
-                    </button>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
-                    {AI_THEORY_PLAN.map((block) => {
-                      const count = wrongs.filter((e) => e.type === block.type).length;
-                      if (!count) return null;
-                      return (
-                        <span key={block.type} className="text-muted">
-                          {block.label} <b className="text-brand-ink tabular-nums">{count}</b>
-                        </span>
-                      );
-                    })}
-                  </div>
-                </section>
-              ) : null}
 
               {records.length ? (
                 <section className="glass px-4 py-4 sm:px-5">
@@ -1622,11 +1425,6 @@ export function AiTrainerPage() {
           {paper && !result ? (
             <>
               <section className="glass flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5">
-                {paper.mode === 'wrongs' ? (
-                  <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5 text-[12px]">
-                    错题复盘
-                  </span>
-                ) : null}
                 <span className="text-brand-ink flex items-center gap-1.5 text-[15px] font-semibold tabular-nums">
                   <Clock className="size-4" />
                   {splitTime(left)}
@@ -1766,22 +1564,6 @@ export function AiTrainerPage() {
           {paper && result ? (
             <>
               <section className="glass flex flex-wrap items-end justify-between gap-4 px-4 py-5 sm:px-5">
-                {paper.mode === 'wrongs' ? (
-                  <div>
-                    <p className="text-ink text-[26px] leading-none font-semibold tabular-nums">
-                      {wrongs.length ? `还剩 ${wrongs.length} 题` : '错题已清空'}
-                    </p>
-                    <p className="text-secondary mt-2 text-[13px]">
-                      本轮答对 {result.correct} 题 · 未过 {result.wrong + result.blank} 题 · 用时{' '}
-                      {splitTime(paper.seconds - left)}
-                    </p>
-                    <p className="text-muted mt-1 text-[12px]">
-                      {wrongs.length
-                        ? '做对的题已从错题本移除，剩下的再练一轮，全部做对才解锁新卷。'
-                        : '错题已清空，可以开始新的模拟卷了。'}
-                    </p>
-                  </div>
-                ) : (
                   <div>
                     <p
                       className={`text-[40px] leading-none font-semibold tabular-nums ${
@@ -1796,7 +1578,6 @@ export function AiTrainerPage() {
                       {splitTime(paper.seconds - left)}
                     </p>
                   </div>
-                )}
                 <div className="flex gap-4 text-[13px]">
                   <span className="text-success-ink">对 {result.correct}</span>
                   <span className="text-danger-ink">错 {result.wrong}</span>
@@ -1810,41 +1591,17 @@ export function AiTrainerPage() {
                   >
                     {review ? '收起回顾' : '逐题回顾'}
                   </button>
-                  {paper.mode === 'wrongs' ? (
-                    wrongs.length ? (
-                      <button
-                        type="button"
-                        onClick={() => startWrongs()}
-                        className="pill pill--solid px-4 py-2 text-[13px]"
-                      >
-                        <RotateCcw className="mr-1 inline size-3.5" />
-                        再练一轮
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          reset();
-                          start();
-                        }}
-                        className="pill pill--solid px-4 py-2 text-[13px]"
-                      >
-                        开始新卷
-                      </button>
-                    )
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        reset();
-                        if (wrongs.length) startWrongs();
-                      }}
-                      className="pill pill--solid px-4 py-2 text-[13px]"
-                    >
-                      <RotateCcw className="mr-1 inline size-3.5" />
-                      {wrongs.length ? '去清错题' : '再考一次'}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      reset();
+                      start();
+                    }}
+                    className="pill pill--solid px-4 py-2 text-[13px]"
+                  >
+                    <RotateCcw className="mr-1 inline size-3.5" />
+                    再考一次
+                  </button>
                 </div>
               </section>
 
@@ -1899,11 +1656,6 @@ export function AiTrainerPage() {
                             : null}
                         </div>
                         <ExplainBlock id={q.id} />
-                        {wrongs.some((e) => e.qid === q.id) ? (
-                          <FixBox q={q} onFixed={() => clearExamWrong([q.id])} />
-                        ) : (
-                          <p className="text-success-ink mt-3 text-[12px]">已订正</p>
-                        )}
                       </div>
                     );
                   })}
