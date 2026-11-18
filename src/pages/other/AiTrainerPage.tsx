@@ -114,11 +114,49 @@ function mixQuestion(q: AiQuestion): ExamQuestion {
   return { ...q, shown, key: q.answer.map((a) => remap.get(a) ?? a) };
 }
 
-function buildPaper(): Paper {
+/** 考试卷里错题占的比例上限：每种题型留四分之一席位给错题，其余优先出没做过的新题。 */
+const EXAM_WRONG_RATIO = 0.25;
+
+/** 组卷选题用的种子：哪些题做过、哪些在错题集里。 */
+interface PaperSeed {
+  /** 做过（刷过或考过）的题 */
+  seen: Set<string>;
+  /** 错题池：qid -> 权重，错得越多权重越大 */
+  wrongs: Map<string, number>;
+}
+
+function buildPaper(seed?: PaperSeed): Paper {
   const picked: ExamQuestion[] = [];
   for (const block of AI_THEORY_PLAN) {
     const pool = AI_THEORY_QUESTIONS.filter((q) => q.type === block.type);
-    for (const q of shuffle(pool).slice(0, Math.min(block.count, pool.length))) picked.push(mixQuestion(q));
+    const target = Math.min(block.count, pool.length);
+    const chosen: AiQuestion[] = [];
+    if (seed) {
+      // 1. 先按比例补错题：错得越多越先上榜
+      const wrongCandidates = pool
+        .filter((q) => seed.wrongs.has(q.id))
+        .sort((a, b) => (seed.wrongs.get(b.id) ?? 0) - (seed.wrongs.get(a.id) ?? 0));
+      const wrongQuota = Math.min(Math.floor(target * EXAM_WRONG_RATIO), wrongCandidates.length);
+      for (const q of wrongCandidates.slice(0, wrongQuota)) chosen.push(q);
+    }
+    // 2. 剩下席位优先出没做过的新题，新题不够才用做过的题补
+    const restPool = pool.filter((q) => !chosen.some((c) => c.id === q.id));
+    const need = target - chosen.length;
+    if (need > 0) {
+      const freshPool = seed ? restPool.filter((q) => !seed.seen.has(q.id)) : restPool;
+      const seenPool = seed ? restPool.filter((q) => seed.seen.has(q.id)) : [];
+      chosen.push(...shuffle(freshPool).slice(0, need));
+      const left = target - chosen.length;
+      if (left > 0) chosen.push(...shuffle(seenPool).slice(0, left));
+    }
+    // 3. 还不够（比如题池本来就小）就随便补满
+    if (chosen.length < target) {
+      for (const q of shuffle(pool.filter((q) => !chosen.some((c) => c.id === q.id)))) {
+        if (chosen.length >= target) break;
+        chosen.push(q);
+      }
+    }
+    picked.push(...shuffle(chosen).map(mixQuestion));
   }
   return {
     id: `exam-${Date.now()}`,
@@ -822,7 +860,11 @@ export function AiTrainerPage() {
   }, [left, paper, result, doSubmit]);
 
   const start = () => {
-    const fresh: Paper = { ...buildPaper(), mode: 'exam' };
+    const seen = new Set<string>(Object.keys(srs));
+    const seedWrongs = new Map<string, number>();
+    for (const item of Object.values(wrongBook)) seedWrongs.set(item.qid, wrongWeight(item));
+    for (const w of wrongs) seedWrongs.set(w.qid, Math.max(seedWrongs.get(w.qid) ?? 0, w.misses));
+    const fresh: Paper = { ...buildPaper({ seen, wrongs: seedWrongs }), mode: 'exam' };
     submitted.current = false;
     setPaper(fresh);
     setPicked({});
