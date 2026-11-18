@@ -1096,9 +1096,6 @@ export function AiTrainerPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-ink text-[22px] font-semibold">人工智能训练师（三级）</h1>
-          <p className="text-secondary mt-1 text-[13px]">
-            理论考试 {AI_THEORY_MINUTES} 分钟 · 190 题 · 100 分；实操 120 分钟 · 6 题 · 100 分，两项各 60 分合格。
-          </p>
         </div>
         <div className="flex gap-1.5">
           {tabs.map((item) => (
@@ -1180,7 +1177,6 @@ export function AiTrainerPage() {
                       >
                         先清错题（剩 {wrongs.length} 题）
                       </button>
-                      <span className="text-muted text-[12px]">清完才能开新卷</span>
                     </>
                   ) : (
                     <button type="button" onClick={start} className="pill pill--solid px-5 py-2.5 text-[14px]">
@@ -1204,8 +1200,6 @@ export function AiTrainerPage() {
                     </button>
                   ) : null}
                 </div>
-                <p className="text-muted basis-full text-[12px] leading-relaxed">
-                  900 题来自官方《理论知识复习题》，每次按考纲结构随机抽 40 判断 + 140 单选 + 10 多选。答案 892 题有权威出处（官方模拟卷 + 公开题库），剩 8 题为 AI 推定（回顾里标「AI 解析」），发现错答案告诉我即可修正。</p>
               </section>
 
               {wrongs.length ? (
@@ -1222,9 +1216,6 @@ export function AiTrainerPage() {
                       开始复盘
                     </button>
                   </div>
-                  <p className="text-secondary mt-2 text-[12px] leading-relaxed">
-                    上一张卷子做错的题会留在这里，需要重新做一遍并全部做对，才解锁新的模拟卷。复盘时选项会重新打乱，做对的题当场从错题本移除，做错的继续留下。
-                  </p>
                   <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
                     {AI_THEORY_PLAN.map((block) => {
                       const count = wrongs.filter((e) => e.type === block.type).length;
@@ -1385,18 +1376,6 @@ export function AiTrainerPage() {
                   </button>
                 </div>
               </section>
-
-              {drill.kind === 'today' ? (
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => startDrill('free')}
-                    className="pill px-3 py-1.5 text-[12px]"
-                  >
-                    自由练 10 题
-                  </button>
-                </div>
-              ) : null}
 
               {wrongOpen ? wrongBookSection : null}
 
