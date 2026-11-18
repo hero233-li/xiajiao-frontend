@@ -1014,6 +1014,8 @@ export function AiTrainerPage() {
   const drillPicked: string[] = drill && drillQ ? (drill.picks[drillQ.id] ?? []) : [];
   const nowTs = Date.now();
   const todayLog = daily[dayOf(nowTs)] ?? { new: 0, review: 0, right: 0, wrong: 0 };
+  const drillDoneCount = Object.keys(srs).length;
+  const drillPct = Math.min(100, Math.round((drillDoneCount / AI_THEORY_QUESTIONS.length) * 100));
   const streak = useMemo(() => streakOf(daily, nowTs), [daily, nowTs]);
   /** 错题集，错得多的排前面。 */
   const wrongList = useMemo(() => sortWrongs(wrongBook), [wrongBook]);
@@ -1335,16 +1337,27 @@ export function AiTrainerPage() {
                     <h2 className="text-ink text-[14px] font-semibold">
                       {drill.kind === 'today' ? '今日任务' : '自由练习'}
                     </h2>
-                    <span className="text-muted text-[12px] tabular-nums">
-                      {drill.submitted ? '本批已交卷' : '第 ' + (drill.cursor + 1) + ' / ' + drill.questions.length + ' 题'}
+                    <span className="text-ink text-[13px] font-semibold tabular-nums">
+                      已刷 {drillDoneCount} / {AI_THEORY_QUESTIONS.length} 题
                     </span>
+                    <span className="text-muted text-[12px] tabular-nums">{drillPct}%</span>
                   </div>
-                  <p className="text-secondary mt-1 text-[12px] leading-relaxed">
+                  <div className="bg-surface-2 mt-2 h-1.5 w-full max-w-[280px] overflow-hidden rounded-full">
+                    <div className="bg-brand h-full rounded-full" style={{ width: drillPct + '%' }} />
+                  </div>
+                  <p className="text-secondary mt-1.5 text-[12px] leading-relaxed">
                     {drill.kind === 'today'
-                      ? '一批 ' +
+                      ? '题库共 ' +
+                        AI_THEORY_QUESTIONS.length +
+                        ' 题，还剩 ' +
+                        (AI_THEORY_QUESTIONS.length - drillDoneCount) +
+                        ' 题没刷过；今天已做 ' +
+                        (todayLog.new + todayLog.review) +
+                        ' 题。一批 ' +
                         DRILL_COUNT +
-                        ' 题：先出错题集里今天还没做过的，再出到期该复习的，不够再补没学过的新题。做完统一交一次卷，交卷后逐题给解析；答错的直接进错题集，下次优先再出。'
+                        ' 题：先出错题集里今天还没做过的，再出到期该复习的，不够再补没学过的新题；交卷后逐题给解析，答错的直接进错题集。'
                       : '从 ' + AI_THEORY_QUESTIONS.length + ' 题里随机抽 ' + DRILL_COUNT + ' 题练手，不写进今日任务。'}
+                    {drill.submitted ? '' : ' 本批第 ' + (drill.cursor + 1) + ' / ' + drill.questions.length + ' 题。'}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
