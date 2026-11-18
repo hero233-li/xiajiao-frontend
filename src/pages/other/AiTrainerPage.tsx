@@ -828,6 +828,18 @@ export function AiTrainerPage() {
           : [value];
       return { ...prev, picks: { ...prev.picks, [question.id]: next } };
     });
+    // 判断/单选：选完稍等一下自动翻到下一题；多选要自己点「下一题」。
+    if (question.type !== 'multi') {
+      window.setTimeout(() => {
+        setDrill((prev) => {
+          if (!prev || prev.submitted) return prev;
+          const cur = prev.questions[prev.cursor];
+          if (!cur || cur.id !== question.id) return prev;
+          if (prev.cursor + 1 >= prev.questions.length) return prev;
+          return { ...prev, cursor: prev.cursor + 1 };
+        });
+      }, 200);
+    }
   };
 
   /** 交卷：整批一次结算，按对错推进卡片，并记当天账。 */
