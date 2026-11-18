@@ -329,6 +329,7 @@ function QuestionCard({
   marked,
   onToggleMark,
   hint,
+  hideMultiTip,
 }: {
   question: ExamQuestion;
   index: number;
@@ -340,6 +341,8 @@ function QuestionCard({
   onToggleMark?: () => void;
   /** 题号旁的角标，例如「错题 ×3」。 */
   hint?: string;
+  /** 刷题模式下不显示「多选要选全」这类提示。 */
+  hideMultiTip?: boolean;
 }) {
   const isMulti = question.type === 'multi';
   const correctSet = new Set(question.key);
@@ -420,7 +423,9 @@ function QuestionCard({
               </button>
             );
           })}
-          {isMulti ? <p className="text-muted text-[12px]">多选题：选全才得分，多选少选都不得分。</p> : null}
+          {isMulti && !hideMultiTip ? (
+            <p className="text-muted text-[12px]">多选题：选全才得分，多选少选都不得分。</p>
+          ) : null}
         </div>
       )}
     </div>
@@ -1516,6 +1521,7 @@ export function AiTrainerPage() {
                     picked={drillPicked}
                     revealed={false}
                     hint={drillHint}
+                    hideMultiTip
                     onPick={(value) => drillPick(drillQ, value)}
                   />
                   <div className="mt-5 flex flex-wrap items-center gap-3">
