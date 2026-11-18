@@ -1230,24 +1230,6 @@ export function AiTrainerPage() {
                 </section>
               ) : null}
 
-              <section className="glass px-4 py-4 sm:px-5">
-                <h2 className="text-ink text-[14px] font-semibold">考试结构</h2>
-                <div className="mt-3 flex flex-col gap-2">
-                  {AI_THEORY_PLAN.map((block) => (
-                    <div key={block.type} className="flex items-baseline justify-between gap-3 text-[13px]">
-                      <span className="text-ink">{block.label}</span>
-                      <span className="text-secondary tabular-nums">
-                        {block.count} 题 × {block.per} 分 = {block.count * block.per} 分
-                      </span>
-                    </div>
-                  ))}
-                  <div className="border-line/70 mt-1 flex items-baseline justify-between gap-3 border-t pt-2 text-[13px]">
-                    <span className="text-ink font-semibold">合计</span>
-                    <span className="text-secondary tabular-nums">190 题 · 100 分 · 90 分钟</span>
-                  </div>
-                </div>
-              </section>
-
               {records.length ? (
                 <section className="glass px-4 py-4 sm:px-5">
                   <div className="flex items-baseline justify-between gap-3">
@@ -1381,20 +1363,6 @@ export function AiTrainerPage() {
 
               {drill.submitted ? (
                 <>
-                  {drillStats.wrong ? (
-                    <section className="bg-danger-soft border-danger flex flex-wrap items-center justify-between gap-3 rounded-[14px] border px-4 py-3 sm:px-5">
-                      <p className="text-danger text-[13px] font-semibold">
-                        本批答错 {drillStats.wrong} 题，已进错题集，下次刷题从错题集优先出
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setWrongOpen(true)}
-                        className="pill px-3 py-1.5 text-[12px]"
-                      >
-                        看错题集
-                      </button>
-                    </section>
-                  ) : null}
                   <section className="glass flex flex-wrap items-end justify-between gap-4 px-4 py-5 sm:px-5">
                     <div>
                       <p className="text-brand-ink text-[34px] leading-none font-semibold tabular-nums">
