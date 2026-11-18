@@ -915,8 +915,9 @@ export function AiTrainerPage() {
   };
 
   /**
-   * 出题顺序：错题集里今天还没做过的 → 到期的复习题 → 没学过的新题 → 学过的随便补。
-   * 不设上限：够 10 题就收；全部做完也能靠「学过的随便补」一直刷下去。
+   * 每批 10 题的席位分配：错题集按权重占位，其余是新题。
+   * 起始 3:7（3 席错题），错题相对越多越往 5:5 靠（最多 5 席）；新题刷光了就整批全出错题，
+   * 错题也没有就到期复习 → 学过的随便补，保证任何阶段都刷得下去。
    */
   const startDrill = (kind: 'today' | 'free' = 'today') => {
     const now = Date.now();
@@ -932,22 +933,31 @@ export function AiTrainerPage() {
     const doneToday = (qid: string) => (srs[qid]?.lastAt ?? 0) >= start;
 
     if (kind === 'today') {
-      // 错题优先：今天还没做对过的错题先出，最多占 6 席，剩下的留给复习与新题。
-      const todayKey = dayOf(now);
+      const freshIds = shuffle(AI_THEORY_QUESTIONS)
+        .filter((q) => !srs[q.id] && !wrongBook[q.id])
+        .map((q) => q.id);
+      const wrongCount = wrongList.length;
+      const freshCount = freshIds.length;
+      // 错题席位：3 席起步，错题在全库未掌握里的占比越高越往 5 席靠；新题刷光就整批错题。
       let wrongSlots = 0;
-      for (const w of wrongList) {
-        if (wrongSlots >= 6) break;
-        if (w.rightDay === todayKey) continue;
-        const before = ids.length;
-        push(w.qid, 'wrong');
-        if (ids.length > before) wrongSlots += 1;
+      if (wrongCount > 0) {
+        if (freshCount === 0) wrongSlots = DRILL_COUNT;
+        else {
+          const share = wrongCount / (wrongCount + freshCount);
+          wrongSlots = Math.round(DRILL_COUNT * (0.3 + 0.2 * share));
+          wrongSlots = Math.min(Math.max(wrongSlots, 3), 5, wrongCount);
+        }
       }
+      for (const w of shuffle(wrongList.map((w) => w.qid))) {
+        if (ids.length >= wrongSlots) break;
+        push(w, 'wrong');
+      }
+      for (const qid of freshIds) push(qid, 'new');
       const due = Object.entries(srs)
         .filter(([qid, card]) => card && card.due <= now && !doneToday(qid) && !labels[qid])
         .sort((a, b) => a[1].due - b[1].due)
         .map(([qid]) => qid);
       for (const qid of due) push(qid, 'review');
-      for (const q of shuffle(AI_THEORY_QUESTIONS)) if (!srs[q.id]) push(q.id, 'new');
       for (const q of shuffle(AI_THEORY_QUESTIONS)) push(q.id, 'review');
     } else {
       for (const q of shuffle(AI_THEORY_QUESTIONS).slice(0, DRILL_COUNT)) {
