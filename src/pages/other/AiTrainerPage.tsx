@@ -891,7 +891,6 @@ export function AiTrainerPage() {
    * 错题也没有就到期复习 → 学过的随便补，保证任何阶段都刷得下去。
    */
   const startDrill = (kind: 'today' | 'free' = 'today') => {
-    const now = Date.now();
     const byId = qById;
     const ids: string[] = [];
     const labels: Record<string, 'new' | 'review' | 'wrong'> = {};
@@ -904,15 +903,11 @@ export function AiTrainerPage() {
       const freshIds = shuffle(AI_THEORY_QUESTIONS)
         .filter((q) => !srs[q.id] && !wrongBook[q.id])
         .map((q) => q.id);
+      // 错题集分成两堆：还在错的（积分 < 0）和已回的（积分回到 0，标「复习」）。
       const activeWrongs = wrongList.filter((w) => !isReviewing(w));
-      const dueIds = Object.entries(srs)
-        .filter(([qid, card]) => card && card.due <= now && byId.has(qid))
-        .sort((a, b) => a[1].due - b[1].due)
-        .map(([qid]) => qid);
-          const activeWrongIds = new Set(activeWrongs.map((w) => w.qid));
-      const reviewIds = dueIds.filter((qid) => !activeWrongIds.has(qid));
+      const reviewIds = wrongList.filter((w) => isReviewing(w)).map((w) => w.qid);
       const wrongCount = activeWrongs.length;
-      // 错题席位：错题在「未掌握」里的占比越高越往 5 席靠；复习题和新题都没有了才整批错题。
+      // 错题席位：错题在「没掌握的题」里占比越高越往 5 席靠；复习题和新题都没有了才整批错题。
       let wrongSlots = 0;
       if (wrongCount > 0) {
         if (freshIds.length + reviewIds.length === 0) wrongSlots = DRILL_COUNT;
@@ -923,16 +918,17 @@ export function AiTrainerPage() {
         }
       }
       const mainSlots = DRILL_COUNT - wrongSlots;
-      // 复习题权重是新题的 2 倍：还有到期复习题就先出复习题，复习题出完才出新题。
+      // 复习题排在前面：还有没刷过的复习题就先出复习题，复习题出完出新题。
       const reviewPool = [...reviewIds];
       const freshPool = [...freshIds];
       while (ids.length < mainSlots && (reviewPool.length || freshPool.length)) {
-        const reviewWeight = reviewPool.length * 2;
-        const freshWeight = freshPool.length;
-        const takeReview = Math.random() * (reviewWeight + freshWeight) < reviewWeight;
-        if (takeReview && reviewPool.length) push(reviewPool.shift() as string, 'review');
-        else if (freshPool.length) push(freshPool.shift() as string, 'new');
-        else if (reviewPool.length) push(reviewPool.shift() as string, 'review');
+        if (reviewPool.length && (!freshPool.length || Math.random() < 0.75)) {
+          push(reviewPool.shift() as string, 'review');
+        } else if (freshPool.length) {
+          push(freshPool.shift() as string, 'new');
+        } else if (reviewPool.length) {
+          push(reviewPool.shift() as string, 'review');
+        }
       }
       // 错题席位按权重抽：考试错题权重 3 倍起，错得越多越容易抽到。
       const rest = [...activeWrongs];
@@ -948,8 +944,8 @@ export function AiTrainerPage() {
         const picked = rest.splice(pickIndex, 1)[0];
         push(picked.qid, 'wrong');
       }
-      // 兜底：还没到期但学过的题
-      for (const q of shuffle(AI_THEORY_QUESTIONS)) push(q.id, srs[q.id] ? 'review' : 'new');
+      // 兜底：以前答对过、也不在错题集里的题
+      for (const q of shuffle(AI_THEORY_QUESTIONS)) push(q.id, 'review');
     } else {
       for (const q of shuffle(AI_THEORY_QUESTIONS).slice(0, DRILL_COUNT)) {
         push(q.id, srs[q.id] ? 'review' : 'new');
@@ -1017,8 +1013,6 @@ export function AiTrainerPage() {
     else if (drill?.labels[drillQ.id] === 'review') parts.push('复习');
     const miss = wrongs.find((e) => e.qid === drillQ.id)?.misses ?? 0;
     if (miss > 0) parts.push('考卷错过 ' + miss + ' 次');
-    const card = srs[drillQ.id];
-    if (card && card.box > 0) parts.push('第 ' + card.box + ' 盒');
     return parts.join('，');
   })();
   const answerText = (q: ExamQuestion) => lettersOf(q.key);
@@ -1208,7 +1202,7 @@ export function AiTrainerPage() {
                 <div className="min-w-0">
                   <h2 className="text-ink text-[14px] font-semibold">刷题模式</h2>
                   <p className="text-secondary mt-1 text-[12px] leading-relaxed">
-                    每批 {DRILL_COUNT} 题：先出到期复习题，复习题出完出新题，新题也刷完了出错题；交卷后才看答案。
+                    每批 {DRILL_COUNT} 题：先出复习题（错题集里已经回到 0 分的），复习题出完出新题，新题也刷完了出错题；交卷后才看答案。
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
