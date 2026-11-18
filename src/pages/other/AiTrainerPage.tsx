@@ -151,17 +151,16 @@ interface DrillRun {
   fixed: Record<string, boolean>;
 }
 
-/** 刷题会话存本地：刷新页面回到原来那一页，而不是回首页。 */
+/** 刷题会话存本地并同步到云端：刷新、换设备都回到原来那一页，而不是回首页。 */
 const DRILL_SESSION_KEY = 'xj.ai.drill.session.v1';
+const DRILL_SESSION_META_KEY = 'xj.ai.drill.session.meta.v1';
+const DRILL_SESSION_CLOUD_KEY = 'ai-drill-session';
 
-function loadDrillSession(): DrillRun | null {
-  try {
-    const raw = localStorage.getItem(DRILL_SESSION_KEY);
-    if (!raw) return null;
-    const data = JSON.parse(raw) as DrillRun;
-    if (!data || !Array.isArray(data.questions) || !data.questions.length) return null;
-    if (!data.questions.every((q) => q && typeof q.id === 'string' && Array.isArray(q.shown))) return null;
-    return {
+function normalizeDrillSession(input: unknown): DrillRun | null {
+  const data = input as DrillRun | null;
+  if (!data || !Array.isArray(data.questions) || !data.questions.length) return null;
+  if (!data.questions.every((q) => q && typeof q.id === 'string' && Array.isArray(q.shown))) return null;
+  return {
       kind: data.kind === 'free' ? 'free' : 'today',
       questions: data.questions,
       cursor: Math.min(Math.max(Number(data.cursor) || 0, 0), data.questions.length - 1),
@@ -170,7 +169,14 @@ function loadDrillSession(): DrillRun | null {
       labels: data.labels ?? {},
       fixPicks: data.fixPicks ?? {},
       fixed: data.fixed ?? {},
-    };
+  };
+}
+
+function loadDrillSession(): DrillRun | null {
+  try {
+    const raw = localStorage.getItem(DRILL_SESSION_KEY);
+    if (!raw) return null;
+    return normalizeDrillSession(JSON.parse(raw));
   } catch {
     return null;
   }
@@ -450,6 +456,48 @@ export function AiTrainerPage() {
   useEffect(() => {
     if (drill) localStorage.setItem(DRILL_SESSION_KEY, JSON.stringify(drill));
     else localStorage.removeItem(DRILL_SESSION_KEY);
+  }, [drill]);
+
+  /** 刷题会话也上云：换设备/换浏览器打开，直接接着上次那一页。 */
+  const sessionSynced = useRef(false);
+  const skipSessionPush = useRef(false);
+
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const remote = await cloudPull<{ drill?: DrillRun | null }>(DRILL_SESSION_CLOUD_KEY);
+      if (!alive) return;
+      const localAt = Number(localStorage.getItem(DRILL_SESSION_META_KEY) ?? 0);
+      const localSession = loadDrillSession();
+      const remoteSession = remote && remote.updatedAt > localAt ? normalizeDrillSession(remote?.data?.drill) : null;
+      if (remoteSession) {
+        skipSessionPush.current = true;
+        setDrill(remoteSession);
+        localStorage.setItem(DRILL_SESSION_KEY, JSON.stringify(remoteSession));
+        localStorage.setItem(DRILL_SESSION_META_KEY, String(remote?.updatedAt ?? Date.now()));
+      } else if (localSession) {
+        const now = Date.now();
+        localStorage.setItem(DRILL_SESSION_META_KEY, String(now));
+        void cloudPut(DRILL_SESSION_CLOUD_KEY, { drill: localSession });
+      }
+      sessionSynced.current = true;
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!sessionSynced.current) return;
+    if (skipSessionPush.current) {
+      skipSessionPush.current = false;
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      localStorage.setItem(DRILL_SESSION_META_KEY, String(Date.now()));
+      void cloudPut(DRILL_SESSION_CLOUD_KEY, { drill });
+    }, 900);
+    return () => window.clearTimeout(timer);
   }, [drill]);
 
   useEffect(() => {
