@@ -36,7 +36,6 @@ import {
   saveDaily,
   saveQueue,
   saveSrs,
-  startOfDay,
   type DayLog,
   type DayQueue,
   type SrsConf,
@@ -901,29 +900,43 @@ export function AiTrainerPage() {
       ids.push(qid);
       labels[qid] = label;
     };
-    const start = startOfDay(now);
-    const doneToday = (qid: string) => (srs[qid]?.lastAt ?? 0) >= start;
-
     if (kind === 'today') {
       const freshIds = shuffle(AI_THEORY_QUESTIONS)
         .filter((q) => !srs[q.id] && !wrongBook[q.id])
         .map((q) => q.id);
       const activeWrongs = wrongList.filter((w) => !isReviewing(w));
+      const dueIds = Object.entries(srs)
+        .filter(([qid, card]) => card && card.due <= now && byId.has(qid))
+        .sort((a, b) => a[1].due - b[1].due)
+        .map(([qid]) => qid);
+          const activeWrongIds = new Set(activeWrongs.map((w) => w.qid));
+      const reviewIds = dueIds.filter((qid) => !activeWrongIds.has(qid));
       const wrongCount = activeWrongs.length;
-      const freshCount = freshIds.length;
-      // 错题席位：3 席起步，错题在全库未掌握里的占比越高越往 5 席靠；新题刷光就整批错题。
+      // 错题席位：错题在「未掌握」里的占比越高越往 5 席靠；复习题和新题都没有了才整批错题。
       let wrongSlots = 0;
       if (wrongCount > 0) {
-        if (freshCount === 0) wrongSlots = DRILL_COUNT;
+        if (freshIds.length + reviewIds.length === 0) wrongSlots = DRILL_COUNT;
         else {
-          const share = wrongCount / (wrongCount + freshCount);
+          const share = wrongCount / (wrongCount + freshIds.length + reviewIds.length);
           wrongSlots = Math.round(DRILL_COUNT * (0.3 + 0.2 * share));
           wrongSlots = Math.min(Math.max(wrongSlots, 3), 5, wrongCount);
         }
       }
+      const mainSlots = DRILL_COUNT - wrongSlots;
+      // 复习题权重是新题的 2 倍：还有到期复习题就先出复习题，复习题出完才出新题。
+      const reviewPool = [...reviewIds];
+      const freshPool = [...freshIds];
+      while (ids.length < mainSlots && (reviewPool.length || freshPool.length)) {
+        const reviewWeight = reviewPool.length * 2;
+        const freshWeight = freshPool.length;
+        const takeReview = Math.random() * (reviewWeight + freshWeight) < reviewWeight;
+        if (takeReview && reviewPool.length) push(reviewPool.shift() as string, 'review');
+        else if (freshPool.length) push(freshPool.shift() as string, 'new');
+        else if (reviewPool.length) push(reviewPool.shift() as string, 'review');
+      }
       // 错题席位按权重抽：考试错题权重 3 倍起，错得越多越容易抽到。
       const rest = [...activeWrongs];
-      while (ids.length < wrongSlots && rest.length) {
+      while (ids.length < DRILL_COUNT && rest.length) {
         const weights = rest.map((w) => wrongWeight(w));
         const totalWeight = weights.reduce((a, b) => a + b, 0);
         let point = Math.random() * totalWeight;
@@ -935,13 +948,8 @@ export function AiTrainerPage() {
         const picked = rest.splice(pickIndex, 1)[0];
         push(picked.qid, 'wrong');
       }
-      for (const qid of freshIds) push(qid, 'new');
-      const due = Object.entries(srs)
-        .filter(([qid, card]) => card && card.due <= now && !doneToday(qid) && !labels[qid])
-        .sort((a, b) => a[1].due - b[1].due)
-        .map(([qid]) => qid);
-      for (const qid of due) push(qid, 'review');
-      for (const q of shuffle(AI_THEORY_QUESTIONS)) push(q.id, 'review');
+      // 兜底：还没到期但学过的题
+      for (const q of shuffle(AI_THEORY_QUESTIONS)) push(q.id, srs[q.id] ? 'review' : 'new');
     } else {
       for (const q of shuffle(AI_THEORY_QUESTIONS).slice(0, DRILL_COUNT)) {
         push(q.id, srs[q.id] ? 'review' : 'new');
@@ -1200,7 +1208,7 @@ export function AiTrainerPage() {
                 <div className="min-w-0">
                   <h2 className="text-ink text-[14px] font-semibold">刷题模式</h2>
                   <p className="text-secondary mt-1 text-[12px] leading-relaxed">
-                    每批 {DRILL_COUNT} 题，错题按权重占位，其余是新题，交卷后才看答案。
+                    每批 {DRILL_COUNT} 题：先出到期复习题，复习题出完出新题，新题也刷完了出错题；交卷后才看答案。
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
