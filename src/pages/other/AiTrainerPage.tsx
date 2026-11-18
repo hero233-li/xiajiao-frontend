@@ -1009,8 +1009,6 @@ export function AiTrainerPage() {
 
   const drillQ = drill && !drill.submitted ? drill.questions[drill.cursor] : null;
   const drillPicked: string[] = drill && drillQ ? (drill.picks[drillQ.id] ?? []) : [];
-  const nowTs = Date.now();
-  const todayLog = daily[dayOf(nowTs)] ?? { new: 0, review: 0, right: 0, wrong: 0 };
   const drillDoneCount = Object.keys(srs).length;
   const drillPct = Math.min(100, Math.round((drillDoneCount / AI_THEORY_QUESTIONS.length) * 100));
   /** 错题集，错得多的排前面。 */
@@ -1326,20 +1324,6 @@ export function AiTrainerPage() {
                   <div className="bg-surface-2 mt-2 h-1.5 w-full max-w-[280px] overflow-hidden rounded-full">
                     <div className="bg-brand h-full rounded-full" style={{ width: drillPct + '%' }} />
                   </div>
-                  <p className="text-secondary mt-1.5 text-[12px] leading-relaxed">
-                    {drill.kind === 'today'
-                      ? '题库共 ' +
-                        AI_THEORY_QUESTIONS.length +
-                        ' 题，还剩 ' +
-                        (AI_THEORY_QUESTIONS.length - drillDoneCount) +
-                        ' 题没刷过；今天已做 ' +
-                        (todayLog.new + todayLog.review) +
-                        ' 题。一批 ' +
-                        DRILL_COUNT +
-                        ' 题：先出错题集里今天还没做过的，再出到期该复习的，不够再补没学过的新题；交卷后逐题给解析，答错的直接进错题集。'
-                      : '从 ' + AI_THEORY_QUESTIONS.length + ' 题里随机抽 ' + DRILL_COUNT + ' 题练手，不写进今日任务。'}
-                    {drill.submitted ? '' : ' 本批第 ' + (drill.cursor + 1) + ' / ' + drill.questions.length + ' 题。'}
-                  </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
                   {drill.submitted ? (
