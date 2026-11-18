@@ -932,8 +932,15 @@ export function AiTrainerPage() {
     const doneToday = (qid: string) => (srs[qid]?.lastAt ?? 0) >= start;
 
     if (kind === 'today') {
+      // 错题优先：今天还没做对过的错题先出，最多占 6 席，剩下的留给复习与新题。
+      const todayKey = dayOf(now);
+      let wrongSlots = 0;
       for (const w of wrongList) {
-        if (!doneToday(w.qid)) push(w.qid, 'wrong');
+        if (wrongSlots >= 6) break;
+        if (w.rightDay === todayKey) continue;
+        const before = ids.length;
+        push(w.qid, 'wrong');
+        if (ids.length > before) wrongSlots += 1;
       }
       const due = Object.entries(srs)
         .filter(([qid, card]) => card && card.due <= now && !doneToday(qid) && !labels[qid])

@@ -7,6 +7,8 @@ export interface WrongItem {
   right: number;
   firstAt: number;
   lastAt: number;
+  /** 最近一次做对是哪一天（YYYY-MM-DD），用于「今天做对过的错题本批不再出」。 */
+  rightDay?: string;
 }
 
 export type WrongBook = Record<string, WrongItem>;
@@ -28,6 +30,7 @@ export function loadWrongBook(): WrongBook {
         right: Math.max(0, Number(v.right) || 0),
         firstAt: Number(v.firstAt) || Date.now(),
         lastAt: Number(v.lastAt) || Date.now(),
+        rightDay: typeof v.rightDay === 'string' ? v.rightDay : undefined,
       };
     }
     return out;
@@ -59,11 +62,18 @@ export function addWrong(book: WrongBook, qid: string, now: number): WrongBook {
   };
 }
 
-/** 错题集里的题做对了：只累加「已对」次数，不会自动移出。 */
+function dayKey(ts: number): string {
+  const d = new Date(ts);
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return d.getFullYear() + '-' + m + '-' + day;
+}
+
+/** 错题集里的题做对了：只累加「已对」次数，不会自动移出；记下做对的日子，当天剩下的批次不再重复出。 */
 export function noteRight(book: WrongBook, qid: string, now: number): WrongBook {
   const old = book[qid];
   if (!old) return book;
-  return { ...book, [qid]: { ...old, right: old.right + 1, lastAt: now } };
+  return { ...book, [qid]: { ...old, right: old.right + 1, lastAt: now, rightDay: dayKey(now) } };
 }
 
 
@@ -80,7 +90,7 @@ export function mergeWrongBook(local: WrongBook, remote: WrongBook): WrongBook {
     if (!item || typeof item.misses !== 'number') continue;
     const mine = out[qid];
     if (!mine) {
-      out[qid] = { ...item, qid };
+      out[qid] = { ...item, qid, rightDay: item.rightDay || undefined };
       continue;
     }
     out[qid] = {
@@ -89,6 +99,7 @@ export function mergeWrongBook(local: WrongBook, remote: WrongBook): WrongBook {
       right: Math.max(mine.right ?? 0, Number(item.right) || 0),
       firstAt: Math.min(mine.firstAt || item.firstAt, item.firstAt || mine.firstAt),
       lastAt: Math.max(mine.lastAt ?? 0, item.lastAt ?? 0),
+      rightDay: [mine.rightDay, item.rightDay].filter(Boolean).sort().pop(),
     };
   }
   return out;
