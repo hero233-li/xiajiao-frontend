@@ -643,20 +643,6 @@ export function AiPractical() {
       <div className="space-y-4">
         <section className="glass px-4 py-5 sm:px-6">
           <h2 className="text-ink text-[22px] font-semibold">人工智能训练师（三级）操作技能考核</h2>
-          <p className="text-muted mt-2 text-[13px] leading-relaxed">
-            按官方认定方案组卷：一场考核 {AI_PRACTICAL_COUNT} 题、120 分钟、100 分，题库共 {AI_PRACTICAL_POOL.length} 道官方真题。
-            业务流程设计在 1.1/1.2 两组里抽一组（30 分钟 25 分），培训与指导在 4.1/4.2 里抽一组（10 分钟 5 分），
-            数据清洗和标注（20 分钟 15 分）、模型开发与测试（20 分钟 20 分）、智能系统监控和优化（20 分钟 15 分）、
-            人机交互流程设计（20 分钟 20 分）四题必考。
-          </p>
-          <div className="text-muted mt-3 space-y-1.5 text-[13px] leading-relaxed">
-            <p>规则同考场：全卷 120 分钟统一倒计时，中途不暂停；每题标的 20 或 30 分钟只是建议时间，六题之间可以自由来回改，到点自动交卷，一份卷只能交一次。</p>
-            <p>每题左侧是官方试题单，右侧「素材下载」给本题全部素材（notebook 框架、数据集、答题卷、onnx 模型），解压或直接在网页里的 jupyter 打开即可作答。</p>
-            <p>作答完按「答案上传」表格逐项交文件：notebook 在 JupyterLab 里用 File → Save and Export Notebook As → HTML 导出（经典 notebook 界面是 File → Download as → HTML），截图存 jpg，报告存 docx，文件名照表格里的要求写。</p>
-            <p>要写答题卷的题不用下载 Word：点「素材下载」里的「在线填写答题卷」，按原卷的表格和空格逐处填，停手即自动存成 {"<题号>.docx"} 交上去。想照原样看就点「预览原卷」。</p>
-            <p>纯论述题（1.2.x、4.x）不会出现 jupyter 入口——那几题就是写文档；带 notebook 或数据集的题才有 jupyter。</p>
-            <p>交卷后按官方评分细则逐条给分，可对照每个评分点看理由。注意：判分由 AI 完成，主要看材料是否齐全、代码与文件名是否正确，看不出的内容（截图里画得对不对、文档写得好不好）它给不了分，所以分数不等于真实考场成绩。</p>
-          </div>
           {error ? <p className="text-danger-ink mt-3 text-[13px]">{error}</p> : null}
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
