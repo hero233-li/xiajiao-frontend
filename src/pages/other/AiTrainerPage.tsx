@@ -253,6 +253,8 @@ const CLOUD_META_KEY = 'xj.ai.meta.v1';
 /** 刷题进度（卡片 / 每日账 / 错题集 / 每天新题量）的云同步槽位。 */
 const DRILL_CLOUD_KEY = 'ai-drill';
 const DRILL_META_KEY = 'xj.ai.drill.meta.v1';
+/** 题库落在服务器 MySQL（xuexizhitu.ai_question / ai_question_seen），考试和刷题都算「做过」。 */
+const BANK_API = '/ai-lab';
 
 interface WrongEntry {
   qid: string;
@@ -487,6 +489,8 @@ export function AiTrainerPage() {
   const [conf, setConf] = useState<SrsConf>(() => loadConf());
   const [queue, setQueue] = useState<DayQueue | null>(() => loadQueue());
   const [wrongBook, setWrongBook] = useState<WrongBook>(() => loadWrongBook());
+  /** 服务器 MySQL 里记过的「做过」题号（考试 + 刷题）。 */
+  const [seenIds, setSeenIds] = useState<Set<string>>(new Set());
   const [drillHome, setDrillHome] = useState(false);
   const [wrongOpen, setWrongOpen] = useState(false);
 
@@ -553,6 +557,35 @@ export function AiTrainerPage() {
   useEffect(() => {
     saveConf(conf);
   }, [conf]);
+
+  /** 开页同步「做过」标记：服务器是账本，本机多出来的进度先补推上去。 */
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const local = new Set<string>([...Object.keys(srs), ...Object.keys(wrongBook), ...wrongs.map((w) => w.qid)]);
+      let server = new Set<string>();
+      try {
+        const res = await fetch(BANK_API + '/bank/seen');
+        const data = await res.json();
+        server = new Set(Object.keys((data?.seen ?? {}) as Record<string, unknown>));
+      } catch {
+        /* 服务器拿不到就先用本机的 */
+      }
+      if (!alive) return;
+      setSeenIds(new Set([...server, ...local]));
+      const missing = [...local].filter((id) => !server.has(id));
+      if (missing.length) {
+        void fetch(BANK_API + '/bank/mark', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ ids: missing, source: 'drill' }),
+        }).catch(() => undefined);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   /** 云端记录的最后同步时间，0 表示这次打开还没和云端打过交道。 */
   const [drillSyncedAt, setDrillSyncedAt] = useState(0);
@@ -681,6 +714,14 @@ export function AiTrainerPage() {
     }
     saveWrongs(nextWrongs);
     setWrongs(nextWrongs);
+    /* 这张卷考过的题都算「做过」，写进服务器 MySQL */
+    const examIds = paper.questions.map((q) => q.id);
+    setSeenIds((prev) => new Set([...prev, ...examIds]));
+    void fetch(BANK_API + '/bank/mark', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ids: examIds, source: 'exam' }),
+    }).catch(() => undefined);
     if (examWrongIds.length) {
       setWrongBook((book) => {
         let next = book;
@@ -860,7 +901,7 @@ export function AiTrainerPage() {
   }, [left, paper, result, doSubmit]);
 
   const start = () => {
-    const seen = new Set<string>(Object.keys(srs));
+    const seen = new Set<string>([...Object.keys(srs), ...seenIds]);
     const seedWrongs = new Map<string, number>();
     for (const item of Object.values(wrongBook)) seedWrongs.set(item.qid, wrongWeight(item));
     for (const w of wrongs) seedWrongs.set(w.qid, Math.max(seedWrongs.get(w.qid) ?? 0, w.misses));
@@ -971,6 +1012,14 @@ export function AiTrainerPage() {
       return next;
     });
     clearExamWrong(results.map((r) => r.q.id));
+    /* 这一批刷过的题也算「做过」，写进服务器 MySQL */
+    const batchIds = results.map((r) => r.q.id);
+    setSeenIds((prev) => new Set([...prev, ...batchIds]));
+    void fetch(BANK_API + '/bank/mark', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ids: batchIds, source: 'drill' }),
+    }).catch(() => undefined);
     setDrill({ ...cur, submitted: true });
   };
 
@@ -1060,7 +1109,7 @@ export function AiTrainerPage() {
       // 考卷错题必须先在刷题模式里刷过一遍：每一批都先把它们放进来，刷过就从考卷错题本摘掉
       for (const w of wrongs) push(w.qid, 'wrong');
       const freshIds = shuffle(AI_THEORY_QUESTIONS)
-        .filter((q) => !srs[q.id] && !wrongBook[q.id])
+        .filter((q) => !srs[q.id] && !wrongBook[q.id] && !seenIds.has(q.id))
         .map((q) => q.id);
       // 错题集分成两堆：还在错的（积分 < 0）和已回的（积分回到 0，标「复习」）。
       const activeWrongs = wrongList.filter((w) => !isReviewing(w));
@@ -1162,7 +1211,7 @@ export function AiTrainerPage() {
 
   const drillQ = drill && !drill.submitted ? drill.questions[drill.cursor] : null;
   const drillPicked: string[] = drill && drillQ ? (drill.picks[drillQ.id] ?? []) : [];
-  const drillDoneCount = Object.keys(srs).length;
+  const drillDoneCount = seenIds.size;
   const drillPct = Math.min(100, Math.round((drillDoneCount / AI_THEORY_QUESTIONS.length) * 100));
   /** 错题集，错得多的排前面。 */
   const wrongList = useMemo(() => sortWrongs(wrongBook), [wrongBook]);
