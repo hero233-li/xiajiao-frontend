@@ -134,6 +134,310 @@ const STUDY_DONE_KEY = 'xj.ai.practical.study.v1';
 /* 学习模式的提交目录：submissions/study/<题号>/ */
 const STUDY_EXAM = 'study';
 
+/* ------------------------------- 变体练习 ------------------------------- */
+/* 同一考法换数据与参数：防止只背骨架、填空位置一变就不会 */
+interface VariantRubric {
+  id: string;
+  score: number;
+  desc: string;
+}
+interface VariantItem {
+  name: string;
+  csv: string;
+  title: string;
+  kind: string;
+  ref: string;
+  sheet: string;
+  rows: number;
+  rubric: VariantRubric[];
+}
+
+function VariantLab({ onExit }: { onExit: () => void }) {
+  const [items, setItems] = useState<VariantItem[]>([]);
+  const [openName, setOpenName] = useState('');
+  const [jupyterToken, setJupyterToken] = useState('');
+  const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [busy, setBusy] = useState('');
+  const [grading, setGrading] = useState(false);
+  const [result, setResult] = useState<ItemResult | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    void fetch(API + '/variants')
+      .then((r) => r.json())
+      .then((d) => setItems(Array.isArray(d?.items) ? (d.items as VariantItem[]) : []))
+      .catch(() => undefined);
+    void fetch(API + '/config')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.token) setJupyterToken(String(d.token));
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const cur = items.find((it) => it.name === openName) ?? null;
+  const total = cur ? cur.rubric.reduce((n, r) => n + r.score, 0) : 0;
+
+  const reload = useCallback(async (code: string) => {
+    try {
+      const r = await fetch(API + '/files?exam=' + STUDY_EXAM + '&code=' + encodeURIComponent(code));
+      const d = await r.json();
+      setFiles(Array.isArray(d.files) ? (d.files as UploadedFile[]) : []);
+    } catch {
+      setFiles([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    setResult(null);
+    setBusy('');
+    if (openName) void reload(openName);
+  }, [openName, reload]);
+
+  const doUpload = useCallback(
+    async (file: File) => {
+      if (!openName) return;
+      setBusy('正在上传 ' + file.name);
+      try {
+        const b64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const s = String(reader.result ?? '');
+            resolve(s.slice(s.indexOf(',') + 1));
+          };
+          reader.onerror = () => reject(new Error('读取文件失败'));
+          reader.readAsDataURL(file);
+        });
+        const res = await fetch(API + '/upload', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ exam: STUDY_EXAM, code: openName, name: file.name, data: b64 }),
+        });
+        const d = await res.json().catch(() => null);
+        if (!res.ok || !d?.ok) throw new Error(d?.error ?? '上传失败');
+        await reload(openName);
+        setBusy('文件上传成功：' + file.name);
+        window.setTimeout(() => setBusy(''), 2600);
+      } catch (err) {
+        setBusy(err instanceof Error ? err.message : '上传失败');
+        window.setTimeout(() => setBusy(''), 4000);
+      }
+    },
+    [openName, reload],
+  );
+
+  const removeFile = useCallback(
+    async (name: string) => {
+      if (!openName) return;
+      await fetch(API + '/delete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ exam: STUDY_EXAM, code: openName, name }),
+      }).catch(() => undefined);
+      await reload(openName);
+    },
+    [openName, reload],
+  );
+
+  const grade = useCallback(async () => {
+    if (grading || !cur) return;
+    if (!files.length) {
+      setBusy('先上传导出的 html 与截图，再判分');
+      window.setTimeout(() => setBusy(''), 3000);
+      return;
+    }
+    setGrading(true);
+    setResult(null);
+    setBusy('AI 正在按评分细则判这道变体题');
+    try {
+      const res = await fetch(API + '/grade', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          exam: STUDY_EXAM,
+          answers: [
+            {
+              code: cur.name,
+              title: cur.title,
+              score: total,
+              sheet: cur.sheet,
+              rubric: cur.rubric,
+              ref: cur.ref,
+            },
+          ],
+        }),
+      });
+      const created = await res.json().catch(() => null);
+      if (!res.ok || !created?.jobId) throw new Error(created?.error ?? '判分失败');
+      for (let i = 0; i < 300; i += 1) {
+        await new Promise((r) => setTimeout(r, 2000));
+        const poll = await fetch(API + '/grade/' + created.jobId).then((r) => r.json());
+        if (poll.status === 'done') {
+          const graded = poll.result as PaperResult;
+          setResult(graded.items?.[0] ?? null);
+          setBusy('');
+          return;
+        }
+        if (poll.status === 'error') throw new Error(poll.error ?? '判分失败');
+      }
+      throw new Error('判分超时，稍后再试');
+    } catch (err) {
+      setBusy(err instanceof Error ? err.message : '判分失败');
+    } finally {
+      setGrading(false);
+    }
+  }, [cur, files.length, grading, total]);
+
+  return (
+    <div className="space-y-3">
+      <section className="glass px-3 py-3 sm:px-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <span className="text-ink text-[13px] font-medium">变体练习</span>
+          <span className="text-muted text-[13px]">同一考法换数据与参数，练的是看懂题面，不是背骨架</span>
+          <button type="button" className="pill ml-auto px-3 py-1.5 text-[12px]" onClick={onExit}>
+            退出变体练习
+          </button>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {items.map((it) => (
+            <button
+              key={it.name}
+              type="button"
+              onClick={() => setOpenName(it.name === openName ? '' : it.name)}
+              className={
+                'rounded-md border px-2 py-1 text-[11px] tabular-nums ' +
+                (it.name === openName ? 'border-brand text-brand' : 'border-line text-secondary')
+              }
+            >
+              {it.name}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {!cur ? (
+        <section className="glass px-4 py-4 text-secondary text-[13px] leading-relaxed sm:px-5">
+          <p>上方是变体题号。点一个题号，右边会给出这道变体的题面、数据字段、评分细则和素材下载。</p>
+          <p className="mt-2">每道变体都是同样的考法（读数据、按阈值分层、按两个维度分箱求比例与人数），但数据集名、判定字段、阈值、分箱边界、分组字段都换过。考场换题也是这么换的。</p>
+          <p className="mt-2">做题顺序：下载素材包解压，用 jupyter 打开 ipynb，只在下划线处补代码，跑出结果后 File → Download as → HTML(.html)，再截图，回到这里上传判分。</p>
+        </section>
+      ) : (
+        <>
+          <section className="glass px-4 py-4 sm:px-5">
+            <h3 className="text-ink text-[15px] font-medium">
+              {cur.name} {cur.title}
+            </h3>
+            <div className="text-secondary mt-2 space-y-2 text-[13px] leading-relaxed">
+              <p>{cur.sheet}</p>
+              <p className="text-muted">
+                数据集 {cur.csv}，{cur.rows} 行，满分 {total} 分
+              </p>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <a className="pill px-2.5 py-1 text-[12px]" href={API + '/variants/' + encodeURIComponent(cur.name) + '.zip'} download={cur.name + '.zip'}>
+                <Download size={12} className="mr-1" />
+                打包下载
+              </a>
+              <a
+                className="pill px-2.5 py-1 text-[12px]"
+                href={'/jupyter/tree/' + encodeURIComponent('素材') + '/' + encodeURIComponent(cur.name) + (jupyterToken ? '?token=' + encodeURIComponent(jupyterToken) : '')}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <ExternalLink size={12} className="mr-1" />
+                在 jupyter 中作答
+              </a>
+            </div>
+          </section>
+
+          <section className="glass px-4 py-4 sm:px-5">
+            <h3 className="text-ink text-[14px] font-medium">评分细则</h3>
+            <table className="mt-2 w-full text-[12px]">
+              <thead>
+                <tr className="text-muted">
+                  <th className="w-[12%] border border-[var(--border)] px-1 py-1 text-left font-normal">编号</th>
+                  <th className="w-[10%] border border-[var(--border)] px-1 py-1 text-left font-normal">配分</th>
+                  <th className="border border-[var(--border)] px-1 py-1 text-left font-normal">评分标准</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cur.rubric.map((r) => (
+                  <tr key={r.id}>
+                    <td className="border border-[var(--border)] px-1 py-1 tabular-nums">{r.id}</td>
+                    <td className="border border-[var(--border)] px-1 py-1 tabular-nums">{r.score}</td>
+                    <td className="border border-[var(--border)] px-1 py-1">{r.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          <section className="glass px-4 py-4 sm:px-5">
+            <h3 className="text-ink text-[14px] font-medium">答案上传</h3>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <input
+                ref={fileRef}
+                type="file"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void doUpload(f);
+                  e.target.value = '';
+                }}
+              />
+              <button type="button" className="pill pill--solid px-3 py-1.5 text-[12px]" onClick={() => fileRef.current?.click()}>
+                <FileUp size={12} className="mr-1" />
+                选择文件上传
+              </button>
+              <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={() => void grade()} disabled={grading}>
+                {grading ? <Loader2 size={12} className="mr-1 animate-spin" /> : <Send size={12} className="mr-1" />}
+                提交本题判分
+              </button>
+              {busy ? <span className="text-muted text-[12px]">{busy}</span> : null}
+            </div>
+            {files.length ? (
+              <ul className="mt-2 space-y-1 text-[12px]">
+                {files.map((f) => (
+                  <li key={f.name} className="text-secondary flex items-center gap-2">
+                    <span>{f.name}</span>
+                    <span className="text-muted tabular-nums">{Math.round(f.size / 1024)} KB</span>
+                    <button type="button" className="text-muted ml-auto" onClick={() => void removeFile(f.name)}>
+                      <Trash2 size={12} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {result ? (
+              <div className="mt-3 border-t border-[var(--border)] pt-2">
+                <p className="text-ink text-[13px] font-medium tabular-nums">
+                  本题得分 {result.score} / {result.max}
+                </p>
+                <ul className="mt-1 space-y-1 text-[12px]">
+                  {result.points.map((p) => (
+                    <li key={p.id} className="text-secondary">
+                      <span className="tabular-nums">
+                        {p.id} {p.got} 分
+                      </span>
+                      {p.why ? <span className="text-muted">：{p.why}</span> : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </section>
+
+          <section className="glass px-4 py-4 sm:px-5">
+            <details>
+              <summary className="text-ink cursor-pointer text-[14px] font-medium">参考答案（做完再看）</summary>
+              <pre className="text-secondary mt-2 overflow-x-auto whitespace-pre-wrap text-[12px] leading-relaxed">{cur.ref}</pre>
+            </details>
+          </section>
+        </>
+      )}
+    </div>
+  );
+}
 function StudyMode({ pages, onExit }: { pages: PageItem[]; onExit: () => void }) {
   const [localPages, setLocalPages] = useState<PageItem[]>(pages);
   const [index, setIndex] = useState(0);
@@ -144,6 +448,8 @@ function StudyMode({ pages, onExit }: { pages: PageItem[]; onExit: () => void })
   const [grading, setGrading] = useState(false);
   const [result, setResult] = useState<ItemResult | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const [lab, setLab] = useState(false);
 
   const item = AI_PRACTICAL_POOL[index];
   const page = localPages.find((p) => p.code === item.code);
@@ -293,6 +599,8 @@ function StudyMode({ pages, onExit }: { pages: PageItem[]; onExit: () => void })
     }
   }, [ans, files.length, grading, item]);
 
+  if (lab) return <VariantLab onExit={() => setLab(false)} />;
+
   const doneCount = Object.keys(done).filter((k) => done[k]).length;
   const go = (delta: number) => setIndex((i) => Math.min(AI_PRACTICAL_POOL.length - 1, Math.max(0, i + delta)));
 
@@ -314,6 +622,9 @@ function StudyMode({ pages, onExit }: { pages: PageItem[]; onExit: () => void })
             </button>
             <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={() => go(1)} disabled={index === AI_PRACTICAL_POOL.length - 1}>
               下一题
+            </button>
+            <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={() => setLab(true)}>
+              变体练习
             </button>
             <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={onExit}>
               退出学习
