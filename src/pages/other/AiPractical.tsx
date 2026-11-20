@@ -7,7 +7,7 @@ import {
   pickPracticalExamPaper,
   type PoolItem,
 } from '../../data/aiPracticalPool';
-import { cloudPull, cloudPut } from '../../lib/aiSync';
+import { dbDel, dbGet, dbSet, hydrate } from '../../lib/aiDb';
 import { answerOf } from '../../data/aiPracticalAnswers';
 import { sheetOf, type PracticalSheet, type SheetCell, type SheetPara } from '../../data/aiPracticalSheets';
 
@@ -15,8 +15,6 @@ import { sheetOf, type PracticalSheet, type SheetCell, type SheetPara } from '..
 
 const SESSION_KEY = 'xj.ai.practical.exam.v3';
 const RESULT_KEY = 'xj.ai.practical.results.v1';
-const CLOUD_KEY = 'ai-practical';
-const CLOUD_META_KEY = 'xj.ai.practical.meta.v1';
 const API = '/ai-lab';
 /* 在线答题卷的草稿（按题号存一份字段值） */
 const SHEET_KEY = 'xj.ai.practical.sheets.v1';
@@ -82,7 +80,7 @@ interface Session {
 
 function loadJson<T>(key: string, fallback: T): T {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = dbGet(key);
     return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
     return fallback;
@@ -90,11 +88,7 @@ function loadJson<T>(key: string, fallback: T): T {
 }
 
 function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* 超配额就算了 */
-  }
+  dbSet(key, value);
 }
 
 function fmt(seconds: number) {
@@ -849,6 +843,7 @@ export function AiPractical() {
   /* 学习模式：按官方题号顺序 1.1.1 → 4.2.5 一道一道过，不抽题、不计时 */
   const [study, setStudy] = useState(false);
 
+  const [cloudReady, setCloudReady] = useState(false);
   const submitting = useRef(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -870,6 +865,19 @@ export function AiPractical() {
     },
     [],
   );
+
+  /* 云端记录读齐之前不渲染，也不允许把空数据写回去 */
+  useEffect(() => {
+    let alive = true;
+    void hydrate().then(() => {
+      if (!alive) return;
+      setHistory(loadJson<SavedResult[]>(RESULT_KEY, []));
+      setCloudReady(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   /* 题面 + jupyter token */
   useEffect(() => {
@@ -900,7 +908,7 @@ export function AiPractical() {
     if (found.length !== AI_PRACTICAL_COUNT) return;
     const left = paperSeconds(found) - Math.floor((Date.now() - saved.startedAt) / 1000);
     if (left <= 0) {
-      localStorage.removeItem(SESSION_KEY);
+      dbDel(SESSION_KEY);
       return;
     }
     setPaper(found);
@@ -965,7 +973,7 @@ export function AiPractical() {
       setResult(null);
       setAutoSubmitted(auto);
       setWaitTick(0);
-      localStorage.removeItem(SESSION_KEY);
+      dbDel(SESSION_KEY);
       const ticker = window.setInterval(() => setWaitTick((n) => n + 1), 1000);
       const elapsed = Math.min(paperSeconds(paper), Math.round((Date.now() - exam.startedAt) / 1000));
       try {
@@ -1002,8 +1010,6 @@ export function AiPractical() {
             setHistory((prev) => {
               const next = [saved, ...prev].slice(0, 20);
               saveJson(RESULT_KEY, next);
-              localStorage.setItem(CLOUD_META_KEY, String(Date.now()));
-              void cloudPut(CLOUD_KEY, { results: next });
               return next;
             });
             setPhase('done');
@@ -1029,35 +1035,10 @@ export function AiPractical() {
     void submit(true);
   }, [phase, remaining, submit]);
 
-  useEffect(() => {
-    let alive = true;
-    void (async () => {
-      const remote = await cloudPull<{ results?: SavedResult[] }>(CLOUD_KEY);
-      if (!alive) return;
-      const localList = loadJson<SavedResult[]>(RESULT_KEY, []);
-      const localAt = Number(localStorage.getItem(CLOUD_META_KEY) ?? 0);
-      if (remote && remote.updatedAt > localAt) {
-        const list = Array.isArray(remote.data.results) ? remote.data.results.slice(0, 20) : [];
-        saveJson(RESULT_KEY, list);
-        localStorage.setItem(CLOUD_META_KEY, String(remote.updatedAt));
-        setHistory(list);
-        return;
-      }
-      if (localList.length && (!remote || remote.updatedAt < localAt || localAt === 0)) {
-        localStorage.setItem(CLOUD_META_KEY, String(Date.now()));
-        void cloudPut(CLOUD_KEY, { results: localList });
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
   const clearAll = useCallback(() => {
     if (!window.confirm('清空这台设备与云端的实操记录？未交卷的试卷也会一起清掉。')) return;
-    localStorage.removeItem(RESULT_KEY);
-    localStorage.removeItem(SESSION_KEY);
-    localStorage.setItem(CLOUD_META_KEY, String(Date.now()));
+    dbDel(RESULT_KEY);
+    dbDel(SESSION_KEY);
     setHistory([]);
     setResult(null);
     setError('');
@@ -1066,8 +1047,6 @@ export function AiPractical() {
     setPaper([]);
     setUploads({});
     setRemaining(0);
-    void cloudPut(CLOUD_KEY, { results: [] });
-    window.setTimeout(() => void cloudPut(CLOUD_KEY, { results: [] }), 900);
   }, []);
 
   const doUpload = useCallback(
@@ -1218,6 +1197,10 @@ export function AiPractical() {
         </section>
       </div>
     );
+  }
+
+  if (!cloudReady) {
+    return <div className="text-secondary p-8 text-[13px]">正在读取云端记录…</div>;
   }
 
   return (

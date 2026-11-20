@@ -23,6 +23,16 @@ export async function cloudPull<T>(key: string): Promise<CloudDoc<T> | null> {
   }
 }
 
+/** 与 cloudPull 相同，但网络/HTTP 失败会抛错——用来区分「云端还没有」和「读不到云端」。 */
+export async function cloudPullStrict<T>(key: string): Promise<CloudDoc<T> | null> {
+  const res = await fetch(`${BASE}/${key}`, { method: 'GET', cache: 'no-store' });
+  if (!res.ok) throw new Error('读取失败：HTTP ' + res.status);
+  const body = (await res.json()) as { ok?: boolean; data?: { updatedAt?: number } };
+  const data = body?.data;
+  if (!data || typeof data.updatedAt !== 'number') return null;
+  return { data: data as unknown as T, updatedAt: data.updatedAt };
+}
+
 export async function cloudPut(key: string, payload: Record<string, unknown>): Promise<boolean> {
   try {
     const res = await fetch(`${BASE}/${key}`, {

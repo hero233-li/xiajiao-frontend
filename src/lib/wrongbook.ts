@@ -1,3 +1,5 @@
+import { dbGet, dbSet } from './aiDb';
+
 /** 刷题模式自己的错题集：刷题判错的题进这里，不写进考试模式的错题本。 */
 export interface WrongItem {
   qid: string;
@@ -21,7 +23,7 @@ const KEY = 'xj.ai.drill.wrongs.v1';
 
 export function loadWrongBook(): WrongBook {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = dbGet(KEY);
     if (!raw) return {};
     const data = JSON.parse(raw) as WrongBook;
     if (!data || typeof data !== 'object') return {};
@@ -48,11 +50,7 @@ export function loadWrongBook(): WrongBook {
 }
 
 export function saveWrongBook(book: WrongBook) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(book));
-  } catch {
-    /* 配额满就算了 */
-  }
+  dbSet(KEY, book);
 }
 
 /** 答错：进错题集或累加次数。已经在里面的不重置首次时间；考试错题额外记一次 exam。 */

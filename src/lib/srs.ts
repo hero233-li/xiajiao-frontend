@@ -1,8 +1,9 @@
 /**
  * 背题模式（间隔重复）：卡片的调度与本地存储。
- * 只做纯计算与 localStorage 读写，不依赖 React，方便脱离界面验证。
+ * 只做纯计算与云端记录读写（见 aiDb），不依赖 React，方便脱离界面验证。
  * 盒子间隔参考常见背单词软件：答对升一盒、答错回到 1 盒，15 题以后算掌握。
  */
+import { dbGet, dbSet } from './aiDb';
 
 export interface SrsCard {
   /** 0 = 还没起步；1..7 = 盒子层级 */
@@ -220,7 +221,7 @@ export function bumpDay(
 
 function readJson<T>(key: string): T | null {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = dbGet(key);
     if (!raw) return null;
     return JSON.parse(raw) as T;
   } catch {
@@ -229,11 +230,7 @@ function readJson<T>(key: string): T | null {
 }
 
 function writeJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* 配额满就算了 */
-  }
+  dbSet(key, value);
 }
 
 export function loadSrs(): SrsMap {

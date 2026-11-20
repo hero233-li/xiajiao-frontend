@@ -13,14 +13,13 @@ import {
   addWrong,
   loadWrongBook,
   noteRight,
-  mergeWrongBook,
   saveWrongBook,
   isReviewing,
   sortWrongs,
   wrongWeight,
   type WrongBook,
 } from '../../lib/wrongbook';
-import { cloudPull, cloudPut } from '../../lib/aiSync';
+import { dbDel, dbGet, dbSet, hydrate } from '../../lib/aiDb';
 import {
   answerCard,
   buildQueue,
@@ -30,8 +29,6 @@ import {
   loadDaily,
   loadQueue,
   loadSrs,
-  mergeDaily,
-  mergeSrs,
   saveConf,
   saveDaily,
   saveQueue,
@@ -200,8 +197,6 @@ interface DrillRun {
 
 /** 刷题会话存本地并同步到云端：刷新、换设备都回到原来那一页，而不是回首页。 */
 const DRILL_SESSION_KEY = 'xj.ai.drill.session.v1';
-const DRILL_SESSION_META_KEY = 'xj.ai.drill.session.meta.v1';
-const DRILL_SESSION_CLOUD_KEY = 'ai-drill-session';
 
 function normalizeDrillSession(input: unknown): DrillRun | null {
   const data = input as DrillRun | null;
@@ -221,7 +216,7 @@ function normalizeDrillSession(input: unknown): DrillRun | null {
 
 function loadDrillSession(): DrillRun | null {
   try {
-    const raw = localStorage.getItem(DRILL_SESSION_KEY);
+    const raw = dbGet(DRILL_SESSION_KEY);
     if (!raw) return null;
     return normalizeDrillSession(JSON.parse(raw));
   } catch {
@@ -245,11 +240,7 @@ interface ResumeState {
 }
 
 function saveResume(state: ResumeState) {
-  try {
-    localStorage.setItem(RESUME_KEY, JSON.stringify(state));
-  } catch {
-    /* 配额满就算了 */
-  }
+  dbSet(RESUME_KEY, state);
 }
 
 /* --------------------------------- 错题本 --------------------------------- */
@@ -257,11 +248,7 @@ function saveResume(state: ResumeState) {
 /** 交卷时把答错的题记下来：下次考前必须先全部做对，才解锁新卷。 */
 const WRONG_KEY = 'xj.ai.wrongs.v1';
 /** 云端整份文档（考试记录 + 错题本），换设备也能接上。 */
-const CLOUD_KEY = 'ai-trainer';
-const CLOUD_META_KEY = 'xj.ai.meta.v1';
 /** 刷题进度（卡片 / 每日账 / 错题集 / 每天新题量）的云同步槽位。 */
-const DRILL_CLOUD_KEY = 'ai-drill';
-const DRILL_META_KEY = 'xj.ai.drill.meta.v1';
 /** 题库落在服务器 MySQL（xuexizhitu.ai_question / ai_question_seen），考试和刷题都算「做过」。 */
 const BANK_API = '/ai-lab';
 
@@ -274,7 +261,7 @@ interface WrongEntry {
 
 function loadWrongs(): WrongEntry[] {
   try {
-    const raw = localStorage.getItem(WRONG_KEY);
+    const raw = dbGet(WRONG_KEY);
     if (!raw) return [];
     const list = JSON.parse(raw) as WrongEntry[];
     return Array.isArray(list) ? list.filter((e) => e && typeof e.qid === 'string') : [];
@@ -284,11 +271,7 @@ function loadWrongs(): WrongEntry[] {
 }
 
 function saveWrongs(list: WrongEntry[]) {
-  try {
-    localStorage.setItem(WRONG_KEY, JSON.stringify(list.slice(0, 400)));
-  } catch {
-    /* 配额满就算了 */
-  }
+  dbSet(WRONG_KEY, list.slice(0, 400));
 }
 
 function lettersOf(list: string[]): string {
@@ -329,7 +312,7 @@ function scoreOf(paper: Paper, picked: Record<string, string[]>) {
 
 function loadRecords(): ExamRecord[] {
   try {
-    const raw = localStorage.getItem(STORE_KEY);
+    const raw = dbGet(STORE_KEY);
     if (!raw) return [];
     const list = JSON.parse(raw) as ExamRecord[];
     return Array.isArray(list) ? list : [];
@@ -503,67 +486,53 @@ export function AiTrainerPage() {
   const [drillHome, setDrillHome] = useState(false);
   const [wrongOpen, setWrongOpen] = useState(false);
 
-  // 刷题会话落盘：刷新、关标签页再回来都停在同一页
-  useEffect(() => {
-    if (drill) localStorage.setItem(DRILL_SESSION_KEY, JSON.stringify(drill));
-    else localStorage.removeItem(DRILL_SESSION_KEY);
-  }, [drill]);
-
-  /** 刷题会话也上云：换设备/换浏览器打开，直接接着上次那一页。 */
-  const sessionSynced = useRef(false);
-  const skipSessionPush = useRef(false);
+  /** 云端记录读齐之前不渲染，也不允许把空数据写回去。 */
+  const [cloudReady, setCloudReady] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    void (async () => {
-      const remote = await cloudPull<{ drill?: DrillRun | null }>(DRILL_SESSION_CLOUD_KEY);
+    void hydrate().then(() => {
       if (!alive) return;
-      const localAt = Number(localStorage.getItem(DRILL_SESSION_META_KEY) ?? 0);
-      const localSession = loadDrillSession();
-      const remoteSession = remote && remote.updatedAt > localAt ? normalizeDrillSession(remote?.data?.drill) : null;
-      if (remoteSession) {
-        skipSessionPush.current = true;
-        setDrill(remoteSession);
-        localStorage.setItem(DRILL_SESSION_KEY, JSON.stringify(remoteSession));
-        localStorage.setItem(DRILL_SESSION_META_KEY, String(remote?.updatedAt ?? Date.now()));
-      } else if (localSession) {
-        const now = Date.now();
-        localStorage.setItem(DRILL_SESSION_META_KEY, String(now));
-        void cloudPut(DRILL_SESSION_CLOUD_KEY, { drill: localSession });
-      }
-      sessionSynced.current = true;
-    })();
+      setSrs(loadSrs());
+      setDaily(loadDaily());
+      setConf(loadConf());
+      setQueue(loadQueue());
+      setWrongBook(loadWrongBook());
+      setWrongs(loadWrongs());
+      setRecords(loadRecords());
+      setDrill(loadDrillSession());
+      setCloudReady(true);
+    });
     return () => {
       alive = false;
     };
   }, []);
 
+  // 刷题会话也存云端：换设备/换浏览器打开，直接接着上次那一页
   useEffect(() => {
-    if (!sessionSynced.current) return;
-    if (skipSessionPush.current) {
-      skipSessionPush.current = false;
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      localStorage.setItem(DRILL_SESSION_META_KEY, String(Date.now()));
-      void cloudPut(DRILL_SESSION_CLOUD_KEY, { drill });
-    }, 900);
-    return () => window.clearTimeout(timer);
-  }, [drill]);
+    if (!cloudReady) return;
+    if (drill) dbSet(DRILL_SESSION_KEY, drill);
+    else dbDel(DRILL_SESSION_KEY);
+  }, [drill, cloudReady]);
+
 
   useEffect(() => {
+    if (!cloudReady) return;
     saveWrongBook(wrongBook);
   }, [wrongBook]);
 
   useEffect(() => {
+    if (!cloudReady) return;
     saveSrs(srs);
   }, [srs]);
 
   useEffect(() => {
+    if (!cloudReady) return;
     saveDaily(daily);
   }, [daily]);
 
   useEffect(() => {
+    if (!cloudReady) return;
     saveConf(conf);
   }, [conf]);
 
@@ -596,79 +565,9 @@ export function AiTrainerPage() {
     };
   }, []);
 
-  /** 云端记录的最后同步时间，0 表示这次打开还没和云端打过交道。 */
-  const [drillSyncedAt, setDrillSyncedAt] = useState(0);
-  const drillSynced = useRef(false);
-
-  /** 开页先把云端刷题进度并进来（老设备上的数据也会一次性推上去）。 */
-  useEffect(() => {
-    let alive = true;
-    void (async () => {
-      const remote = await cloudPull<{
-        srs?: SrsMap;
-        daily?: Record<string, DayLog>;
-        wrongs?: WrongBook;
-        conf?: SrsConf;
-      }>(DRILL_CLOUD_KEY);
-      if (!alive) return;
-      const localAt = Number(localStorage.getItem(DRILL_META_KEY) ?? 0);
-      if (remote && remote.updatedAt > localAt) {
-        const nextSrs = mergeSrs(loadSrs(), remote.data.srs ?? {});
-        const nextDaily = mergeDaily(loadDaily(), remote.data.daily ?? {});
-        const nextWrong = mergeWrongBook(loadWrongBook(), remote.data.wrongs ?? {});
-        const rconf = remote.data.conf;
-        saveSrs(nextSrs);
-        setSrs(nextSrs);
-        saveDaily(nextDaily);
-        setDaily(nextDaily);
-        saveWrongBook(nextWrong);
-        setWrongBook(nextWrong);
-        if (rconf && Number(rconf.newPerDay) > 0) {
-          const nextConf: SrsConf = {
-            newPerDay: Math.round(Number(rconf.newPerDay)),
-            reviewCap: Math.round(Number(rconf.reviewCap) || loadConf().reviewCap),
-          };
-          saveConf(nextConf);
-          setConf(nextConf);
-        }
-        localStorage.setItem(DRILL_META_KEY, String(remote.updatedAt));
-        setDrillSyncedAt(remote.updatedAt);
-      } else {
-        const localSrs = loadSrs();
-        const localWrong = loadWrongBook();
-        if (Object.keys(localSrs).length > 0 || Object.keys(localWrong).length > 0) {
-          const now = Date.now();
-          localStorage.setItem(DRILL_META_KEY, String(now));
-          void cloudPut(DRILL_CLOUD_KEY, {
-            srs: localSrs,
-            daily: loadDaily(),
-            wrongs: localWrong,
-            conf: loadConf(),
-          });
-          setDrillSyncedAt(now);
-        }
-      }
-      drillSynced.current = true;
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  /** 刷题进度变了就节流推上去：错题集、卡片、每日账、每天新题量都跟着上云。 */
-  useEffect(() => {
-    if (!drillSynced.current) return;
-    const timer = window.setTimeout(() => {
-      const now = Date.now();
-      localStorage.setItem(DRILL_META_KEY, String(now));
-      void cloudPut(DRILL_CLOUD_KEY, { srs, daily, wrongs: wrongBook, conf });
-      setDrillSyncedAt(now);
-    }, 900);
-    return () => window.clearTimeout(timer);
-  }, [srs, daily, wrongBook, conf]);
-
   /** 今日队列一天只排一次：做完的题不再从队列里消失，进度才不会往回跳。 */
   useEffect(() => {
+    if (!cloudReady) return;
     const now = Date.now();
     const today = dayOf(now);
     const stale = !queue || queue.date !== today || queue.fresh.length < conf.newPerDay;
@@ -749,13 +648,11 @@ export function AiTrainerPage() {
         passed: scored.score >= 60,
       };
       nextRecords = [rec, ...loadRecords()].slice(0, 30);
-      localStorage.setItem(STORE_KEY, JSON.stringify(nextRecords));
+      dbSet(STORE_KEY, nextRecords);
       setRecords(nextRecords);
     }
-    localStorage.setItem(CLOUD_META_KEY, String(Date.now()));
-    void cloudPut(CLOUD_KEY, { records: nextRecords, wrongs: nextWrongs });
-    localStorage.removeItem(PROGRESS_KEY);
-    localStorage.removeItem(RESUME_KEY);
+    dbDel(PROGRESS_KEY);
+    dbDel(RESUME_KEY);
     setResult(scored);
   }, [paper, picked, left, wrongs, records]);
 
@@ -768,8 +665,6 @@ export function AiTrainerPage() {
         const next = prev.filter((e) => !drop.has(e.qid));
         if (next.length === prev.length) return prev;
         saveWrongs(next);
-        localStorage.setItem(CLOUD_META_KEY, String(Date.now()));
-        void cloudPut(CLOUD_KEY, { records, wrongs: next });
         return next;
       });
     },
@@ -778,6 +673,7 @@ export function AiTrainerPage() {
 
   // 作答过程随时落盘，刷新/关页可续做
   useEffect(() => {
+    if (!cloudReady) return;
     if (!paper || result) return;
     saveResume({
       id: paper.id,
@@ -925,46 +821,9 @@ export function AiTrainerPage() {
     setMarked({});
     setSheetOpen(false);
     setJump('');
-    localStorage.setItem(
-      PROGRESS_KEY,
-      JSON.stringify({ id: fresh.id, startedAt: fresh.startedAt, left: fresh.seconds }),
-    );
+    dbSet(PROGRESS_KEY, { id: fresh.id, startedAt: fresh.startedAt, left: fresh.seconds });
   };
 
-  // 双向同步：云端更新就拉下来；本机更新（或云端还是空的）就把它推上去
-  useEffect(() => {
-    let alive = true;
-    void (async () => {
-      const remote = await cloudPull<{ records?: ExamRecord[]; wrongs?: WrongEntry[] }>(CLOUD_KEY);
-      if (!alive) return;
-      const localRecs = loadRecords();
-      const localWrongs = loadWrongs();
-      const localAt = Number(localStorage.getItem(CLOUD_META_KEY) ?? 0);
-      const hasLocal = localRecs.length > 0 || localWrongs.length > 0;
-
-      if (remote && remote.updatedAt > localAt) {
-        const recs = Array.isArray(remote.data.records) ? remote.data.records.slice(0, 30) : [];
-        const wrs = Array.isArray(remote.data.wrongs)
-          ? remote.data.wrongs.filter((e) => e && typeof e.qid === 'string')
-          : [];
-        localStorage.setItem(STORE_KEY, JSON.stringify(recs));
-        saveWrongs(wrs);
-        localStorage.setItem(CLOUD_META_KEY, String(remote.updatedAt));
-        setRecords(recs);
-        setWrongs(wrs);
-        return;
-      }
-      // 本机有数据而云端为空/更旧：直接把本机推上去（老记录一次性上云）
-      if (hasLocal && (!remote || remote.updatedAt < localAt || localAt === 0)) {
-        const now = Date.now();
-        localStorage.setItem(CLOUD_META_KEY, String(now));
-        void cloudPut(CLOUD_KEY, { records: localRecs, wrongs: localWrongs });
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   /** 刷题不改选项：选了就存着，交卷时才判断对错。 */
   const drillPick = (question: ExamQuestion, value: string) => {
@@ -1204,12 +1063,11 @@ export function AiTrainerPage() {
 
   const clearAll = () => {
     if (!window.confirm('清空这台设备与云端的全部记录（成绩 + 错题本）？清完就像没做过题一样。')) return;
-    localStorage.removeItem(STORE_KEY);
-    localStorage.removeItem(WRONG_KEY);
-    localStorage.removeItem(PROGRESS_KEY);
-    localStorage.removeItem(RESUME_KEY);
-    localStorage.setItem(CLOUD_META_KEY, String(Date.now()));
-    localStorage.removeItem(DRILL_SESSION_KEY);
+    dbDel(STORE_KEY);
+    dbDel(WRONG_KEY);
+    dbDel(PROGRESS_KEY);
+    dbDel(RESUME_KEY);
+    dbDel(DRILL_SESSION_KEY);
     setDrill(null);
     setRecords([]);
     setWrongs([]);
@@ -1218,11 +1076,6 @@ export function AiTrainerPage() {
     setPaper(null);
     setPicked({});
     setMarked({});
-    // 清空要压过可能还在飞的「上云」请求：先推一次，再补一次
-    void cloudPut(CLOUD_KEY, { records: [], wrongs: [] });
-    window.setTimeout(() => {
-      void cloudPut(CLOUD_KEY, { records: [], wrongs: [] });
-    }, 900);
   };
 
   const reset = () => {
@@ -1305,6 +1158,10 @@ export function AiTrainerPage() {
     { key: 'skill', label: '实操' },
     { key: 'info', label: '报考信息' },
   ];
+
+  if (!cloudReady) {
+    return <div className="text-secondary p-8 text-[13px]">正在读取云端记录…</div>;
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -1463,7 +1320,6 @@ export function AiTrainerPage() {
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
-                  <span className="text-muted text-[12px]">{drillSyncedAt ? '云端已同步' : '只在本机'}</span>
                   <button
                     type="button"
                     onClick={closeDrill}
@@ -1799,7 +1655,7 @@ export function AiTrainerPage() {
                     type="button"
                     onClick={() => {
                       if (window.confirm('放弃这次考试？已作答不会保存。')) {
-                        localStorage.removeItem(RESUME_KEY);
+                        dbDel(RESUME_KEY);
                         setPaper(null);
                       }
                     }}
