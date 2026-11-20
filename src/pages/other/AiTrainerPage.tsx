@@ -170,12 +170,21 @@ function buildPaper(seed?: PaperSeed): Paper {
 
 /** 一批 10 题，不计时；做完统一交一次卷。 */
 const DRILL_COUNT = 10;
+/** 错题模式：一局 5 题，题源只有错题集。 */
+const WRONG_COUNT = 5;
+
+type DrillKind = 'today' | 'free' | 'wrongs';
+
+/** 一局几题：错题模式 5 题，其余 10 题。 */
+function sizeOf(kind: DrillKind): number {
+  return kind === 'wrongs' ? WRONG_COUNT : DRILL_COUNT;
+}
 /** 每天新题量的可选档位。 */
 
 
 interface DrillRun {
-  /** today = 按今日任务队列出题；free = 自由练，全库随机 */
-  kind: 'today' | 'free';
+  /** today = 按今日任务队列出题；free = 自由练，全库随机；wrongs = 错题模式，只出错题集里的题 */
+  kind: DrillKind;
   questions: ExamQuestion[];
   cursor: number;
   picks: Record<string, string[]>;
@@ -199,7 +208,7 @@ function normalizeDrillSession(input: unknown): DrillRun | null {
   if (!data || !Array.isArray(data.questions) || !data.questions.length) return null;
   if (!data.questions.every((q) => q && typeof q.id === 'string' && Array.isArray(q.shown))) return null;
   return {
-      kind: data.kind === 'free' ? 'free' : 'today',
+      kind: data.kind === 'free' ? 'free' : data.kind === 'wrongs' ? 'wrongs' : 'today',
       questions: data.questions,
       cursor: Math.min(Math.max(Number(data.cursor) || 0, 0), data.questions.length - 1),
       picks: data.picks ?? {},
@@ -1096,12 +1105,13 @@ export function AiTrainerPage() {
    * 起始 3:7（3 席错题），错题相对越多越往 5:5 靠（最多 5 席）；新题刷光了就整批全出错题，
    * 错题也没有就到期复习 → 学过的随便补，保证任何阶段都刷得下去。
    */
-  const startDrill = (kind: 'today' | 'free' = 'today') => {
+  const startDrill = (kind: DrillKind = 'today') => {
     const byId = qById;
+    const size = sizeOf(kind);
     const ids: string[] = [];
     const labels: Record<string, 'new' | 'review' | 'wrong'> = {};
     const push = (qid: string, label: 'new' | 'review' | 'wrong') => {
-      if (ids.length >= DRILL_COUNT || labels[qid] || !byId.has(qid)) return;
+      if (ids.length >= size || labels[qid] || !byId.has(qid)) return;
       ids.push(qid);
       labels[qid] = label;
     };
@@ -1118,14 +1128,14 @@ export function AiTrainerPage() {
       // 错题席位：错题在「没掌握的题」里占比越高越往 5 席靠；复习题和新题都没有了才整批错题。
       let wrongSlots = 0;
       if (wrongCount > 0) {
-        if (freshIds.length + reviewIds.length === 0) wrongSlots = DRILL_COUNT;
+        if (freshIds.length + reviewIds.length === 0) wrongSlots = size;
         else {
           const share = wrongCount / (wrongCount + freshIds.length + reviewIds.length);
-          wrongSlots = Math.round(DRILL_COUNT * (0.3 + 0.2 * share));
+          wrongSlots = Math.round(size * (0.3 + 0.2 * share));
           wrongSlots = Math.min(Math.max(wrongSlots, 3), 5, wrongCount);
         }
       }
-      const mainSlots = DRILL_COUNT - wrongSlots;
+      const mainSlots = size - wrongSlots;
       // 复习题排在前面：还有没刷过的复习题就先出复习题，复习题出完出新题。
       const reviewPool = [...reviewIds];
       const freshPool = [...freshIds];
@@ -1140,7 +1150,7 @@ export function AiTrainerPage() {
       }
       // 错题席位按权重抽：考试错题权重 3 倍起，错得越多越容易抽到。
       const rest = [...activeWrongs];
-      while (ids.length < DRILL_COUNT && rest.length) {
+      while (ids.length < size && rest.length) {
         const weights = rest.map((w) => wrongWeight(w));
         const totalWeight = weights.reduce((a, b) => a + b, 0);
         let point = Math.random() * totalWeight;
@@ -1154,8 +1164,23 @@ export function AiTrainerPage() {
       }
       // 兜底：以前答对过、也不在错题集里的题
       for (const q of shuffle(AI_THEORY_QUESTIONS)) push(q.id, 'review');
+    } else if (kind === 'wrongs') {
+      // 错题模式：题源只有错题集。还在错的按权重先抽（考试错题 3 倍起、错得多的更靠前），不够再补已回的复习题。
+      const activePool = [...wrongList.filter((w) => !isReviewing(w))];
+      while (ids.length < size && activePool.length) {
+        const weights = activePool.map((w) => wrongWeight(w));
+        const totalWeight = weights.reduce((a, b) => a + b, 0);
+        let point = Math.random() * totalWeight;
+        let pickIndex = 0;
+        while (pickIndex < weights.length - 1 && point > weights[pickIndex]) {
+          point -= weights[pickIndex];
+          pickIndex += 1;
+        }
+        push(activePool.splice(pickIndex, 1)[0].qid, 'wrong');
+      }
+      for (const w of shuffle(wrongList.filter((item) => isReviewing(item)))) push(w.qid, 'wrong');
     } else {
-      for (const q of shuffle(AI_THEORY_QUESTIONS).slice(0, DRILL_COUNT)) {
+      for (const q of shuffle(AI_THEORY_QUESTIONS).slice(0, size)) {
         push(q.id, srs[q.id] ? 'review' : 'new');
       }
     }
@@ -1362,7 +1387,15 @@ export function AiTrainerPage() {
                     onClick={() => startDrill('today')}
                     className="pill px-4 py-2.5 text-[14px]"
                   >
-                    刷题模式（10 题一局）
+                    刷题模式（{DRILL_COUNT} 题一局）
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => startDrill('wrongs')}
+                    disabled={!wrongList.length}
+                    className="pill px-4 py-2.5 text-[14px] disabled:opacity-40"
+                  >
+                    {wrongList.length ? '错题模式（' + WRONG_COUNT + ' 题一局）' : '错题模式（错题集是空的）'}
                   </button>
                   {records.length || wrongs.length ? (
                     <button
@@ -1420,6 +1453,7 @@ export function AiTrainerPage() {
                   <h2 className="text-ink text-[14px] font-semibold">刷题模式</h2>
                   <p className="text-secondary mt-1 text-[12px] leading-relaxed">
                     每批 {DRILL_COUNT} 题：先出复习题（错题集里已经回到 0 分的），复习题出完出新题，新题也刷完了出错题；交卷后才看答案。
+                    错题模式只出错题集里的题，一局 {WRONG_COUNT} 题。
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
@@ -1443,7 +1477,15 @@ export function AiTrainerPage() {
                   {wrongList.length ? '先做错题（' + wrongList.length + ' 题）' : '开始今日任务'}
                 </button>
                 <button type="button" onClick={() => startDrill('free')} className="pill px-4 py-2.5 text-[14px]">
-                  自由练 10 题
+                  自由练 {DRILL_COUNT} 题
+                </button>
+                <button
+                  type="button"
+                  onClick={() => startDrill('wrongs')}
+                  disabled={!wrongList.length}
+                  className="pill px-4 py-2.5 text-[14px] disabled:opacity-40"
+                >
+                  错题模式 {WRONG_COUNT} 题
                 </button>
               </div>
 
@@ -1457,7 +1499,7 @@ export function AiTrainerPage() {
                 <div className="min-w-0">
                   <div className="flex items-baseline gap-2">
                     <h2 className="text-ink text-[14px] font-semibold">
-                      {drill.kind === 'today' ? '今日任务' : '自由练习'}
+                      {drill.kind === 'today' ? '今日任务' : drill.kind === 'wrongs' ? '错题模式' : '自由练习'}
                     </h2>
                     <span className="text-ink text-[13px] font-semibold tabular-nums">
                       已刷 {drillDoneCount} / {AI_THEORY_QUESTIONS.length} 题
@@ -1530,7 +1572,7 @@ export function AiTrainerPage() {
                         className="pill pill--solid px-4 py-2 text-[13px] disabled:opacity-40"
                       >
                         <RotateCcw className="mr-1 inline size-3.5" />
-                        {unfixedCount > 0 ? '还剩 ' + unfixedCount + ' 题待订正' : '再来 ' + DRILL_COUNT + ' 题'}
+                        {unfixedCount > 0 ? '还剩 ' + unfixedCount + ' 题待订正' : '再来 ' + sizeOf(drill.kind) + ' 题'}
                       </button>
                       <button type="button" onClick={closeDrill} className="pill px-4 py-2 text-[13px]">
                         返回
