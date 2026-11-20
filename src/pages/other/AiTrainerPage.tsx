@@ -1020,7 +1020,8 @@ export function AiTrainerPage() {
       }
       return next;
     });
-    clearExamWrong(results.map((r) => r.q.id));
+    /* 考卷错题只能在错题模式里做对一遍才摘掉，摘完才解锁下一次理论考试 */
+    if (cur.kind === 'wrongs') clearExamWrong(results.filter((r) => r.ok).map((r) => r.q.id));
     /* 这一批刷过的题也算「做过」，写进服务器 MySQL */
     const batchIds = results.map((r) => r.q.id);
     setSeenIds((prev) => new Set([...prev, ...batchIds]));
@@ -1064,8 +1065,11 @@ export function AiTrainerPage() {
     return { right, wrong, answered: right + wrong, fresh, review };
   }, [drill]);
 
-  /** 考卷错题还没在刷题模式里刷过的数量：没清完不让开新卷。 */
-  const pendingExamWrongs = wrongs.length;
+  /** 考卷错题还没在错题模式里做对过的数量：没清完不让开新卷。题库里已经不存在的题不算，免得永远解锁不了。 */
+  const pendingExamWrongs = useMemo(() => {
+    const known = new Set(AI_THEORY_QUESTIONS.map((q) => q.id));
+    return wrongs.filter((e) => known.has(e.qid)).length;
+  }, [wrongs]);
 
   /** 复盘里还没订正的错题数：订正完才允许开下一批。 */
   const unfixedCount = useMemo(() => {
@@ -1092,6 +1096,7 @@ export function AiTrainerPage() {
     }
     setDrill((prev) => (prev ? { ...prev, fixed: { ...prev.fixed, [q.id]: true } } : prev));
     setFixBad((prev) => ({ ...prev, [q.id]: false }));
+    if (drill?.kind === 'wrongs') clearExamWrong([q.id]);
   };
 
   const closeDrill = () => {
@@ -1116,8 +1121,6 @@ export function AiTrainerPage() {
       labels[qid] = label;
     };
     if (kind === 'today') {
-      // 考卷错题必须先在刷题模式里刷过一遍：每一批都先把它们放进来，刷过就从考卷错题本摘掉
-      for (const w of wrongs) push(w.qid, 'wrong');
       const freshIds = shuffle(AI_THEORY_QUESTIONS)
         .filter((q) => !srs[q.id] && !wrongBook[q.id] && !seenIds.has(q.id))
         .map((q) => q.id);
@@ -1165,10 +1168,13 @@ export function AiTrainerPage() {
       // 兜底：以前答对过、也不在错题集里的题
       for (const q of shuffle(AI_THEORY_QUESTIONS)) push(q.id, 'review');
     } else if (kind === 'wrongs') {
-      // 错题模式：题源只有错题集。还在错的按权重先抽（考试错题 3 倍起、错得多的更靠前），不够再补已回的复习题。
-      const activePool = [...wrongList.filter((w) => !isReviewing(w))];
+      // 错题模式：题源只有错题集。考卷错题排最前（它们还卡着下一次考试，可能不在错题集或已标回），
+      // 其余还在错的按权重抽（错得越多越靠前），最后补已回的复习题。
+      const examIds = new Set(wrongs.map((e) => e.qid));
+      for (const e of shuffle(wrongs)) push(e.qid, 'wrong');
+      const activePool = [...wrongList.filter((w) => !isReviewing(w) && !examIds.has(w.qid)).map((w) => ({ qid: w.qid, weight: wrongWeight(w) }))];
       while (ids.length < size && activePool.length) {
-        const weights = activePool.map((w) => wrongWeight(w));
+        const weights = activePool.map((w) => w.weight);
         const totalWeight = weights.reduce((a, b) => a + b, 0);
         let point = Math.random() * totalWeight;
         let pickIndex = 0;
@@ -1379,7 +1385,7 @@ export function AiTrainerPage() {
                     className="pill pill--solid px-5 py-2.5 text-[14px] disabled:opacity-40"
                   >
                     {pendingExamWrongs > 0
-                      ? '先刷完 ' + pendingExamWrongs + ' 道考卷错题'
+                      ? '先去错题模式做对 ' + pendingExamWrongs + ' 道考卷错题'
                       : '开始一次模拟考试'}
                   </button>
                   <button
@@ -1392,10 +1398,10 @@ export function AiTrainerPage() {
                   <button
                     type="button"
                     onClick={() => startDrill('wrongs')}
-                    disabled={!wrongList.length}
+                    disabled={!wrongList.length && !wrongs.length}
                     className="pill px-4 py-2.5 text-[14px] disabled:opacity-40"
                   >
-                    {wrongList.length ? '错题模式（' + WRONG_COUNT + ' 题一局）' : '错题模式（错题集是空的）'}
+                    {wrongList.length || wrongs.length ? '错题模式（' + WRONG_COUNT + ' 题一局）' : '错题模式（错题集是空的）'}
                   </button>
                   {records.length || wrongs.length ? (
                     <button
