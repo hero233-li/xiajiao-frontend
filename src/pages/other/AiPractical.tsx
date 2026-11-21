@@ -16,9 +16,11 @@ import {
   Play,
   RotateCcw,
   Send,
+  TrainFront,
   Trash2,
 } from 'lucide-react';
 import { AiPracticalCodeCheck } from './AiPracticalCodeCheck';
+import { AiSubwaySprint } from './AiSubwaySprint';
 import {
   AI_PRACTICAL_COUNT,
   AI_PRACTICAL_POOL,
@@ -1032,6 +1034,7 @@ export function AiPractical() {
   const [jupyterToken, setJupyterToken] = useState('');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [study, setStudy] = useState(false);
+  const [subwaySprint, setSubwaySprint] = useState(false);
   const [codeCheck, setCodeCheck] = useState(false);
   const [codeCheckFixed, setCodeCheckFixed] = useState<string | null>(null);
   const [secPick, setSecPick] = useState(false);
@@ -1370,6 +1373,10 @@ export function AiPractical() {
 
   /* --------------------------------- 渲染 --------------------------------- */
 
+  if (subwaySprint) {
+    return <AiSubwaySprint onExit={() => setSubwaySprint(false)} />;
+  }
+
   if (codeCheck) {
     return (
       <AiPracticalCodeCheck
@@ -1436,6 +1443,33 @@ export function AiPractical() {
 
           </div>
         </section>
+
+        {/* 本次考试专享：地铁考前冲刺入口（手机单手速刷弱点 + 必交 docx 背诵） */}
+        <button
+          type="button"
+          onClick={() => setSubwaySprint(true)}
+          className="glass glass-interactive border-brand/40 flex w-full flex-wrap items-center justify-between gap-3 border p-4 text-left sm:px-5"
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <span className="bg-brand text-white grid size-10 shrink-0 place-items-center rounded-[12px]">
+              <TrainFront size={19} strokeWidth={1.8} />
+            </span>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-ink text-[15px] font-semibold">地铁考前冲刺（本次专享）</h3>
+                <span className="bg-danger-soft text-danger rounded-full px-2 py-0.5 text-[11px] font-semibold">
+                  20 个真实错因 + 6 套必交 docx 背诵
+                </span>
+              </div>
+              <p className="text-secondary mt-0.5 text-[12.5px]">
+                专为手机定制：单手 4 选 1 专治手滑坑 + 2.1/2.2/3.2/1.2 必交 docx 挖空背诵 + 120 分钟考场清单
+              </p>
+            </div>
+          </div>
+          <span className="pill pill--solid shrink-0 px-3.5 py-1.5 text-[12px] font-medium">
+            立刻开刷
+          </span>
+        </button>
 
         {/* 三大专项练习模式卡片 */}
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
