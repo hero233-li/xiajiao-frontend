@@ -1441,6 +1441,37 @@ export function AiPractical() {
   const best = useMemo(() => (history.length ? Math.max(...history.map((h) => h.total)) : null), [history]);
   const uploadedTotal = useMemo(() => Object.values(uploads).reduce((n, fs) => n + fs.length, 0), [uploads]);
 
+  /* 考试里把这一题退回最初状态：notebook 恢复成填空版，本题已交文件与在线答题卷草稿一并清空 */
+  const [resettingCode, setResettingCode] = useState<string | null>(null);
+  const resetCurQuestion = useCallback(async () => {
+    if (!exam) return;
+    const code = curCode;
+    const ok = window.confirm(
+      `重置 ${code}？\n\n这题会回到最初的样子：notebook 恢复成填空版，已上传的本题文件和在线答题卷草稿都清空。\n不能撤销。`,
+    );
+    if (!ok) return;
+    setResettingCode(code);
+    try {
+      const res = await fetch(API + '/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exam: exam.id, code }),
+      });
+      const d = await res.json();
+      if (!d?.ok) throw new Error(typeof d?.error === 'string' ? d.error : '重置失败');
+      const drafts = loadSheetDrafts();
+      if (drafts[code]) {
+        delete drafts[code];
+        saveJson(SHEET_KEY, drafts);
+      }
+      await reloadFiles(exam.id, exam.codes);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : '重置失败');
+    } finally {
+      setResettingCode(null);
+    }
+  }, [exam, curCode, reloadFiles]);
+
   /* --------------------------------- 渲染 --------------------------------- */
 
   if (codeCheck) {
@@ -2068,6 +2099,21 @@ export function AiPractical() {
                   <Download size={12} />
                   打包下载
                 </a>
+                {hasNotebook ? (
+                  <button
+                    type="button"
+                    className="pill px-3 py-1.5 text-[12px]"
+                    onClick={() => void resetCurQuestion()}
+                    disabled={resettingCode === curCode}
+                  >
+                    {resettingCode === curCode ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <RotateCcw size={12} />
+                    )}
+                    重置本题
+                  </button>
+                ) : null}
                 {REF_CODES.has(curCode) ? (
                   <a
                     className="pill px-3 py-1.5 text-[12px]"
