@@ -35,12 +35,6 @@ import { sheetOf, type PracticalSheet, type SheetCell, type SheetPara } from '..
 
 const SESSION_KEY = 'xj.ai.practical.exam.v3';
 const RESULT_KEY = 'xj.ai.practical.results.v1';
-const REPLAY_KEY = 'xj.ai.practical.replay.v1';
-/** 手动重置过的那一场成绩（存 at），重置后不再据此自动上锁 */
-const REPLAY_SKIP_KEY = 'xj.ai.practical.replay.skip.v1';
-/** 错题再战门槛：一次整卷低于 LOCK_BELOW 分就锁住新卷，同一套题做到 UNLOCK_AT 分才解锁。 */
-const LOCK_BELOW = 60;
-const UNLOCK_AT = 60;
 const API = '/ai-lab';
 /* 在线答题卷的草稿（按题号存一份字段值） */
 const SHEET_KEY = 'xj.ai.practical.sheets.v1';
@@ -102,22 +96,6 @@ interface Session {
   id: string;
   codes: string[];
   startedAt: number;
-}
-
-interface ReplayState {
-  /** 要重做的同一套题号（顺序不变） */
-  codes: string[];
-  /** 上锁时间（ISO） */
-  at: string;
-  /** 这套题至今最好的百分制得分 */
-  best: number;
-  /** 已经重做的次数 */
-  attempts: number;
-}
-
-/** 百分制得分：整卷按 100 分算，专项练习这类小题也按比例算。 */
-function pctOf(r: { total: number; max: number }): number {
-  return r.max > 0 ? Math.round((r.total / r.max) * 100) : 0;
 }
 
 function loadJson<T>(key: string, fallback: T): T {
@@ -1058,9 +1036,6 @@ export function AiPractical() {
   const [codeCheckFixed, setCodeCheckFixed] = useState<string | null>(null);
   const [secPick, setSecPick] = useState(false);
   const [secNow, setSecNow] = useState<PracticalSection | null>(null);
-  const [replay, setReplay] = useState<ReplayState | null>(() => loadJson<ReplayState | null>(REPLAY_KEY, null));
-  const [replaySkip, setReplaySkip] = useState<string | null>(() => loadJson<string | null>(REPLAY_SKIP_KEY, null));
-  const [replayRun, setReplayRun] = useState(false);
 
   const [cloudReady, setCloudReady] = useState(false);
   const submitting = useRef(false);
@@ -1094,52 +1069,6 @@ export function AiPractical() {
     };
   }, []);
 
-  /* 错题再战：最近一次整卷低于 60 分就锁住新卷，同一套 6 题做到 60 分才解锁。
-     云端成绩可能由人工判卷写回，所以这里从最近一次成绩反推，而不是只在交卷时算。 */
-  useEffect(() => {
-    if (!cloudReady) return;
-    const latest = history[0];
-    if (!latest || !Array.isArray(latest.codes) || latest.codes.length !== AI_PRACTICAL_COUNT) return;
-    const pct = pctOf(latest);
-    /* 手动重置过的那一场不再自动上锁，等下一场成绩出来再判断 */
-    if (!replay && replaySkip === latest.at) return;
-    if (pct >= UNLOCK_AT) {
-      if (replay) {
-        setReplay(null);
-        saveJson(REPLAY_KEY, null);
-      }
-      return;
-    }
-    if (replay) {
-      if (pct > replay.best) {
-        const next = { ...replay, best: pct };
-        setReplay(next);
-        saveJson(REPLAY_KEY, next);
-      }
-      return;
-    }
-    if (pct < LOCK_BELOW) {
-      const next: ReplayState = { codes: latest.codes, at: latest.at, best: pct, attempts: 1 };
-      setReplay(next);
-      saveJson(REPLAY_KEY, next);
-    }
-  }, [cloudReady, history, replay, replaySkip]);
-
-  /* 手动重置错题再战：解除这一套的锁，可以重新抽新卷；已交成绩与错题记录都不动 */
-  const resetReplay = useCallback(() => {
-    if (!replay) return;
-    const ok = window.confirm(
-      `重置错题再战？\n\n这套 ${replay.codes.length} 题最好 ${replay.best} 分，重置后可以重新抽一套新题。\n已交卷的成绩和错题记录都保留。`,
-    );
-    if (!ok) return;
-    setReplaySkip(replay.at);
-    saveJson(REPLAY_SKIP_KEY, replay.at);
-    setReplay(null);
-    saveJson(REPLAY_KEY, null);
-    setReplayRun(false);
-    dbDel(SESSION_KEY);
-  }, [replay]);
-
   useEffect(() => {
     void (async () => {
       try {
@@ -1170,14 +1099,6 @@ export function AiPractical() {
       dbDel(SESSION_KEY);
       return;
     }
-    const locked = loadJson<ReplayState | null>(REPLAY_KEY, null);
-    setReplayRun(
-      Boolean(
-        locked &&
-          locked.codes.length === saved.codes.length &&
-          locked.codes.every((c, i) => c === saved.codes[i]),
-      ),
-    );
     setPaper(found);
     setExam(saved);
     setRemaining(left);
@@ -1215,14 +1136,7 @@ export function AiPractical() {
     try {
       const all = pages.length ? pages : await loadPages();
       setPages(all);
-      const replayCodes = replay?.codes ?? [];
-      const lockedPaper = replayCodes.length
-        ? replayCodes
-            .map((c) => AI_PRACTICAL_POOL.find((p) => p.code === c))
-            .filter((p): p is PoolItem => Boolean(p))
-        : [];
-      const nextPaper =
-        lockedPaper.length === AI_PRACTICAL_COUNT ? lockedPaper : pickPracticalExamPaper(Math.random, testedCodes);
+      const nextPaper = pickPracticalExamPaper(Math.random, testedCodes);
       const sid = 'e' + Date.now().toString(36);
       const now = Date.now();
       const session: Session = {
@@ -1238,7 +1152,6 @@ export function AiPractical() {
       setRemaining(paperSeconds(nextPaper));
       setUploads({});
       setSecNow(null);
-      setReplayRun(lockedPaper.length === AI_PRACTICAL_COUNT);
       setPhase('writing');
       saveJson(SESSION_KEY, session);
       void reloadFiles(sid, session.codes);
@@ -1246,7 +1159,7 @@ export function AiPractical() {
       setError(err instanceof Error ? err.message : '题面加载失败');
       setPhase('error');
     }
-  }, [pages, reloadFiles, testedCodes, replay]);
+  }, [pages, reloadFiles, testedCodes]);
 
   /** 专项练习：只在选中的考核单元里随机抽一道题，优先抽还没考过的题，计时按该单元的时长。 */
   const beginSection = useCallback(
@@ -1262,7 +1175,6 @@ export function AiPractical() {
       setError('');
       setAutoSubmitted(false);
       setSecNow(sec);
-      setReplayRun(false);
       setSecPick(false);
       setPaper([item]);
       setExam(session);
@@ -1323,23 +1235,7 @@ export function AiPractical() {
               saveJson(RESULT_KEY, next);
               return next;
             });
-            /* 整卷（6 题）才触发错题再战：低于 60 分锁新卷，同一套做到 60 分解锁 */
-            if (saved.codes.length === AI_PRACTICAL_COUNT) {
-              const pct = pctOf(saved);
-              if (pct >= UNLOCK_AT) {
-                setReplay(null);
-                saveJson(REPLAY_KEY, null);
-              } else if (pct < LOCK_BELOW || replay) {
-                const next: ReplayState = {
-                  codes: saved.codes,
-                  at: saved.at,
-                  best: Math.max(pct, replay ? replay.best : 0),
-                  attempts: saved.codes.join() === (replay?.codes ?? []).join() ? (replay?.attempts ?? 0) + 1 : 1,
-                };
-                setReplay(next);
-                saveJson(REPLAY_KEY, next);
-              }
-            }
+
             setPhase('done');
             return;
           }
@@ -1507,7 +1403,7 @@ export function AiPractical() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-ink text-[15px] font-semibold">{replay ? '错题再战' : '操作技能模拟考试'}</h2>
+                <h2 className="text-ink text-[15px] font-semibold">操作技能模拟考试</h2>
                 <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
                   6 题 120 分钟 100 分
                 </span>
@@ -1520,16 +1416,10 @@ export function AiPractical() {
                     历史最高 {best} 分
                   </span>
                 ) : null}
-                {replay ? (
-                  <span className="bg-danger-soft text-danger-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
-                    这套最好 {replay.best} 分
-                  </span>
-                ) : null}
+
               </div>
               <p className="text-secondary mt-2 text-[13px]">
-                {replay
-                  ? `上次 ${replay.best} 分没到 ${UNLOCK_AT} 分，先把这套同样的 ${replay.codes.length} 道题做到 ${UNLOCK_AT} 分，才能开新卷（已重做 ${replay.attempts} 次）`
-                  : '按真实考核结构从六个单元随机抽题，支持 Jupyter 实跑、在线答题卷与 AI 细则判分'}
+                {'按真实考核结构从六个单元随机抽题，支持 Jupyter 实跑、在线答题卷与 AI 细则判分'}
               </p>
               {error ? <p className="text-danger-ink mt-2 text-[13px]">{error}</p> : null}
             </div>
@@ -1541,19 +1431,9 @@ export function AiPractical() {
               disabled={phase === 'loading'}
             >
               {phase === 'loading' ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} strokeWidth={2} />}
-              {phase === 'loading' ? '正在组卷' : replay ? `错题再战（同一套 ${replay.codes.length} 题）` : '开始模拟考试'}
+              {phase === 'loading' ? '正在组卷' : '开始模拟考试'}
             </button>
-            {replay ? (
-              <button
-                type="button"
-                className="pill px-3 py-2.5 text-[13px]"
-                onClick={resetReplay}
-                disabled={phase === 'loading'}
-              >
-                <RotateCcw size={14} />
-                重置再战
-              </button>
-            ) : null}
+
           </div>
         </section>
 
@@ -1748,7 +1628,7 @@ export function AiPractical() {
               onClick={() => void begin()}
             >
               <Play size={14} />
-              {replay ? '继续错题再战' : '再考一场'}
+              再考一场
             </button>
           )}
           {secNow ? (
@@ -1791,7 +1671,7 @@ export function AiPractical() {
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium">
-              {secNow ? `专项练习 ${secNow.label}` : replayRun ? '错题再战' : '模拟考试'}
+              {secNow ? `专项练习 ${secNow.label}` : '模拟考试'}
             </span>
             <span className="text-secondary text-[13px]">自学考生</span>
             <span className="text-muted text-[13px] tabular-nums">已上传 {uploadedTotal} 个文件</span>
