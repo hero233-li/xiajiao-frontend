@@ -126,6 +126,13 @@ async function loadPages(): Promise<PageItem[]> {
 /* -------------------------------- 学习模式 -------------------------------- */
 
 const STUDY_DONE_KEY = 'xj.ai.practical.study.v1';
+/* 学习模式的题号导航按考核项目分组，40 题一眼分段：1 业务分析、2 智能训练、3 智能系统设计、4 培训与指导 */
+const PRACTICAL_GROUPS = [
+  { key: '1.', label: '业务分析' },
+  { key: '2.', label: '智能训练' },
+  { key: '3.', label: '智能系统设计' },
+  { key: '4.', label: '培训与指导' },
+];
 /* 学习模式的提交目录：submissions/study/<题号>/ */
 const STUDY_EXAM = 'study';
 
@@ -610,13 +617,10 @@ function StudyMode({
   return (
     <div className="space-y-3">
       <section className="glass px-3 py-3 sm:px-4">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="text-ink text-[13px] font-medium">学习模式</span>
           <span className="text-muted text-[13px] tabular-nums">
             第 {index + 1} / {AI_PRACTICAL_POOL.length} 题
-          </span>
-          <span className="text-muted text-[13px]">
-            题号 {item.code} · {sectionLabel(item.code)} · {item.minutes} · {item.score} 分
           </span>
           <span className="text-muted text-[13px] tabular-nums">已标完成 {doneCount} 题</span>
           <div className="ml-auto flex items-center gap-2">
@@ -637,19 +641,39 @@ function StudyMode({
             </button>
           </div>
         </div>
-        <div className="mt-2 flex flex-wrap gap-1">
-          {AI_PRACTICAL_POOL.map((p, i) => (
-            <button
-              key={p.code}
-              type="button"
-              onClick={() => setIndex(i)}
-              className={
-                'rounded-md border px-1.5 py-0.5 text-[11px] tabular-nums ' +
-                (i === index ? 'border-brand text-brand' : done[p.code] ? 'border-line text-muted line-through' : 'border-line text-secondary')
-              }
-            >
-              {p.code}
-            </button>
+        <div className="border-line mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t pt-3">
+          <span className="text-ink text-[13px] font-medium tabular-nums">{item.code}</span>
+          <span className="text-secondary text-[13px]">{sectionLabel(item.code)}</span>
+          <span className="text-muted text-[13px] tabular-nums">{item.minutes} 分钟</span>
+          <span className="text-muted text-[13px] tabular-nums">{item.score} 分</span>
+        </div>
+        <div className="mt-3 space-y-1.5">
+          {PRACTICAL_GROUPS.map((g) => (
+            <div key={g.key} className="flex items-start gap-3">
+              <span className="text-muted mt-[5px] w-[76px] shrink-0 text-[12px] leading-none">{g.label}</span>
+              <div className="flex flex-1 flex-wrap gap-1.5">
+                {AI_PRACTICAL_POOL.map((q, i) => ({ q, i }))
+                  .filter((x) => x.q.code.startsWith(g.key))
+                  .map(({ q, i }) => (
+                    <button
+                      key={q.code}
+                      type="button"
+                      onClick={() => setIndex(i)}
+                      className={
+                        'flex items-center gap-1 rounded-md border px-1.5 py-1 text-[11px] leading-none tabular-nums transition ' +
+                        (i === index
+                          ? 'border-brand bg-brand/10 text-brand font-medium'
+                          : done[q.code]
+                            ? 'border-line text-muted'
+                            : 'border-line text-secondary hover:border-brand/40')
+                      }
+                    >
+                      {done[q.code] && i !== index ? <span className="h-1 w-1 rounded-full bg-current" /> : null}
+                      {q.code}
+                    </button>
+                  ))}
+              </div>
+            </div>
           ))}
         </div>
       </section>
