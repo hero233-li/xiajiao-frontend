@@ -39,8 +39,8 @@ const REPLAY_KEY = 'xj.ai.practical.replay.v1';
 /** 手动重置过的那一场成绩（存 at），重置后不再据此自动上锁 */
 const REPLAY_SKIP_KEY = 'xj.ai.practical.replay.skip.v1';
 /** 错题再战门槛：一次整卷低于 LOCK_BELOW 分就锁住新卷，同一套题做到 UNLOCK_AT 分才解锁。 */
-const LOCK_BELOW = 70;
-const UNLOCK_AT = 80;
+const LOCK_BELOW = 60;
+const UNLOCK_AT = 60;
 const API = '/ai-lab';
 /* 在线答题卷的草稿（按题号存一份字段值） */
 const SHEET_KEY = 'xj.ai.practical.sheets.v1';
@@ -1094,7 +1094,7 @@ export function AiPractical() {
     };
   }, []);
 
-  /* 错题再战：最近一次整卷低于 70 分就锁住新卷，同一套 6 题做到 80 分才解锁。
+  /* 错题再战：最近一次整卷低于 60 分就锁住新卷，同一套 6 题做到 60 分才解锁。
      云端成绩可能由人工判卷写回，所以这里从最近一次成绩反推，而不是只在交卷时算。 */
   useEffect(() => {
     if (!cloudReady) return;
@@ -1323,7 +1323,7 @@ export function AiPractical() {
               saveJson(RESULT_KEY, next);
               return next;
             });
-            /* 整卷（6 题）才触发错题再战：低分锁新卷，同一套做到 80 分解锁 */
+            /* 整卷（6 题）才触发错题再战：低于 60 分锁新卷，同一套做到 60 分解锁 */
             if (saved.codes.length === AI_PRACTICAL_COUNT) {
               const pct = pctOf(saved);
               if (pct >= UNLOCK_AT) {
