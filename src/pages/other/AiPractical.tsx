@@ -524,6 +524,7 @@ function StudyMode({
   const [localPages, setLocalPages] = useState<PageItem[]>(pages);
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState<Record<string, boolean>>(() => loadJson<Record<string, boolean>>(STUDY_DONE_KEY, {}));
+  const [resetting, setResetting] = useState(false);
   const [jupyterToken, setJupyterToken] = useState('');
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [busy, setBusy] = useState('');
@@ -680,6 +681,38 @@ function StudyMode({
       setGrading(false);
     }
   }, [ans, files.length, grading, item]);
+
+  /* 重做这道题：清掉已上传的答案文件、判分结果与完成标记，并把 notebook 还原成空白版 */
+  const resetItem = useCallback(async () => {
+    if (resetting) return;
+    const lines = [
+      '会清空这道题在本站的记录：已上传的答案文件（' + files.length + ' 个）、AI 判分结果、已学完标记；',
+      item.code + ' 的 notebook 也会恢复成没做过时的空白版本。',
+      '清空后不能撤销，确定重做吗？',
+    ];
+    if (!window.confirm(lines.join('\n'))) return;
+    setResetting(true);
+    setBusy('正在清空这道题的内容');
+    try {
+      const res = await fetch(API + '/reset', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ exam: STUDY_EXAM, code: item.code }),
+      });
+      const d = await res.json().catch(() => null);
+      if (!res.ok || !d?.ok) throw new Error(d?.error ?? '清空失败');
+      setResult(null);
+      setDone((s) => ({ ...s, [item.code]: false }));
+      await reload(item.code);
+      setBusy('已清空，可以重做这道题了');
+      window.setTimeout(() => setBusy(''), 3000);
+    } catch (err) {
+      setBusy(err instanceof Error ? err.message : '清空失败');
+      window.setTimeout(() => setBusy(''), 4000);
+    } finally {
+      setResetting(false);
+    }
+  }, [files.length, item.code, reload, resetting]);
 
   if (lab) return <VariantLab onExit={() => setLab(false)} />;
 
@@ -917,6 +950,15 @@ function StudyMode({
           onClick={() => setDone((d) => ({ ...d, [item.code]: !d[item.code] }))}
         >
           {done[item.code] ? '取消完成标记' : '标记这道题已学完'}
+        </button>
+        <button
+          type="button"
+          className="pill px-4 py-2 text-[13px]"
+          onClick={() => void resetItem()}
+          disabled={resetting || grading}
+        >
+          {resetting ? <Loader2 size={12} className="mr-1 animate-spin" /> : <RotateCcw size={12} className="mr-1" />}
+          {resetting ? '正在清空' : '重做这道题'}
         </button>
         <span className="text-muted text-[12px]">按官方题号顺序 1.1.1 到 4.2.5 一道一道过，进度存在服务器上。</span>
       </section>
