@@ -56,9 +56,10 @@ function fillFullCode(item: CodeDrillItem): string {
   return item.template.replace(/\{\{(\d+)\}\}/g, (_, idx: string) => item.blanks[Number(idx)]?.answer ?? '');
 }
 
-export function AiPracticalCodeCheck({ onExit }: { onExit: () => void }) {
-  const [stage, setStage] = useState<CodeDrillStage | 'all'>('3.2');
-  const [code, setCode] = useState<string>('3.2.1');
+export function AiPracticalCodeCheck({ onExit, fixedCode }: { onExit: () => void; fixedCode?: string }) {
+  const fixedItem = fixedCode ? AI_PRACTICAL_CODE_DRILLS.find((it) => it.code === fixedCode) : undefined;
+  const [stage, setStage] = useState<CodeDrillStage | 'all'>(fixedItem?.stage ?? '3.2');
+  const [code, setCode] = useState<string>(fixedCode ?? '3.2.1');
   const [inputs, setInputs] = useState<Record<number, string>>({});
   const [checked, setChecked] = useState(false);
   const [showTip, setShowTip] = useState(true);
@@ -180,22 +181,26 @@ export function AiPracticalCodeCheck({ onExit }: { onExit: () => void }) {
       <section className="glass px-4 py-4 sm:px-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-ink text-[16px] font-semibold">实操代码盲填检测（20 题秒判）</h2>
+            <h2 className="text-ink text-[16px] font-semibold">{fixedCode ? '代码盲填检测 · ' + item.code : '实操代码盲填检测（20 题秒判）'}</h2>
             <p className="text-secondary mt-0.5 text-[12px]">
               直接对着官方 .ipynb 原卷空格敲代码，0 秒核对对错；单题正确率 ≥80% 自动标过关。
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {fixedCode ? null : (
             <button type="button" onClick={randomBlind} className="pill pill--solid px-3 py-1.5 text-[12px]">
               <Shuffle size={12} className="mr-1 inline" />
               本阶段随机盲测 1 题
             </button>
+            )}
             <button type="button" onClick={onExit} className="pill px-3 py-1.5 text-[12px]">
-              返回实操首页
+              {fixedCode ? '返回考试' : '返回实操首页'}
             </button>
           </div>
         </div>
 
+        {fixedCode ? null : (
+          <>
         {/* 阶段筛选 */}
         <div className="mt-3 flex flex-wrap gap-1.5">
           {CODE_DRILL_STAGES.map((s) => {
@@ -250,6 +255,8 @@ export function AiPracticalCodeCheck({ onExit }: { onExit: () => void }) {
             当前范围已过关 {passedInStage} / {stageItems.length} 题
           </span>
         </div>
+          </>
+        )}
       </section>
 
       {/* 当前题信息 + 口诀栏 */}

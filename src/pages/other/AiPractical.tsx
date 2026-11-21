@@ -803,6 +803,8 @@ export function AiPractical() {
   const [study, setStudy] = useState(false);
   /* 代码盲填检测模式：20 道 Python 实操题行内填空 0 秒判分 */
   const [codeCheck, setCodeCheck] = useState(false);
+  /* 从考试里打开时只看当前这道题 */
+  const [codeCheckFixed, setCodeCheckFixed] = useState<string | null>(null);
 
   const [cloudReady, setCloudReady] = useState(false);
   const submitting = useRef(false);
@@ -1077,7 +1079,15 @@ export function AiPractical() {
   /* --------------------------------- 渲染 --------------------------------- */
 
   if (codeCheck) {
-    return <AiPracticalCodeCheck onExit={() => setCodeCheck(false)} />;
+    return (
+      <AiPracticalCodeCheck
+        fixedCode={codeCheckFixed ?? undefined}
+        onExit={() => {
+          setCodeCheck(false);
+          setCodeCheckFixed(null);
+        }}
+      />
+    );
   }
 
   if (study) {
@@ -1286,6 +1296,18 @@ export function AiPractical() {
             >
               素材下载
             </button>
+            {pageFiles.includes(curCode + '.ipynb') ? (
+              <button
+                type="button"
+                className="pill px-3 py-1.5 text-[12px]"
+                onClick={() => {
+                  setCodeCheckFixed(curCode);
+                  setCodeCheck(true);
+                }}
+              >
+                代码盲填检测
+              </button>
+            ) : null}
           </div>
 
           {tab === 'upload' ? (
