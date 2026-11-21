@@ -200,13 +200,11 @@ function SheetBody({ text }: { text: string }) {
 /* -------------------------------- 学习模式 -------------------------------- */
 
 const STUDY_DONE_KEY = 'xj.ai.practical.study.v1';
-/* 学习模式的题号导航按考核项目分组，40 题一眼分段：1 业务分析、2 智能训练、3 智能系统设计、4 培训与指导 */
-const PRACTICAL_GROUPS = [
-  { key: '1.', label: '业务分析' },
-  { key: '2.', label: '智能训练' },
-  { key: '3.', label: '智能系统设计' },
-  { key: '4.', label: '培训与指导' },
-];
+/* 题库里的 minutes 是「20min」这种字符串，统一成「20 分钟」再显示 */
+function fmtMinutes(v: string | number) {
+  const n = typeof v === 'number' ? v : Number(String(v).replace(/[^\d]/g, ''));
+  return Number.isFinite(n) && n > 0 ? n + ' 分钟' : String(v);
+}
 /* 学习模式的提交目录：submissions/study/<题号>/ */
 const STUDY_EXAM = 'study';
 
@@ -718,16 +716,21 @@ function StudyMode({
         <div className="border-line mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t pt-3">
           <span className="text-ink text-[13px] font-medium tabular-nums">{item.code}</span>
           <span className="text-secondary text-[13px]">{sectionLabel(item.code)}</span>
-          <span className="text-muted text-[13px] tabular-nums">{item.minutes} 分钟</span>
+          <span className="text-muted text-[13px] tabular-nums">{fmtMinutes(item.minutes)}</span>
           <span className="text-muted text-[13px] tabular-nums">{item.score} 分</span>
         </div>
-        <div className="mt-3 space-y-1.5">
-          {PRACTICAL_GROUPS.map((g) => (
-            <div key={g.key} className="flex items-start gap-3">
-              <span className="text-muted mt-[5px] w-[76px] shrink-0 text-[12px] leading-none">{g.label}</span>
+        <div className="border-line mt-3 space-y-2 border-t pt-3">
+          {AI_PRACTICAL_SECTIONS.map((sec) => (
+            <div key={sec.key} className="flex items-start gap-3">
+              <div className="w-[104px] shrink-0">
+                <div className="text-secondary text-[12px] leading-tight">{sec.label}</div>
+                <div className="text-muted mt-1 text-[11px] leading-none tabular-nums">
+                  {sec.score} 分 {fmtMinutes(sec.minutes)}
+                </div>
+              </div>
               <div className="flex flex-1 flex-wrap gap-1.5">
                 {AI_PRACTICAL_POOL.map((q, i) => ({ q, i }))
-                  .filter((x) => x.q.code.startsWith(g.key))
+                  .filter((x) => sec.groups.includes(x.q.code.split('.').slice(0, 2).join('.')))
                   .map(({ q, i }) => (
                     <button
                       key={q.code}
@@ -1359,7 +1362,7 @@ export function AiPractical() {
                 className={
                   'pill px-2.5 py-1 text-[12px] ' + (i === current ? 'pill--solid' : n ? 'text-success-ink' : '')
                 }
-                title={'第 ' + (i + 1) + ' 题 ' + item.code + '，建议 ' + item.minutes + ' 分钟'}
+                title={'第 ' + (i + 1) + ' 题 ' + item.code + '，建议 ' + fmtMinutes(item.minutes)}
               >
                 第 {i + 1} 题
                 {n ? ' ' + n : ''}
@@ -1385,7 +1388,7 @@ export function AiPractical() {
         {/* 左：试题单 */}
         <section className="glass px-4 py-4 sm:px-5">
           <div className="text-muted mb-2 text-[12px]">
-            第 {current + 1} 题 {sectionLabel(paper[current]?.code ?? '')} 考核时间 {paper[current]?.minutes} 分值{' '}
+            第 {current + 1} 题 {sectionLabel(paper[current]?.code ?? '')} 考核时间 {fmtMinutes(paper[current]?.minutes ?? 0)} 分值{' '}
             {paper[current]?.score} 分
           </div>
           {currentPage ? (
