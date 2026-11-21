@@ -124,14 +124,55 @@ async function loadPages(): Promise<PageItem[]> {
 }
 
 /* 试题单：把整段文字按小节标题、编号小问、正文分层重排，避免糊成一片 */
-type SheetBlock = { kind: 'h' | 'p' | 'item' | 'meta'; text: string };
+type SheetBlock = { kind: 'h' | 'p' | 'item' | 'step' | 'meta'; text: string };
+
+/* Word 导出的是 U+2028，先统一成真换行，否则整段会挤成一行 */
+function normalizeSheet(text: string): string {
+  return text.replace(/[\r\u2028\u2029]/g, '\n');
+}
+
+/* 一行里挤了多个「1) 2) 3)」时按编号切开：编号必须在行首或紧跟标点 */
+function splitSteps(line: string): string[] {
+  const cuts: number[] = [];
+  const re = /\d{1,2}\)/g;
+  let m: RegExpExecArray | null = re.exec(line);
+  while (m) {
+    const at = m.index;
+    const prev = at ? line.slice(at - 1, at) : '';
+    if (!at || /[\s；;。：:，,、]/.test(prev)) cuts.push(at);
+    m = re.exec(line);
+  }
+  if (cuts.length < 2) return [line];
+  const out: string[] = [];
+  for (let k = 0; k < cuts.length; k += 1) {
+    const from = cuts[k];
+    const to = k + 1 < cuts.length ? cuts[k + 1] : line.length;
+    const piece = line.slice(from, to).trim();
+    if (piece) out.push(piece);
+  }
+  return out;
+}
+
+/** 试题单里「（1）」「1)」这类编号行给一点左侧缩进，长段落更好扫 */
+function sheetIndent(html: string) {
+  const text = html.replace(/<[^>]+>/g, '').trim();
+  if (/^\d{1,2}\)/.test(text)) return 'pl-7';
+  if (/^[（(]\d{1,2}[)）]/.test(text)) return 'pl-3';
+  return '';
+}
+
+function kindOfSheet(text: string): SheetBlock['kind'] {
+  if (/^[（(]\d{1,2}[)）]/.test(text)) return 'item';
+  if (/^\d{1,2}\)/.test(text)) return 'step';
+  return 'p';
+}
 
 function parseSheetText(text: string): SheetBlock[] {
   const out: SheetBlock[] = [];
-  for (const raw of text.split('\n')) {
+  for (const raw of normalizeSheet(text).split('\n')) {
     const line = raw.trim();
     if (!line) continue;
-    if (/^(试题名称|考核时间)[:：]/.test(line)) {
+    if (/^(试题名称|考核时间|准考证号)[:：]/.test(line)) {
       out.push({ kind: 'meta', text: line });
       continue;
     }
@@ -139,17 +180,13 @@ function parseSheetText(text: string): SheetBlock[] {
       out.push({ kind: 'h', text: line });
       continue;
     }
-    const parts = line
+    const chunks = line
       .split(/(?=[（(]\d{1,2}[)）])/u)
       .map((s) => s.trim())
       .filter(Boolean);
-    if (parts.length > 1) {
-      for (const part of parts) {
-        out.push({ kind: /^[（(]\d{1,2}[)）]/.test(part) ? 'item' : 'p', text: part });
-      }
-      continue;
+    for (const chunk of chunks.flatMap(splitSteps)) {
+      out.push({ kind: kindOfSheet(chunk), text: chunk });
     }
-    out.push({ kind: 'p', text: line });
   }
   return out;
 }
@@ -183,7 +220,18 @@ function SheetBody({ text }: { text: string }) {
           const rest = mark ? b.text.slice(head.length).trim() : b.text;
           return (
             <div key={i} className="flex gap-2 text-[13px] leading-[1.9]">
-              <span className="text-ink shrink-0 tabular-nums">{head}</span>
+              <span className="text-ink w-7 shrink-0 tabular-nums">{head}</span>
+              <span className="text-secondary">{rest}</span>
+            </div>
+          );
+        }
+        if (b.kind === 'step') {
+          const mark = b.text.match(/^\d{1,2}\)/);
+          const head = mark ? mark[0] : '';
+          const rest = mark ? b.text.slice(head.length).trim() : b.text;
+          return (
+            <div key={i} className="flex gap-2 pl-7 text-[13px] leading-[1.9]">
+              <span className="text-muted w-5 shrink-0 tabular-nums">{head}</span>
               <span className="text-secondary">{rest}</span>
             </div>
           );
@@ -1266,7 +1314,7 @@ export function AiPractical() {
                             dangerouslySetInnerHTML={{ __html: b.html }}
                           />
                         ) : (
-                          <p key={i} dangerouslySetInnerHTML={{ __html: b.html }} />
+                          <p key={i} className={sheetIndent(b.html)} dangerouslySetInnerHTML={{ __html: b.html }} />
                         ),
                       )}
                     </div>
