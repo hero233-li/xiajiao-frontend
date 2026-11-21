@@ -91,13 +91,14 @@ body {
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  /* 玻璃必须在真实背景上验证：近白画布 + 柔和的环境色场 */
+  /* 柔和环境色场：移除 background-attachment: fixed，避免滚动时整屏重绘 */
   background-color: var(--slate-1);
   background-image:
     radial-gradient(58% 42% at 8% 4%, color-mix(in srgb, var(--iris-9) 9%, transparent), transparent 70%),
     radial-gradient(50% 42% at 92% 14%, color-mix(in srgb, var(--blue-9) 6%, transparent), transparent 72%),
     radial-gradient(54% 46% at 86% 90%, color-mix(in srgb, var(--teal-9) 7%, transparent), transparent 72%);
-  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: 100% 100vh;
 }
 
 ::selection {
@@ -110,25 +111,21 @@ body {
 }
 
 @layer components {
-  /* 玻璃卡片：Liquid Glass「Medium」量级 */
+  /* 玻璃卡片：静态透底渐变 + 1px 亮边 + 顶沿高光，零 backdrop-filter GPU 开销 */
   .glass {
     position: relative;
     border-radius: var(--radius-card);
-    background: var(--glass-fill);
-    -webkit-backdrop-filter: var(--glass-blur);
-    backdrop-filter: var(--glass-blur);
+    background: var(--glass-surface);
     border: 1px solid var(--glass-edge);
     box-shadow: var(--glass-inset), var(--glass-shadow-soft);
     overflow: hidden;
   }
 
-  /* 高可读玻璃：浮层、弹窗与顶栏，保证文字对比度 ≥ 4.5:1 */
+  /* 高可读浮层：弹窗、吸顶条与悬浮操作岛 */
   .glass-panel {
     position: relative;
     border-radius: var(--radius-card);
     background: var(--glass-fill-strong);
-    -webkit-backdrop-filter: var(--glass-blur);
-    backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-edge-strong);
     box-shadow: var(--glass-inset), var(--glass-shadow-soft);
   }
@@ -196,7 +193,7 @@ body {
     border-bottom: none;
   }
 
-  /* 玻璃分段控制器：同心胶囊切换 */
+  /* 分段控制器：同心胶囊切换，无 backdrop-filter 开销 */
   .segmented {
     display: inline-flex;
     align-items: center;
@@ -204,8 +201,6 @@ body {
     padding: 4px;
     border-radius: var(--radius-pill);
     background: var(--glass-fill);
-    -webkit-backdrop-filter: var(--glass-blur-pill);
-    backdrop-filter: var(--glass-blur-pill);
     border: 1px solid var(--glass-edge);
     box-shadow: var(--glass-inset), var(--glass-shadow-pill);
   }
@@ -261,22 +256,12 @@ body {
     color: var(--slate-11);
   }
 
-  /* 不支持 backdrop-filter 时退成「半透明底 + 静态高光」 */
-  @supports not (backdrop-filter: blur(1px)) {
-    .glass,
-    .glass-panel,
-    .segmented {
-      background: var(--glass-fill-strong);
-    }
-  }
-
-  /* 流光：装饰性，隐藏时不占布局、不拦截事件 */
+  /* 静态高光层：仅保留柔和光感，不做无限帧动画 */
   .glass--sheen::before {
     content: '';
     position: absolute;
     inset: 0;
     background: var(--sheen);
-    animation: sheen 6s linear infinite;
     pointer-events: none;
   }
 
@@ -284,7 +269,7 @@ body {
     position: relative;
   }
 
-  /* 玻璃药丸：同材质但更亮，层级靠亮度而非颜色 */
+  /* 玻璃药丸：高亮实感，零模糊开销 */
   .pill {
     display: inline-flex;
     align-items: center;
@@ -293,8 +278,6 @@ body {
     border-radius: var(--radius-pill);
     padding: 8px 16px;
     background: var(--glass-fill-strong);
-    -webkit-backdrop-filter: var(--glass-blur-pill);
-    backdrop-filter: var(--glass-blur-pill);
     border: 1px solid var(--glass-edge-strong);
     color: var(--slate-12);
     box-shadow: var(--glass-inset), var(--glass-shadow-pill);
@@ -472,43 +455,8 @@ body {
   }
 }
 
-@keyframes sheen {
-  from {
-    transform: translateX(-60%);
-  }
-  to {
-    transform: translateX(60%);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .glass--sheen::before {
-    animation: none;
-  }
   * {
     transition-duration: 1ms !important;
-  }
-}
-
-@layer components {
-  /* 头像轻轻上下浮动：振幅 8px，周期 3.4s */
-  .float-soft {
-    animation: float-soft 3.4s ease-in-out infinite;
-  }
-}
-
-@keyframes float-soft {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .float-soft {
-    animation: none;
   }
 }

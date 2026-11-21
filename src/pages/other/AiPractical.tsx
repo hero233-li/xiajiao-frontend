@@ -2249,7 +2249,7 @@ function SheetEditor({
   const filled = Object.values(values).filter((v) => v.trim()).length;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/45 px-3 py-6 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/45 px-3 py-6">
       <div className="glass-panel mx-auto w-full max-w-[900px] p-5 sm:p-6">
         <div className="hairline-b flex flex-wrap items-center justify-between gap-3 pb-4">
           <div className="min-w-0">

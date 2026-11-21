@@ -110,7 +110,7 @@ export function LoginPage() {
       <div className="glass glass--sheen min-h-[516px] w-full max-w-[420px] px-7 pt-4 pb-8">
         <div className="mt-5 flex justify-center">
           <span
-            className="float-soft grid size-[112px] place-items-center overflow-hidden rounded-full shadow-[0_0_0_3px_#fff,0_14px_30px_rgba(15,23,42,0.12)]"
+            className="grid size-[112px] place-items-center overflow-hidden rounded-full shadow-[0_0_0_3px_#fff,0_14px_30px_rgba(15,23,42,0.12)]"
             style={{ background: 'linear-gradient(160deg, var(--blue-2) 0%, var(--iris-3) 100%)' }}
           >
             <img src={qGirl} alt="" className="size-full object-cover" draggable={false} />

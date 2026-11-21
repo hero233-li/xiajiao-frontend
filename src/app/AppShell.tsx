@@ -51,7 +51,7 @@ export function AppShell() {
       <header className="mx-auto flex w-full max-w-[1380px] items-center justify-between px-4 pt-5 pb-4 sm:px-6 lg:px-8">
         <Link to="/today" className="text-ink flex items-center gap-2.5 text-[15px] font-semibold tracking-tight">
           <span
-            className="float-soft grid size-9 place-items-center overflow-hidden rounded-full shadow-[0_0_0_2px_#fff,0_6px_16px_rgba(15,23,42,0.12)]"
+            className="grid size-9 place-items-center overflow-hidden rounded-full shadow-[0_0_0_2px_#fff,0_6px_16px_rgba(15,23,42,0.12)]"
             style={{ background: 'linear-gradient(160deg, var(--blue-2) 0%, var(--iris-3) 100%)' }}
           >
             <img src={qGirl} alt="" className="size-full object-cover" draggable={false} />
