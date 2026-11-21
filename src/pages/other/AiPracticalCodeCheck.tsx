@@ -343,8 +343,8 @@ export function AiPracticalCodeCheck({ onExit, fixedCode }: { onExit: () => void
         </section>
       ) : null}
 
-      {/* 悬浮操作：秒判对错 / 清空重写，固定在视口左侧靠中，代码再长也点得到 */}
-      <div className="fixed top-1/2 left-0 z-30 hidden -translate-y-1/2 pl-2 sm:block">
+      {/* 悬浮操作：秒判对错 / 清空重写，固定在视口右侧靠中，代码再长也点得到 */}
+      <div className="fixed top-1/2 right-0 z-30 hidden -translate-y-1/2 pr-2 sm:block">
         <div className="glass flex flex-col gap-1.5 rounded-[14px] p-1.5">
           <button type="button" onClick={doCheck} className="pill pill--solid px-3 py-2 text-[13px] whitespace-nowrap">
             <Check size={13} className="mr-1 inline" />
