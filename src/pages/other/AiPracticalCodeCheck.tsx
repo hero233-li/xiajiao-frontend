@@ -343,13 +343,28 @@ export function AiPracticalCodeCheck({ onExit, fixedCode }: { onExit: () => void
         </section>
       ) : null}
 
+      {/* 悬浮操作：秒判对错 / 清空重写，固定在视口左侧靠中，代码再长也点得到 */}
+      <div className="fixed top-1/2 left-0 z-30 hidden -translate-y-1/2 pl-2 sm:block">
+        <div className="glass flex flex-col gap-1.5 rounded-[14px] p-1.5">
+          <button type="button" onClick={doCheck} className="pill pill--solid px-3 py-2 text-[13px] whitespace-nowrap">
+            <Check size={13} className="mr-1 inline" />
+            秒判对错
+          </button>
+          <button type="button" onClick={resetAll} className="pill px-3 py-2 text-[13px] whitespace-nowrap">
+            <RotateCcw size={12} className="mr-1 inline" />
+            清空重写
+          </button>
+        </div>
+      </div>
+
       {/* 行内代码盲填区 */}
       <section className="glass px-3 py-4 sm:px-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <span className="text-muted text-[12px] tabular-nums">
             已填 {filledCount} / {totalBlanks} 空（按 Enter 自动跳下一空，引号与多余空格不扣分）
           </span>
-          <div className="flex flex-wrap gap-2">
+          {/* 小屏把按钮留在原位；大屏用左侧悬浮那对（见下方 fixed 操作条） */}
+          <div className="flex flex-wrap gap-2 sm:hidden">
             <button type="button" onClick={doCheck} className="pill pill--solid px-4 py-1.5 text-[13px]">
               <Check size={13} className="mr-1 inline" />
               秒判对错
