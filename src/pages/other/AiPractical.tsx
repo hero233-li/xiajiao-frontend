@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Clock, Download, ExternalLink, FileText, FileUp, Loader2, Play, RotateCcw, Send, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Code2, Download, ExternalLink, FileText, FileUp, Loader2, Play, RotateCcw, Send, Trash2 } from 'lucide-react';
+import { AiPracticalCodeCheck } from './AiPracticalCodeCheck';
 import {
   AI_PRACTICAL_COUNT,
   AI_PRACTICAL_POOL,
@@ -432,7 +433,15 @@ function VariantLab({ onExit }: { onExit: () => void }) {
     </div>
   );
 }
-function StudyMode({ pages, onExit }: { pages: PageItem[]; onExit: () => void }) {
+function StudyMode({
+  pages,
+  onExit,
+  onOpenCodeCheck,
+}: {
+  pages: PageItem[];
+  onExit: () => void;
+  onOpenCodeCheck: () => void;
+}) {
   const [localPages, setLocalPages] = useState<PageItem[]>(pages);
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState<Record<string, boolean>>(() => loadJson<Record<string, boolean>>(STUDY_DONE_KEY, {}));
@@ -616,6 +625,9 @@ function StudyMode({ pages, onExit }: { pages: PageItem[]; onExit: () => void })
             </button>
             <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={() => go(1)} disabled={index === AI_PRACTICAL_POOL.length - 1}>
               下一题
+            </button>
+            <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={onOpenCodeCheck}>
+              代码盲填检测
             </button>
             <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={() => setLab(true)}>
               变体练习
@@ -842,6 +854,8 @@ export function AiPractical() {
   const [sheetOpen, setSheetOpen] = useState(false);
   /* 学习模式：按官方题号顺序 1.1.1 → 4.2.5 一道一道过，不抽题、不计时 */
   const [study, setStudy] = useState(false);
+  /* 代码盲填检测模式：20 道 Python 实操题行内填空 0 秒判分 */
+  const [codeCheck, setCodeCheck] = useState(false);
 
   const [cloudReady, setCloudReady] = useState(false);
   const submitting = useRef(false);
@@ -1118,8 +1132,21 @@ export function AiPractical() {
 
   /* --------------------------------- 渲染 --------------------------------- */
 
+  if (codeCheck) {
+    return <AiPracticalCodeCheck onExit={() => setCodeCheck(false)} />;
+  }
+
   if (study) {
-    return <StudyMode pages={pages} onExit={() => setStudy(false)} />;
+    return (
+      <StudyMode
+        pages={pages}
+        onExit={() => setStudy(false)}
+        onOpenCodeCheck={() => {
+          setStudy(false);
+          setCodeCheck(true);
+        }}
+      />
+    );
   }
 
   if (phase === 'idle' || phase === 'loading' || phase === 'error') {
@@ -1137,6 +1164,10 @@ export function AiPractical() {
             >
               {phase === 'loading' ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <Play size={14} className="mr-1.5" />}
               {phase === 'loading' ? '正在组卷' : '开始考试'}
+            </button>
+            <button type="button" className="pill px-4 py-2.5 text-[13px]" onClick={() => setCodeCheck(true)}>
+              <Code2 size={14} className="mr-1.5" />
+              代码盲填检测（20 题秒判）
             </button>
             <button type="button" className="pill px-4 py-2.5 text-[13px]" onClick={() => setStudy(true)}>
               <FileText size={14} className="mr-1.5" />
