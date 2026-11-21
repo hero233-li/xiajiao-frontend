@@ -167,12 +167,12 @@ function buildPaper(seed?: PaperSeed): Paper {
 
 /** 一批 10 题，不计时；做完统一交一次卷。 */
 const DRILL_COUNT = 10;
-/** 错题模式：一局 5 题，题源只有错题集。 */
-const WRONG_COUNT = 5;
+/** 错题模式：一局 10 题，题源只有错题集。 */
+const WRONG_COUNT = 10;
 
 type DrillKind = 'today' | 'free' | 'wrongs';
 
-/** 一局几题：错题模式 5 题，其余 10 题。 */
+/** 一局几题：错题模式与其余模式都是 10 题。 */
 function sizeOf(kind: DrillKind): number {
   return kind === 'wrongs' ? WRONG_COUNT : DRILL_COUNT;
 }
