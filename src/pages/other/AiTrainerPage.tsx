@@ -165,8 +165,10 @@ function buildPaper(seed?: PaperSeed): Paper {
 
 /* --------------------------------- 背题模式 -------------------------------- */
 
-/** 一批 10 题，不计时；做完统一交一次卷。 */
+/** 自由练一批 10 题，不计时；做完统一交一次卷。 */
 const DRILL_COUNT = 10;
+/** 刷题模式：一次 30 题，全部是新题。 */
+const TODAY_COUNT = 30;
 /** 错题模式：一局 10 题，题源只有错题集。 */
 const WRONG_COUNT = 10;
 /** 平时练习（刷题、错题模式）不出多选题：多选只在模拟考卷里出现。 */
@@ -176,8 +178,9 @@ const MULTI_IDS = new Set(AI_THEORY_QUESTIONS.filter((q) => q.type === 'multi').
 
 type DrillKind = 'today' | 'free' | 'wrongs';
 
-/** 一局几题：错题模式与其余模式都是 10 题。 */
+/** 一局几题：刷题模式 30 题，错题模式、自由练各 10 题。 */
 function sizeOf(kind: DrillKind): number {
+  if (kind === 'today') return TODAY_COUNT;
   return kind === 'wrongs' ? WRONG_COUNT : DRILL_COUNT;
 }
 /** 每天新题量的可选档位。 */
@@ -1216,7 +1219,7 @@ export function AiTrainerPage() {
                     onClick={() => startDrill('today')}
                     className="pill px-4 py-2.5 text-[14px]"
                   >
-                    刷题模式（{DRILL_COUNT} 题一局）
+                    刷题模式（{TODAY_COUNT} 题一局）
                   </button>
                   <button
                     type="button"
@@ -1281,7 +1284,7 @@ export function AiTrainerPage() {
                 <div className="min-w-0">
                   <h2 className="text-ink text-[14px] font-semibold">刷题模式</h2>
                   <p className="text-secondary mt-1 text-[12px] leading-relaxed">
-                    每批 {DRILL_COUNT} 题，全部是没做过的新题；交卷后才看答案。
+                    一次 {TODAY_COUNT} 题，全部是没做过的新题；交卷后才看答案。
                     错题模式只出错题集里的题，一局 {WRONG_COUNT} 题。
                   </p>
                 </div>
@@ -1302,7 +1305,7 @@ export function AiTrainerPage() {
                   onClick={() => startDrill('today')}
                   className="pill pill--solid px-5 py-2.5 text-[14px]"
                 >
-                  {'开始刷题（' + DRILL_COUNT + ' 题新题）'}
+                  {'开始刷题（' + TODAY_COUNT + ' 题新题）'}
                 </button>
                 <button type="button" onClick={() => startDrill('free')} className="pill px-4 py-2.5 text-[14px]">
                   自由练 {DRILL_COUNT} 题
