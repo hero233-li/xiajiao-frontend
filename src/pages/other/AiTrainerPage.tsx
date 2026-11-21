@@ -169,6 +169,10 @@ function buildPaper(seed?: PaperSeed): Paper {
 const DRILL_COUNT = 10;
 /** 错题模式：一局 10 题，题源只有错题集。 */
 const WRONG_COUNT = 10;
+/** 平时练习（刷题、错题模式）不出多选题：多选只在模拟考卷里出现。 */
+const PRACTICE_QUESTIONS = AI_THEORY_QUESTIONS.filter((q) => q.type !== 'multi');
+/** 多选题号：历史记录里残留的多选题要在这里挡掉。 */
+const MULTI_IDS = new Set(AI_THEORY_QUESTIONS.filter((q) => q.type === 'multi').map((q) => q.id));
 
 type DrillKind = 'today' | 'free' | 'wrongs';
 
@@ -574,7 +578,7 @@ export function AiTrainerPage() {
     if (!stale) return;
     const next = buildQueue(
       srs,
-      AI_THEORY_QUESTIONS.map((q) => q.id),
+      PRACTICE_QUESTIONS.map((q) => q.id),
       now,
       conf,
     );
@@ -613,6 +617,8 @@ export function AiTrainerPage() {
       const map = new Map(wrongs.map((e) => [e.qid, e]));
       const now = new Date().toISOString();
       for (const q of paper.questions) {
+        /* 多选只在考卷里出现，错了也不记进错题本 */
+        if (q.type === 'multi') continue;
         const mine = picked[q.id] ?? [];
         if (mine.length === 0 || isRight(q, mine)) continue;
         map.set(q.id, { qid: q.id, type: q.type, misses: (map.get(q.id)?.misses ?? 0) + 1, lastAt: now });
@@ -926,7 +932,7 @@ export function AiTrainerPage() {
 
   /** 考卷错题还没在错题模式里做对过的数量：没清完不让开新卷。题库里已经不存在的题不算，免得永远解锁不了。 */
   const pendingExamWrongs = useMemo(() => {
-    const known = new Set(AI_THEORY_QUESTIONS.map((q) => q.id));
+    const known = new Set(PRACTICE_QUESTIONS.map((q) => q.id));
     return wrongs.filter((e) => known.has(e.qid)).length;
   }, [wrongs]);
 
@@ -980,7 +986,7 @@ export function AiTrainerPage() {
       labels[qid] = label;
     };
     if (kind === 'today') {
-      const freshIds = shuffle(AI_THEORY_QUESTIONS)
+      const freshIds = shuffle(PRACTICE_QUESTIONS)
         .filter((q) => !srs[q.id] && !wrongBook[q.id] && !seenIds.has(q.id))
         .map((q) => q.id);
       // 错题集分成两堆：还在错的（积分 < 0）和已回的（积分回到 0，标「复习」）。
@@ -1025,12 +1031,12 @@ export function AiTrainerPage() {
         push(picked.qid, 'wrong');
       }
       // 兜底：以前答对过、也不在错题集里的题
-      for (const q of shuffle(AI_THEORY_QUESTIONS)) push(q.id, 'review');
+      for (const q of shuffle(PRACTICE_QUESTIONS)) push(q.id, 'review');
     } else if (kind === 'wrongs') {
       // 错题模式：题源只有错题集。考卷错题排最前（它们还卡着下一次考试，可能不在错题集或已标回），
       // 其余还在错的按权重抽（错得越多越靠前），最后补已回的复习题。
-      const examIds = new Set(wrongs.map((e) => e.qid));
-      for (const e of shuffle(wrongs)) push(e.qid, 'wrong');
+      const examIds = new Set(practiceWrongs.map((e) => e.qid));
+      for (const e of shuffle(practiceWrongs)) push(e.qid, 'wrong');
       const activePool = [...wrongList.filter((w) => !isReviewing(w) && !examIds.has(w.qid)).map((w) => ({ qid: w.qid, weight: wrongWeight(w) }))];
       while (ids.length < size && activePool.length) {
         const weights = activePool.map((w) => w.weight);
@@ -1045,7 +1051,7 @@ export function AiTrainerPage() {
       }
       for (const w of shuffle(wrongList.filter((item) => isReviewing(item)))) push(w.qid, 'wrong');
     } else {
-      for (const q of shuffle(AI_THEORY_QUESTIONS).slice(0, size)) {
+      for (const q of shuffle(PRACTICE_QUESTIONS).slice(0, size)) {
         push(q.id, srs[q.id] ? 'review' : 'new');
       }
     }
@@ -1095,10 +1101,12 @@ export function AiTrainerPage() {
 
   const drillQ = drill && !drill.submitted ? drill.questions[drill.cursor] : null;
   const drillPicked: string[] = drill && drillQ ? (drill.picks[drillQ.id] ?? []) : [];
-  const drillDoneCount = seenIds.size;
-  const drillPct = Math.min(100, Math.round((drillDoneCount / AI_THEORY_QUESTIONS.length) * 100));
-  /** 错题集，错得多的排前面。 */
-  const wrongList = useMemo(() => sortWrongs(wrongBook), [wrongBook]);
+  const drillDoneCount = PRACTICE_QUESTIONS.filter((q) => seenIds.has(q.id)).length;
+  const drillPct = Math.min(100, Math.round((drillDoneCount / PRACTICE_QUESTIONS.length) * 100));
+  /** 错题集，错得多的排前面。多选题不进错题集，历史残留的在这里过滤掉。 */
+  const wrongList = useMemo(() => sortWrongs(wrongBook).filter((w) => !MULTI_IDS.has(w.qid)), [wrongBook]);
+  /** 考卷错题同理：多选不参与错题模式，也不卡下一次考试。 */
+  const practiceWrongs = useMemo(() => wrongs.filter((e) => !MULTI_IDS.has(e.qid)), [wrongs]);
   const qById = useMemo(() => new Map(AI_THEORY_QUESTIONS.map((q) => [q.id, q])), []);
   const drillHint = (() => {
     if (!drillQ) return '';
@@ -1211,7 +1219,7 @@ export function AiTrainerPage() {
                 <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
                   <div>
                     <p className="text-ink text-[22px] leading-none font-semibold tabular-nums">
-                      {AI_THEORY_QUESTIONS.length}
+                      {PRACTICE_QUESTIONS.length}
                     </p>
                     <p className="text-secondary mt-2 text-[13px]">题库题量</p>
                   </div>
@@ -1255,12 +1263,12 @@ export function AiTrainerPage() {
                   <button
                     type="button"
                     onClick={() => startDrill('wrongs')}
-                    disabled={!wrongList.length && !wrongs.length}
+                    disabled={!wrongList.length && !practiceWrongs.length}
                     className="pill px-4 py-2.5 text-[14px] disabled:opacity-40"
                   >
-                    {wrongList.length || wrongs.length ? '错题模式（' + WRONG_COUNT + ' 题一局）' : '错题模式（错题集是空的）'}
+                    {wrongList.length || practiceWrongs.length ? '错题模式（' + WRONG_COUNT + ' 题一局）' : '错题模式（错题集是空的）'}
                   </button>
-                  {records.length || wrongs.length ? (
+                  {records.length || practiceWrongs.length ? (
                     <button
                       type="button"
                       onClick={clearAll}
@@ -1364,7 +1372,7 @@ export function AiTrainerPage() {
                       {drill.kind === 'today' ? '今日任务' : drill.kind === 'wrongs' ? '错题模式' : '自由练习'}
                     </h2>
                     <span className="text-ink text-[13px] font-semibold tabular-nums">
-                      已刷 {drillDoneCount} / {AI_THEORY_QUESTIONS.length} 题
+                      已刷 {drillDoneCount} / {PRACTICE_QUESTIONS.length} 题
                     </span>
                     <span className="text-muted text-[12px] tabular-nums">{drillPct}%</span>
                   </div>
