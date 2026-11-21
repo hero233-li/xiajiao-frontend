@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Clock, Code2, Download, ExternalLink, FileText, FileUp, Loader2, Play, RotateCcw, Send, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Code2, Download, ExternalLink, FileText, FileUp, ListChecks, Loader2, Play, RotateCcw, Send, Trash2 } from 'lucide-react';
 import { AiPracticalCodeCheck } from './AiPracticalCodeCheck';
 import {
   AI_PRACTICAL_COUNT,
@@ -7,6 +7,7 @@ import {
   AI_PRACTICAL_SECTIONS,
   pickPracticalExamPaper,
   type PoolItem,
+  type PracticalSection,
 } from '../../data/aiPracticalPool';
 import { dbDel, dbGet, dbSet, hydrate } from '../../lib/aiDb';
 import { answerOf } from '../../data/aiPracticalAnswers';
@@ -106,6 +107,11 @@ function sectionLabel(code: string) {
   const group = code.split('.').slice(0, 2).join('.');
   const hit = AI_PRACTICAL_SECTIONS.find((s) => s.groups.includes(group));
   return hit?.label ?? '实操题';
+}
+
+/** 某个考核单元下的全部题目：单元 1（1.1 + 1.2）和单元 6（4.1 + 4.2）各 10 题，其余各 5 题。 */
+function sectionItems(sec: PracticalSection): PoolItem[] {
+  return AI_PRACTICAL_POOL.filter((it) => sec.groups.includes(it.group));
 }
 
 function kb(n: number) {
@@ -853,6 +859,9 @@ export function AiPractical() {
   const [codeCheck, setCodeCheck] = useState(false);
   /* 从考试里打开时只看当前这道题 */
   const [codeCheckFixed, setCodeCheckFixed] = useState<string | null>(null);
+  /* 专项练习：先选一个考核单元，再只在这个单元里抽一道题做 */
+  const [secPick, setSecPick] = useState(false);
+  const [secNow, setSecNow] = useState<PracticalSection | null>(null);
 
   const [cloudReady, setCloudReady] = useState(false);
   const submitting = useRef(false);
@@ -964,6 +973,7 @@ export function AiPractical() {
       setTab('upload');
       setRemaining(paperSeconds(nextPaper));
       setUploads({});
+      setSecNow(null);
       setPhase('writing');
       saveJson(SESSION_KEY, session);
       void reloadFiles(sid, session.codes);
@@ -972,6 +982,31 @@ export function AiPractical() {
       setPhase('error');
     }
   }, [pages, reloadFiles]);
+
+  /** 专项练习：只在选中的考核单元里随机抽一道题，计时按该单元的时长。 */
+  const beginSection = useCallback(
+    (sec: PracticalSection) => {
+      const pool = sectionItems(sec);
+      if (!pool.length) return;
+      const item = pool[Math.floor(Math.random() * pool.length)];
+      const sid = 'p' + Date.now().toString(36);
+      const session: Session = { id: sid, codes: [item.code], startedAt: Date.now() };
+      tickedRef.current = 0;
+      setError('');
+      setAutoSubmitted(false);
+      setSecNow(sec);
+      setSecPick(false);
+      setPaper([item]);
+      setExam(session);
+      setCurrent(0);
+      setTab('upload');
+      setRemaining(paperSeconds([item]));
+      setUploads({});
+      setPhase('writing');
+      void reloadFiles(sid, session.codes);
+    },
+    [reloadFiles],
+  );
 
   const submit = useCallback(
     async (auto = false) => {
@@ -1175,9 +1210,46 @@ export function AiPractical() {
               <FileText size={14} className="mr-1.5" />
               学习模式（按题号顺序练 40 题）
             </button>
+            <button
+              type="button"
+              className={'pill px-4 py-2.5 text-[13px] ' + (secPick ? 'pill--solid' : '')}
+              onClick={() => setSecPick((v) => !v)}
+            >
+              <ListChecks size={14} className="mr-1.5" />
+              专项练习（选一个考核单元）
+            </button>
             {best !== null ? <span className="text-muted text-[13px]">历史最高 {best} 分</span> : null}
           </div>
         </section>
+
+        {secPick ? (
+          <section className="glass px-4 py-4 sm:px-5">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <h3 className="text-ink text-[15px] font-medium">专项练习：先选一个考核单元</h3>
+              <p className="text-muted text-[13px]">只在这个单元里抽一道题，计时按该单元时长，交卷按官方评分细则判分。</p>
+            </div>
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {AI_PRACTICAL_SECTIONS.map((sec) => {
+                const items = sectionItems(sec);
+                return (
+                  <button
+                    key={sec.key}
+                    type="button"
+                    onClick={() => beginSection(sec)}
+                    className="border-line hover:border-brand flex flex-col gap-1 rounded-xl border px-3.5 py-3 text-left transition-colors"
+                  >
+                    <span className="text-ink text-[15px] font-medium">{sec.label}</span>
+                    <span className="text-muted flex items-center gap-3 text-[13px] tabular-nums">
+                      <span>{items.length} 道题</span>
+                      <span>{sec.score} 分</span>
+                      <span>{fmtMinutes(sec.minutes)}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
 
         {result ? <ResultCard result={result} paper={paper} auto={autoSubmitted} seconds={history[0]?.seconds ?? 0} /> : null}
         {history.length ? (
@@ -1219,10 +1291,33 @@ export function AiPractical() {
         {result ? <ResultCard result={result} paper={paper} auto={autoSubmitted} seconds={history[0]?.seconds ?? 0} /> : null}
         {error ? <p className="text-danger-ink glass px-4 py-3 text-[13px]">{error}</p> : null}
         <section className="glass flex flex-wrap items-center gap-3 px-4 py-4 sm:px-5">
-          <button type="button" className="pill pill--solid px-4 py-2 text-[13px]" onClick={() => void begin()}>
-            <Play size={14} className="mr-1.5" />
-            再考一场
-          </button>
+          {secNow ? (
+            <button
+              type="button"
+              className="pill pill--solid px-4 py-2 text-[13px]"
+              onClick={() => beginSection(secNow)}
+            >
+              <ListChecks size={14} className="mr-1.5" />
+              再抽一道（{secNow.label}）
+            </button>
+          ) : (
+            <button type="button" className="pill pill--solid px-4 py-2 text-[13px]" onClick={() => void begin()}>
+              <Play size={14} className="mr-1.5" />
+              再考一场
+            </button>
+          )}
+          {secNow ? (
+            <button
+              type="button"
+              className="pill px-3 py-2 text-[13px]"
+              onClick={() => {
+                setSecNow(null);
+                setPhase('idle');
+              }}
+            >
+              换个单元
+            </button>
+          ) : null}
           <button type="button" className="pill px-3 py-2 text-[13px]" onClick={clearAll}>
             <RotateCcw size={13} className="mr-1.5" />
             清空记录
@@ -1243,7 +1338,9 @@ export function AiPractical() {
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <span className="text-ink text-[13px]">
             考生：<span className="font-medium">自学考生</span>
-            <span className="text-muted ml-3">试卷：人工智能训练师（三级）操作技能</span>
+            <span className="text-muted ml-3">
+              {secNow ? '专项练习：' + secNow.label : '试卷：人工智能训练师（三级）操作技能'}
+            </span>
           </span>
           <span className="text-muted text-[13px]">
             已上传 {uploadedTotal} 个文件
