@@ -175,27 +175,22 @@ function buildPaper(seed?: PaperSeed): Paper {
 
 /** 自由练一批 10 题，不计时；做完统一交一次卷。 */
 const DRILL_COUNT = 10;
-/** 刷题模式：一次 30 题，全部是新题。 */
-const TODAY_COUNT = 30;
 /** 错题模式：一局 10 题，题源只有错题集。 */
 const WRONG_COUNT = 10;
-/** 平时练习（刷题、错题模式）不出多选题：多选只在模拟考卷里出现。 */
+/** 平时练习（自由练、错题模式）不出多选题：多选只在模拟考卷里出现。 */
 const PRACTICE_QUESTIONS = AI_THEORY_QUESTIONS.filter((q) => q.type !== 'multi');
 /** 多选题号：历史记录里残留的多选题要在这里挡掉。 */
 const MULTI_IDS = new Set(AI_THEORY_QUESTIONS.filter((q) => q.type === 'multi').map((q) => q.id));
 
-type DrillKind = 'today' | 'free' | 'wrongs';
+type DrillKind = 'free' | 'wrongs';
 
-/** 一局几题：刷题模式 30 题，错题模式、自由练各 10 题。 */
+/** 一局几题：错题模式、自由练各 10 题。 */
 function sizeOf(kind: DrillKind): number {
-  if (kind === 'today') return TODAY_COUNT;
   return kind === 'wrongs' ? WRONG_COUNT : DRILL_COUNT;
 }
-/** 每天新题量的可选档位。 */
-
 
 interface DrillRun {
-  /** today = 刷题模式，只出没做过的新题；free = 自由练，全库随机；wrongs = 错题模式，按错因专项抓题 */
+  /** free = 自由练，全库随机；wrongs = 错题模式，按错因专项抓题 */
   kind: DrillKind;
   /** 错题模式专项 ID（不固定题数，按模式全量出题） */
   patternId?: WrongPatternId;
@@ -223,7 +218,7 @@ function normalizeDrillSession(input: unknown): DrillRun | null {
   if (!data.questions.every((q) => q && typeof q.id === 'string' && Array.isArray(q.shown))) return null;
   const pat = data.patternId ? patternById(data.patternId) : undefined;
   return {
-      kind: data.kind === 'free' ? 'free' : data.kind === 'wrongs' ? 'wrongs' : 'today',
+      kind: data.kind === 'wrongs' ? 'wrongs' : 'free',
       patternId: pat ? pat.id : undefined,
       patternTitle: typeof data.patternTitle === 'string' ? data.patternTitle : pat?.title,
       patternTip: typeof data.patternTip === 'string' ? data.patternTip : pat?.tip,
@@ -1043,8 +1038,8 @@ export function AiTrainerPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  /** 刷题模式只出新题；错题模式只出错题集；自由练全库随机。 */
-  const startDrill = (kind: DrillKind = 'today') => {
+  /** 错题模式只出错题集；自由练全库随机。 */
+  const startDrill = (kind: DrillKind = 'free') => {
     const byId = qById;
     const size = sizeOf(kind);
     const ids: string[] = [];
@@ -1054,13 +1049,7 @@ export function AiTrainerPage() {
       ids.push(qid);
       labels[qid] = label;
     };
-    if (kind === 'today') {
-      // 刷题模式全部出新题：没建过复习卡片、不在错题集、也没被标记做过。
-      for (const q of shuffle(PRACTICE_QUESTIONS)) {
-        if (srs[q.id] || wrongBook[q.id] || seenIds.has(q.id)) continue;
-        push(q.id, 'new');
-      }
-    } else if (kind === 'wrongs') {
+    if (kind === 'wrongs') {
       // 错题模式：题源只有错题集。考卷错题排最前（它们还卡着下一次考试，可能不在错题集或已标回），
       // 其余还在错的按权重抽（错得越多越靠前），最后补已回的复习题。
       const examIds = new Set(practiceWrongs.map((e) => e.qid));
@@ -1089,7 +1078,7 @@ export function AiTrainerPage() {
       .filter((q): q is AiQuestion => !!q)
       .map(mixQuestion);
     if (!questions.length) {
-      window.alert(kind === 'today' ? '新题已经刷完了，600 道练习题都做过一遍。' : '错题集里还没有题。');
+      window.alert('错题集里还没有题。');
       return;
     }
     setDrillHome(true);
@@ -1322,10 +1311,10 @@ export function AiTrainerPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => startDrill('today')}
+                    onClick={() => startDrill('free')}
                     className="pill px-4 py-2.5 text-[14px]"
                   >
-                    刷题模式（{TODAY_COUNT} 题一局）
+                    自由练（{DRILL_COUNT} 题）
                   </button>
                   <button
                     type="button"
@@ -1480,9 +1469,9 @@ export function AiTrainerPage() {
             <>
               <section className="glass flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
                 <div className="min-w-0">
-                  <h2 className="text-ink text-[14px] font-semibold">刷题模式</h2>
+                  <h2 className="text-ink text-[14px] font-semibold">自由练</h2>
                   <p className="text-secondary mt-1 text-[12px] leading-relaxed">
-                    一次 {TODAY_COUNT} 题，全部是没做过的新题；交卷后才看答案。
+                    一次 {DRILL_COUNT} 题，全库随机，不计时；交卷后才看答案。
                     错题模式按错因专项抓题，不固定每局题数。
                   </p>
                 </div>
@@ -1498,14 +1487,7 @@ export function AiTrainerPage() {
               </section>
 
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => startDrill('today')}
-                  className="pill pill--solid px-5 py-2.5 text-[14px]"
-                >
-                  {'开始刷题（' + TODAY_COUNT + ' 题新题）'}
-                </button>
-                <button type="button" onClick={() => startDrill('free')} className="pill px-4 py-2.5 text-[14px]">
+                <button type="button" onClick={() => startDrill('free')} className="pill pill--solid px-5 py-2.5 text-[14px]">
                   自由练 {DRILL_COUNT} 题
                 </button>
                 <button
@@ -1531,13 +1513,11 @@ export function AiTrainerPage() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-baseline gap-2">
                     <h2 className="text-ink text-[14px] font-semibold">
-                      {drill.kind === 'today'
-                        ? '刷题模式'
-                        : drill.kind === 'wrongs'
-                          ? drill.patternTitle
-                            ? `错题专项 · ${drill.patternTitle}`
-                            : '错题模式'
-                          : '自由练习'}
+                      {drill.kind === 'wrongs'
+                        ? drill.patternTitle
+                          ? `错题专项 · ${drill.patternTitle}`
+                          : '错题模式'
+                        : '自由练习'}
                     </h2>
                     {drill.kind === 'wrongs' ? (
                       <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5 text-[12px] tabular-nums">
