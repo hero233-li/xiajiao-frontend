@@ -19,6 +19,14 @@ import {
   wrongWeight,
   type WrongBook,
 } from '../../lib/wrongbook';
+import {
+  WRONG_PATTERNS,
+  matchWrongPattern,
+  passWrongScope,
+  patternById,
+  type WrongPatternId,
+  type WrongScope,
+} from '../../lib/wrongPatterns';
 import { dbDel, dbGet, dbSet, hydrate } from '../../lib/aiDb';
 import {
   answerCard,
@@ -187,12 +195,16 @@ function sizeOf(kind: DrillKind): number {
 
 
 interface DrillRun {
-  /** today = 刷题模式，只出没做过的新题；free = 自由练，全库随机；wrongs = 错题模式，只出错题集里的题 */
+  /** today = 刷题模式，只出没做过的新题；free = 自由练，全库随机；wrongs = 错题模式，按错因专项抓题 */
   kind: DrillKind;
+  /** 错题模式专项 ID（不固定题数，按模式全量出题） */
+  patternId?: WrongPatternId;
+  patternTitle?: string;
+  patternTip?: string;
   questions: ExamQuestion[];
   cursor: number;
   picks: Record<string, string[]>;
-  /** 一批 10 题统一交一次卷，交卷后才揭晓对错并出本批总结。 */
+  /** 整批统一交一次卷，交卷后才揭晓对错并出本批总结。 */
   submitted: boolean;
   /** 这一批里每道题算复习还是新题 */
   labels: Record<string, 'new' | 'review' | 'wrong'>;
@@ -209,8 +221,12 @@ function normalizeDrillSession(input: unknown): DrillRun | null {
   const data = input as DrillRun | null;
   if (!data || !Array.isArray(data.questions) || !data.questions.length) return null;
   if (!data.questions.every((q) => q && typeof q.id === 'string' && Array.isArray(q.shown))) return null;
+  const pat = data.patternId ? patternById(data.patternId) : undefined;
   return {
       kind: data.kind === 'free' ? 'free' : data.kind === 'wrongs' ? 'wrongs' : 'today',
+      patternId: pat ? pat.id : undefined,
+      patternTitle: typeof data.patternTitle === 'string' ? data.patternTitle : pat?.title,
+      patternTip: typeof data.patternTip === 'string' ? data.patternTip : pat?.tip,
       questions: data.questions,
       cursor: Math.min(Math.max(Number(data.cursor) || 0, 0), data.questions.length - 1),
       picks: data.picks ?? {},
@@ -492,6 +508,9 @@ export function AiTrainerPage() {
   const [seenIds, setSeenIds] = useState<Set<string>>(new Set());
   const [drillHome, setDrillHome] = useState(false);
   const [wrongOpen, setWrongOpen] = useState(false);
+  const [wrongPicker, setWrongPicker] = useState(false);
+  const [wrongScope, setWrongScope] = useState<WrongScope>('all');
+  const [showPatternTip, setShowPatternTip] = useState(true);
 
   /** 云端记录读齐之前不渲染，也不允许把空数据写回去。 */
   const [cloudReady, setCloudReady] = useState(false);
@@ -971,6 +990,57 @@ export function AiTrainerPage() {
     setDrill(null);
     setDrillHome(false);
     setWrongOpen(false);
+    setWrongPicker(false);
+  };
+
+  /** 按某一种错题规律/专题抓出全部匹配错题（不固定题数），专门练这一类。 */
+  const startWrongPattern = (patternId: WrongPatternId) => {
+    const def = patternById(patternId);
+    if (!def) return;
+    const examPendingIds = new Set(practiceWrongs.map((e) => e.qid));
+    const orderedIds: string[] = [];
+    const seenPick = new Set<string>();
+    const addCandidate = (qid: string) => {
+      if (seenPick.has(qid) || MULTI_IDS.has(qid)) return;
+      const q = qById.get(qid);
+      if (!q) return;
+      const item = wrongBook[qid];
+      if (!passWrongScope(wrongScope, item, patternId)) return;
+      if (!matchWrongPattern(patternId, q, item, examPendingIds)) return;
+      seenPick.add(qid);
+      orderedIds.push(qid);
+    };
+    // 考卷待清错题排前面，其余错题集里的全部匹配题打乱后一起出
+    for (const e of shuffle(practiceWrongs)) addCandidate(e.qid);
+    for (const w of shuffle(wrongList)) addCandidate(w.qid);
+
+    const questions = orderedIds
+      .map((id) => qById.get(id))
+      .filter((q): q is AiQuestion => !!q)
+      .map(mixQuestion);
+    if (!questions.length) {
+      window.alert('当前筛选条件下这一类错题是空的，可以切回「全部错题」或换个专题。');
+      return;
+    }
+    const labels: Record<string, 'new' | 'review' | 'wrong'> = {};
+    for (const q of questions) labels[q.id] = 'wrong';
+    setWrongPicker(false);
+    setDrillHome(true);
+    setShowPatternTip(true);
+    setDrill({
+      kind: 'wrongs',
+      patternId: def.id,
+      patternTitle: def.title,
+      patternTip: def.tip,
+      questions,
+      cursor: 0,
+      picks: {},
+      submitted: false,
+      labels,
+      fixPicks: {},
+      fixed: {},
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   /** 刷题模式只出新题；错题模式只出错题集；自由练全库随机。 */
@@ -1069,14 +1139,50 @@ export function AiTrainerPage() {
   /** 考卷错题同理：多选不参与错题模式，也不卡下一次考试。 */
   const practiceWrongs = useMemo(() => wrongs.filter((e) => !MULTI_IDS.has(e.qid)), [wrongs]);
   const qById = useMemo(() => new Map(AI_THEORY_QUESTIONS.map((q) => [q.id, q])), []);
+  /** 每个错题专项在当前筛选范围下的实时题量（动态算，不固定题数）。 */
+  const wrongPatternCounts = useMemo(() => {
+    const examPendingIds = new Set(practiceWrongs.map((e) => e.qid));
+    const allIds = Array.from(new Set([...practiceWrongs.map((e) => e.qid), ...wrongList.map((w) => w.qid)])).filter(
+      (id) => !MULTI_IDS.has(id),
+    );
+    const counts: Record<WrongPatternId, number> = {
+      exam_pending: 0,
+      stubborn: 0,
+      tf_absolute: 0,
+      tf_concept: 0,
+      tf_all: 0,
+      single_negative: 0,
+      single_special: 0,
+      single_ml: 0,
+      single_biz_data: 0,
+      all_wrongs: 0,
+    };
+    for (const pat of WRONG_PATTERNS) {
+      let n = 0;
+      for (const qid of allIds) {
+        const q = qById.get(qid);
+        if (!q) continue;
+        const item = wrongBook[qid];
+        if (!passWrongScope(wrongScope, item, pat.id)) continue;
+        if (matchWrongPattern(pat.id, q, item, examPendingIds)) n += 1;
+      }
+      counts[pat.id] = n;
+    }
+    return counts;
+  }, [wrongList, practiceWrongs, wrongBook, wrongScope, qById]);
   const drillHint = (() => {
     if (!drillQ) return '';
     const parts: string[] = [];
     if (drill?.labels[drillQ.id] === 'new') parts.push('新题');
     else if (drill?.labels[drillQ.id] === 'review') parts.push('复习');
+    const wb = wrongBook[drillQ.id];
+    if (drill?.kind === 'wrongs' && wb) {
+      parts.push('错 ' + wb.misses + ' 次');
+      if (wb.right === 0) parts.push('从未做对');
+    }
     const miss = wrongs.find((e) => e.qid === drillQ.id)?.misses ?? 0;
     if (miss > 0) parts.push('考卷错过 ' + miss + ' 次');
-    return parts.join('，');
+    return parts.join(' · ');
   })();
   const answerText = (q: ExamQuestion) => lettersOf(q.key);
 
@@ -1223,11 +1329,13 @@ export function AiTrainerPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => startDrill('wrongs')}
+                    onClick={() => setWrongPicker((v) => !v)}
                     disabled={!wrongList.length && !practiceWrongs.length}
-                    className="pill px-4 py-2.5 text-[14px] disabled:opacity-40"
+                    className={`pill px-4 py-2.5 text-[14px] disabled:opacity-40 ${wrongPicker ? 'pill--solid' : ''}`}
                   >
-                    {wrongList.length || practiceWrongs.length ? '错题模式（' + WRONG_COUNT + ' 题一局）' : '错题模式（错题集是空的）'}
+                    {wrongList.length || practiceWrongs.length
+                      ? `错题模式（按错因专项 · ${wrongList.length} 题）`
+                      : '错题模式（错题集是空的）'}
                   </button>
                   {records.length || practiceWrongs.length ? (
                     <button
@@ -1240,6 +1348,96 @@ export function AiTrainerPage() {
                   ) : null}
                 </div>
               </section>
+
+              {wrongPicker && (wrongList.length > 0 || practiceWrongs.length > 0) ? (
+                <section className="glass flex flex-col gap-4 px-4 py-4 sm:px-5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h2 className="text-ink text-[15px] font-semibold">错题专项模式 · 按规律针对性攻克</h2>
+                      <p className="text-secondary mt-1 text-[12px]">
+                        不固定每次几题：选一个错题规律，把命中该规律的错题全部抓出来专门练，做题时附带考场避坑口诀。
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {(
+                        [
+                          { id: 'all', label: '全部命中' },
+                          { id: 'never_right', label: '仅从未做对过' },
+                          { id: 'multi_miss', label: '仅错 ≥2 次' },
+                        ] as { id: WrongScope; label: string }[]
+                      ).map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setWrongScope(opt.id)}
+                          className={`pill px-2.5 py-1 text-[12px] ${wrongScope === opt.id ? 'pill--solid' : ''}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setWrongPicker(false)}
+                        className="text-muted hover:text-ink ml-1 px-1.5 text-[12px] transition"
+                      >
+                        收起
+                      </button>
+                    </div>
+                  </div>
+
+                  {(
+                    [
+                      { key: 'urgent', title: '优先清扫' },
+                      { key: 'tf', title: '规律 A · 判断题「疑罪从 F」专项（你 88% 判断错题答案都是错）' },
+                      { key: 'single', title: '规律 B · 单选题高频陷阱与关键词绑定' },
+                      { key: 'all', title: '兜底总清扫' },
+                    ] as const
+                  ).map((sec) => {
+                    const items = WRONG_PATTERNS.filter(
+                      (p) => p.group === sec.key && (!p.hideWhenEmpty || wrongPatternCounts[p.id] > 0),
+                    );
+                    if (!items.length) return null;
+                    return (
+                      <div key={sec.key} className="flex flex-col gap-2">
+                        <p className="text-muted text-[12px] font-medium">{sec.title}</p>
+                        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                          {items.map((pat) => {
+                            const count = wrongPatternCounts[pat.id];
+                            return (
+                              <button
+                                key={pat.id}
+                                type="button"
+                                disabled={count === 0}
+                                onClick={() => startWrongPattern(pat.id)}
+                                className="border-line hover:border-brand/60 flex flex-col gap-1.5 rounded-[14px] border px-3.5 py-3 text-left transition disabled:opacity-40"
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-ink text-[14px] font-semibold">{pat.title}</span>
+                                  <span
+                                    className={`shrink-0 rounded-full px-2.5 py-0.5 text-[12px] font-semibold tabular-nums ${
+                                      count > 0
+                                        ? pat.group === 'urgent'
+                                          ? 'bg-danger-soft text-danger'
+                                          : 'bg-brand-soft text-brand-ink'
+                                        : 'bg-line/60 text-muted'
+                                    }`}
+                                  >
+                                    {count} 题
+                                  </span>
+                                </div>
+                                <p className="text-secondary text-[12px] leading-relaxed">{pat.subtitle}</p>
+                                <p className="text-brand-ink/90 mt-0.5 text-[12px] leading-relaxed">
+                                  口诀：{pat.tip}
+                                </p>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </section>
+              ) : null}
 
               {records.length ? (
                 <section className="glass px-4 py-4 sm:px-5">
@@ -1285,7 +1483,7 @@ export function AiTrainerPage() {
                   <h2 className="text-ink text-[14px] font-semibold">刷题模式</h2>
                   <p className="text-secondary mt-1 text-[12px] leading-relaxed">
                     一次 {TODAY_COUNT} 题，全部是没做过的新题；交卷后才看答案。
-                    错题模式只出错题集里的题，一局 {WRONG_COUNT} 题。
+                    错题模式按错因专项抓题，不固定每局题数。
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
@@ -1312,11 +1510,14 @@ export function AiTrainerPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => startDrill('wrongs')}
-                  disabled={!wrongList.length}
+                  onClick={() => {
+                    setDrillHome(false);
+                    setWrongPicker(true);
+                  }}
+                  disabled={!wrongList.length && !practiceWrongs.length}
                   className="pill px-4 py-2.5 text-[14px] disabled:opacity-40"
                 >
-                  错题模式 {WRONG_COUNT} 题
+                  错题模式（按错因专项）
                 </button>
               </div>
 
@@ -1328,18 +1529,43 @@ export function AiTrainerPage() {
             <>
               <section className="glass flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
                 <div className="min-w-0">
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex flex-wrap items-baseline gap-2">
                     <h2 className="text-ink text-[14px] font-semibold">
-                      {drill.kind === 'today' ? '刷题模式' : drill.kind === 'wrongs' ? '错题模式' : '自由练习'}
+                      {drill.kind === 'today'
+                        ? '刷题模式'
+                        : drill.kind === 'wrongs'
+                          ? drill.patternTitle
+                            ? `错题专项 · ${drill.patternTitle}`
+                            : '错题模式'
+                          : '自由练习'}
                     </h2>
-                    <span className="text-ink text-[13px] font-semibold tabular-nums">
-                      已刷 {drillDoneCount} / {PRACTICE_QUESTIONS.length} 题
-                    </span>
-                    <span className="text-muted text-[12px] tabular-nums">{drillPct}%</span>
+                    {drill.kind === 'wrongs' ? (
+                      <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5 text-[12px] tabular-nums">
+                        本专题共 {drill.questions.length} 题
+                      </span>
+                    ) : (
+                      <>
+                        <span className="text-ink text-[13px] font-semibold tabular-nums">
+                          已刷 {drillDoneCount} / {PRACTICE_QUESTIONS.length} 题
+                        </span>
+                        <span className="text-muted text-[12px] tabular-nums">{drillPct}%</span>
+                      </>
+                    )}
                   </div>
-                  <div className="bg-surface-2 mt-2 h-1.5 w-full max-w-[280px] overflow-hidden rounded-full">
-                    <div className="bg-brand h-full rounded-full" style={{ width: drillPct + '%' }} />
-                  </div>
+                  {drill.kind === 'wrongs' ? (
+                    <div className="bg-surface-2 mt-2 h-1.5 w-full max-w-[280px] overflow-hidden rounded-full">
+                      <div
+                        className="bg-brand h-full rounded-full transition-all"
+                        style={{
+                          width: `${Math.min(100, Math.round((drillStats.answered / Math.max(1, drill.questions.length)) * 100))}%`,
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="bg-surface-2 mt-2 h-1.5 w-full max-w-[280px] overflow-hidden rounded-full">
+                      <div className="bg-brand h-full rounded-full" style={{ width: drillPct + '%' }} />
+                    </div>
+                  )}
                 </div>
                 <div className="flex shrink-0 items-center gap-3 text-[13px]">
                   {drill.submitted ? null : (
@@ -1368,6 +1594,19 @@ export function AiTrainerPage() {
                   >
                     错题集 {wrongList.length}
                   </button>
+                  {drill.kind === 'wrongs' ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDrill(null);
+                        setDrillHome(false);
+                        setWrongPicker(true);
+                      }}
+                      className="text-secondary hover:text-ink text-[12px] transition"
+                    >
+                      换专题
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     onClick={closeDrill}
@@ -1394,17 +1633,44 @@ export function AiTrainerPage() {
                         正确率 {Math.round((drillStats.right / drill.questions.length) * 100)}%，答错{' '}
                         {drillStats.wrong} 题，未作答 {drill.questions.length - drillStats.answered} 题
                       </p>
+                      {drill.patternTip ? (
+                        <p className="text-brand-ink mt-2 text-[12px] leading-relaxed">
+                          <Lightbulb className="mr-1 inline size-3.5" />
+                          本专题口诀：{drill.patternTip}
+                        </p>
+                      ) : null}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        onClick={() => startDrill(drill.kind)}
+                        onClick={() =>
+                          drill.kind === 'wrongs' && drill.patternId
+                            ? startWrongPattern(drill.patternId)
+                            : startDrill(drill.kind)
+                        }
                         disabled={unfixedCount > 0}
                         className="pill pill--solid px-4 py-2 text-[13px] disabled:opacity-40"
                       >
                         <RotateCcw className="mr-1 inline size-3.5" />
-                        {unfixedCount > 0 ? '还剩 ' + unfixedCount + ' 题待订正' : '再来 ' + sizeOf(drill.kind) + ' 题'}
+                        {unfixedCount > 0
+                          ? '还剩 ' + unfixedCount + ' 题待订正'
+                          : drill.kind === 'wrongs' && drill.patternId
+                            ? '再刷一遍本专题'
+                            : '再来 ' + sizeOf(drill.kind) + ' 题'}
                       </button>
+                      {drill.kind === 'wrongs' ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDrill(null);
+                            setDrillHome(false);
+                            setWrongPicker(true);
+                          }}
+                          className="pill px-4 py-2 text-[13px]"
+                        >
+                          换个错题专题
+                        </button>
+                      ) : null}
                       <button type="button" onClick={closeDrill} className="pill px-4 py-2 text-[13px]">
                         返回
                       </button>
@@ -1521,6 +1787,25 @@ export function AiTrainerPage() {
                 </>
               ) : drillQ ? (
                 <section className="glass px-4 py-5 sm:px-5">
+                  {drill.patternTip ? (
+                    <div className="border-line mb-4 flex flex-wrap items-start justify-between gap-2 rounded-[12px] border px-3.5 py-2.5 text-[12px]">
+                      {showPatternTip ? (
+                        <p className="text-brand-ink min-w-0 flex-1 leading-relaxed">
+                          <Lightbulb className="mr-1 inline size-3.5" />
+                          {drill.patternTip}
+                        </p>
+                      ) : (
+                        <span className="text-muted">已隐藏避坑口诀（盲测中）</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowPatternTip((v) => !v)}
+                        className="text-muted hover:text-ink shrink-0 transition"
+                      >
+                        {showPatternTip ? '隐藏口诀' : '显示口诀'}
+                      </button>
+                    </div>
+                  ) : null}
                   <QuestionCard
                     question={drillQ}
                     index={drill.cursor}
@@ -1549,6 +1834,15 @@ export function AiTrainerPage() {
                       下一题
                       <ChevronRight className="ml-1 inline size-4" />
                     </button>
+                    {drill.cursor + 1 >= drill.questions.length ? (
+                      <button
+                        type="button"
+                        onClick={askSubmitDrill}
+                        className="pill pill--solid ml-auto px-4 py-1.5 text-[13px]"
+                      >
+                        交卷看本批总结
+                      </button>
+                    ) : null}
                   </div>
                 </section>
               ) : null}
