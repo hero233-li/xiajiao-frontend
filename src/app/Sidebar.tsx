@@ -17,7 +17,7 @@ export function Sidebar() {
         type="button"
         onClick={() => setMobileOpen((prev) => !prev)}
         aria-expanded={mobileOpen}
-        className="text-secondary hover:text-ink flex w-full items-center justify-between rounded-[10px] px-2 py-1.5 text-[13px] lg:hidden"
+        className="text-secondary hover:text-ink flex w-full items-center justify-between rounded-[14px] px-3 py-2 text-[13px] font-medium lg:hidden"
       >
         <span className="flex items-center gap-2">
           <Menu size={16} strokeWidth={1.8} />
@@ -26,7 +26,7 @@ export function Sidebar() {
         <ChevronDown
           size={15}
           strokeWidth={1.8}
-          className={`transition-transform duration-200 ${mobileOpen ? 'rotate-180' : ''}`}
+          className={`transition-transform duration-[var(--duration)] ease-[var(--ease-out)] ${mobileOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -44,13 +44,15 @@ export function Sidebar() {
               return (
                 <div key={to}>
                   <div
-                    className={`flex items-center rounded-[12px] text-[14px] transition-colors ${
-                      active ? 'bg-brand-soft text-brand-ink font-medium' : 'text-secondary hover:text-ink'
+                    className={`flex items-center rounded-[14px] text-[13px] transition-colors duration-[var(--duration)] ease-[var(--ease-out)] ${
+                      active
+                        ? 'bg-brand-soft text-brand-ink font-medium'
+                        : 'text-secondary hover:bg-surface-2/60 hover:text-ink'
                     }`}
                   >
                     <Link to={to} className="flex flex-1 items-center gap-2.5 px-3 py-2">
-                      <Icon size={17} strokeWidth={1.8} />
-                      {label}
+                      <Icon size={16} strokeWidth={active ? 2 : 1.75} className="shrink-0" />
+                      <span className="truncate">{label}</span>
                     </Link>
                     {children && (
                       <button
@@ -58,19 +60,19 @@ export function Sidebar() {
                         onClick={() => setOpenGroups((prev) => ({ ...prev, [to]: !open }))}
                         aria-label={open ? `收起${label}` : `展开${label}`}
                         aria-expanded={open}
-                        className="pr-2 pl-1"
+                        className="grid size-7 place-items-center rounded-full pr-1 text-current opacity-70 hover:opacity-100"
                       >
                         <ChevronDown
-                          size={15}
+                          size={14}
                           strokeWidth={1.8}
-                          className={`transition-transform duration-200 ${open ? '' : '-rotate-90'}`}
+                          className={`transition-transform duration-[var(--duration)] ease-[var(--ease-out)] ${open ? '' : '-rotate-90'}`}
                         />
                       </button>
                     )}
                   </div>
 
                   {children && open && (
-                    <div className="mt-0.5 ml-[26px] flex flex-col gap-0.5 border-l border-line pl-2">
+                    <div className="hairline-l mt-1 ml-[23px] flex flex-col gap-0.5 pl-2.5">
                       {children.map((child) => {
                         const isActive = pathname === child.to;
                         return (
@@ -78,10 +80,10 @@ export function Sidebar() {
                             key={child.to}
                             to={child.to}
                             aria-current={isActive ? 'page' : undefined}
-                            className={`rounded-[9px] px-2.5 py-1.5 text-[13px] transition-colors ${
+                            className={`rounded-[10px] px-2.5 py-1.5 text-[13px] transition-colors duration-[var(--duration)] ease-[var(--ease-out)] ${
                               isActive
-                                ? 'text-brand-ink bg-brand-soft/70 font-medium'
-                                : 'text-secondary hover:text-ink'
+                                ? 'bg-brand-soft/80 text-brand-ink font-medium'
+                                : 'text-secondary hover:bg-surface-2/60 hover:text-ink'
                             }`}
                           >
                             {child.label}

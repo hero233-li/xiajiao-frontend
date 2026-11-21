@@ -1,5 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Clock, Code2, Download, ExternalLink, FileText, FileUp, ListChecks, Loader2, Play, RotateCcw, Send, Trash2 } from 'lucide-react';
+import {
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Code2,
+  Download,
+  ExternalLink,
+  FileText,
+  FileUp,
+  ListChecks,
+  Loader2,
+  PanelLeft,
+  Play,
+  RotateCcw,
+  Send,
+  Trash2,
+} from 'lucide-react';
 import { AiPracticalCodeCheck } from './AiPracticalCodeCheck';
 import {
   AI_PRACTICAL_COUNT,
@@ -100,7 +118,16 @@ function fmt(seconds: number) {
 
 function stamp(iso: string) {
   const d = new Date(iso);
-  return d.getMonth() + 1 + ' 月 ' + d.getDate() + ' 日 ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  return (
+    d.getMonth() +
+    1 +
+    ' 月 ' +
+    d.getDate() +
+    ' 日 ' +
+    String(d.getHours()).padStart(2, '0') +
+    ':' +
+    String(d.getMinutes()).padStart(2, '0')
+  );
 }
 
 function sectionLabel(code: string) {
@@ -213,8 +240,8 @@ function SheetBody({ text }: { text: string }) {
           return (
             <h4
               key={i}
-              className="text-ink text-[15px] font-medium"
-              style={{ marginTop: i === 0 ? 0 : 16 }}
+              className="text-ink text-[15px] font-semibold"
+              style={{ marginTop: i === 0 ? 0 : 18 }}
             >
               {b.text}
             </h4>
@@ -225,8 +252,8 @@ function SheetBody({ text }: { text: string }) {
           const head = mark ? mark[0] : '';
           const rest = mark ? b.text.slice(head.length).trim() : b.text;
           return (
-            <div key={i} className="flex gap-2 text-[13px] leading-[1.9]">
-              <span className="text-ink w-7 shrink-0 tabular-nums">{head}</span>
+            <div key={i} className="flex gap-2 text-[15px] leading-[1.8]">
+              <span className="text-ink w-8 shrink-0 font-medium tabular-nums">{head}</span>
               <span className="text-secondary">{rest}</span>
             </div>
           );
@@ -236,14 +263,14 @@ function SheetBody({ text }: { text: string }) {
           const head = mark ? mark[0] : '';
           const rest = mark ? b.text.slice(head.length).trim() : b.text;
           return (
-            <div key={i} className="flex gap-2 pl-7 text-[13px] leading-[1.9]">
-              <span className="text-muted w-5 shrink-0 tabular-nums">{head}</span>
+            <div key={i} className="flex gap-2 pl-8 text-[15px] leading-[1.8]">
+              <span className="text-muted w-6 shrink-0 tabular-nums">{head}</span>
               <span className="text-secondary">{rest}</span>
             </div>
           );
         }
         return (
-          <p key={i} className="text-secondary text-[13px] leading-[1.9]">
+          <p key={i} className="text-secondary text-[15px] leading-[1.8]">
             {b.text}
           </p>
         );
@@ -251,6 +278,7 @@ function SheetBody({ text }: { text: string }) {
     </div>
   );
 }
+
 /* -------------------------------- 学习模式 -------------------------------- */
 
 const STUDY_DONE_KEY = 'xj.ai.practical.study.v1';
@@ -293,7 +321,11 @@ function VariantLab({ onExit }: { onExit: () => void }) {
   useEffect(() => {
     void fetch(API + '/variants')
       .then((r) => r.json())
-      .then((d) => setItems(Array.isArray(d?.items) ? (d.items as VariantItem[]) : []))
+      .then((d) => {
+        const list = Array.isArray(d?.items) ? (d.items as VariantItem[]) : [];
+        setItems(list);
+        if (list.length) setOpenName((prev) => prev || list[0].name);
+      })
       .catch(() => undefined);
     void fetch(API + '/config')
       .then((r) => r.json())
@@ -318,6 +350,7 @@ function VariantLab({ onExit }: { onExit: () => void }) {
 
   useEffect(() => {
     setBusy('');
+    setResult(null);
     if (openName) void reload(openName);
   }, [openName, reload]);
 
@@ -415,92 +448,114 @@ function VariantLab({ onExit }: { onExit: () => void }) {
   }, [cur, files.length, grading, total]);
 
   return (
-    <div className="space-y-3">
-      <section className="glass px-3 py-3 sm:px-4">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span className="text-ink text-[13px] font-medium">变体练习</span>
-          <span className="text-muted text-[13px]">同一考法换数据与参数，练的是看懂题面，不是背骨架</span>
-          <button type="button" className="pill ml-auto px-3 py-1.5 text-[12px]" onClick={onExit}>
+    <div className="space-y-4">
+      <section className="glass p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-ink text-[15px] font-semibold">变体练习</h2>
+            <span className="text-muted text-[13px]">同一考法换数据与参数</span>
+          </div>
+          <button type="button" className="pill px-3.5 py-1.5 text-[12px]" onClick={onExit}>
             退出变体练习
           </button>
         </div>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {items.map((it) => (
-            <button
-              key={it.name}
-              type="button"
-              onClick={() => setOpenName(it.name === openName ? '' : it.name)}
-              className={
-                'rounded-md border px-2 py-1 text-[11px] tabular-nums ' +
-                (it.name === openName ? 'border-brand text-brand' : 'border-line text-secondary')
-              }
-            >
-              {it.name}
-            </button>
-          ))}
-        </div>
+
+        {items.length ? (
+          <div className="hairline-t mt-3 flex flex-wrap gap-1.5 pt-3">
+            {items.map((it) => (
+              <button
+                key={it.name}
+                type="button"
+                onClick={() => setOpenName(it.name)}
+                className={`rounded-[10px] border px-2.5 py-1 text-[12px] tabular-nums transition-colors ${
+                  it.name === openName
+                    ? 'border-brand bg-brand font-medium text-white'
+                    : 'hairline bg-glass-fill-quiet text-secondary hover:border-brand/50 hover:text-ink'
+                }`}
+              >
+                {it.name}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </section>
 
       {!cur ? (
-        <section className="glass px-4 py-4 text-secondary text-[13px] leading-relaxed sm:px-5">
-          <p>上方是变体题号。点一个题号，右边会给出这道变体的题面、数据字段、评分细则和素材下载。</p>
-          <p className="mt-2">每道变体都是同样的考法（读数据、按阈值分层、按两个维度分箱求比例与人数），但数据集名、判定字段、阈值、分箱边界、分组字段都换过。考场换题也是这么换的。</p>
-          <p className="mt-2">做题顺序：下载素材包解压，用 jupyter 打开 ipynb，只在下划线处补代码，跑出结果后 File → Download as → HTML(.html)，再截图，回到这里上传判分。</p>
+        <section className="glass text-secondary p-5 text-[13px] leading-relaxed sm:p-6">
+          正在加载变体题列表…
         </section>
       ) : (
         <>
-          <section className="glass px-4 py-4 sm:px-5">
-            <h3 className="text-ink text-[15px] font-medium">
-              {cur.name} {cur.title}
-            </h3>
-            <div className="text-secondary mt-2 space-y-2 text-[13px] leading-relaxed">
+          <section className="glass p-5 sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-semibold tabular-nums">
+                {cur.name}
+              </span>
+              <h3 className="text-ink text-[15px] font-semibold">{cur.title}</h3>
+            </div>
+            <div className="text-secondary mt-3 space-y-2 text-[15px] leading-relaxed">
               <p>{cur.sheet}</p>
-              <p className="text-muted">
-                数据集 {cur.csv}，{cur.rows} 行，满分 {total} 分
+              <p className="text-muted text-[13px] tabular-nums">
+                数据集 {cur.csv} 共 {cur.rows} 行 满分 {total} 分
               </p>
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <a className="pill px-2.5 py-1 text-[12px]" href={API + '/variants/' + encodeURIComponent(cur.name) + '.zip'} download={cur.name + '.zip'}>
-                <Download size={12} className="mr-1" />
-                打包下载
+            <div className="mt-4 flex flex-wrap gap-2">
+              <a
+                className="pill px-3.5 py-1.5 text-[12px]"
+                href={API + '/variants/' + encodeURIComponent(cur.name) + '.zip'}
+                download={cur.name + '.zip'}
+              >
+                <Download size={13} />
+                打包下载素材
               </a>
               <a
-                className="pill px-2.5 py-1 text-[12px]"
-                href={'/jupyter/tree/' + encodeURIComponent('素材') + '/' + encodeURIComponent(cur.name) + (jupyterToken ? '?token=' + encodeURIComponent(jupyterToken) : '')}
+                className="pill pill--solid px-3.5 py-1.5 text-[12px] font-medium"
+                href={
+                  '/jupyter/tree/' +
+                  encodeURIComponent('素材') +
+                  '/' +
+                  encodeURIComponent(cur.name) +
+                  (jupyterToken ? '?token=' + encodeURIComponent(jupyterToken) : '')
+                }
                 target="_blank"
                 rel="noreferrer"
               >
-                <ExternalLink size={12} className="mr-1" />
-                在 jupyter 中作答
+                <ExternalLink size={13} />
+                在 Jupyter 中作答
               </a>
             </div>
           </section>
 
-          <section className="glass px-4 py-4 sm:px-5">
-            <h3 className="text-ink text-[14px] font-medium">评分细则</h3>
-            <table className="mt-2 w-full text-[12px]">
-              <thead>
-                <tr className="text-muted">
-                  <th className="w-[12%] border border-[var(--border)] px-1 py-1 text-left font-normal">编号</th>
-                  <th className="w-[10%] border border-[var(--border)] px-1 py-1 text-left font-normal">配分</th>
-                  <th className="border border-[var(--border)] px-1 py-1 text-left font-normal">评分标准</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cur.rubric.map((r) => (
-                  <tr key={r.id}>
-                    <td className="border border-[var(--border)] px-1 py-1 tabular-nums">{r.id}</td>
-                    <td className="border border-[var(--border)] px-1 py-1 tabular-nums">{r.score}</td>
-                    <td className="border border-[var(--border)] px-1 py-1">{r.desc}</td>
+          <section className="glass p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-ink text-[15px] font-semibold">评分细则</h3>
+              <span className="text-muted text-[12px] tabular-nums">满分 {total} 分</span>
+            </div>
+            <div className="hairline mt-3 overflow-hidden rounded-[14px]">
+              <table className="glass-table">
+                <thead>
+                  <tr>
+                    <th className="w-20">编号</th>
+                    <th className="w-16">配分</th>
+                    <th>评分标准</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {cur.rubric.map((r) => (
+                    <tr key={r.id}>
+                      <td className="text-ink font-medium tabular-nums">{r.id}</td>
+                      <td className="text-brand-ink font-medium tabular-nums">{r.score}</td>
+                      <td>{r.desc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
 
-          <section className="glass px-4 py-4 sm:px-5">
-            <h3 className="text-ink text-[14px] font-medium">答案上传</h3>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
+          <section className="glass p-5 sm:p-6">
+            <h3 className="text-ink text-[15px] font-semibold">答案上传与判分</h3>
+            <div className="mt-3 flex flex-wrap items-center gap-2.5">
               <input
                 ref={fileRef}
                 type="file"
@@ -511,41 +566,58 @@ function VariantLab({ onExit }: { onExit: () => void }) {
                   e.target.value = '';
                 }}
               />
-              <button type="button" className="pill pill--solid px-3 py-1.5 text-[12px]" onClick={() => fileRef.current?.click()}>
-                <FileUp size={12} className="mr-1" />
+              <button
+                type="button"
+                className="pill pill--solid px-3.5 py-1.5 text-[12px] font-medium"
+                onClick={() => fileRef.current?.click()}
+              >
+                <FileUp size={13} />
                 选择文件上传
               </button>
-              <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={() => void grade()} disabled={grading}>
-                {grading ? <Loader2 size={12} className="mr-1 animate-spin" /> : <Send size={12} className="mr-1" />}
+              <button
+                type="button"
+                className="pill px-3.5 py-1.5 text-[12px] disabled:opacity-40"
+                onClick={() => void grade()}
+                disabled={grading}
+              >
+                {grading ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
                 提交本题判分
               </button>
-              {busy ? <span className="text-muted text-[12px]">{busy}</span> : null}
+              {busy ? <span className="text-brand-ink text-[12px]">{busy}</span> : null}
             </div>
+
             {files.length ? (
-              <ul className="mt-2 space-y-1 text-[12px]">
+              <ul className="hairline-t mt-3 divide-y divide-[var(--glass-hairline)] pt-1">
                 {files.map((f) => (
-                  <li key={f.name} className="text-secondary flex items-center gap-2">
-                    <span>{f.name}</span>
-                    <span className="text-muted tabular-nums">{Math.round(f.size / 1024)} KB</span>
-                    <button type="button" className="text-muted ml-auto" onClick={() => void removeFile(f.name)}>
-                      <Trash2 size={12} />
+                  <li key={f.name} className="text-secondary flex items-center gap-2 py-2 text-[13px]">
+                    <span className="bg-success-soft text-success-ink rounded-full px-2 py-0.5 text-[12px]">已上传</span>
+                    <span className="text-ink min-w-0 flex-1 truncate">{f.name}</span>
+                    <span className="text-muted text-[12px] tabular-nums">{kb(f.size)}</span>
+                    <button
+                      type="button"
+                      className="text-muted hover:text-danger-ink p-1 transition-colors"
+                      onClick={() => void removeFile(f.name)}
+                      aria-label="删除"
+                    >
+                      <Trash2 size={13} />
                     </button>
                   </li>
                 ))}
               </ul>
             ) : null}
+
             {result ? (
-              <div className="mt-3 border-t border-[var(--border)] pt-2">
-                <p className="text-ink text-[13px] font-medium tabular-nums">
+              <div className="hairline-t mt-4 pt-3">
+                <p className="text-ink text-[15px] font-semibold tabular-nums">
                   本题得分 {result.score} / {result.max}
                 </p>
-                <ul className="mt-1 space-y-1 text-[12px]">
+                <ul className="mt-2 space-y-1.5 text-[13px]">
                   {result.points.map((p) => (
                     <li key={p.id} className="text-secondary">
-                      <span className="tabular-nums">
+                      <span className="text-ink font-medium tabular-nums">
                         {p.id} {p.got} 分
                       </span>
-                      {p.why ? <span className="text-muted">：{p.why}</span> : null}
+                      {p.why ? <span className="text-muted"> {p.why}</span> : null}
                     </li>
                   ))}
                 </ul>
@@ -553,10 +625,12 @@ function VariantLab({ onExit }: { onExit: () => void }) {
             ) : null}
           </section>
 
-          <section className="glass px-4 py-4 sm:px-5">
+          <section className="glass p-5 sm:p-6">
             <details>
-              <summary className="text-ink cursor-pointer text-[14px] font-medium">参考答案（做完再看）</summary>
-              <pre className="text-secondary mt-2 overflow-x-auto whitespace-pre-wrap text-[12px] leading-relaxed">{cur.ref}</pre>
+              <summary className="text-ink cursor-pointer text-[15px] font-semibold">参考答案（做完再看）</summary>
+              <pre className="hairline bg-surface/80 text-secondary mt-3 overflow-x-auto rounded-[14px] p-4 font-mono text-[12px] leading-relaxed whitespace-pre-wrap">
+                {cur.ref}
+              </pre>
             </details>
           </section>
         </>
@@ -564,6 +638,9 @@ function VariantLab({ onExit }: { onExit: () => void }) {
     </div>
   );
 }
+
+/* -------------------------------- 学习模式组件 -------------------------------- */
+
 function StudyMode({
   pages,
   onExit,
@@ -580,7 +657,7 @@ function StudyMode({
   const [jupyterToken, setJupyterToken] = useState('');
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [busy, setBusy] = useState('');
-
+  const [dirOpen, setDirOpen] = useState(false);
   const [lab, setLab] = useState(false);
 
   const item = AI_PRACTICAL_POOL[index];
@@ -621,7 +698,6 @@ function StudyMode({
     }
   }, []);
 
-  /* 换题：清掉上一题的判分结果与文件列表 */
   useEffect(() => {
     setBusy('');
     void reload(item.code);
@@ -635,7 +711,6 @@ function StudyMode({
       body: JSON.stringify({ code: item.code, status: done[item.code] ? 'done' : 'doing' }),
     }).catch(() => undefined);
   }, [item.code, done]);
-
 
   /* 重做这道题：清掉已上传的答案文件、判分结果与完成标记，并把 notebook 还原成空白版 */
   const resetItem = useCallback(async () => {
@@ -673,165 +748,268 @@ function StudyMode({
   const doneCount = Object.keys(done).filter((k) => done[k]).length;
   const go = (delta: number) => setIndex((i) => Math.min(AI_PRACTICAL_POOL.length - 1, Math.max(0, i + delta)));
 
-  return (
-    <div className="space-y-3">
-      <section className="glass px-3 py-3 sm:px-4">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <span className="text-ink text-[13px] font-medium">学习模式</span>
-          <span className="text-muted text-[13px] tabular-nums">
-            第 {index + 1} / {AI_PRACTICAL_POOL.length} 题
-          </span>
-          <span className="text-muted text-[13px] tabular-nums">已标完成 {doneCount} 题</span>
-          <div className="ml-auto flex items-center gap-2">
-            <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={() => go(-1)} disabled={index === 0}>
-              上一题
-            </button>
-            <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={() => go(1)} disabled={index === AI_PRACTICAL_POOL.length - 1}>
-              下一题
-            </button>
-            <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={onOpenCodeCheck}>
-              代码盲填检测
-            </button>
-            <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={() => setLab(true)}>
-              变体练习
-            </button>
-            <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={onExit}>
-              退出学习
-            </button>
-          </div>
-        </div>
-        <div className="border-line mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t pt-3">
-          <span className="text-ink text-[13px] font-medium tabular-nums">{item.code}</span>
-          <span className="text-secondary text-[13px]">{sectionLabel(item.code)}</span>
-          <span className="text-muted text-[13px] tabular-nums">{fmtMinutes(item.minutes)}</span>
-          <span className="text-muted text-[13px] tabular-nums">{item.score} 分</span>
-        </div>
-        <div className="border-line mt-3 space-y-2 border-t pt-3">
-          {AI_PRACTICAL_SECTIONS.map((sec) => (
-            <div key={sec.key} className="flex items-start gap-3">
-              <div className="w-[104px] shrink-0">
-                <div className="text-secondary text-[12px] leading-tight">{sec.label}</div>
-                <div className="text-muted mt-1 text-[11px] leading-none tabular-nums">
-                  {sec.score} 分 {fmtMinutes(sec.minutes)}
-                </div>
+  const directoryRail = (
+    <section className="glass p-4">
+      <div className="flex items-center justify-between gap-2 pb-3">
+        <span className="text-ink text-[13px] font-semibold">题号目录</span>
+        <span className="text-muted text-[12px] tabular-nums">
+          已完成 {doneCount} / {AI_PRACTICAL_POOL.length}
+        </span>
+      </div>
+      <div className="hairline-t space-y-3.5 pt-3">
+        {AI_PRACTICAL_SECTIONS.map((sec) => {
+          const secQuestions = AI_PRACTICAL_POOL.map((q, i) => ({ q, i })).filter((x) =>
+            sec.groups.includes(x.q.code.split('.').slice(0, 2).join('.')),
+          );
+          return (
+            <div key={sec.key}>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-secondary text-[12px] font-medium">{sec.label}</span>
+                <span className="text-muted text-[12px] tabular-nums">{sec.score} 分</span>
               </div>
-              <div className="flex flex-1 flex-wrap gap-1.5">
-                {AI_PRACTICAL_POOL.map((q, i) => ({ q, i }))
-                  .filter((x) => sec.groups.includes(x.q.code.split('.').slice(0, 2).join('.')))
-                  .map(({ q, i }) => (
+              <div className="mt-1.5 grid grid-cols-5 gap-1">
+                {secQuestions.map(({ q, i }) => {
+                  const active = i === index;
+                  const isDone = Boolean(done[q.code]);
+                  return (
                     <button
                       key={q.code}
                       type="button"
-                      onClick={() => setIndex(i)}
-                      className={
-                        'flex items-center gap-1 rounded-md border px-1.5 py-1 text-[11px] leading-none tabular-nums transition ' +
-                        (i === index
-                          ? 'border-brand bg-brand/10 text-brand font-medium'
-                          : done[q.code]
-                            ? 'border-line text-muted'
-                            : 'border-line text-secondary hover:border-brand/40')
-                      }
+                      onClick={() => {
+                        setIndex(i);
+                        setDirOpen(false);
+                      }}
+                      className={`relative grid h-7 place-items-center rounded-[8px] text-[12px] tabular-nums transition-colors ${
+                        active
+                          ? 'bg-brand font-semibold text-white'
+                          : isDone
+                            ? 'bg-success-soft/80 text-success-ink font-medium'
+                            : 'bg-surface-2/75 text-secondary hover:bg-brand-soft/60 hover:text-brand-ink'
+                      }`}
                     >
-                      {done[q.code] && i !== index ? <span className="h-1 w-1 rounded-full bg-current" /> : null}
                       {q.code}
                     </button>
-                  ))}
+                  );
+                })}
               </div>
             </div>
-          ))}
+          );
+        })}
+      </div>
+    </section>
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* 紧凑顶部控制栏 */}
+      <section className="glass-panel flex flex-wrap items-center gap-2.5 px-4 py-3 sm:px-5">
+        <span className="text-ink text-[15px] font-semibold">学习模式</span>
+        <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
+          第 {index + 1} / {AI_PRACTICAL_POOL.length} 题
+        </span>
+        <span className="text-muted text-[12px] tabular-nums">已完成 {doneCount} 题</span>
+
+        <button
+          type="button"
+          className={`pill px-3 py-1.5 text-[12px] xl:hidden ${dirOpen ? 'pill--solid' : ''}`}
+          onClick={() => setDirOpen((v) => !v)}
+        >
+          <PanelLeft size={13} />
+          题号目录
+        </button>
+
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="pill px-3 py-1.5 text-[12px] disabled:opacity-40"
+            onClick={() => go(-1)}
+            disabled={index === 0}
+          >
+            <ChevronLeft size={13} />
+            上一题
+          </button>
+          <button
+            type="button"
+            className="pill px-3 py-1.5 text-[12px] disabled:opacity-40"
+            onClick={() => go(1)}
+            disabled={index === AI_PRACTICAL_POOL.length - 1}
+          >
+            下一题
+            <ChevronRight size={13} />
+          </button>
+          <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={onOpenCodeCheck}>
+            代码盲填检测
+          </button>
+          <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={() => setLab(true)}>
+            变体练习
+          </button>
+          <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={onExit}>
+            退出学习
+          </button>
         </div>
       </section>
 
-      <section className="glass px-4 py-4 sm:px-5">
-        <h3 className="text-ink text-[15px] font-medium">{item.title}</h3>
-        <div className="mt-3 max-w-[78ch]">
-          <SheetBody text={item.sheet} />
-        </div>
-      </section>
+      {/* 小屏展开目录 */}
+      {dirOpen ? <div className="xl:hidden">{directoryRail}</div> : null}
 
-      <section className="glass px-4 py-4 sm:px-5">
-        <h3 className="text-ink text-[14px] font-medium">评分细则</h3>
-        <table className="mt-2 w-full text-[12px]">
-          <thead>
-            <tr className="text-muted">
-              <th className="w-[12%] border border-[var(--border)] px-1 py-1 text-left font-normal">编号</th>
-              <th className="w-[10%] border border-[var(--border)] px-1 py-1 text-left font-normal">配分</th>
-              <th className="border border-[var(--border)] px-1 py-1 text-left font-normal">评分标准</th>
-            </tr>
-          </thead>
-          <tbody>
-            {item.rubric.map((r) => (
-              <tr key={r.id}>
-                <td className="border border-[var(--border)] px-1 py-1 tabular-nums">{r.id}</td>
-                <td className="border border-[var(--border)] px-1 py-1 tabular-nums">{r.score}</td>
-                <td className="border border-[var(--border)] px-1 py-1">{r.desc}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+      {/* 主双栏：左侧 40 题目录 + 右侧阅读与实练区 */}
+      <div className="grid items-start gap-4 xl:grid-cols-[264px_minmax(0,1fr)]">
+        <div className="hidden xl:sticky xl:top-5 xl:block">{directoryRail}</div>
 
-      <section className="glass px-4 py-4 sm:px-5">
-        <h3 className="text-ink text-[14px] font-medium">素材下载</h3>
-        <div className="mt-2 flex flex-wrap gap-2">
-          <a className="pill px-2.5 py-1 text-[12px]" href={API + '/materials/' + encodeURIComponent(item.code) + '.zip'} download={item.code + '.zip'}>
-            <Download size={12} className="mr-1" />
-            打包下载
-          </a>
-          {showJupyter ? (
-            <a
-              className="pill px-2.5 py-1 text-[12px]"
-              href={'/jupyter/tree/' + encodeURIComponent('素材') + '/' + encodeURIComponent(item.code) + (jupyterToken ? '?token=' + encodeURIComponent(jupyterToken) : '')}
-              target="_blank"
-              rel="noreferrer"
+        <div className="min-w-0 space-y-4">
+          <section className="glass p-5 sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-semibold tabular-nums">
+                {item.code}
+              </span>
+              <span className="bg-surface-2 text-secondary rounded-full px-2.5 py-0.5 text-[12px]">
+                {sectionLabel(item.code)}
+              </span>
+              <span className="text-muted text-[12px] tabular-nums">{fmtMinutes(item.minutes)}</span>
+              <span className="text-muted text-[12px] tabular-nums">{item.score} 分</span>
+              {done[item.code] ? (
+                <span className="bg-success-soft text-success-ink ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-medium">
+                  <Check size={12} /> 已学完
+                </span>
+              ) : null}
+            </div>
+            <h3 className="text-ink mt-3 text-[15px] font-semibold">{item.title}</h3>
+            <div className="hairline-t mt-4 max-w-[78ch] pt-4">
+              <SheetBody text={item.sheet} />
+            </div>
+          </section>
+
+          <section className="glass p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-ink text-[15px] font-semibold">评分细则</h3>
+              <span className="text-muted text-[12px] tabular-nums">满分 {item.score} 分</span>
+            </div>
+            <div className="hairline mt-3 overflow-hidden rounded-[14px]">
+              <table className="glass-table">
+                <thead>
+                  <tr>
+                    <th className="w-20">编号</th>
+                    <th className="w-16">配分</th>
+                    <th>评分标准</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {item.rubric.map((r) => (
+                    <tr key={r.id}>
+                      <td className="text-ink font-medium tabular-nums">{r.id}</td>
+                      <td className="text-brand-ink font-medium tabular-nums">{r.score}</td>
+                      <td>{r.desc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="glass p-5 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-ink text-[15px] font-semibold">素材下载</h3>
+              <div className="flex flex-wrap gap-2">
+                <a
+                  className="pill px-3 py-1.5 text-[12px]"
+                  href={API + '/materials/' + encodeURIComponent(item.code) + '.zip'}
+                  download={item.code + '.zip'}
+                >
+                  <Download size={13} />
+                  打包下载
+                </a>
+                {showJupyter ? (
+                  <a
+                    className="pill pill--solid px-3 py-1.5 text-[12px] font-medium"
+                    href={
+                      '/jupyter/tree/' +
+                      encodeURIComponent('素材') +
+                      '/' +
+                      encodeURIComponent(item.code) +
+                      (jupyterToken ? '?token=' + encodeURIComponent(jupyterToken) : '')
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink size={13} />
+                    在 Jupyter 中作答
+                  </a>
+                ) : null}
+              </div>
+            </div>
+            {list.length ? (
+              <ul className="hairline-t mt-3 divide-y divide-[var(--glass-hairline)] pt-1">
+                {list.map((name) => (
+                  <li key={name} className="flex items-center justify-between gap-3 py-2 text-[13px]">
+                    <span className="text-ink min-w-0 break-all">{name}</span>
+                    <a
+                      className="text-brand-ink shrink-0 text-[12px] font-medium hover:underline"
+                      href={
+                        API +
+                        '/materials/' +
+                        encodeURIComponent(item.code) +
+                        '/' +
+                        name.split('/').map(encodeURIComponent).join('/')
+                      }
+                      download={name}
+                    >
+                      下载
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted mt-2 text-[13px]">本题无独立素材文件</p>
+            )}
+          </section>
+
+          <section className="glass flex flex-wrap items-center gap-2.5 px-5 py-3.5">
+            <button
+              type="button"
+              className={done[item.code] ? 'pill px-4 py-2 text-[13px]' : 'pill pill--solid px-4 py-2 text-[13px] font-medium'}
+              onClick={() => setDone((d) => ({ ...d, [item.code]: !d[item.code] }))}
             >
-              <ExternalLink size={12} className="mr-1" />
-              在 jupyter 中作答
-            </a>
-          ) : null}
-        </div>
-        <ul className="mt-2 space-y-1 text-[12px]">
-          {list.map((name) => (
-            <li key={name}>
-              <a
-                className="text-brand break-all"
-                href={API + '/materials/' + encodeURIComponent(item.code) + '/' + name.split('/').map(encodeURIComponent).join('/')}
-                download={name}
+              <Check size={14} />
+              {done[item.code] ? '取消完成标记' : '标记已学完'}
+            </button>
+            <button
+              type="button"
+              className="pill px-4 py-2 text-[13px] disabled:opacity-40"
+              onClick={() => void resetItem()}
+              disabled={resetting}
+            >
+              {resetting ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />}
+              {resetting ? '正在清空' : '重做这道题'}
+            </button>
+            {busy ? <span className="text-brand-ink text-[12px]">{busy}</span> : null}
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                className="pill px-3 py-1.5 text-[12px] disabled:opacity-40"
+                onClick={() => go(-1)}
+                disabled={index === 0}
               >
-                {name}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-
-
-      <section className="glass flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5">
-        <button
-          type="button"
-          className={done[item.code] ? 'pill px-4 py-2 text-[13px]' : 'pill pill--solid px-4 py-2 text-[13px]'}
-          onClick={() => setDone((d) => ({ ...d, [item.code]: !d[item.code] }))}
-        >
-          {done[item.code] ? '取消完成标记' : '标记这道题已学完'}
-        </button>
-        <button
-          type="button"
-          className="pill px-4 py-2 text-[13px]"
-          onClick={() => void resetItem()}
-          disabled={resetting}
-        >
-          {resetting ? <Loader2 size={12} className="mr-1 animate-spin" /> : <RotateCcw size={12} className="mr-1" />}
-          {resetting ? '正在清空' : '重做这道题'}
-        </button>
-        {busy ? <span className="text-brand text-[12px]">{busy}</span> : null}
-        <span className="text-muted text-[12px]">按官方题号顺序 1.1.1 到 4.2.5 一道一道过，进度存在服务器上。</span>
-      </section>
+                <ChevronLeft size={13} />
+                上一题
+              </button>
+              <button
+                type="button"
+                className="pill px-3 py-1.5 text-[12px] disabled:opacity-40"
+                onClick={() => go(1)}
+                disabled={index === AI_PRACTICAL_POOL.length - 1}
+              >
+                下一题
+                <ChevronRight size={13} />
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }
 
-/* ---------------------------------- 组件 ---------------------------------- */
+/* ---------------------------------- 主组件 ---------------------------------- */
 
 type Phase = 'idle' | 'loading' | 'writing' | 'grading' | 'done' | 'error';
 
@@ -853,13 +1031,9 @@ export function AiPractical() {
   const [autoSubmitted, setAutoSubmitted] = useState(false);
   const [jupyterToken, setJupyterToken] = useState('');
   const [sheetOpen, setSheetOpen] = useState(false);
-  /* 学习模式：按官方题号顺序 1.1.1 → 4.2.5 一道一道过，不抽题、不计时 */
   const [study, setStudy] = useState(false);
-  /* 代码盲填检测模式：20 道 Python 实操题行内填空 0 秒判分 */
   const [codeCheck, setCodeCheck] = useState(false);
-  /* 从考试里打开时只看当前这道题 */
   const [codeCheckFixed, setCodeCheckFixed] = useState<string | null>(null);
-  /* 专项练习：先选一个考核单元，再只在这个单元里抽一道题做 */
   const [secPick, setSecPick] = useState(false);
   const [secNow, setSecNow] = useState<PracticalSection | null>(null);
 
@@ -867,26 +1041,22 @@ export function AiPractical() {
   const submitting = useRef(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  const reloadFiles = useCallback(
-    async (sid: string, codes: string[]) => {
-      const next: Record<string, UploadedFile[]> = {};
-      await Promise.all(
-        codes.map(async (code) => {
-          try {
-            const r = await fetch(API + '/files?exam=' + encodeURIComponent(sid) + '&code=' + encodeURIComponent(code));
-            const d = await r.json();
-            next[code] = Array.isArray(d.files) ? (d.files as UploadedFile[]) : [];
-          } catch {
-            next[code] = [];
-          }
-        }),
-      );
-      setUploads(next);
-    },
-    [],
-  );
+  const reloadFiles = useCallback(async (sid: string, codes: string[]) => {
+    const next: Record<string, UploadedFile[]> = {};
+    await Promise.all(
+      codes.map(async (code) => {
+        try {
+          const r = await fetch(API + '/files?exam=' + encodeURIComponent(sid) + '&code=' + encodeURIComponent(code));
+          const d = await r.json();
+          next[code] = Array.isArray(d.files) ? (d.files as UploadedFile[]) : [];
+        } catch {
+          next[code] = [];
+        }
+      }),
+    );
+    setUploads(next);
+  }, []);
 
-  /* 云端记录读齐之前不渲染，也不允许把空数据写回去 */
   useEffect(() => {
     let alive = true;
     void hydrate().then(() => {
@@ -899,7 +1069,6 @@ export function AiPractical() {
     };
   }, []);
 
-  /* 题面 + jupyter token */
   useEffect(() => {
     void (async () => {
       try {
@@ -918,7 +1087,6 @@ export function AiPractical() {
     })();
   }, []);
 
-  /* 恢复未完成的考试 */
   useEffect(() => {
     const saved = loadJson<Session | null>(SESSION_KEY, null);
     if (!saved || !Array.isArray(saved.codes) || saved.codes.length !== AI_PRACTICAL_COUNT || !saved.startedAt) return;
@@ -939,7 +1107,6 @@ export function AiPractical() {
     void reloadFiles(saved.id, saved.codes);
   }, [reloadFiles]);
 
-  /* 全卷倒计时：考场只控总时长，分题时间是建议值 */
   useEffect(() => {
     if (phase !== 'writing' || !exam) return;
     const tick = () => {
@@ -1032,7 +1199,6 @@ export function AiPractical() {
               score: it.score,
               sheet: it.sheet,
               rubric: it.rubric,
-              /* 第三方整理的参考要点，只作为判分时的对照，不要求学生逐字对上 */
               ref: answerOf(it.code)?.text ?? '',
             })),
           }),
@@ -1073,7 +1239,6 @@ export function AiPractical() {
     [exam, paper],
   );
 
-  /* 全卷到点：自动交卷 */
   useEffect(() => {
     if (phase !== 'writing' || !tickedRef.current || remaining > 0) return;
     void submit(true);
@@ -1145,16 +1310,15 @@ export function AiPractical() {
   const currentFiles = uploads[paper[current]?.code ?? ''] ?? [];
   const curCode = paper[current]?.code ?? '';
   const pageFiles = currentPage?.files ?? [];
-  /* 有没有发 notebook 或数据集：决定这道题该不该出现 jupyter 入口（1.2.x、4.x 这类纯论述题没有） */
   const hasNotebook = pageFiles.includes(curCode + '.ipynb');
   const hasData = pageFiles.some((n) => /\.(csv|xlsx|xls)$/i.test(n));
   const showJupyter = hasNotebook || hasData;
   const hasSheet = pageFiles.some((n) => n.endsWith('.docx'));
 
-  /* 换题时把答题卷面板收起来 */
   useEffect(() => {
     setSheetOpen(false);
   }, [curCode]);
+
   const overtime = remaining <= 5 * 60 && phase === 'writing';
   const best = useMemo(() => (history.length ? Math.max(...history.map((h) => h.total)) : null), [history]);
   const uploadedTotal = useMemo(() => Object.values(uploads).reduce((n, fs) => n + fs.length, 0), [uploads]);
@@ -1189,46 +1353,123 @@ export function AiPractical() {
   if (phase === 'idle' || phase === 'loading' || phase === 'error') {
     return (
       <div className="space-y-4">
-        <section className="glass px-4 py-5 sm:px-6">
-          <h2 className="text-ink text-[22px] font-semibold">人工智能训练师（三级）操作技能考核</h2>
-          {error ? <p className="text-danger-ink mt-3 text-[13px]">{error}</p> : null}
-          <div className="mt-4 flex flex-wrap items-center gap-3">
+        {/* 主考试英雄卡片 */}
+        <section className="glass glass--sheen p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-ink text-[15px] font-semibold">操作技能模拟考试</h2>
+                <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
+                  6 题 120 分钟 100 分
+                </span>
+                {best !== null ? (
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums ${
+                      best >= 60 ? 'bg-success-soft text-success-ink' : 'bg-surface-2 text-secondary'
+                    }`}
+                  >
+                    历史最高 {best} 分
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-secondary mt-2 text-[13px]">
+                按真实考核结构从六个单元随机抽题，支持 Jupyter 实跑、在线答题卷与 AI 细则判分
+              </p>
+              {error ? <p className="text-danger-ink mt-2 text-[13px]">{error}</p> : null}
+            </div>
+
             <button
               type="button"
-              className="pill pill--solid px-5 py-2.5 text-[13px]"
+              className="pill pill--solid px-5 py-2.5 text-[13px] font-medium disabled:opacity-50"
               onClick={() => void begin()}
               disabled={phase === 'loading'}
             >
-              {phase === 'loading' ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <Play size={14} className="mr-1.5" />}
-              {phase === 'loading' ? '正在组卷' : '开始考试'}
+              {phase === 'loading' ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} strokeWidth={2} />}
+              {phase === 'loading' ? '正在组卷' : '开始模拟考试'}
             </button>
-            <button type="button" className="pill px-4 py-2.5 text-[13px]" onClick={() => setCodeCheck(true)}>
-              <Code2 size={14} className="mr-1.5" />
-              代码盲填检测（20 题秒判）
-            </button>
-            <button type="button" className="pill px-4 py-2.5 text-[13px]" onClick={() => setStudy(true)}>
-              <FileText size={14} className="mr-1.5" />
-              学习模式（按题号顺序练 40 题）
-            </button>
-            <button
-              type="button"
-              className={'pill px-4 py-2.5 text-[13px] ' + (secPick ? 'pill--solid' : '')}
-              onClick={() => setSecPick((v) => !v)}
-            >
-              <ListChecks size={14} className="mr-1.5" />
-              专项练习（选一个考核单元）
-            </button>
-            {best !== null ? <span className="text-muted text-[13px]">历史最高 {best} 分</span> : null}
           </div>
         </section>
 
-        {secPick ? (
-          <section className="glass px-4 py-4 sm:px-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-              <h3 className="text-ink text-[15px] font-medium">专项练习：先选一个考核单元</h3>
-              <p className="text-muted text-[13px]">只在这个单元里抽一道题，计时按该单元时长，交卷按官方评分细则判分。</p>
+        {/* 三大专项练习模式卡片 */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <button
+            type="button"
+            onClick={() => setCodeCheck(true)}
+            className="glass glass-interactive flex flex-col items-start gap-3 p-5 text-left"
+          >
+            <div className="flex w-full items-center justify-between gap-2">
+              <span className="bg-brand-soft text-brand-ink grid size-9 place-items-center rounded-[12px]">
+                <Code2 size={18} strokeWidth={1.8} />
+              </span>
+              <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
+                20 题
+              </span>
             </div>
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <h3 className="text-ink text-[15px] font-semibold">代码盲填检测</h3>
+              <p className="text-secondary mt-1 text-[13px]">对照原卷空格手写代码，0 秒核对</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSecPick((v) => !v)}
+            className={`glass glass-interactive flex flex-col items-start gap-3 p-5 text-left ${
+              secPick ? 'ring-brand/50 ring-1' : ''
+            }`}
+          >
+            <div className="flex w-full items-center justify-between gap-2">
+              <span className="bg-brand-soft text-brand-ink grid size-9 place-items-center rounded-[12px]">
+                <ListChecks size={18} strokeWidth={1.8} />
+              </span>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums ${
+                  secPick ? 'bg-brand text-white' : 'bg-surface-2 text-secondary'
+                }`}
+              >
+                6 个单元
+              </span>
+            </div>
+            <div>
+              <h3 className="text-ink text-[15px] font-semibold">专项单元练习</h3>
+              <p className="text-secondary mt-1 text-[13px]">选定单个考核单元，随机抽 1 题计时练</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setStudy(true)}
+            className="glass glass-interactive flex flex-col items-start gap-3 p-5 text-left"
+          >
+            <div className="flex w-full items-center justify-between gap-2">
+              <span className="bg-brand-soft text-brand-ink grid size-9 place-items-center rounded-[12px]">
+                <FileText size={18} strokeWidth={1.8} />
+              </span>
+              <span className="bg-surface-2 text-secondary rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
+                40 题
+              </span>
+            </div>
+            <div>
+              <h3 className="text-ink text-[15px] font-semibold">按题号学习</h3>
+              <p className="text-secondary mt-1 text-[13px]">按 1.1.1 至 4.2.5 顺序看题面与评分细则</p>
+            </div>
+          </button>
+        </div>
+
+        {/* 专项单元选择器 */}
+        {secPick ? (
+          <section className="glass p-5 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-ink text-[15px] font-semibold">选择考核单元</h3>
+              <button
+                type="button"
+                onClick={() => setSecPick(false)}
+                className="text-muted hover:text-ink text-[12px] transition-colors"
+              >
+                收起
+              </button>
+            </div>
+            <div className="mt-3.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
               {AI_PRACTICAL_SECTIONS.map((sec) => {
                 const items = sectionItems(sec);
                 return (
@@ -1236,14 +1477,18 @@ export function AiPractical() {
                     key={sec.key}
                     type="button"
                     onClick={() => beginSection(sec)}
-                    className="border-line hover:border-brand flex flex-col gap-1 rounded-xl border px-3.5 py-3 text-left transition-colors"
+                    className="glass-tile flex flex-col gap-2 p-4 text-left"
                   >
-                    <span className="text-ink text-[15px] font-medium">{sec.label}</span>
-                    <span className="text-muted flex items-center gap-3 text-[13px] tabular-nums">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-ink text-[15px] font-medium">{sec.label}</span>
+                      <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5 text-[12px] font-medium tabular-nums">
+                        {sec.score} 分
+                      </span>
+                    </div>
+                    <div className="text-muted flex items-center gap-3 text-[12px] tabular-nums">
                       <span>{items.length} 道题</span>
-                      <span>{sec.score} 分</span>
                       <span>{fmtMinutes(sec.minutes)}</span>
-                    </span>
+                    </div>
                   </button>
                 );
               })}
@@ -1251,21 +1496,50 @@ export function AiPractical() {
           </section>
         ) : null}
 
-        {result ? <ResultCard result={result} paper={paper} auto={autoSubmitted} seconds={history[0]?.seconds ?? 0} /> : null}
+        {result ? (
+          <ResultCard result={result} paper={paper} auto={autoSubmitted} seconds={history[0]?.seconds ?? 0} />
+        ) : null}
+
+        {/* 历史交卷 */}
         {history.length ? (
-          <section className="glass px-4 py-4 sm:px-5">
-            <h3 className="text-ink text-[14px] font-medium">历史交卷</h3>
-            <ul className="mt-2 space-y-1.5">
-              {history.map((h) => (
-                <li key={h.at} className="text-muted flex flex-wrap items-baseline gap-x-4 text-[13px]">
-                  <span className="tabular-nums">{stamp(h.at)}</span>
-                  <span className={'tabular-nums ' + (h.total >= 60 ? 'text-success-ink' : 'text-ink')}>
-                    {h.total} / {h.max} 分
-                  </span>
-                  <span className="tabular-nums">用时 {fmt(h.seconds)}</span>
-                  <span className="tabular-nums">{h.codes?.join(' ') ?? ''}</span>
-                </li>
-              ))}
+          <section className="glass p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-ink text-[15px] font-semibold">历史交卷</h3>
+              <button
+                type="button"
+                onClick={clearAll}
+                className="text-muted hover:text-danger-ink text-[12px] transition-colors"
+              >
+                清空记录
+              </button>
+            </div>
+            <ul className="mt-3 divide-y divide-[var(--glass-hairline)]">
+              {history.map((h) => {
+                const pass = h.total >= 60;
+                return (
+                  <li key={h.at} className="flex flex-wrap items-center gap-x-4 gap-y-1.5 py-3 text-[13px]">
+                    <span
+                      className={`w-24 shrink-0 text-[15px] font-semibold tabular-nums ${
+                        pass ? 'text-success-ink' : 'text-danger-ink'
+                      }`}
+                    >
+                      {h.total} / {h.max}
+                    </span>
+                    <span className="text-secondary tabular-nums">{stamp(h.at)}</span>
+                    <span className="text-muted text-[12px] tabular-nums">用时 {fmt(h.seconds)}</span>
+                    <div className="ml-auto flex flex-wrap gap-1">
+                      {(h.codes ?? []).map((c) => (
+                        <span
+                          key={c}
+                          className="bg-surface-2 text-secondary rounded-md px-1.5 py-0.5 text-[12px] tabular-nums"
+                        >
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         ) : null}
@@ -1275,51 +1549,63 @@ export function AiPractical() {
 
   if (phase === 'grading') {
     return (
-      <div className="space-y-4">
-        <section className="glass px-4 py-8 text-center sm:px-6">
-          <Loader2 size={22} className="text-brand mx-auto animate-spin" />
-          <p className="text-ink mt-3 text-[15px] font-medium">AI 正在按官方评分细则逐题判卷</p>
-          <p className="text-muted mt-1 text-[13px]">已等 {waitTick} 秒，通常需要 1 到 3 分钟</p>
-        </section>
-      </div>
+      <section className="glass p-10 text-center">
+        <Loader2 size={24} className="text-brand mx-auto animate-spin" />
+        <p className="text-ink mt-3 text-[15px] font-semibold">AI 正在按官方评分细则逐题判卷</p>
+        <p className="text-muted mt-1.5 text-[13px] tabular-nums">已等待 {waitTick} 秒，通常需要 1 到 3 分钟</p>
+      </section>
     );
   }
 
   if (phase === 'done') {
     return (
       <div className="space-y-4">
-        {result ? <ResultCard result={result} paper={paper} auto={autoSubmitted} seconds={history[0]?.seconds ?? 0} /> : null}
-        {error ? <p className="text-danger-ink glass px-4 py-3 text-[13px]">{error}</p> : null}
-        <section className="glass flex flex-wrap items-center gap-3 px-4 py-4 sm:px-5">
+        {result ? (
+          <ResultCard result={result} paper={paper} auto={autoSubmitted} seconds={history[0]?.seconds ?? 0} />
+        ) : null}
+        {error ? <p className="text-danger-ink glass px-5 py-3.5 text-[13px]">{error}</p> : null}
+        <section className="glass flex flex-wrap items-center gap-2.5 px-5 py-4">
           {secNow ? (
             <button
               type="button"
-              className="pill pill--solid px-4 py-2 text-[13px]"
+              className="pill pill--solid px-4 py-2 text-[13px] font-medium"
               onClick={() => beginSection(secNow)}
             >
-              <ListChecks size={14} className="mr-1.5" />
+              <ListChecks size={14} />
               再抽一道（{secNow.label}）
             </button>
           ) : (
-            <button type="button" className="pill pill--solid px-4 py-2 text-[13px]" onClick={() => void begin()}>
-              <Play size={14} className="mr-1.5" />
+            <button
+              type="button"
+              className="pill pill--solid px-4 py-2 text-[13px] font-medium"
+              onClick={() => void begin()}
+            >
+              <Play size={14} />
               再考一场
             </button>
           )}
           {secNow ? (
             <button
               type="button"
-              className="pill px-3 py-2 text-[13px]"
+              className="pill px-4 py-2 text-[13px]"
               onClick={() => {
                 setSecNow(null);
+                setSecPick(true);
                 setPhase('idle');
               }}
             >
               换个单元
             </button>
-          ) : null}
-          <button type="button" className="pill px-3 py-2 text-[13px]" onClick={clearAll}>
-            <RotateCcw size={13} className="mr-1.5" />
+          ) : (
+            <button
+              type="button"
+              className="pill px-4 py-2 text-[13px]"
+              onClick={() => setPhase('idle')}
+            >
+              返回实操首页
+            </button>
+          )}
+          <button type="button" className="text-muted hover:text-danger-ink ml-auto text-[12px]" onClick={clearAll}>
             清空记录
           </button>
         </section>
@@ -1328,34 +1614,48 @@ export function AiPractical() {
   }
 
   if (!cloudReady) {
-    return <div className="text-secondary p-8 text-[13px]">正在读取云端记录…</div>;
+    return <div className="glass text-secondary p-8 text-center text-[13px]">正在读取云端学习记录…</div>;
   }
 
   return (
-    <div className="space-y-3">
-      {/* 顶部考生条 */}
-      <section className="glass px-3 py-3 sm:px-4">
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          <span className="text-ink text-[13px]">
-            考生：<span className="font-medium">自学考生</span>
-            <span className="text-muted ml-3">
-              {secNow ? '专项练习：' + secNow.label : '试卷：人工智能训练师（三级）操作技能'}
+    <div className="space-y-4">
+      {/* 顶部考场状态条 */}
+      <section className="glass-panel px-4 py-3.5 sm:px-5 lg:sticky lg:top-4 lg:z-20">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium">
+              {secNow ? `专项练习 ${secNow.label}` : '模拟考试'}
             </span>
-          </span>
-          <span className="text-muted text-[13px]">
-            已上传 {uploadedTotal} 个文件
-          </span>
-          <span className="ml-auto flex items-baseline gap-2">
-            <span className="text-muted text-[12px]">全卷剩余</span>
-            <span className={'text-[22px] font-semibold tabular-nums ' + (overtime ? 'text-danger-ink' : 'text-brand')}>
-              {fmt(remaining)}
+            <span className="text-secondary text-[13px]">自学考生</span>
+            <span className="text-muted text-[13px] tabular-nums">已上传 {uploadedTotal} 个文件</span>
+          </div>
+
+          <div className="ml-auto flex items-center gap-3">
+            <span className="flex items-center gap-1.5">
+              <Clock size={15} className={overtime ? 'text-danger-ink' : 'text-brand-ink'} />
+              <span
+                className={`text-[22px] leading-none font-semibold tabular-nums ${
+                  overtime ? 'text-danger-ink' : 'text-brand-ink'
+                }`}
+              >
+                {fmt(remaining)}
+              </span>
             </span>
-          </span>
+            <button
+              type="button"
+              className="pill pill--solid px-4 py-1.5 text-[13px] font-medium"
+              onClick={() => void submit(false)}
+            >
+              <Send size={13} />
+              交卷
+            </button>
+          </div>
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          <Clock size={13} className="text-muted" />
+
+        <div className="hairline-t mt-3 flex flex-wrap items-center gap-1.5 pt-3">
           {paper.map((item, i) => {
             const n = (uploads[item.code] ?? []).length;
+            const active = i === current;
             return (
               <button
                 key={item.code}
@@ -1364,50 +1664,69 @@ export function AiPractical() {
                   setCurrent(i);
                   setTab('upload');
                 }}
-                className={
-                  'pill px-2.5 py-1 text-[12px] ' + (i === current ? 'pill--solid' : n ? 'text-success-ink' : '')
-                }
-                title={'第 ' + (i + 1) + ' 题 ' + item.code + '，建议 ' + fmtMinutes(item.minutes)}
+                className={`rounded-full px-3 py-1 text-[12px] font-medium transition-colors ${
+                  active
+                    ? 'bg-brand text-white'
+                    : n
+                      ? 'bg-success-soft text-success-ink'
+                      : 'bg-surface-2 text-secondary hover:text-ink'
+                }`}
+                title={`第 ${i + 1} 题 ${item.code}，建议 ${fmtMinutes(item.minutes)}`}
               >
-                第 {i + 1} 题
-                {n ? ' ' + n : ''}
+                第 {i + 1} 题{n ? ` (${n})` : ''}
               </button>
             );
           })}
-          <button
-            type="button"
-            className="pill ml-auto px-3 py-1.5 text-[12px]"
-            onClick={() => setCurrent((c) => Math.min(paper.length - 1, c + 1))}
-          >
-            <ChevronRight size={12} className="mr-1" />
-            下一题
-          </button>
-          <button type="button" className="pill px-3 py-1.5 text-[12px]" onClick={() => void submit(false)}>
-            <Send size={12} className="mr-1.5" />
-            交卷
-          </button>
+
+          <div className="ml-auto flex items-center gap-1.5">
+            <button
+              type="button"
+              className="pill px-3 py-1 text-[12px] disabled:opacity-40"
+              onClick={() => setCurrent((c) => Math.max(0, c - 1))}
+              disabled={current === 0}
+            >
+              <ChevronLeft size={13} />
+              上一题
+            </button>
+            <button
+              type="button"
+              className="pill px-3 py-1 text-[12px] disabled:opacity-40"
+              onClick={() => setCurrent((c) => Math.min(paper.length - 1, c + 1))}
+              disabled={current >= paper.length - 1}
+            >
+              下一题
+              <ChevronRight size={13} />
+            </button>
+          </div>
         </div>
       </section>
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
         {/* 左：试题单 */}
-        <section className="glass px-4 py-4 sm:px-5">
-          <div className="text-muted mb-2 text-[12px]">
-            第 {current + 1} 题 {sectionLabel(paper[current]?.code ?? '')} 考核时间 {fmtMinutes(paper[current]?.minutes ?? 0)} 分值{' '}
-            {paper[current]?.score} 分
+        <section className="glass p-5 sm:p-6">
+          <div className="hairline-b flex flex-wrap items-center gap-2 pb-3.5 text-[12px]">
+            <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 font-semibold tabular-nums">
+              第 {current + 1} 题
+            </span>
+            <span className="bg-surface-2 text-secondary rounded-full px-2.5 py-0.5">
+              {sectionLabel(paper[current]?.code ?? '')}
+            </span>
+            <span className="text-muted tabular-nums">考核时间 {fmtMinutes(paper[current]?.minutes ?? 0)}</span>
+            <span className="text-muted tabular-nums">分值 {paper[current]?.score} 分</span>
           </div>
+
           {currentPage ? (
-            <div className="space-y-3">
+            <div className="mt-4 max-w-[76ch] space-y-4">
               {currentPage.sections.map((sec) => (
                 <div key={sec.head}>
-                  <h3 className="text-ink text-[15px] font-medium">{sec.head}</h3>
+                  <h3 className="text-ink text-[15px] font-semibold">{sec.head}</h3>
                   {sec.blocks.length ? (
-                    <div className="text-muted mt-1 space-y-1 text-[13px] leading-relaxed">
+                    <div className="text-secondary mt-2 space-y-1.5 text-[15px] leading-[1.8]">
                       {sec.blocks.map((b, i) =>
                         b.kind === 'table' ? (
                           <div
                             key={i}
-                            className="overflow-x-auto text-[12.5px] [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-[var(--border)] [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-[var(--border)] [&_th]:bg-black/[0.03] [&_th]:px-2 [&_th]:py-1"
+                            className="hairline my-2 overflow-x-auto rounded-[12px] text-[13px] [&_table]:w-full [&_table]:border-collapse [&_td]:border-b [&_td]:border-[var(--glass-hairline)] [&_td]:px-2.5 [&_td]:py-1.5 [&_th]:border-b [&_th]:border-[var(--glass-hairline)] [&_th]:bg-surface-2/60 [&_th]:px-2.5 [&_th]:py-2 [&_th]:text-left [&_th]:font-medium [&_tr:last-child_td]:border-b-0"
                             dangerouslySetInnerHTML={{ __html: b.html }}
                           />
                         ) : (
@@ -1420,27 +1739,32 @@ export function AiPractical() {
               ))}
             </div>
           ) : (
-            <p className="text-muted text-[13px]">正在加载本题题面</p>
+            <p className="text-muted mt-4 text-[13px]">正在加载本题题面…</p>
           )}
         </section>
 
-        {/* 右：上传与素材 */}
-        <section className="glass h-fit px-4 py-4 sm:px-5">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className={'pill px-3 py-1.5 text-[12px] ' + (tab === 'upload' ? 'pill--solid' : '')}
-              onClick={() => setTab('upload')}
-            >
-              答案上传
-            </button>
-            <button
-              type="button"
-              className={'pill px-3 py-1.5 text-[12px] ' + (tab === 'materials' ? 'pill--solid' : '')}
-              onClick={() => setTab('materials')}
-            >
-              素材下载
-            </button>
+        {/* 右：上传与素材工具栏 */}
+        <section className="glass p-4 sm:p-5 lg:sticky lg:top-[132px]">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="segmented">
+              <button
+                type="button"
+                data-active={tab === 'upload'}
+                className="segmented-item px-3 py-1 text-[12px]"
+                onClick={() => setTab('upload')}
+              >
+                答案上传
+              </button>
+              <button
+                type="button"
+                data-active={tab === 'materials'}
+                className="segmented-item px-3 py-1 text-[12px]"
+                onClick={() => setTab('materials')}
+              >
+                素材下载
+              </button>
+            </div>
+
             {pageFiles.includes(curCode + '.ipynb') ? (
               <button
                 type="button"
@@ -1450,68 +1774,83 @@ export function AiPractical() {
                   setCodeCheck(true);
                 }}
               >
-                代码盲填检测
+                <Code2 size={13} />
+                盲填检测
               </button>
             ) : null}
           </div>
 
           {tab === 'upload' ? (
-            <div className="mt-3">
-              <h3 className="text-ink text-[14px] font-medium">注意事项</h3>
-              <ul className="text-muted mt-1 space-y-1 text-[12px] leading-relaxed">
-                {(currentPage?.notes ?? []).map((n, i) => (
-                  <li key={i}>{n}</li>
-                ))}
-              </ul>
-              <h3 className="text-ink mt-3 text-[14px] font-medium">答案上传</h3>
-              <table className="mt-1 w-full table-fixed text-[12px]">
-                <thead>
-                  <tr className="text-muted">
-                    <th className="w-[10%] border border-[var(--border)] px-1 py-1 text-left font-normal">序号</th>
-                    <th className="w-[52%] border border-[var(--border)] px-1 py-1 text-left font-normal">要求</th>
-                    <th className="w-[38%] border border-[var(--border)] px-1 py-1 text-left font-normal">上传</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <div className="mt-4 space-y-4">
+              <div>
+                <h3 className="text-ink text-[13px] font-semibold">提交要求</h3>
+                <div className="mt-2 space-y-2">
                   {(currentPage?.uploads ?? []).map((u) => (
-                    <tr key={u.seq}>
-                      <td className="border border-[var(--border)] px-1 py-1 tabular-nums">{u.seq}</td>
-                      <td className="text-muted border border-[var(--border)] px-1 py-1">{u.requirement}</td>
-                      <td className="border border-[var(--border)] px-1 py-1">
-                        <button
-                          type="button"
-                          className="pill px-2 py-0.5 text-[11px]"
-                          onClick={() => fileRef.current?.click()}
-                        >
-                          <FileUp size={11} className="mr-1" />
-                          上传
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {currentFiles.length ? (
-                <ul className="mt-2 space-y-1">
-                  {currentFiles.map((f) => (
-                    <li key={f.name} className="text-muted flex items-center gap-2 text-[12px]">
-                      <span className="text-success-ink">已上传</span>
-                      <span className="min-w-0 flex-1 truncate">{f.name}</span>
-                      <span className="tabular-nums">{kb(f.size)}</span>
+                    <div
+                      key={u.seq}
+                      className="hairline bg-surface/55 flex items-center gap-2.5 rounded-[12px] px-3 py-2.5"
+                    >
+                      <span className="bg-surface-2 text-muted grid size-5 shrink-0 place-items-center rounded-full text-[12px] tabular-nums">
+                        {u.seq}
+                      </span>
+                      <span className="text-secondary min-w-0 flex-1 text-[12px] leading-relaxed">
+                        {u.requirement}
+                      </span>
                       <button
                         type="button"
-                        className="text-muted hover:text-danger-ink"
-                        onClick={() => void removeFile(f.name)}
-                        aria-label="删除"
+                        className="pill shrink-0 px-2.5 py-1 text-[12px]"
+                        onClick={() => fileRef.current?.click()}
                       >
-                        <Trash2 size={12} />
+                        <FileUp size={12} />
+                        上传
                       </button>
-                    </li>
+                    </div>
                   ))}
-                </ul>
-              ) : (
-                <p className="text-muted mt-2 text-[12px]">本题还没上传文件，未上传的评分点按 0 分算。</p>
-              )}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-ink text-[13px] font-semibold">本题已上传</h3>
+                  <span className="text-muted text-[12px] tabular-nums">{currentFiles.length} 个</span>
+                </div>
+                {currentFiles.length ? (
+                  <ul className="mt-2 divide-y divide-[var(--glass-hairline)]">
+                    {currentFiles.map((f) => (
+                      <li key={f.name} className="flex items-center gap-2 py-2 text-[12px]">
+                        <span className="bg-success-soft text-success-ink shrink-0 rounded-full px-2 py-0.5 font-medium">
+                          已传
+                        </span>
+                        <span className="text-ink min-w-0 flex-1 truncate">{f.name}</span>
+                        <span className="text-muted shrink-0 tabular-nums">{kb(f.size)}</span>
+                        <button
+                          type="button"
+                          className="text-muted hover:text-danger-ink p-0.5 transition-colors"
+                          onClick={() => void removeFile(f.name)}
+                          aria-label="删除"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-muted mt-1.5 text-[12px]">尚未上传文件，未提交的评分点按 0 分计。</p>
+                )}
+                {busy ? <p className="text-brand-ink mt-2 text-[12px]">{busy}</p> : null}
+              </div>
+
+              {(currentPage?.notes ?? []).length ? (
+                <div className="hairline bg-surface/55 rounded-[12px] p-3">
+                  <h4 className="text-ink text-[12px] font-semibold">注意事项</h4>
+                  <ul className="text-muted mt-1.5 space-y-1 text-[12px] leading-relaxed">
+                    {(currentPage?.notes ?? []).map((n, i) => (
+                      <li key={i}>{n}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
               <input
                 ref={fileRef}
                 type="file"
@@ -1522,69 +1861,62 @@ export function AiPractical() {
                   if (f) void doUpload(f);
                 }}
               />
-              {busy ? <p className="text-brand mt-2 text-[12px]">{busy}</p> : null}
             </div>
           ) : (
-            <div className="mt-3">
-              <h3 className="text-ink text-[14px] font-medium">文件列表</h3>
-              <table className="mt-1 w-full text-[12px]">
-                <thead>
-                  <tr className="text-muted">
-                    <th className="w-[10%] border border-[var(--border)] px-1 py-1 text-left font-normal">序号</th>
-                    <th className="border border-[var(--border)] px-1 py-1 text-left font-normal">文件名</th>
-                    <th className="w-[18%] border border-[var(--border)] px-1 py-1 text-left font-normal">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(currentPage?.files ?? []).map((name, i) => (
-                    <tr key={name}>
-                      <td className="border border-[var(--border)] px-1 py-1 tabular-nums">{i + 1}</td>
-                      <td className="border border-[var(--border)] px-1 py-1 break-all">{name}</td>
-                      <td className="border border-[var(--border)] px-1 py-1 whitespace-nowrap">
-                        <a
-                          className="text-brand"
-                          href={API + '/materials/' + encodeURIComponent(paper[current]?.code ?? '') + '/' + name.split('/').map(encodeURIComponent).join('/')}
-                          download={name}
-                        >
-                          下载
-                        </a>
-                        {name.endsWith('.docx') ? (
-                          <a
-                            className="text-brand ml-2"
-                            href={API + '/sheet/' + encodeURIComponent(paper[current]?.code ?? '')}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            预览
-                          </a>
-                        ) : null}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <a
-                  className="pill px-2.5 py-1 text-[12px]"
-                  href={API + '/materials/' + encodeURIComponent(paper[current]?.code ?? '') + '.zip'}
-                  download={(paper[current]?.code ?? 'materials') + '.zip'}
-                >
-                  <Download size={12} className="mr-1" />
-                  打包下载
-                </a>
+            <div className="mt-4 space-y-4">
+              {/* 快捷操作按钮区 */}
+              <div className="flex flex-wrap gap-2">
+                {showJupyter ? (
+                  <a
+                    className="pill pill--solid px-3 py-1.5 text-[12px] font-medium"
+                    href={
+                      '/jupyter/tree/' +
+                      encodeURIComponent('素材') +
+                      '/' +
+                      encodeURIComponent(curCode) +
+                      '?token=' +
+                      jupyterToken
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink size={12} />
+                    在 Jupyter 中作答
+                  </a>
+                ) : null}
                 {hasSheet ? (
                   <button
                     type="button"
-                    className="pill pill--solid px-2.5 py-1 text-[12px]"
+                    className="pill pill--solid px-3 py-1.5 text-[12px] font-medium"
                     onClick={() => setSheetOpen(true)}
                   >
-                    <FileText size={12} className="mr-1" />
+                    <FileText size={12} />
                     在线填写答题卷
                   </button>
                 ) : null}
+                {hasNotebook ? (
+                  <a
+                    className="pill px-3 py-1.5 text-[12px]"
+                    href={
+                      '/jupyter/notebooks/' +
+                      encodeURIComponent('素材') +
+                      '/' +
+                      encodeURIComponent(curCode) +
+                      '/' +
+                      encodeURIComponent(curCode + '.ipynb') +
+                      '?token=' +
+                      jupyterToken
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink size={12} />
+                    打开本题 notebook
+                  </a>
+                ) : null}
                 {hasSheet ? (
                   <a
-                    className="pill px-2.5 py-1 text-[12px]"
+                    className="pill px-3 py-1.5 text-[12px]"
                     href={API + '/sheet/' + encodeURIComponent(curCode)}
                     target="_blank"
                     rel="noreferrer"
@@ -1592,58 +1924,109 @@ export function AiPractical() {
                     预览原卷
                   </a>
                 ) : null}
-                {showJupyter ? (
-                  <a
-                    className="pill pill--solid px-2.5 py-1 text-[12px]"
-                    href={'/jupyter/tree/' + encodeURIComponent('素材') + '/' + encodeURIComponent(curCode) + '?token=' + jupyterToken}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <ExternalLink size={12} className="mr-1" />
-                    在 jupyter 中作答
-                  </a>
-                ) : null}
-                {hasNotebook ? (
-                  <a
-                    className="pill px-2.5 py-1 text-[12px]"
-                    href={'/jupyter/notebooks/' + encodeURIComponent('素材') + '/' + encodeURIComponent(curCode) + '/' + encodeURIComponent(curCode + '.ipynb') + '?token=' + jupyterToken}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <ExternalLink size={12} className="mr-1" />
-                    打开本题 notebook
-                  </a>
-                ) : null}
+                <a
+                  className="pill px-3 py-1.5 text-[12px]"
+                  href={API + '/materials/' + encodeURIComponent(paper[current]?.code ?? '') + '.zip'}
+                  download={(paper[current]?.code ?? 'materials') + '.zip'}
+                >
+                  <Download size={12} />
+                  打包下载
+                </a>
                 {REF_CODES.has(curCode) ? (
                   <a
-                    className="pill px-2.5 py-1 text-[12px]"
-                    href={'/jupyter/notebooks/' + encodeURIComponent('素材') + '/' + encodeURIComponent(curCode) + '/' + encodeURIComponent(curCode + '_ref.ipynb') + '?token=' + jupyterToken}
+                    className="pill px-3 py-1.5 text-[12px]"
+                    href={
+                      '/jupyter/notebooks/' +
+                      encodeURIComponent('素材') +
+                      '/' +
+                      encodeURIComponent(curCode) +
+                      '/' +
+                      encodeURIComponent(curCode + '_ref.ipynb') +
+                      '?token=' +
+                      jupyterToken
+                    }
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <FileText size={12} className="mr-1" />
+                    <FileText size={12} />
                     参考做法（AI 生成）
                   </a>
                 ) : null}
               </div>
-              {showJupyter ? (
-                <p className="text-muted mt-2 text-[12px] leading-relaxed">
-                  现在是经典 notebook 界面（和考场同款）：导出用 File → Download as → HTML(.html)。考场里 jupyter 的工作目录是 D:\jupyter_notebook，本题素材目录就相当于那个位置（平台把素材解压到考生文件夹后在里面起 jupyter，效果一样）。本题没发 notebook 框架的，用 New → Python 3 自己新建即可。
-                </p>
-              ) : (
-                <p className="text-muted mt-2 text-[12px] leading-relaxed">
-                  本题是论述题，按试题单把答案写进答题卷就行，不用开 jupyter。点「在线填写答题卷」可以直接在网页里按原卷的表格和空格逐处填写，填完自动存成 {curCode}.docx 交上去，也可以下载原卷用 Word 填。
-                </p>
-              )}
-              <p className="text-muted mt-1 text-[12px] leading-relaxed">
-                参考做法是 AI 照着试题单写的一份可运行代码，只用来对照思路。建议先自己写完再看，真考不提供这个。
-              </p>
-              {hasSheet ? (
-                <p className="text-muted mt-1 text-[12px] leading-relaxed">
-                  答题卷是 Word 二进制文件，jupyter 里双击它只会报「is not UTF-8 encoded」，看不到内容——那是加载不了，不是文件坏了。
-                  想照原样看就点「预览原卷」；要打字就点「在线填写答题卷」，按字段填完自动存成 {curCode}.docx（这份就是判分用的答卷）。
-                </p>
-              ) : null}
+
+              {/* 素材文件列表 */}
+              <div>
+                <h3 className="text-ink text-[13px] font-semibold">素材文件</h3>
+                <div className="hairline mt-2 overflow-hidden rounded-[12px]">
+                  <table className="glass-table">
+                    <thead>
+                      <tr>
+                        <th className="w-10">#</th>
+                        <th>文件名</th>
+                        <th className="w-20">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(currentPage?.files ?? []).map((name, i) => (
+                        <tr key={name}>
+                          <td className="text-muted tabular-nums">{i + 1}</td>
+                          <td className="text-ink break-all">{name}</td>
+                          <td className="whitespace-nowrap">
+                            <a
+                              className="text-brand-ink font-medium hover:underline"
+                              href={
+                                API +
+                                '/materials/' +
+                                encodeURIComponent(paper[current]?.code ?? '') +
+                                '/' +
+                                name.split('/').map(encodeURIComponent).join('/')
+                              }
+                              download={name}
+                            >
+                              下载
+                            </a>
+                            {name.endsWith('.docx') ? (
+                              <a
+                                className="text-brand-ink ml-2 hover:underline"
+                                href={API + '/sheet/' + encodeURIComponent(paper[current]?.code ?? '')}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                预览
+                              </a>
+                            ) : null}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* 可折叠的操作说明，减少视觉干扰 */}
+              <details className="hairline bg-surface/55 rounded-[12px] p-3">
+                <summary className="text-secondary flex cursor-pointer list-none items-center justify-between text-[12px] font-medium">
+                  <span>作答与导出说明</span>
+                  <ChevronDown size={14} />
+                </summary>
+                <div className="text-muted mt-2 space-y-2 text-[12px] leading-relaxed">
+                  {showJupyter ? (
+                    <p>
+                      经典 notebook 界面与考场一致：导出请用 File → Download as → HTML(.html)。素材目录即考场工作目录；未发框架时用 New → Python 3 新建。
+                    </p>
+                  ) : (
+                    <p>
+                      本题为论述题，无需打开 Jupyter。点「在线填写答题卷」可直接按原卷填写并自动存为 {curCode}.docx，也可下载原卷用 Word 填写。
+                    </p>
+                  )}
+                  <p>参考做法为 AI 对照试题单生成的可运行代码，仅用于对照思路，建议独立完成后查看。</p>
+                  {hasSheet ? (
+                    <p>
+                      答题卷为 Word 二进制文件，在 Jupyter 中双击会提示非 UTF-8；查看原样请点「预览原卷」，填写请点「在线填写答题卷」。
+                    </p>
+                  ) : null}
+                </div>
+              </details>
             </div>
           )}
         </section>
@@ -1661,27 +2044,7 @@ export function AiPractical() {
         />
       ) : null}
 
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          className="pill px-3 py-1.5 text-[12px]"
-          onClick={() => setCurrent((c) => Math.max(0, c - 1))}
-          disabled={current === 0}
-        >
-          <ChevronLeft size={12} className="mr-1" />
-          上一题
-        </button>
-        <button
-          type="button"
-          className="pill px-3 py-1.5 text-[12px]"
-          onClick={() => setCurrent((c) => Math.min(paper.length - 1, c + 1))}
-          disabled={current >= paper.length - 1}
-        >
-          下一题
-          <ChevronRight size={12} className="ml-1" />
-        </button>
-        {error ? <span className="text-danger-ink text-[12px]">{error}</span> : null}
-      </div>
+      {error ? <p className="text-danger-ink text-[13px]">{error}</p> : null}
     </div>
   );
 }
@@ -1699,50 +2062,68 @@ function ResultCard({
   auto: boolean;
   seconds: number;
 }) {
+  const passed = result.total >= 60;
   return (
-    <section className="glass px-4 py-4 sm:px-5">
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
-        <span className="text-ink text-[22px] font-semibold tabular-nums">
-          {result.total} / {result.max}
+    <section className="glass p-5 sm:p-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className={`text-[36px] leading-none font-semibold tabular-nums ${passed ? 'text-success-ink' : 'text-danger-ink'}`}>
+          {result.total}
+          <span className="text-muted ml-1 text-[15px] font-normal">/ {result.max}</span>
         </span>
-        <span className={'text-[13px] ' + (result.total >= 60 ? 'text-success-ink' : 'text-danger-ink')}>
-          {result.total >= 60 ? '合格' : '不合格（60 分合格）'}
+        <span
+          className={`rounded-full px-2.5 py-0.5 text-[12px] font-medium ${
+            passed ? 'bg-success-soft text-success-ink' : 'bg-danger-soft text-danger-ink'
+          }`}
+        >
+          {passed ? '合格' : '不合格（60 分合格）'}
         </span>
-        {seconds ? <span className="text-muted text-[12px]">交卷用时 {fmt(seconds)}</span> : null}
-        {auto ? <span className="text-warn text-[12px]">到点自动交卷</span> : null}
+        {seconds ? <span className="text-muted text-[13px] tabular-nums">交卷用时 {fmt(seconds)}</span> : null}
+        {auto ? (
+          <span className="bg-warn-soft text-warn rounded-full px-2.5 py-0.5 text-[12px] font-medium">到点自动交卷</span>
+        ) : null}
       </div>
-      <p className="text-warn mt-2 text-[12px] leading-relaxed">
-        AI 判分只核对材料是否齐全、文件名和关键代码或字段是否对上；截图里画得对不对、文档写得好不好它看不出来。这个分数用来查漏，不等于真实考场成绩。
+
+      <p className="bg-warn-soft/55 text-warn mt-3 rounded-[12px] px-3.5 py-2.5 text-[12px] leading-relaxed">
+        AI 判分核对材料完整性、文件名与关键代码或字段；截图画面与主观论述深度仅供参考，不等同真实考场成绩。
       </p>
-      {result.summary ? <p className="text-muted mt-2 text-[13px] leading-relaxed">{result.summary}</p> : null}
-      <div className="mt-3 space-y-3">
+
+      {result.summary ? <p className="text-secondary mt-3 text-[13px] leading-relaxed">{result.summary}</p> : null}
+
+      <div className="mt-4 space-y-3">
         {result.items.map((it) => {
           const meta = paper.find((p) => p.code === it.code) ?? AI_PRACTICAL_POOL.find((p) => p.code === it.code);
           const ans = answerOf(it.code);
           return (
-            <div key={it.code}>
-              <div className="flex flex-wrap items-baseline gap-x-3">
-                <span className="text-ink text-[14px] font-medium tabular-nums">
-                  {it.code} {it.score} / {it.max}
+            <div key={it.code} className="hairline bg-surface/55 rounded-[14px] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-semibold tabular-nums">
+                    {it.code}
+                  </span>
+                  <span className="text-ink text-[15px] font-medium">{meta?.title}</span>
+                </div>
+                <span className="text-ink text-[15px] font-semibold tabular-nums">
+                  {it.score} / {it.max} 分
                 </span>
-                <span className="text-muted text-[12px]">{meta?.title}</span>
               </div>
+
               {it.points.length ? (
-                <ul className="mt-1 space-y-1">
+                <ul className="hairline-t mt-3 divide-y divide-[var(--glass-hairline)] pt-1">
                   {it.points.map((p) => {
                     const rubric = meta?.rubric.find((r) => r.id === p.id);
                     const full = rubric?.score ?? 0;
+                    const tone =
+                      p.got >= full && full > 0
+                        ? 'bg-success-soft text-success-ink'
+                        : p.got > 0
+                          ? 'bg-warn-soft text-warn'
+                          : 'bg-danger-soft text-danger-ink';
                     return (
-                      <li key={p.id} className="flex items-baseline gap-2 text-[12.5px]">
-                        <span
-                          className={
-                            'w-16 shrink-0 tabular-nums ' +
-                            (p.got >= full && full > 0 ? 'text-success-ink' : p.got > 0 ? 'text-ink' : 'text-danger-ink')
-                          }
-                        >
+                      <li key={p.id} className="flex items-start gap-2.5 py-2 text-[13px]">
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[12px] font-medium tabular-nums ${tone}`}>
                           {p.id} {p.got}/{full}
                         </span>
-                        <span className="text-muted min-w-0 flex-1">
+                        <span className="text-secondary min-w-0 flex-1 leading-relaxed">
                           {rubric?.desc ? rubric.desc + ' ' : ''}
                           {p.why}
                         </span>
@@ -1751,13 +2132,16 @@ function ResultCard({
                   })}
                 </ul>
               ) : null}
+
               {ans ? (
-                <details className="mt-2">
-                  <summary className="text-brand cursor-pointer text-[12px]">参考答案（第三方整理，非官方）</summary>
-                  <pre className="text-secondary mt-1 font-sans text-[12.5px] leading-relaxed whitespace-pre-wrap">
+                <details className="mt-3">
+                  <summary className="text-brand-ink cursor-pointer text-[12px] font-medium">
+                    查看参考答案（第三方整理，非官方）
+                  </summary>
+                  <pre className="hairline bg-canvas/80 text-secondary mt-2 rounded-[12px] p-3 font-sans text-[13px] leading-relaxed whitespace-pre-wrap">
                     {ans.text}
                   </pre>
-                  <p className="text-muted mt-1 text-[12px] leading-relaxed">{ans.note}</p>
+                  <p className="text-muted mt-1.5 text-[12px] leading-relaxed">{ans.note}</p>
                 </details>
               ) : null}
             </div>
@@ -1790,7 +2174,7 @@ function SheetParaBlock({
           {part}
           {i < parts.length - 1 ? (
             <input
-              className="border-line bg-surface-2 text-ink mx-1 min-w-[160px] rounded-md border px-2 py-0.5 text-[13px] outline-none"
+              className="hairline bg-canvas text-ink focus:border-brand mx-1 min-w-[160px] rounded-[8px] px-2.5 py-1 text-[13px] outline-none"
               value={values[block.id + '#' + i] ?? ''}
               onChange={(e) => set(block.id + '#' + i, e.target.value)}
             />
@@ -1865,43 +2249,48 @@ function SheetEditor({
   const filled = Object.values(values).filter((v) => v.trim()).length;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/45 px-3 py-6">
-      <div className="glass mx-auto w-full max-w-[880px] px-4 py-4 sm:px-6">
-        <div className="flex flex-wrap items-start justify-between gap-2">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/45 px-3 py-6 backdrop-blur-sm">
+      <div className="glass-panel mx-auto w-full max-w-[900px] p-5 sm:p-6">
+        <div className="hairline-b flex flex-wrap items-center justify-between gap-3 pb-4">
           <div className="min-w-0">
-            <h3 className="text-ink text-[15px] font-semibold">答题卷 {code}</h3>
-            <p className="text-muted mt-0.5 text-[12px] leading-relaxed">
-              按原卷的表格和空格逐处填写，共 {sheet.fieldCount} 处，已填 {filled} 处。停手 1 秒自动保存成 {code}
-              .docx，这份就是判分用的答卷。
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-ink text-[15px] font-semibold">在线答题卷 {code}</h3>
+              <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
+                已填 {filled} / {sheet.fieldCount} 处
+              </span>
+            </div>
+            <p className="text-muted mt-1 text-[12px]">
+              停手 1 秒自动保存为 {code}.docx，作为判分答卷
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2.5">
             <span className="text-muted text-[12px]">
-              {state === 'saving' ? '保存中…' : state === 'saved' ? '已保存' : state === 'error' ? msg : ''}
+              {state === 'saving' ? '保存中…' : state === 'saved' ? '已自动保存' : state === 'error' ? msg : ''}
             </span>
-            <button type="button" className="pill pill--solid px-3 py-1.5 text-[12px]" onClick={finish}>
-              <Send size={12} className="mr-1" />
+            <button type="button" className="pill pill--solid px-4 py-1.5 text-[12px] font-medium" onClick={finish}>
+              <Send size={12} />
               保存并关闭
             </button>
           </div>
         </div>
-        <div className="mt-3 space-y-2">
+
+        <div className="mt-4 space-y-3">
           {sheet.blocks.map((b) =>
             b.kind === 'p' ? (
               <SheetParaBlock key={b.id} block={b} values={values} set={set} />
             ) : (
-              <div key={b.id} className="overflow-x-auto">
-                <table className="w-full border-collapse text-[12.5px]">
+              <div key={b.id} className="hairline overflow-x-auto rounded-[12px]">
+                <table className="glass-table">
                   <tbody>
                     {b.rows.map((row: SheetCell[], ri: number) => (
                       <tr key={ri}>
                         {row.map((cell: SheetCell, ci: number) => (
-                          <td key={ci} className="border-line border px-2 py-1 align-top">
+                          <td key={ci} className="hairline-r last:border-r-0">
                             {cell.field ? (
                               <textarea
-                                className="text-ink w-full resize-y bg-transparent text-[12.5px] leading-relaxed outline-none"
+                                className="text-ink focus:bg-brand-soft/20 w-full resize-y rounded-[6px] bg-transparent p-1 text-[13px] leading-relaxed outline-none"
                                 rows={2}
-                                placeholder="（填写处）"
+                                placeholder="在此填写…"
                                 value={values[cell.field] ?? ''}
                                 onChange={(e) => set(cell.field, e.target.value)}
                               />

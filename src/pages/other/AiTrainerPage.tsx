@@ -1,5 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronLeft, ChevronRight, Clock, Lightbulb, RotateCcw, X } from 'lucide-react';
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Flag,
+  Lightbulb,
+  ListFilter,
+  Play,
+  RotateCcw,
+  X,
+} from 'lucide-react';
 import { AiPractical } from './AiPractical';
 import {
   AI_THEORY_MINUTES,
@@ -137,14 +148,12 @@ function buildPaper(seed?: PaperSeed): Paper {
     const target = Math.min(block.count, pool.length);
     const chosen: AiQuestion[] = [];
     if (seed) {
-      // 1. 先按比例补错题：错得越多越先上榜
       const wrongCandidates = pool
         .filter((q) => seed.wrongs.has(q.id))
         .sort((a, b) => (seed.wrongs.get(b.id) ?? 0) - (seed.wrongs.get(a.id) ?? 0));
       const wrongQuota = Math.min(Math.floor(target * EXAM_WRONG_RATIO), wrongCandidates.length);
       for (const q of wrongCandidates.slice(0, wrongQuota)) chosen.push(q);
     }
-    // 2. 剩下席位优先出没做过的新题，新题不够才用做过的题补
     const restPool = pool.filter((q) => !chosen.some((c) => c.id === q.id));
     const need = target - chosen.length;
     if (need > 0) {
@@ -154,7 +163,6 @@ function buildPaper(seed?: PaperSeed): Paper {
       const left = target - chosen.length;
       if (left > 0) chosen.push(...shuffle(seenPool).slice(0, left));
     }
-    // 3. 还不够（比如题池本来就小）就随便补满
     if (chosen.length < target) {
       for (const q of shuffle(pool.filter((q) => !chosen.some((c) => c.id === q.id)))) {
         if (chosen.length >= target) break;
@@ -216,17 +224,17 @@ function normalizeDrillSession(input: unknown): DrillRun | null {
   if (!data.questions.every((q) => q && typeof q.id === 'string' && Array.isArray(q.shown))) return null;
   const pat = data.patternId ? patternById(data.patternId) : undefined;
   return {
-      kind: 'wrongs',
-      patternId: pat ? pat.id : undefined,
-      patternTitle: typeof data.patternTitle === 'string' ? data.patternTitle : pat?.title,
-      patternTip: typeof data.patternTip === 'string' ? data.patternTip : pat?.tip,
-      questions: data.questions,
-      cursor: Math.min(Math.max(Number(data.cursor) || 0, 0), data.questions.length - 1),
-      picks: data.picks ?? {},
-      submitted: !!data.submitted,
-      labels: data.labels ?? {},
-      fixPicks: data.fixPicks ?? {},
-      fixed: data.fixed ?? {},
+    kind: 'wrongs',
+    patternId: pat ? pat.id : undefined,
+    patternTitle: typeof data.patternTitle === 'string' ? data.patternTitle : pat?.title,
+    patternTip: typeof data.patternTip === 'string' ? data.patternTip : pat?.tip,
+    questions: data.questions,
+    cursor: Math.min(Math.max(Number(data.cursor) || 0, 0), data.questions.length - 1),
+    picks: data.picks ?? {},
+    submitted: !!data.submitted,
+    labels: data.labels ?? {},
+    fixPicks: data.fixPicks ?? {},
+    fixed: data.fixed ?? {},
   };
 }
 
@@ -263,8 +271,6 @@ function saveResume(state: ResumeState) {
 
 /** 交卷时把答错的题记下来：下次考前必须先全部做对，才解锁新卷。 */
 const WRONG_KEY = 'xj.ai.wrongs.v1';
-/** 云端整份文档（考试记录 + 错题本），换设备也能接上。 */
-/** 刷题进度（卡片 / 每日账 / 错题集 / 每天新题量）的云同步槽位。 */
 /** 题库落在服务器 MySQL（xuexizhitu.ai_question / ai_question_seen），考试和刷题都算「做过」。 */
 const BANK_API = '/ai-lab';
 
@@ -299,7 +305,6 @@ function lettersOf(list: string[]): string {
 
 function isRight(q: ExamQuestion, mine: string[]) {
   return mine.length > 0 && mine.length === q.key.length && [...mine].sort().join('') === [...q.key].sort().join('');
-
 }
 
 function scoreOf(paper: Paper, picked: Record<string, string[]>) {
@@ -314,8 +319,7 @@ function scoreOf(paper: Paper, picked: Record<string, string[]>) {
       blank += 1;
       continue;
     }
-    const ok =
-      mine.length === q.key.length && [...mine].sort().join('') === [...q.key].sort().join('');
+    const ok = mine.length === q.key.length && [...mine].sort().join('') === [...q.key].sort().join('');
     if (ok) {
       correct += 1;
       score += perType.get(q.type) ?? 0;
@@ -354,7 +358,7 @@ function QuestionCard({
   revealed,
   marked,
   onToggleMark,
-  hint,
+  hints,
   hideMultiTip,
 }: {
   question: ExamQuestion;
@@ -365,8 +369,8 @@ function QuestionCard({
   revealed: boolean;
   marked?: boolean;
   onToggleMark?: () => void;
-  /** 题号旁的角标，例如「错题 ×3」。 */
-  hint?: string;
+  /** 题号旁的角标列表，例如 ['错 3 次', '从未做对']。 */
+  hints?: string[];
   /** 刷题模式下不显示「多选要选全」这类提示。 */
   hideMultiTip?: boolean;
 }) {
@@ -374,35 +378,41 @@ function QuestionCard({
   const correctSet = new Set(question.key);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-baseline gap-2">
-        <span className="text-muted text-[12px] tabular-nums">
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-muted text-[13px] font-medium tabular-nums">
           {index + 1} / {total}
         </span>
-        <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5 text-[12px]">
+        <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium">
           {TYPE_LABEL[question.type]}
         </span>
-        {hint ? (
-          <span className="bg-danger-soft text-danger rounded-full px-2 py-0.5 text-[12px]">{hint}</span>
-        ) : null}
+        {(hints ?? []).map((tag) => (
+          <span
+            key={tag}
+            className="bg-danger-soft text-danger-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium"
+          >
+            {tag}
+          </span>
+        ))}
         {onToggleMark ? (
           <button
             type="button"
             onClick={onToggleMark}
-            className={`pill ml-auto px-2.5 py-1 text-[12px] ${marked ? 'pill--solid' : ''}`}
+            className={`pill ml-auto px-3 py-1 text-[12px] ${marked ? 'pill--solid' : ''}`}
           >
+            <Flag size={12} strokeWidth={1.9} />
             {marked ? '已标记' : '标记待定'}
           </button>
         ) : null}
       </div>
 
-      <p className="text-ink text-[15px] leading-relaxed">{question.stem}</p>
+      <p className="text-ink text-[15px] leading-[1.75] font-medium">{question.stem}</p>
 
       {question.type === 'tf' ? (
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-3 sm:max-w-[340px]">
           {[
-            { value: 'T', label: '正确' },
-            { value: 'F', label: '错误' },
+            { value: 'T', label: '正确', hotkey: 'T' },
+            { value: 'F', label: '错误', hotkey: 'F' },
           ].map((opt) => {
             const active = picked.includes(opt.value);
             const good = revealed && correctSet.has(opt.value);
@@ -412,17 +422,30 @@ function QuestionCard({
                 key={opt.value}
                 type="button"
                 onClick={() => onPick(opt.value)}
-                className={`pill min-w-24 px-5 py-2.5 text-[14px] ${
-                  bad ? 'text-danger-ink' : good || active ? 'pill--solid' : ''
+                className={`glass-tile flex items-center justify-between px-4 py-3 text-[15px] font-medium ${
+                  bad
+                    ? 'border-danger/60 bg-danger-soft/70 text-danger-ink'
+                    : good
+                      ? 'border-success/60 bg-success-soft/70 text-success-ink'
+                      : active
+                        ? 'border-brand bg-brand text-white shadow-[0_6px_16px_color-mix(in_srgb,var(--iris-9)_26%,transparent)]'
+                        : 'text-ink'
                 }`}
               >
-                {opt.label}
+                <span>{opt.label}</span>
+                <span
+                  className={`grid size-6 place-items-center rounded-full text-[12px] tabular-nums ${
+                    active && !bad && !good ? 'bg-white/20 text-white' : 'bg-surface-2 text-muted'
+                  }`}
+                >
+                  {opt.hotkey}
+                </span>
               </button>
             );
           })}
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5">
           {question.shown.map((opt) => {
             const active = picked.includes(opt.key);
             const good = revealed && correctSet.has(opt.key);
@@ -432,25 +455,37 @@ function QuestionCard({
                 key={opt.key}
                 type="button"
                 onClick={() => onPick(opt.key)}
-                className={`glass flex items-start gap-3 px-4 py-3 text-left text-[14px] leading-relaxed transition ${
-                  bad ? 'text-danger-ink' : good ? 'text-success-ink' : 'text-ink'
-                } ${active ? 'ring-brand/60 ring-1' : ''}`}
+                className={`glass-tile flex items-start gap-3 px-4 py-3 text-left text-[15px] leading-relaxed ${
+                  bad
+                    ? 'border-danger/50 bg-danger-soft/60 text-danger-ink'
+                    : good
+                      ? 'border-success/50 bg-success-soft/60 text-success-ink'
+                      : active
+                        ? 'border-brand bg-brand-soft/65 text-ink'
+                        : 'text-ink'
+                }`}
               >
                 <span
-                  className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full text-[12px] tabular-nums ${
-                    active ? 'bg-brand text-white' : 'bg-line/70 text-secondary'
+                  className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-full text-[12px] font-semibold tabular-nums transition-colors ${
+                    bad
+                      ? 'bg-danger-solid text-white'
+                      : good
+                        ? 'bg-success text-white'
+                        : active
+                          ? 'bg-brand text-white'
+                          : 'bg-surface-2 text-secondary'
                   }`}
                 >
                   {opt.key}
                 </span>
                 <span className="min-w-0 flex-1">{opt.text}</span>
-                {good ? <Check className="text-success-ink size-4 shrink-0" /> : null}
-                {bad ? <X className="text-danger-ink size-4 shrink-0" /> : null}
+                {good ? <Check className="text-success-ink mt-1 size-4 shrink-0" /> : null}
+                {bad ? <X className="text-danger-ink mt-1 size-4 shrink-0" /> : null}
               </button>
             );
           })}
           {isMulti && !hideMultiTip ? (
-            <p className="text-muted text-[12px]">多选题：选全才得分，多选少选都不得分。</p>
+            <p className="text-muted text-[12px]">多选题需全选正确项，多选或少选均不得分。</p>
           ) : null}
         </div>
       )}
@@ -462,17 +497,18 @@ function ExplainBlock({ id }: { id: string }) {
   const ex = explainOf(id);
   if (!ex) return null;
   return (
-    <div className="border-line mt-4 rounded-[14px] border px-3.5 py-3">
-      <div className="flex flex-wrap items-center gap-1.5 text-[12px]">
-        <Lightbulb className="text-brand-ink size-3.5" />
-        <span className="text-brand-ink font-medium">解析</span>
+    <div className="hairline bg-surface/65 mt-4 rounded-[14px] px-4 py-3">
+      <div className="flex flex-wrap items-center gap-2 text-[12px]">
+        <span className="text-brand-ink inline-flex items-center gap-1 font-medium">
+          <Lightbulb className="size-3.5" />
+          解析
+        </span>
         <span className="text-muted">{ex.ai ? 'AI 归纳，非官方答案' : '来源：官方题库'}</span>
       </div>
       <p className="text-secondary mt-1.5 text-[13px] leading-relaxed">{ex.text}</p>
     </div>
   );
 }
-
 
 export function AiTrainerPage() {
   const [tab, setTab] = useState<'theory' | 'skill' | 'info'>('theory');
@@ -481,9 +517,7 @@ export function AiTrainerPage() {
   const [picked, setPicked] = useState<Record<string, string[]>>({});
   const [cursor, setCursor] = useState(0);
   const [left, setLeft] = useState(0);
-  const [result, setResult] = useState<{ score: number; correct: number; wrong: number; blank: number } | null>(
-    null,
-  );
+  const [result, setResult] = useState<{ score: number; correct: number; wrong: number; blank: number } | null>(null);
   const [records, setRecords] = useState<ExamRecord[]>(() => loadRecords());
   const [review, setReview] = useState(false);
   const [marked, setMarked] = useState<Record<string, boolean>>({});
@@ -527,13 +561,11 @@ export function AiTrainerPage() {
     };
   }, []);
 
-  // 刷题会话也存云端：换设备/换浏览器打开，直接接着上次那一页
   useEffect(() => {
     if (!cloudReady) return;
     if (drill) dbSet(DRILL_SESSION_KEY, drill);
     else dbDel(DRILL_SESSION_KEY);
   }, [drill, cloudReady]);
-
 
   useEffect(() => {
     if (!cloudReady) return;
@@ -605,7 +637,8 @@ export function AiTrainerPage() {
     if (same) return;
     saveQueue(next);
     setQueue(next);
-  }, [queue, conf, srs]);
+  }, [queue, conf, srs, cloudReady]);
+
   const submitted = useRef(false);
   const nextTimer = useRef<number | null>(null);
 
@@ -621,7 +654,6 @@ export function AiTrainerPage() {
     const spent = paper.seconds - left;
     const isWrongRun = paper.mode === 'wrongs';
 
-    // 错题账本：错题复盘时做对的移除、没做对（含未作答）的留下；正式卷把新错的记进来
     let nextWrongs = wrongs;
     const examWrongIds: string[] = [];
     if (isWrongRun) {
@@ -632,7 +664,6 @@ export function AiTrainerPage() {
       const map = new Map(wrongs.map((e) => [e.qid, e]));
       const now = new Date().toISOString();
       for (const q of paper.questions) {
-        /* 多选只在考卷里出现，错了也不记进错题本 */
         if (q.type === 'multi') continue;
         const mine = picked[q.id] ?? [];
         if (mine.length === 0 || isRight(q, mine)) continue;
@@ -643,7 +674,7 @@ export function AiTrainerPage() {
     }
     saveWrongs(nextWrongs);
     setWrongs(nextWrongs);
-    /* 这张卷考过的题都算「做过」，写进服务器 MySQL */
+
     const examIds = paper.questions.map((q) => q.id);
     setSeenIds((prev) => new Set([...prev, ...examIds]));
     void fetch(BANK_API + '/bank/mark', {
@@ -692,7 +723,6 @@ export function AiTrainerPage() {
     [records],
   );
 
-  // 作答过程随时落盘，刷新/关页可续做
   useEffect(() => {
     if (!cloudReady) return;
     if (!paper || result) return;
@@ -707,7 +737,7 @@ export function AiTrainerPage() {
       marks: marked,
       items: paper.questions.map((q) => ({ qid: q.id, shown: q.shown, key: q.key })),
     });
-  }, [paper, result, left, cursor, picked, marked]);
+  }, [paper, result, left, cursor, picked, marked, cloudReady]);
 
   const submit = useCallback(() => {
     if (!paper || submitted.current) return;
@@ -716,7 +746,6 @@ export function AiTrainerPage() {
     doSubmit();
   }, [paper, answered, doSubmit]);
 
-  /** 选完就走：判断题/单选题自动跳到下一题，多选题留给用户确认。 */
   const advance = useCallback(
     (delay = 200) => {
       if (!paper) return;
@@ -759,7 +788,6 @@ export function AiTrainerPage() {
     [paper],
   );
 
-  // 切题后回到题目顶部（长题干时不用手动往上滚）
   useEffect(() => {
     if (!paper || result) return;
     document.getElementById('ai-question-card')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
@@ -806,7 +834,6 @@ export function AiTrainerPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [paper, result, cursor, pick, goto, toggleMark]);
 
-  // 倒计时
   useEffect(() => {
     if (!paper || result) return;
     const timer = window.setInterval(() => {
@@ -822,7 +849,6 @@ export function AiTrainerPage() {
   }, [paper, result]);
 
   useEffect(() => {
-    // 时间到直接交卷，不走确认框
     if (paper && !result && left === 0) doSubmit();
   }, [left, paper, result, doSubmit]);
 
@@ -845,8 +871,6 @@ export function AiTrainerPage() {
     dbSet(PROGRESS_KEY, { id: fresh.id, startedAt: fresh.startedAt, left: fresh.seconds });
   };
 
-
-  /** 刷题不改选项：选了就存着，交卷时才判断对错。 */
   const drillPick = (question: ExamQuestion, value: string) => {
     setDrill((prev) => {
       if (!prev || prev.submitted) return prev;
@@ -859,7 +883,6 @@ export function AiTrainerPage() {
           : [value];
       return { ...prev, picks: { ...prev.picks, [question.id]: next } };
     });
-    // 判断/单选：选完稍等一下自动翻到下一题；多选要自己点「下一题」。
     if (question.type !== 'multi') {
       window.setTimeout(() => {
         setDrill((prev) => {
@@ -873,7 +896,6 @@ export function AiTrainerPage() {
     }
   };
 
-  /** 交卷：整批一次结算，按对错推进卡片，并记当天账。 */
   const submitDrill = () => {
     const cur = drill;
     if (!cur || cur.submitted) return;
@@ -900,9 +922,7 @@ export function AiTrainerPage() {
       }
       return next;
     });
-    /* 考卷错题只能在错题模式里做对一遍才摘掉，摘完才解锁下一次理论考试 */
     if (cur.kind === 'wrongs') clearExamWrong(results.filter((r) => r.ok).map((r) => r.q.id));
-    /* 这一批刷过的题也算「做过」，写进服务器 MySQL */
     const batchIds = results.map((r) => r.q.id);
     setSeenIds((prev) => new Set([...prev, ...batchIds]));
     void fetch(BANK_API + '/bank/mark', {
@@ -911,21 +931,6 @@ export function AiTrainerPage() {
       body: JSON.stringify({ ids: batchIds, source: 'drill' }),
     }).catch(() => undefined);
     setDrill({ ...cur, submitted: true });
-  };
-
-  /** 交卷按钮：还有未作答的题时先确认一次。 */
-  const askSubmitDrill = () => {
-    if (!drill || drill.submitted) return;
-    const blank = drill.questions.length - drillStats.answered;
-    if (blank > 0 && !window.confirm('还有 ' + blank + ' 题没答，未作答的按答错计入本批，确定交卷？')) return;
-    submitDrill();
-  };
-
-  const drillGo = (delta: number) => {
-    const cur = drill;
-    if (!cur || cur.submitted) return;
-    const next = Math.min(cur.questions.length - 1, Math.max(0, cur.cursor + delta));
-    if (next !== cur.cursor) setDrill({ ...cur, cursor: next });
   };
 
   const drillStats = useMemo(() => {
@@ -945,13 +950,25 @@ export function AiTrainerPage() {
     return { right, wrong, answered: right + wrong, fresh, review };
   }, [drill]);
 
-  /** 考卷错题还没在错题模式里做对过的数量：没清完不让开新卷。题库里已经不存在的题不算，免得永远解锁不了。 */
+  const askSubmitDrill = () => {
+    if (!drill || drill.submitted) return;
+    const blank = drill.questions.length - drillStats.answered;
+    if (blank > 0 && !window.confirm('还有 ' + blank + ' 题没答，未作答的按答错计入本批，确定交卷？')) return;
+    submitDrill();
+  };
+
+  const drillGo = (delta: number) => {
+    const cur = drill;
+    if (!cur || cur.submitted) return;
+    const next = Math.min(cur.questions.length - 1, Math.max(0, cur.cursor + delta));
+    if (next !== cur.cursor) setDrill({ ...cur, cursor: next });
+  };
+
   const pendingExamWrongs = useMemo(() => {
     const known = new Set(PRACTICE_QUESTIONS.map((q) => q.id));
     return wrongs.filter((e) => known.has(e.qid)).length;
   }, [wrongs]);
 
-  /** 复盘里还没订正的错题数：订正完才允许开下一批。 */
   const unfixedCount = useMemo(() => {
     if (!drill || !drill.submitted) return 0;
     return drill.questions.filter((q) => !isRight(q, drill.picks[q.id] ?? []) && !drill.fixed[q.id]).length;
@@ -961,7 +978,8 @@ export function AiTrainerPage() {
     setDrill((prev) => {
       if (!prev) return prev;
       const mine = prev.fixPicks[q.id] ?? [];
-      const nextMine = q.type === 'multi' ? (mine.includes(key) ? mine.filter((v) => v !== key) : [...mine, key]) : [key];
+      const nextMine =
+        q.type === 'multi' ? (mine.includes(key) ? mine.filter((v) => v !== key) : [...mine, key]) : [key];
       return { ...prev, fixPicks: { ...prev.fixPicks, [q.id]: nextMine } };
     });
     setFixBad((prev) => (prev[q.id] ? { ...prev, [q.id]: false } : prev));
@@ -985,7 +1003,10 @@ export function AiTrainerPage() {
     setWrongPicker(false);
   };
 
-  /** 按某一种错题规律/专题抓出全部匹配错题（不固定题数），专门练这一类。 */
+  const wrongList = useMemo(() => sortWrongs(wrongBook).filter((w) => !MULTI_IDS.has(w.qid)), [wrongBook]);
+  const practiceWrongs = useMemo(() => wrongs.filter((e) => !MULTI_IDS.has(e.qid)), [wrongs]);
+  const qById = useMemo(() => new Map(AI_THEORY_QUESTIONS.map((q) => [q.id, q])), []);
+
   const startWrongPattern = (patternId: WrongPatternId) => {
     const def = patternById(patternId);
     if (!def) return;
@@ -1002,7 +1023,6 @@ export function AiTrainerPage() {
       seenPick.add(qid);
       orderedIds.push(qid);
     };
-    // 考卷待清错题排前面，其余错题集里的全部匹配题打乱后一起出
     for (const e of shuffle(practiceWrongs)) addCandidate(e.qid);
     for (const w of shuffle(wrongList)) addCandidate(w.qid);
 
@@ -1011,7 +1031,7 @@ export function AiTrainerPage() {
       .filter((q): q is AiQuestion => !!q)
       .map(mixQuestion);
     if (!questions.length) {
-      window.alert('当前筛选条件下这一类错题是空的，可以切回「全部错题」或换个专题。');
+      window.alert('当前筛选条件下这一类错题是空的，可以切回「全部命中」或换个专题。');
       return;
     }
     const labels: Record<string, 'new' | 'review' | 'wrong'> = {};
@@ -1034,7 +1054,6 @@ export function AiTrainerPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  /** 错题模式只出错题集。 */
   const startDrill = () => {
     const byId = qById;
     const size = sizeOf();
@@ -1045,11 +1064,13 @@ export function AiTrainerPage() {
       ids.push(qid);
       labels[qid] = label;
     };
-    // 题源只有错题集。考卷错题排最前（它们还卡着下一次考试，可能不在错题集或已标回），
-    // 其余还在错的按权重抽（错得越多越靠前），最后补已回的复习题。
     const examIds = new Set(practiceWrongs.map((e) => e.qid));
     for (const e of shuffle(practiceWrongs)) push(e.qid, 'wrong');
-    const activePool = [...wrongList.filter((w) => !isReviewing(w) && !examIds.has(w.qid)).map((w) => ({ qid: w.qid, weight: wrongWeight(w) }))];
+    const activePool = [
+      ...wrongList
+        .filter((w) => !isReviewing(w) && !examIds.has(w.qid))
+        .map((w) => ({ qid: w.qid, weight: wrongWeight(w) })),
+    ];
     while (ids.length < size && activePool.length) {
       const weights = activePool.map((w) => w.weight);
       const totalWeight = weights.reduce((a, b) => a + b, 0);
@@ -1074,7 +1095,6 @@ export function AiTrainerPage() {
     setDrill({ kind: 'wrongs', questions, cursor: 0, picks: {}, submitted: false, labels, fixPicks: {}, fixed: {} });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
 
   const clearAll = () => {
     if (!window.confirm('清空这台设备与云端的全部记录（成绩 + 错题本）？清完就像没做过题一样。')) return;
@@ -1111,12 +1131,6 @@ export function AiTrainerPage() {
   const drillQ = drill && !drill.submitted ? drill.questions[drill.cursor] : null;
   const drillPicked: string[] = drill && drillQ ? (drill.picks[drillQ.id] ?? []) : [];
 
-  /** 错题集，错得多的排前面。多选题不进错题集，历史残留的在这里过滤掉。 */
-  const wrongList = useMemo(() => sortWrongs(wrongBook).filter((w) => !MULTI_IDS.has(w.qid)), [wrongBook]);
-  /** 考卷错题同理：多选不参与错题模式，也不卡下一次考试。 */
-  const practiceWrongs = useMemo(() => wrongs.filter((e) => !MULTI_IDS.has(e.qid)), [wrongs]);
-  const qById = useMemo(() => new Map(AI_THEORY_QUESTIONS.map((q) => [q.id, q])), []);
-  /** 每个错题专项在当前筛选范围下的实时题量（动态算，不固定题数）。 */
   const wrongPatternCounts = useMemo(() => {
     const examPendingIds = new Set(practiceWrongs.map((e) => e.qid));
     const allIds = Array.from(new Set([...practiceWrongs.map((e) => e.qid), ...wrongList.map((w) => w.qid)])).filter(
@@ -1147,55 +1161,64 @@ export function AiTrainerPage() {
     }
     return counts;
   }, [wrongList, practiceWrongs, wrongBook, wrongScope, qById]);
-  const drillHint = (() => {
-    if (!drillQ) return '';
+
+  const drillHints = useMemo(() => {
+    if (!drillQ) return [];
     const parts: string[] = [];
     if (drill?.labels[drillQ.id] === 'new') parts.push('新题');
     else if (drill?.labels[drillQ.id] === 'review') parts.push('复习');
     const wb = wrongBook[drillQ.id];
     if (drill?.kind === 'wrongs' && wb) {
-      parts.push('错 ' + wb.misses + ' 次');
+      parts.push(`错 ${wb.misses} 次`);
       if (wb.right === 0) parts.push('从未做对');
     }
     const miss = wrongs.find((e) => e.qid === drillQ.id)?.misses ?? 0;
-    if (miss > 0) parts.push('考卷错过 ' + miss + ' 次');
-    return parts.join(' · ');
-  })();
-  const answerText = (q: ExamQuestion) => lettersOf(q.key);
+    if (miss > 0) parts.push(`考卷错过 ${miss} 次`);
+    return parts;
+  }, [drillQ, drill, wrongBook, wrongs]);
 
-  /** 错题集列表：刷题入口页和刷题面板共用。 */
+  const answerText = (q: ExamQuestion) => lettersOf(q.key);
+  const markedCount = Object.values(marked).filter(Boolean).length;
+
+  /** 错题集抽屉列表 */
   const wrongBookSection = wrongList.length ? (
-    <section className="glass flex flex-col gap-2 px-4 py-4 sm:px-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-ink text-[14px] font-semibold">错题集 · {wrongList.length} 题</h3>
-        <p className="text-muted text-[12px]">
-          进了就不出来：做对也不会消失，只多记一次「已对」；这里没有移出，题只会越攒越多。
-        </p>
+    <section className="glass p-4 sm:p-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 pb-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-ink text-[15px] font-semibold">错题集</h3>
+          <span className="bg-danger-soft text-danger-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
+            {wrongList.length} 题
+          </span>
+        </div>
+        <span className="text-muted text-[12px]">做对计入已对次数，记录保留供复盘</span>
       </div>
-      <div className="flex flex-col gap-1.5">
+      <div className="hairline-t max-h-[360px] overflow-y-auto">
         {wrongList.map((w, i) => {
           const q = qById.get(w.qid);
           return (
             <div
               key={w.qid}
-              className="border-danger flex flex-wrap items-center gap-2 rounded-[10px] border px-3 py-2 text-[12px]"
+              className="hairline-b flex flex-wrap items-center gap-2 py-2.5 text-[13px] last:border-b-0"
             >
-              <span className="text-muted tabular-nums">{i + 1}</span>
-              <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5">
+              <span className="text-muted w-6 shrink-0 text-[12px] tabular-nums">{i + 1}</span>
+              <span className="bg-brand-soft text-brand-ink shrink-0 rounded-full px-2 py-0.5 text-[12px]">
                 {q ? TYPE_LABEL[q.type] : '题目'}
               </span>
-              <span className="text-ink min-w-0 flex-1 truncate">{q ? q.stem : w.qid}</span>
-              {isReviewing(w) ? (
-                <span className="bg-accent-green/15 text-accent-green rounded-full px-2 py-0.5">复习</span>
-              ) : (
-                <span className="bg-danger-soft text-danger rounded-full px-2 py-0.5">错题</span>
-              )}
-              {w.exam > 0 ? (
-                <span className="bg-danger-soft text-danger rounded-full px-2 py-0.5">考试错题</span>
-              ) : null}
-              <span className="text-danger font-semibold tabular-nums">积分 {w.score.toFixed(1)}</span>
-              <span className="text-muted tabular-nums">错 {w.misses} 次 · 已对 {w.right} 次</span>
-              <span className="text-muted text-[11px]">留在错题集</span>
+              <span className="text-ink min-w-[200px] flex-1 truncate">{q ? q.stem : w.qid}</span>
+              <div className="flex shrink-0 flex-wrap items-center gap-1.5 text-[12px]">
+                {isReviewing(w) ? (
+                  <span className="bg-success-soft text-success-ink rounded-full px-2 py-0.5 font-medium">复习</span>
+                ) : (
+                  <span className="bg-danger-soft text-danger-ink rounded-full px-2 py-0.5 font-medium">错题</span>
+                )}
+                {w.exam > 0 ? (
+                  <span className="bg-warn-soft text-warn rounded-full px-2 py-0.5 font-medium">考卷错题</span>
+                ) : null}
+                <span className="text-danger-ink font-medium tabular-nums">积分 {w.score.toFixed(1)}</span>
+                <span className="text-muted tabular-nums">
+                  错 {w.misses} 对 {w.right}
+                </span>
+              </div>
             </div>
           );
         })}
@@ -1212,44 +1235,52 @@ export function AiTrainerPage() {
   ];
 
   if (!cloudReady) {
-    return <div className="text-secondary p-8 text-[13px]">正在读取云端记录…</div>;
+    return (
+      <div className="glass text-secondary p-8 text-center text-[13px]">正在读取云端学习记录…</div>
+    );
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-ink text-[22px] font-semibold">人工智能训练师（三级）</h1>
-        </div>
-        <div className="flex gap-1.5">
+    <div className="flex flex-col gap-4 lg:gap-5">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="page-title">人工智能训练师（三级）</h1>
+        <div role="tablist" aria-label="考试模块切换" className="segmented">
           {tabs.map((item) => (
             <button
               key={item.key}
               type="button"
+              role="tab"
+              aria-selected={tab === item.key}
+              data-active={tab === item.key}
               onClick={() => setTab(item.key)}
-              className={`pill px-3.5 py-1.5 text-[13px] ${tab === item.key ? 'pill--solid' : ''}`}
+              className="segmented-item"
             >
               {item.label}
             </button>
           ))}
         </div>
-      </div>
+      </header>
 
       {tab === 'info' ? (
-        <section className="glass divide-line/70 divide-y">
-          {[
-            ['职业名称', '人工智能训练师'],
-            ['职业编码', '4-04-05-05'],
-            ['报考等级', '三级 / 高级工'],
-            ['认定方式', '理论知识考试（闭卷机考）+ 操作技能考核（计算机机考）'],
-            ['合格标准', '两科各 100 分制，均达 60 分及以上合格；不及格可分别补考'],
-            ['本次考试', '2026-11-22；报名 11-06 13:30–16:30，长宁校区主楼 216'],
-          ].map(([label, value]) => (
-            <div key={label} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-4 py-3.5 sm:px-5">
-              <span className="text-muted w-24 shrink-0 text-[13px]">{label}</span>
-              <span className="text-ink min-w-0 flex-1 text-[14px]">{value}</span>
-            </div>
-          ))}
+        <section className="glass p-5 sm:p-6">
+          <dl className="divide-y divide-[var(--glass-hairline)]">
+            {[
+              ['职业名称', '人工智能训练师'],
+              ['职业编码', '4-04-05-05'],
+              ['报考等级', '三级 / 高级工'],
+              ['认定方式', '理论知识考试（闭卷机考）+ 操作技能考核（计算机机考）'],
+              ['合格标准', '两科各 100 分制，均达 60 分及以上合格；不及格可分别补考'],
+              ['本次考试', '2026-11-22（报名 11-06 13:30–16:30，长宁校区主楼 216）'],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="flex flex-col gap-1 py-3.5 first:pt-0 last:pb-0 sm:flex-row sm:items-baseline sm:gap-6"
+              >
+                <dt className="text-muted w-24 shrink-0 text-[13px]">{label}</dt>
+                <dd className="text-ink min-w-0 flex-1 text-[15px]">{value}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
       ) : null}
 
@@ -1259,98 +1290,146 @@ export function AiTrainerPage() {
         <>
           {!paper && !result && !drill ? (
             <>
-              <section className="glass flex flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-5">
-                <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
-                  <div>
-                    <p className="text-ink text-[22px] leading-none font-semibold tabular-nums">
-                      {PRACTICE_QUESTIONS.length}
-                    </p>
-                    <p className="text-secondary mt-2 text-[13px]">题库题量</p>
-                  </div>
-                  <div>
-                    <p className="text-ink text-[22px] leading-none font-semibold tabular-nums">
-                      {records.length}
-                    </p>
-                    <p className="text-secondary mt-2 text-[13px]">已做次数</p>
-                  </div>
-                  <div>
-                    <p className="text-brand-ink text-[22px] leading-none font-semibold tabular-nums">
-                      {best === null ? '—' : best}
-                    </p>
-                    <p className="text-secondary mt-2 text-[13px]">最高分</p>
-                  </div>
-                  <div>
-                    <p className="text-ink text-[22px] leading-none font-semibold tabular-nums">
-                      {avg === null ? '—' : avg}
-                    </p>
-                    <p className="text-secondary mt-2 text-[13px]">平均分</p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={start}
-                    disabled={pendingExamWrongs > 0}
-                    className="pill pill--solid px-5 py-2.5 text-[14px] disabled:opacity-40"
+              {/* 核心数据指标条 */}
+              <section className="glass grid grid-cols-2 sm:grid-cols-4">
+                {[
+                  { label: '题库题量', value: String(PRACTICE_QUESTIONS.length), tone: 'text-ink' },
+                  { label: '模拟次数', value: String(records.length), tone: 'text-ink' },
+                  {
+                    label: '最高分',
+                    value: best === null ? '—' : String(best),
+                    tone: best !== null && best >= 60 ? 'text-success-ink' : 'text-brand-ink',
+                  },
+                  { label: '平均分', value: avg === null ? '—' : String(avg), tone: 'text-ink' },
+                ].map((stat, idx) => (
+                  <div
+                    key={stat.label}
+                    className={[
+                      'px-5 py-4',
+                      idx % 2 === 1 ? 'hairline-l' : '',
+                      idx >= 2 ? 'hairline-t sm:border-t-0' : '',
+                      idx > 0 ? 'sm:hairline-l' : '',
+                    ].join(' ')}
                   >
-                    {pendingExamWrongs > 0
-                      ? '先去错题模式做对 ' + pendingExamWrongs + ' 道考卷错题'
-                      : '开始一次模拟考试'}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setWrongPicker((v) => !v)}
-                    disabled={!wrongList.length && !practiceWrongs.length}
-                    className={`pill px-4 py-2.5 text-[14px] disabled:opacity-40 ${wrongPicker ? 'pill--solid' : ''}`}
-                  >
-                    {wrongList.length || practiceWrongs.length
-                      ? `错题模式（按错因专项 · ${wrongList.length} 题）`
-                      : '错题模式（错题集是空的）'}
-                  </button>
-
-                  {records.length || practiceWrongs.length ? (
-                    <button
-                      type="button"
-                      onClick={clearAll}
-                      className="text-muted hover:text-danger-ink px-1 text-[12px] transition"
-                    >
-                      清空记录
-                    </button>
-                  ) : null}
-                </div>
+                    <p className={`text-[22px] leading-none font-semibold tabular-nums ${stat.tone}`}>{stat.value}</p>
+                    <p className="text-secondary mt-2 text-[13px]">{stat.label}</p>
+                  </div>
+                ))}
               </section>
 
-              {wrongPicker && (wrongList.length > 0 || practiceWrongs.length > 0) ? (
-                <section className="glass flex flex-col gap-4 px-4 py-4 sm:px-5">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <h2 className="text-ink text-[15px] font-semibold">错题专项模式 · 按规律针对性攻克</h2>
-                      <p className="text-secondary mt-1 text-[12px]">
-                        不固定每次几题：选一个错题规律，把命中该规律的错题全部抓出来专门练，做题时附带考场避坑口诀。
-                      </p>
+              {/* 双模式主工作区 */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <section className="glass glass--sheen flex flex-col justify-between gap-4 p-5 sm:p-6">
+                  <div>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h2 className="text-ink text-[15px] font-semibold">理论模拟考试</h2>
+                      <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
+                        190 题 {AI_THEORY_MINUTES} 分钟
+                      </span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {(
-                        [
-                          { id: 'all', label: '全部命中' },
-                          { id: 'never_right', label: '仅从未做对过' },
-                          { id: 'multi_miss', label: '仅错 ≥2 次' },
-                        ] as { id: WrongScope; label: string }[]
-                      ).map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setWrongScope(opt.id)}
-                          className={`pill px-2.5 py-1 text-[12px] ${wrongScope === opt.id ? 'pill--solid' : ''}`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                    <p className="text-secondary mt-2 text-[13px]">
+                      判断 40 题 + 单选 140 题 + 多选 10 题，60 分合格
+                    </p>
+                    {pendingExamWrongs > 0 ? (
+                      <p className="bg-danger-soft text-danger-ink mt-3 inline-flex items-center rounded-[10px] px-3 py-1.5 text-[12px] font-medium">
+                        有 {pendingExamWrongs} 道考卷错题待清扫，做对后解锁新卷
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={start}
+                      disabled={pendingExamWrongs > 0}
+                      className="pill pill--solid px-5 py-2 text-[13px] font-medium disabled:opacity-40"
+                    >
+                      <Play size={14} strokeWidth={2} />
+                      开始模拟考试
+                    </button>
+                    {pendingExamWrongs > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => startWrongPattern('exam_pending')}
+                        className="pill px-4 py-2 text-[13px] font-medium"
+                      >
+                        立刻清扫考卷错题
+                      </button>
+                    ) : null}
+                  </div>
+                </section>
+
+                <section className="glass flex flex-col justify-between gap-4 p-5 sm:p-6">
+                  <div>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h2 className="text-ink text-[15px] font-semibold">错题专项训练</h2>
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums ${
+                          wrongList.length
+                            ? 'bg-danger-soft text-danger-ink'
+                            : 'bg-surface-2 text-muted'
+                        }`}
+                      >
+                        {wrongList.length ? `${wrongList.length} 题` : '暂无错题'}
+                      </span>
+                    </div>
+                    <p className="text-secondary mt-2 text-[13px]">
+                      按错因规律归类，附考场避坑口诀集中攻克
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setWrongPicker((v) => !v)}
+                      disabled={!wrongList.length && !practiceWrongs.length}
+                      className={`pill px-4 py-2 text-[13px] font-medium disabled:opacity-40 ${
+                        wrongPicker ? 'pill--solid' : ''
+                      }`}
+                    >
+                      <ListFilter size={14} strokeWidth={2} />
+                      {wrongPicker ? '收起错因专项' : '选择错因专项'}
+                    </button>
+                    {!records.length && practiceWrongs.length ? (
+                      <button
+                        type="button"
+                        onClick={clearAll}
+                        className="text-muted hover:text-danger-ink ml-auto px-1 text-[12px] transition-colors"
+                      >
+                        清空记录
+                      </button>
+                    ) : null}
+                  </div>
+                </section>
+              </div>
+
+              {/* 错题专项选择器 */}
+              {wrongPicker && (wrongList.length > 0 || practiceWrongs.length > 0) ? (
+                <section className="glass flex flex-col gap-5 p-5 sm:p-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="text-ink text-[15px] font-semibold">按错因专项攻克</h2>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="segmented">
+                        {(
+                          [
+                            { id: 'all', label: '全部命中' },
+                            { id: 'never_right', label: '从未做对' },
+                            { id: 'multi_miss', label: '错 ≥2 次' },
+                          ] as { id: WrongScope; label: string }[]
+                        ).map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            data-active={wrongScope === opt.id}
+                            onClick={() => setWrongScope(opt.id)}
+                            className="segmented-item px-3 py-1 text-[12px]"
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
                       <button
                         type="button"
                         onClick={() => setWrongPicker(false)}
-                        className="text-muted hover:text-ink ml-1 px-1.5 text-[12px] transition"
+                        className="text-muted hover:text-ink px-2 text-[12px] transition-colors"
                       >
                         收起
                       </button>
@@ -1360,9 +1439,9 @@ export function AiTrainerPage() {
                   {(
                     [
                       { key: 'urgent', title: '优先清扫' },
-                      { key: 'tf', title: '规律 A · 判断题「疑罪从 F」专项（你 88% 判断错题答案都是错）' },
-                      { key: 'single', title: '规律 B · 单选题高频陷阱与关键词绑定' },
-                      { key: 'all', title: '兜底总清扫' },
+                      { key: 'tf', title: '判断题专项（疑罪从 F）' },
+                      { key: 'single', title: '单选题专项（高频陷阱）' },
+                      { key: 'all', title: '综合清扫' },
                     ] as const
                   ).map((sec) => {
                     const items = WRONG_PATTERNS.filter(
@@ -1370,9 +1449,9 @@ export function AiTrainerPage() {
                     );
                     if (!items.length) return null;
                     return (
-                      <div key={sec.key} className="flex flex-col gap-2">
-                        <p className="text-muted text-[12px] font-medium">{sec.title}</p>
-                        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                      <div key={sec.key} className="flex flex-col gap-2.5">
+                        <h3 className="text-muted text-[12px] font-medium">{sec.title}</h3>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                           {items.map((pat) => {
                             const count = wrongPatternCounts[pat.id];
                             return (
@@ -1381,25 +1460,26 @@ export function AiTrainerPage() {
                                 type="button"
                                 disabled={count === 0}
                                 onClick={() => startWrongPattern(pat.id)}
-                                className="border-line hover:border-brand/60 flex flex-col gap-1.5 rounded-[14px] border px-3.5 py-3 text-left transition disabled:opacity-40"
+                                className="glass-tile flex flex-col gap-2 p-4 text-left disabled:opacity-40"
                               >
                                 <div className="flex items-center justify-between gap-2">
-                                  <span className="text-ink text-[14px] font-semibold">{pat.title}</span>
+                                  <span className="text-ink text-[15px] font-medium">{pat.title}</span>
                                   <span
                                     className={`shrink-0 rounded-full px-2.5 py-0.5 text-[12px] font-semibold tabular-nums ${
                                       count > 0
                                         ? pat.group === 'urgent'
-                                          ? 'bg-danger-soft text-danger'
+                                          ? 'bg-danger-soft text-danger-ink'
                                           : 'bg-brand-soft text-brand-ink'
-                                        : 'bg-line/60 text-muted'
+                                        : 'bg-surface-2 text-muted'
                                     }`}
                                   >
                                     {count} 题
                                   </span>
                                 </div>
-                                <p className="text-secondary text-[12px] leading-relaxed">{pat.subtitle}</p>
-                                <p className="text-brand-ink/90 mt-0.5 text-[12px] leading-relaxed">
-                                  口诀：{pat.tip}
+                                <p className="text-secondary text-[13px] leading-relaxed">{pat.subtitle}</p>
+                                <p className="bg-brand-soft/45 text-brand-ink mt-auto rounded-[10px] px-3 py-1.5 text-[12px] leading-relaxed">
+                                  <Lightbulb className="mr-1 inline size-3.5" />
+                                  {pat.tip}
                                 </p>
                               </button>
                             );
@@ -1411,14 +1491,15 @@ export function AiTrainerPage() {
                 </section>
               ) : null}
 
+              {/* 历史成绩 */}
               {records.length ? (
-                <section className="glass px-4 py-4 sm:px-5">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h2 className="text-ink text-[14px] font-semibold">历史成绩</h2>
+                <section className="glass p-5 sm:p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-ink text-[15px] font-semibold">历史成绩</h2>
                     <button
                       type="button"
                       onClick={clearAll}
-                      className="text-muted hover:text-danger-ink text-[12px] transition"
+                      className="text-muted hover:text-danger-ink text-[12px] transition-colors"
                     >
                       清空记录
                     </button>
@@ -1427,19 +1508,33 @@ export function AiTrainerPage() {
                     {records.slice(0, 10).map((rec) => (
                       <div
                         key={rec.id}
-                        className="border-line/60 flex items-baseline gap-3 border-b py-2.5 text-[13px] last:border-b-0"
+                        className="hairline-b flex flex-wrap items-center gap-x-4 gap-y-1.5 py-3 text-[13px] last:border-b-0"
                       >
-                        <span
-                          className={`w-14 shrink-0 text-[15px] font-semibold tabular-nums ${
-                            rec.passed ? 'text-success-ink' : 'text-danger-ink'
-                          }`}
-                        >
-                          {rec.score}
-                        </span>
+                        <div className="flex w-28 shrink-0 items-center gap-2">
+                          <span
+                            className={`text-[15px] font-semibold tabular-nums ${
+                              rec.passed ? 'text-success-ink' : 'text-danger-ink'
+                            }`}
+                          >
+                            {rec.score} 分
+                          </span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[12px] font-medium ${
+                              rec.passed
+                                ? 'bg-success-soft text-success-ink'
+                                : 'bg-danger-soft text-danger-ink'
+                            }`}
+                          >
+                            {rec.passed ? '合格' : '未过'}
+                          </span>
+                        </div>
                         <span className="text-secondary tabular-nums">{stamp(rec.at)}</span>
-                        <span className="text-muted ml-auto shrink-0 tabular-nums">
-                          对 {rec.correct} · 错 {rec.wrong} · 空 {rec.blank} · 用时 {splitTime(rec.seconds)}
-                        </span>
+                        <div className="text-muted ml-auto flex flex-wrap items-center gap-3 text-[12px] tabular-nums">
+                          <span className="text-success-ink">对 {rec.correct}</span>
+                          <span className="text-danger-ink">错 {rec.wrong}</span>
+                          <span>空 {rec.blank}</span>
+                          <span>用时 {splitTime(rec.seconds)}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1448,53 +1543,55 @@ export function AiTrainerPage() {
             </>
           ) : null}
 
-
-
+          {/* 错题模式工作台 */}
           {!paper && !result && drill ? (
             <>
-              <section className="glass flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-baseline gap-2">
-                    <h2 className="text-ink text-[14px] font-semibold">
-                      {drill.patternTitle ? `错题专项 · ${drill.patternTitle}` : '错题模式'}
+              <section className="glass-panel flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-ink text-[15px] font-semibold">
+                      {drill.patternTitle ? drill.patternTitle : '错题模式'}
                     </h2>
-                    <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5 text-[12px] tabular-nums">
-                      {drill.patternTitle ? '本专题共' : '本局共'} {drill.questions.length} 题
+                    <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
+                      共 {drill.questions.length} 题
                     </span>
                   </div>
-                  <div className="bg-surface-2 mt-2 h-1.5 w-full max-w-[280px] overflow-hidden rounded-full">
-                    <div
-                      className="bg-brand h-full rounded-full transition-all"
-                      style={{
-                        width: `${Math.min(100, Math.round((drillStats.answered / Math.max(1, drill.questions.length)) * 100))}%`,
-                      }}
-                    />
+                  <div className="mt-2 flex items-center gap-3">
+                    <div className="bg-surface-2 h-1.5 w-full max-w-[240px] overflow-hidden rounded-full">
+                      <div
+                        className="bg-brand h-full rounded-full transition-all duration-[var(--duration)] ease-[var(--ease-out)]"
+                        style={{
+                          width: `${Math.min(100, Math.round((drillStats.answered / Math.max(1, drill.questions.length)) * 100))}%`,
+                        }}
+                      />
+                    </div>
+                    {drill.submitted ? (
+                      <div className="flex items-center gap-2.5 text-[12px] font-medium tabular-nums">
+                        <span className="text-success-ink">对 {drillStats.right}</span>
+                        <span className="text-danger-ink">错 {drillStats.wrong}</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted text-[12px] tabular-nums">
+                        已答 {drillStats.answered} / {drill.questions.length}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-3 text-[13px]">
+
+                <div className="flex shrink-0 flex-wrap items-center gap-2 text-[13px]">
                   {drill.submitted ? null : (
                     <button
                       type="button"
                       onClick={askSubmitDrill}
-                      className="pill pill--solid px-4 py-1.5 text-[13px]"
+                      className="pill pill--solid px-4 py-1.5 text-[13px] font-medium"
                     >
-                      交卷看本批总结
+                      交卷看总结
                     </button>
-                  )}
-                  {drill.submitted ? (
-                    <>
-                      <span className="text-accent-green tabular-nums">对 {drillStats.right}</span>
-                      <span className="text-danger tabular-nums">错 {drillStats.wrong}</span>
-                    </>
-                  ) : (
-                    <span className="text-muted tabular-nums">
-                      已答 {drillStats.answered} / {drill.questions.length}
-                    </span>
                   )}
                   <button
                     type="button"
                     onClick={() => setWrongOpen((v) => !v)}
-                    className={'pill px-2.5 py-1 text-[12px]' + (wrongOpen ? ' pill--solid' : '')}
+                    className={`pill px-3 py-1.5 text-[12px] ${wrongOpen ? 'pill--solid' : ''}`}
                   >
                     错题集 {wrongList.length}
                   </button>
@@ -1505,7 +1602,7 @@ export function AiTrainerPage() {
                         setDrill(null);
                         setWrongPicker(true);
                       }}
-                      className="text-secondary hover:text-ink text-[12px] transition"
+                      className="pill px-3 py-1.5 text-[12px]"
                     >
                       换专题
                     </button>
@@ -1513,7 +1610,7 @@ export function AiTrainerPage() {
                   <button
                     type="button"
                     onClick={closeDrill}
-                    className="text-muted hover:text-danger text-[12px] transition"
+                    className="text-muted hover:text-danger-ink px-2 text-[12px] transition-colors"
                   >
                     退出
                   </button>
@@ -1524,22 +1621,27 @@ export function AiTrainerPage() {
 
               {drill.submitted ? (
                 <>
-                  <section className="glass flex flex-wrap items-end justify-between gap-4 px-4 py-5 sm:px-5">
-                    <div>
-                      <p className="text-brand-ink text-[34px] leading-none font-semibold tabular-nums">
-                        {drillStats.right}
-                        <span className="text-muted ml-1 text-[14px] font-normal">
+                  <section className="glass glass--sheen flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-brand-ink text-[36px] leading-none font-semibold tabular-nums">
+                          {drillStats.right}
+                        </span>
+                        <span className="text-secondary text-[15px] tabular-nums">
                           / {drill.questions.length} 题答对
                         </span>
-                      </p>
-                      <p className="text-secondary mt-2 text-[13px]">
-                        正确率 {Math.round((drillStats.right / drill.questions.length) * 100)}%，答错{' '}
-                        {drillStats.wrong} 题，未作答 {drill.questions.length - drillStats.answered} 题
-                      </p>
+                        <span className="bg-brand-soft text-brand-ink ml-1 rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
+                          正确率 {Math.round((drillStats.right / drill.questions.length) * 100)}%
+                        </span>
+                      </div>
+                      <div className="text-secondary mt-2 flex flex-wrap gap-3 text-[13px] tabular-nums">
+                        <span className="text-danger-ink">答错 {drillStats.wrong} 题</span>
+                        <span className="text-muted">未作答 {drill.questions.length - drillStats.answered} 题</span>
+                      </div>
                       {drill.patternTip ? (
-                        <p className="text-brand-ink mt-2 text-[12px] leading-relaxed">
-                          <Lightbulb className="mr-1 inline size-3.5" />
-                          本专题口诀：{drill.patternTip}
+                        <p className="bg-brand-soft/50 text-brand-ink mt-3 rounded-[12px] px-3.5 py-2 text-[13px] leading-relaxed">
+                          <Lightbulb className="mr-1.5 inline size-3.5" />
+                          {drill.patternTip}
                         </p>
                       ) : null}
                     </div>
@@ -1552,14 +1654,14 @@ export function AiTrainerPage() {
                             : startDrill()
                         }
                         disabled={unfixedCount > 0}
-                        className="pill pill--solid px-4 py-2 text-[13px] disabled:opacity-40"
+                        className="pill pill--solid px-4 py-2 text-[13px] font-medium disabled:opacity-40"
                       >
-                        <RotateCcw className="mr-1 inline size-3.5" />
+                        <RotateCcw className="size-3.5" />
                         {unfixedCount > 0
-                          ? '还剩 ' + unfixedCount + ' 题待订正'
+                          ? `还剩 ${unfixedCount} 题待订正`
                           : drill.kind === 'wrongs' && drill.patternId
                             ? '再刷一遍本专题'
-                            : '再来 ' + sizeOf() + ' 题'}
+                            : `再来 ${sizeOf()} 题`}
                       </button>
                       {drill.kind === 'wrongs' ? (
                         <button
@@ -1587,67 +1689,61 @@ export function AiTrainerPage() {
                       return (
                         <div
                           key={q.id}
-                          className={
-                            ok
-                              ? 'glass border-l-accent-green rounded-[14px] border-l-4 px-4 py-4 sm:px-5'
-                              : 'glass bg-danger-soft border-l-danger border-danger/40 rounded-[14px] border border-l-4 px-4 py-4 sm:px-5'
-                          }
+                          className={`glass p-5 ${!ok && !drill.fixed[q.id] ? 'border-danger/35' : ''}`}
                         >
                           <div className="flex flex-wrap items-center gap-2 text-[12px]">
-                            <span className="text-muted tabular-nums">第 {index + 1} 题</span>
-                            <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5">
+                            <span className="text-muted font-medium tabular-nums">第 {index + 1} 题</span>
+                            <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 font-medium">
                               {TYPE_LABEL[q.type]}
                             </span>
-                            <span
-                              className={
-                                tag === 'wrong'
-                                  ? 'bg-danger rounded-full px-2 py-0.5 font-semibold text-white'
-                                  : 'border-line text-muted rounded-full border px-2 py-0.5'
-                              }
-                            >
+                            <span className="bg-surface-2 text-secondary rounded-full px-2.5 py-0.5">
                               {tag === 'wrong' ? '错题集' : tag === 'new' ? '新题' : '复习'}
                             </span>
                             <span
-                              className={
+                              className={`ml-auto rounded-full px-2.5 py-0.5 font-medium ${
                                 ok
-                                  ? 'bg-accent-green rounded-full px-2 py-0.5 font-semibold text-white'
-                                  : 'bg-danger rounded-full px-2 py-0.5 font-semibold text-white'
-                              }
+                                  ? 'bg-success-soft text-success-ink'
+                                  : 'bg-danger-soft text-danger-ink'
+                              }`}
                             >
                               {ok ? '答对' : mine.length ? '答错' : '未作答'}
                             </span>
                           </div>
-                          <p className="text-ink mt-2 text-[14px] leading-relaxed">{q.stem}</p>
-                          <div className="text-secondary mt-2 flex flex-col gap-1 text-[13px]">
-                            <span>
-                              我的答案：
-                              <b className={ok ? 'text-accent-green' : mine.length ? 'text-danger' : 'text-muted'}>
-                                {mine.length
-                                  ? lettersOf(mine)
-                                  : '未作答'}
-                              </b>
+                          <p className="text-ink mt-3 text-[15px] leading-relaxed font-medium">{q.stem}</p>
+                          <div className="mt-3 flex flex-wrap items-center gap-4 text-[13px]">
+                            <span className="text-secondary">
+                              我的答案{' '}
+                              <strong className={ok ? 'text-success-ink' : mine.length ? 'text-danger-ink' : 'text-muted'}>
+                                {mine.length ? lettersOf(mine) : '未作答'}
+                              </strong>
                             </span>
-                            <span>
-                              正确答案：
-                              <b className="text-accent-green">{answerText(q)}</b>
+                            <span className="text-secondary">
+                              正确答案 <strong className="text-success-ink">{answerText(q)}</strong>
                             </span>
-                            {q.type !== 'tf'
-                              ? q.shown
-                                  .filter((opt) => q.key.includes(opt.key) || mine.includes(opt.key))
-                                  .map((opt) => (
-                                    <span key={opt.key} className="text-muted">
-                                      {opt.key}. {opt.text}
-                                    </span>
-                                  ))
-                              : null}
                           </div>
+                          {q.type !== 'tf' ? (
+                            <div className="mt-2 flex flex-col gap-1 text-[13px]">
+                              {q.shown
+                                .filter((opt) => q.key.includes(opt.key) || mine.includes(opt.key))
+                                .map((opt) => (
+                                  <span
+                                    key={opt.key}
+                                    className={q.key.includes(opt.key) ? 'text-ink' : 'text-muted'}
+                                  >
+                                    {opt.key}. {opt.text}
+                                  </span>
+                                ))}
+                            </div>
+                          ) : null}
                           <ExplainBlock id={q.id} />
                           {ok ? null : drill.fixed[q.id] ? (
-                            <p className="text-accent-green mt-3 text-[13px] font-medium">已订正</p>
+                            <p className="text-success-ink mt-3 inline-flex items-center gap-1.5 text-[13px] font-medium">
+                              <Check size={15} /> 已订正
+                            </p>
                           ) : (
-                            <div className="border-line mt-3 rounded-[12px] border px-3.5 py-3">
-                              <p className="text-ink text-[13px] font-medium">重新选一遍，选对并提交才能做下一批</p>
-                              <div className="mt-2 flex flex-wrap gap-2">
+                            <div className="hairline bg-surface/70 mt-4 rounded-[14px] p-4">
+                              <p className="text-ink text-[13px] font-medium">重新选一遍，选对提交后解锁下一批</p>
+                              <div className="mt-2.5 flex flex-wrap gap-2">
                                 {(q.type === 'tf'
                                   ? [
                                       { key: 'T', text: '正确' },
@@ -1661,23 +1757,23 @@ export function AiTrainerPage() {
                                       key={opt.key}
                                       type="button"
                                       onClick={() => drillFixPick(q, opt.key)}
-                                      className={'pill px-3 py-1.5 text-[13px]' + (active ? ' pill--solid' : '')}
+                                      className={`pill px-3.5 py-1.5 text-[13px] ${active ? 'pill--solid' : ''}`}
                                     >
-                                      {q.type === 'tf' ? opt.text : opt.key + '. ' + opt.text}
+                                      {q.type === 'tf' ? opt.text : `${opt.key}. ${opt.text}`}
                                     </button>
                                   );
                                 })}
                               </div>
-                              <div className="mt-2 flex flex-wrap items-center gap-3">
+                              <div className="mt-3 flex flex-wrap items-center gap-3">
                                 <button
                                   type="button"
                                   onClick={() => drillFixSubmit(q)}
-                                  className="pill pill--solid px-3 py-1 text-[12px]"
+                                  className="pill pill--solid px-4 py-1.5 text-[12px] font-medium"
                                 >
-                                  提交
+                                  提交订正
                                 </button>
                                 {fixBad[q.id] ? (
-                                  <span className="text-danger text-[12px]">还不对，再选一次。</span>
+                                  <span className="text-danger-ink text-[12px]">答案仍不对，再核对一次。</span>
                                 ) : null}
                               </div>
                             </div>
@@ -1688,12 +1784,12 @@ export function AiTrainerPage() {
                   </section>
                 </>
               ) : drillQ ? (
-                <section className="glass px-4 py-5 sm:px-5">
+                <section className="glass p-5 sm:p-6">
                   {drill.patternTip ? (
-                    <div className="border-line mb-4 flex flex-wrap items-start justify-between gap-2 rounded-[12px] border px-3.5 py-2.5 text-[12px]">
+                    <div className="bg-brand-soft/50 mb-5 flex flex-wrap items-start justify-between gap-2 rounded-[14px] px-4 py-3 text-[13px]">
                       {showPatternTip ? (
                         <p className="text-brand-ink min-w-0 flex-1 leading-relaxed">
-                          <Lightbulb className="mr-1 inline size-3.5" />
+                          <Lightbulb className="mr-1.5 inline size-4" />
                           {drill.patternTip}
                         </p>
                       ) : (
@@ -1702,47 +1798,50 @@ export function AiTrainerPage() {
                       <button
                         type="button"
                         onClick={() => setShowPatternTip((v) => !v)}
-                        className="text-muted hover:text-ink shrink-0 transition"
+                        className="text-secondary hover:text-ink shrink-0 text-[12px] transition-colors"
                       >
                         {showPatternTip ? '隐藏口诀' : '显示口诀'}
                       </button>
                     </div>
                   ) : null}
+
                   <QuestionCard
                     question={drillQ}
                     index={drill.cursor}
                     total={drill.questions.length}
                     picked={drillPicked}
                     revealed={false}
-                    hint={drillHint}
+                    hints={drillHints}
                     hideMultiTip
                     onPick={(value) => drillPick(drillQ, value)}
                   />
-                  <div className="mt-5 flex flex-wrap items-center gap-3">
+
+                  <div className="hairline-t mt-6 flex flex-wrap items-center gap-2.5 pt-4">
                     <button
                       type="button"
                       onClick={() => drillGo(-1)}
                       disabled={drill.cursor === 0}
-                      className="pill px-3 py-1.5 text-[13px] disabled:opacity-40"
+                      className="pill px-3.5 py-1.5 text-[13px] disabled:opacity-40"
                     >
+                      <ChevronLeft size={15} />
                       上一题
                     </button>
                     <button
                       type="button"
                       onClick={() => drillGo(1)}
                       disabled={drill.cursor + 1 >= drill.questions.length}
-                      className="pill px-3 py-1.5 text-[13px] disabled:opacity-40"
+                      className="pill px-3.5 py-1.5 text-[13px] disabled:opacity-40"
                     >
                       下一题
-                      <ChevronRight className="ml-1 inline size-4" />
+                      <ChevronRight size={15} />
                     </button>
                     {drill.cursor + 1 >= drill.questions.length ? (
                       <button
                         type="button"
                         onClick={askSubmitDrill}
-                        className="pill pill--solid ml-auto px-4 py-1.5 text-[13px]"
+                        className="pill pill--solid ml-auto px-4 py-1.5 text-[13px] font-medium"
                       >
-                        交卷看本批总结
+                        交卷看总结
                       </button>
                     ) : null}
                   </div>
@@ -1751,168 +1850,212 @@ export function AiTrainerPage() {
             </>
           ) : null}
 
+          {/* 模拟考试进行中 */}
           {paper && !result ? (
             <>
-              <section className="glass flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5">
-                <span className="text-brand-ink flex items-center gap-1.5 text-[15px] font-semibold tabular-nums">
+              <section className="glass-panel flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5 lg:sticky lg:top-4 lg:z-20">
+                <span
+                  className={`flex items-center gap-1.5 text-[15px] font-semibold tabular-nums ${
+                    left <= 5 * 60 ? 'text-danger-ink' : 'text-brand-ink'
+                  }`}
+                >
                   <Clock className="size-4" />
                   {splitTime(left)}
                 </span>
                 <span className="text-secondary text-[13px] tabular-nums">
                   已答 {answered} / {paper.questions.length}
                 </span>
-                <div className="bg-line ml-1 hidden h-1.5 w-40 overflow-hidden rounded-full sm:block">
+                <div className="bg-surface-2 hidden h-1.5 w-36 overflow-hidden rounded-full sm:block">
                   <span
-                    className="bg-brand block h-full rounded-full transition-all"
+                    className="bg-brand block h-full rounded-full transition-all duration-[var(--duration)] ease-[var(--ease-out)]"
                     style={{ width: `${(answered / paper.questions.length) * 100}%` }}
                   />
                 </div>
-                {Object.values(marked).filter(Boolean).length ? (
-                  <span className="text-brand-ink text-[12px]">
-                    标记 {Object.values(marked).filter(Boolean).length}
+                {markedCount ? (
+                  <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
+                    标记 {markedCount}
                   </span>
                 ) : null}
-                <button
-                  type="button"
-                  onClick={() => setSheetOpen((v) => !v)}
-                  className="pill ml-auto px-3 py-1.5 text-[13px]"
-                >
-                  {sheetOpen ? '收起答题卡' : '答题卡'}
-                </button>
-                <button type="button" onClick={submit} className="pill pill--solid px-4 py-1.5 text-[13px]">
-                  交卷
-                </button>
-              </section>
-
-              <section id="ai-question-card" className="glass px-4 py-5 sm:px-5">
-                <QuestionCard
-                  question={paper.questions[cursor]}
-                  index={cursor}
-                  total={paper.questions.length}
-                  picked={picked[paper.questions[cursor].id] ?? []}
-                  revealed={false}
-                  onPick={pick}
-                  marked={Boolean(marked[paper.questions[cursor].id])}
-                  onToggleMark={toggleMark}
-                />
-
-                <div className="mt-5 flex items-center gap-2">
+                <div className="ml-auto flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setCursor((c) => Math.max(0, c - 1))}
-                    disabled={cursor === 0}
-                    className="pill flex items-center gap-1 px-3 py-1.5 text-[13px] disabled:opacity-40"
+                    onClick={() => setSheetOpen((v) => !v)}
+                    className={`pill px-3.5 py-1.5 text-[13px] ${sheetOpen ? 'pill--solid' : ''}`}
                   >
-                    <ChevronLeft className="size-4" /> 上一题
+                    {sheetOpen ? '收起答题卡' : '答题卡'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setCursor((c) => Math.min(paper.questions.length - 1, c + 1))}
-                    disabled={cursor === paper.questions.length - 1}
-                    className="pill flex items-center gap-1 px-3 py-1.5 text-[13px] disabled:opacity-40"
+                    onClick={submit}
+                    className="pill pill--solid px-4 py-1.5 text-[13px] font-medium"
                   >
-                    下一题 <ChevronRight className="size-4" />
-                  </button>
-                  <span className="text-muted hidden text-[12px] sm:inline">
-                    A–E / 1–5 选，T/F 判断，←→ 换题，Enter 下一题，M 标记
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm('放弃这次考试？已作答不会保存。')) {
-                        dbDel(RESUME_KEY);
-                        setPaper(null);
-                      }
-                    }}
-                    className="text-muted ml-auto text-[12px] hover:underline"
-                  >
-                    放弃这次
+                    交卷
                   </button>
                 </div>
               </section>
 
-              {sheetOpen ? (
-                <section className="glass px-4 py-4 sm:px-5">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h2 className="text-ink text-[13px] font-semibold">答题卡</h2>
-                    <span className="text-muted text-[12px]">
-                      已答 {answered}/{paper.questions.length} · 标记{' '}
-                      {Object.values(marked).filter(Boolean).length}
-                    </span>
-                    <form
-                      className="ml-auto flex items-center gap-1.5"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        const n = Number(jump);
-                        if (Number.isFinite(n) && n >= 1) goto(n - 1);
-                        setJump('');
-                      }}
+              <div className={sheetOpen ? 'grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]' : ''}>
+                <section id="ai-question-card" className="glass p-5 sm:p-6">
+                  <QuestionCard
+                    question={paper.questions[cursor]}
+                    index={cursor}
+                    total={paper.questions.length}
+                    picked={picked[paper.questions[cursor].id] ?? []}
+                    revealed={false}
+                    onPick={pick}
+                    marked={Boolean(marked[paper.questions[cursor].id])}
+                    onToggleMark={toggleMark}
+                  />
+
+                  <div className="hairline-t mt-6 flex flex-wrap items-center gap-2.5 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setCursor((c) => Math.max(0, c - 1))}
+                      disabled={cursor === 0}
+                      className="pill px-3.5 py-1.5 text-[13px] disabled:opacity-40"
                     >
-                      <input
-                        className="field w-16 px-2 py-1 text-[12px] tabular-nums"
-                        inputMode="numeric"
-                        placeholder="跳题"
-                        value={jump}
-                        onChange={(e) => setJump(e.target.value.replace(/\D/g, ''))}
-                      />
-                      <button type="submit" className="pill px-2.5 py-1 text-[12px]">
-                        跳转
-                      </button>
-                    </form>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-1">
-                    {paper.questions.map((q, index) => {
-                      const done = (picked[q.id] ?? []).length > 0;
-                      const isMarked = Boolean(marked[q.id]);
-                      return (
-                        <button
-                          key={q.id}
-                          type="button"
-                          onClick={() => goto(index)}
-                          className={`relative size-7 rounded-md text-[11px] tabular-nums transition ${
-                            index === cursor
-                              ? 'bg-brand text-white'
-                              : done
-                                ? 'bg-brand-soft text-brand-ink'
-                                : 'bg-line/60 text-muted'
-                          } ${isMarked ? 'ring-brand/70 ring-1' : ''}`}
-                        >
-                          {index + 1}
-                          {isMarked ? (
-                            <span className="bg-brand absolute top-0.5 right-0.5 size-1 rounded-full" />
-                          ) : null}
-                        </button>
-                      );
-                    })}
+                      <ChevronLeft size={15} /> 上一题
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCursor((c) => Math.min(paper.questions.length - 1, c + 1))}
+                      disabled={cursor === paper.questions.length - 1}
+                      className="pill px-3.5 py-1.5 text-[13px] disabled:opacity-40"
+                    >
+                      下一题 <ChevronRight size={15} />
+                    </button>
+
+                    <div className="text-muted hidden items-center gap-2 pl-2 text-[12px] xl:flex">
+                      <span>
+                        <kbd className="kbd">A–E</kbd> 选答
+                      </span>
+                      <span>
+                        <kbd className="kbd">T</kbd>/<kbd className="kbd">F</kbd> 判断
+                      </span>
+                      <span>
+                        <kbd className="kbd">←</kbd> <kbd className="kbd">→</kbd> 切题
+                      </span>
+                      <span>
+                        <kbd className="kbd">M</kbd> 标记
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm('放弃这次考试？已作答不会保存。')) {
+                          dbDel(RESUME_KEY);
+                          setPaper(null);
+                        }
+                      }}
+                      className="text-muted hover:text-danger-ink ml-auto text-[12px] transition-colors"
+                    >
+                      放弃这次
+                    </button>
                   </div>
                 </section>
-              ) : null}
+
+                {sheetOpen ? (
+                  <section className="glass p-4 sm:p-5 lg:sticky lg:top-[76px]">
+                    <div className="flex items-center justify-between gap-2">
+                      <h2 className="text-ink text-[15px] font-semibold">答题卡</h2>
+                      <form
+                        className="flex items-center gap-1.5"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const n = Number(jump);
+                          if (Number.isFinite(n) && n >= 1) goto(n - 1);
+                          setJump('');
+                        }}
+                      >
+                        <input
+                          className="field w-16 px-2.5 py-1 text-[12px] tabular-nums"
+                          inputMode="numeric"
+                          placeholder="题号"
+                          value={jump}
+                          onChange={(e) => setJump(e.target.value.replace(/\D/g, ''))}
+                        />
+                        <button type="submit" className="pill px-2.5 py-1 text-[12px]">
+                          跳转
+                        </button>
+                      </form>
+                    </div>
+
+                    <div className="text-muted mt-2.5 flex items-center gap-3 text-[12px] tabular-nums">
+                      <span>
+                        已答 {answered}/{paper.questions.length}
+                      </span>
+                      <span>标记 {markedCount}</span>
+                    </div>
+
+                    <div className="mt-3 grid max-h-[420px] grid-cols-7 gap-1.5 overflow-y-auto pr-0.5 sm:grid-cols-10 lg:grid-cols-6">
+                      {paper.questions.map((q, index) => {
+                        const done = (picked[q.id] ?? []).length > 0;
+                        const isMarked = Boolean(marked[q.id]);
+                        return (
+                          <button
+                            key={q.id}
+                            type="button"
+                            onClick={() => goto(index)}
+                            className={`relative grid h-8 place-items-center rounded-[8px] text-[12px] tabular-nums transition-colors ${
+                              index === cursor
+                                ? 'bg-brand font-semibold text-white'
+                                : done
+                                  ? 'bg-brand-soft text-brand-ink font-medium'
+                                  : 'bg-surface-2 text-muted hover:text-ink'
+                            } ${isMarked ? 'ring-brand/70 ring-1' : ''}`}
+                          >
+                            {index + 1}
+                            {isMarked ? (
+                              <span
+                                className={`absolute top-1 right-1 size-1 rounded-full ${
+                                  index === cursor ? 'bg-white' : 'bg-brand'
+                                }`}
+                              />
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ) : null}
+              </div>
             </>
           ) : null}
 
+          {/* 模拟考试结果 */}
           {paper && result ? (
             <>
-              <section className="glass flex flex-wrap items-end justify-between gap-4 px-4 py-5 sm:px-5">
-                  <div>
-                    <p
-                      className={`text-[40px] leading-none font-semibold tabular-nums ${
+              <section className="glass glass--sheen flex flex-wrap items-center justify-between gap-5 p-5 sm:p-6">
+                <div>
+                  <div className="flex items-baseline gap-2">
+                    <span
+                      className={`text-[36px] leading-none font-semibold tabular-nums ${
                         result.score >= 60 ? 'text-success-ink' : 'text-danger-ink'
                       }`}
                     >
                       {result.score}
-                      <span className="text-muted ml-1 text-[14px] font-normal">分</span>
-                    </p>
-                    <p className="text-secondary mt-2 text-[13px]">
-                      {result.score >= 60 ? '合格' : '不合格（60 分合格）'} · 用时{' '}
-                      {splitTime(paper.seconds - left)}
-                    </p>
+                    </span>
+                    <span className="text-secondary text-[13px]">分</span>
+                    <span
+                      className={`ml-1 rounded-full px-2.5 py-0.5 text-[12px] font-medium ${
+                        result.score >= 60
+                          ? 'bg-success-soft text-success-ink'
+                          : 'bg-danger-soft text-danger-ink'
+                      }`}
+                    >
+                      {result.score >= 60 ? '合格' : '不合格（60 分合格）'}
+                    </span>
                   </div>
-                <div className="flex gap-4 text-[13px]">
-                  <span className="text-success-ink">对 {result.correct}</span>
-                  <span className="text-danger-ink">错 {result.wrong}</span>
-                  <span className="text-muted">空 {result.blank}</span>
+                  <div className="text-secondary mt-2.5 flex flex-wrap items-center gap-4 text-[13px] tabular-nums">
+                    <span className="text-success-ink">答对 {result.correct}</span>
+                    <span className="text-danger-ink">答错 {result.wrong}</span>
+                    <span className="text-muted">未答 {result.blank}</span>
+                    <span className="text-muted">用时 {splitTime(paper.seconds - left)}</span>
+                  </div>
                 </div>
-                <div className="flex gap-2">
+
+                <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => setReview((v) => !v)}
@@ -1926,9 +2069,9 @@ export function AiTrainerPage() {
                       reset();
                       start();
                     }}
-                    className="pill pill--solid px-4 py-2 text-[13px]"
+                    className="pill pill--solid px-4 py-2 text-[13px] font-medium"
                   >
-                    <RotateCcw className="mr-1 inline size-3.5" />
+                    <RotateCcw className="size-3.5" />
                     再考一次
                   </button>
                 </div>
@@ -1939,51 +2082,54 @@ export function AiTrainerPage() {
                   {paper.questions.map((q, index) => {
                     const mine = picked[q.id] ?? [];
                     const ok =
-                      mine.length === q.key.length &&
-                      [...mine].sort().join('') === [...q.key].sort().join('');
+                      mine.length === q.key.length && [...mine].sort().join('') === [...q.key].sort().join('');
                     if (ok) return null;
                     return (
-                      <div key={q.id} className="glass px-4 py-4 sm:px-5">
-                        <div className="flex items-baseline gap-2 text-[12px]">
-                          <span className="text-muted tabular-nums">第 {index + 1} 题</span>
-                          <span className="bg-brand-soft text-brand-ink rounded-full px-2 py-0.5">
+                      <div key={q.id} className="glass p-5">
+                        <div className="flex flex-wrap items-center gap-2 text-[12px]">
+                          <span className="text-muted font-medium tabular-nums">第 {index + 1} 题</span>
+                          <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 font-medium">
                             {TYPE_LABEL[q.type]}
                           </span>
-                          <span className={mine.length ? 'text-danger-ink' : 'text-muted'}>
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 font-medium ${
+                              mine.length ? 'bg-danger-soft text-danger-ink' : 'bg-surface-2 text-muted'
+                            }`}
+                          >
                             {mine.length ? '答错' : '未作答'}
                           </span>
                           {q.verified === false ? (
-                            <span className="text-muted rounded-full bg-warn-soft px-2 py-0.5">
+                            <span className="bg-warn-soft text-warn rounded-full px-2.5 py-0.5 font-medium">
                               AI 解析
                             </span>
                           ) : null}
                         </div>
-                        <p className="text-ink mt-2 text-[14px] leading-relaxed">{q.stem}</p>
-                        <div className="text-secondary mt-2 flex flex-col gap-1 text-[13px]">
-                          <span>
-                            我的答案：
-                            <b className={mine.length ? 'text-danger-ink' : 'text-muted'}>
-                              {mine.length
-                                ? lettersOf(mine)
-                                : '未作答'}
-                            </b>
+                        <p className="text-ink mt-3 text-[15px] leading-relaxed font-medium">{q.stem}</p>
+                        <div className="mt-3 flex flex-wrap items-center gap-4 text-[13px]">
+                          <span className="text-secondary">
+                            我的答案{' '}
+                            <strong className={mine.length ? 'text-danger-ink' : 'text-muted'}>
+                              {mine.length ? lettersOf(mine) : '未作答'}
+                            </strong>
                           </span>
-                          <span>
-                            正确答案：
-                            <b className="text-success-ink">
-                              {lettersOf(q.key)}
-                            </b>
+                          <span className="text-secondary">
+                            正确答案 <strong className="text-success-ink">{lettersOf(q.key)}</strong>
                           </span>
-                          {q.type !== 'tf'
-                            ? q.shown
-                                .filter((opt) => q.key.includes(opt.key) || mine.includes(opt.key))
-                                .map((opt) => (
-                                  <span key={opt.key} className="text-muted">
-                                    {opt.key}. {opt.text}
-                                  </span>
-                                ))
-                            : null}
                         </div>
+                        {q.type !== 'tf' ? (
+                          <div className="mt-2 flex flex-col gap-1 text-[13px]">
+                            {q.shown
+                              .filter((opt) => q.key.includes(opt.key) || mine.includes(opt.key))
+                              .map((opt) => (
+                                <span
+                                  key={opt.key}
+                                  className={q.key.includes(opt.key) ? 'text-ink' : 'text-muted'}
+                                >
+                                  {opt.key}. {opt.text}
+                                </span>
+                              ))}
+                          </div>
+                        ) : null}
                         <ExplainBlock id={q.id} />
                       </div>
                     );

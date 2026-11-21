@@ -15,18 +15,67 @@
   --color-brand: var(--iris-9);
   --color-brand-soft: var(--iris-3);
   --color-brand-ink: var(--iris-11);
+
+  --color-success: var(--green-9);
+  --color-success-soft: var(--green-3);
+  --color-success-ink: var(--green-11);
+
+  --color-danger-solid: var(--red-9);
   --color-danger: var(--red-11);
+  --color-danger-ink: var(--red-11);
   --color-danger-soft: var(--red-3);
+
   --color-warn: var(--amber-11);
+  --color-warn-soft: var(--amber-3);
+
   --color-accent-orange: var(--orange-11);
   --color-accent-blue: var(--blue-11);
   --color-accent-green: var(--green-11);
   --color-accent-teal: var(--teal-11);
 
+  --color-glass-fill-strong: var(--glass-fill-strong);
+  --color-glass-fill-quiet: var(--glass-fill-quiet);
+
   --font-sans: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
 
   --radius-card: 22px;
   --radius-control: 14px;
+}
+
+/* 0.5px 细线（低分屏自动回退 1px 低透明度），用 @utility 声明以支持响应式前缀 */
+@utility hairline {
+  border: 1px solid var(--glass-hairline);
+  @media (min-resolution: 2dppx) {
+    border-width: 0.5px;
+  }
+}
+
+@utility hairline-t {
+  border-top: 1px solid var(--glass-hairline);
+  @media (min-resolution: 2dppx) {
+    border-top-width: 0.5px;
+  }
+}
+
+@utility hairline-b {
+  border-bottom: 1px solid var(--glass-hairline);
+  @media (min-resolution: 2dppx) {
+    border-bottom-width: 0.5px;
+  }
+}
+
+@utility hairline-l {
+  border-left: 1px solid var(--glass-hairline);
+  @media (min-resolution: 2dppx) {
+    border-left-width: 0.5px;
+  }
+}
+
+@utility hairline-r {
+  border-right: 1px solid var(--glass-hairline);
+  @media (min-resolution: 2dppx) {
+    border-right-width: 0.5px;
+  }
 }
 
 html,
@@ -42,11 +91,12 @@ body {
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  /* 玻璃必须在真实背景上验证：一层近白画布 + 两点极淡的环境色 */
+  /* 玻璃必须在真实背景上验证：近白画布 + 柔和的环境色场 */
   background-color: var(--slate-1);
   background-image:
-    radial-gradient(60% 40% at 10% 6%, color-mix(in srgb, var(--iris-9) 7%, transparent), transparent 70%),
-    radial-gradient(55% 45% at 92% 88%, color-mix(in srgb, var(--teal-9) 6%, transparent), transparent 72%);
+    radial-gradient(58% 42% at 8% 4%, color-mix(in srgb, var(--iris-9) 9%, transparent), transparent 70%),
+    radial-gradient(50% 42% at 92% 14%, color-mix(in srgb, var(--blue-9) 6%, transparent), transparent 72%),
+    radial-gradient(54% 46% at 86% 90%, color-mix(in srgb, var(--teal-9) 7%, transparent), transparent 72%);
   background-attachment: fixed;
 }
 
@@ -72,9 +122,150 @@ body {
     overflow: hidden;
   }
 
+  /* 高可读玻璃：浮层、弹窗与顶栏，保证文字对比度 ≥ 4.5:1 */
+  .glass-panel {
+    position: relative;
+    border-radius: var(--radius-card);
+    background: var(--glass-fill-strong);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-edge-strong);
+    box-shadow: var(--glass-inset), var(--glass-shadow-soft);
+  }
+
+  .glass-interactive {
+    transition:
+      transform var(--duration) var(--ease-out),
+      border-color var(--duration) var(--ease-out),
+      background-color var(--duration) var(--ease-out),
+      box-shadow var(--duration) var(--ease-out);
+  }
+
+  .glass-interactive:hover {
+    transform: translateY(-1px);
+    border-color: var(--glass-edge-strong);
+    background: var(--glass-fill-strong);
+  }
+
+  /* 同心嵌套内卡：外 22 − 内边距 8 = 14；Retina 屏渲染 0.5px 细线 */
+  .glass-tile {
+    border-radius: var(--radius-control);
+    background: var(--glass-fill-quiet);
+    border: 1px solid var(--glass-hairline);
+    transition:
+      background-color var(--duration) var(--ease-out),
+      border-color var(--duration) var(--ease-out),
+      box-shadow var(--duration) var(--ease-out);
+  }
+
+  .glass-tile:hover:not(:disabled) {
+    background: var(--glass-fill-strong);
+    border-color: var(--iris-7);
+  }
+
+  @media (min-resolution: 2dppx) {
+    .glass-tile {
+      border-width: 0.5px;
+    }
+  }
+
+  /* 统一细线表格：用于评分细则、素材与题面内嵌表 */
+  .glass-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .glass-table th {
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 500;
+    color: var(--slate-10);
+    background: color-mix(in srgb, var(--slate-3) 55%, transparent);
+    border-bottom: 1px solid var(--glass-hairline);
+  }
+
+  .glass-table td {
+    padding: 9px 10px;
+    color: var(--slate-11);
+    vertical-align: top;
+    border-bottom: 1px solid var(--glass-hairline);
+  }
+
+  .glass-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* 玻璃分段控制器：同心胶囊切换 */
+  .segmented {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: var(--glass-blur-pill);
+    backdrop-filter: var(--glass-blur-pill);
+    border: 1px solid var(--glass-edge);
+    box-shadow: var(--glass-inset), var(--glass-shadow-pill);
+  }
+
+  .segmented-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border-radius: var(--radius-pill);
+    padding: 6px 14px;
+    font-size: 13px;
+    line-height: 1.2;
+    font-weight: 500;
+    color: var(--slate-11);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--duration) var(--ease-out),
+      color var(--duration) var(--ease-out),
+      box-shadow var(--duration) var(--ease-out);
+  }
+
+  .segmented-item:hover {
+    color: var(--slate-12);
+    background: color-mix(in srgb, var(--slate-4) 55%, transparent);
+  }
+
+  .segmented-item[data-active='true'] {
+    background: var(--iris-9);
+    color: #fff;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--iris-9) 26%, transparent);
+  }
+
+  .segmented-item[data-active='true']:hover {
+    background: var(--iris-10);
+    color: #fff;
+  }
+
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 6px;
+    border: 1px solid var(--glass-hairline-strong);
+    background: var(--glass-fill-strong);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1;
+    color: var(--slate-11);
+  }
+
   /* 不支持 backdrop-filter 时退成「半透明底 + 静态高光」 */
   @supports not (backdrop-filter: blur(1px)) {
-    .glass {
+    .glass,
+    .glass-panel,
+    .segmented {
       background: var(--glass-fill-strong);
     }
   }
@@ -100,19 +291,26 @@ body {
     justify-content: center;
     gap: 6px;
     border-radius: var(--radius-pill);
-    padding: 8px 18px;
+    padding: 8px 16px;
     background: var(--glass-fill-strong);
     -webkit-backdrop-filter: var(--glass-blur-pill);
     backdrop-filter: var(--glass-blur-pill);
     border: 1px solid var(--glass-edge-strong);
+    color: var(--slate-12);
     box-shadow: var(--glass-inset), var(--glass-shadow-pill);
+    cursor: pointer;
     transition:
       transform var(--duration) var(--ease-out),
+      background-color var(--duration) var(--ease-out),
       box-shadow var(--duration) var(--ease-out);
   }
 
-  .pill:hover {
+  .pill:hover:not(:disabled) {
     transform: translateY(-1px);
+  }
+
+  .pill:disabled {
+    cursor: not-allowed;
   }
 
   /* 实心胶囊：选中态 / 主按钮 */
@@ -123,7 +321,7 @@ body {
     box-shadow: 0 6px 16px color-mix(in srgb, var(--iris-9) 28%, transparent);
   }
 
-  .pill--solid:hover {
+  .pill--solid:hover:not(:disabled) {
     background: var(--iris-10);
   }
 
@@ -132,7 +330,7 @@ body {
     width: 100%;
     border-radius: var(--radius-control);
     background: var(--glass-fill-quiet);
-    border: 0.5px solid var(--glass-hairline);
+    border: 0.5px solid var(--glass-hairline-strong);
     padding: 10px 14px;
     font-size: 15px;
     color: var(--slate-12);
@@ -140,6 +338,11 @@ body {
     transition:
       border-color var(--duration) var(--ease-out),
       box-shadow var(--duration) var(--ease-out);
+  }
+
+  .field:focus {
+    border-color: var(--iris-8);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--iris-9) 14%, transparent);
   }
 
   /* 实心输入：白底浮起的输入框，比玻璃更「实体」 */

@@ -3,26 +3,28 @@
 
 :root {
   /* 材质：低不透明度 + 背景模糊饱和，离开背景近乎不可见 */
-  --glass-fill: rgba(255, 255, 255, 0.55);
-  --glass-fill-strong: rgba(255, 255, 255, 0.75);
-  --glass-fill-quiet: rgba(255, 255, 255, 0.35);
-  --glass-edge: rgba(255, 255, 255, 0.7);
-  --glass-edge-strong: rgba(255, 255, 255, 0.9);
-  --glass-hairline: rgba(15, 23, 42, 0.06);
-  --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  --glass-shadow-soft: 0 8px 24px rgba(15, 23, 42, 0.06);
-  --glass-shadow-pill: 0 2px 8px rgba(15, 23, 42, 0.05);
+  --glass-fill: rgba(255, 255, 255, 0.62);
+  --glass-fill-strong: rgba(255, 255, 255, 0.86);
+  --glass-fill-quiet: rgba(255, 255, 255, 0.4);
+  --glass-edge: rgba(255, 255, 255, 0.78);
+  --glass-edge-strong: rgba(255, 255, 255, 0.94);
+  --glass-hairline: rgba(15, 23, 42, 0.08);
+  --glass-hairline-strong: rgba(15, 23, 42, 0.14);
+  --border: var(--glass-hairline);
+  --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --glass-shadow-soft: 0 8px 28px rgba(15, 23, 42, 0.055), 0 1px 2px rgba(15, 23, 42, 0.03);
+  --glass-shadow-pill: 0 2px 8px rgba(15, 23, 42, 0.045);
   --glass-blur: blur(20px) saturate(180%);
   --glass-blur-pill: blur(12px) saturate(160%);
 
   /* 流光：一道移动的淡彩高光，周期 6s，只在装饰层出现 */
   --sheen: linear-gradient(
     100deg,
-    transparent 36%,
-    rgba(120, 180, 255, 0.08) 46%,
-    rgba(120, 230, 200, 0.07) 52%,
-    rgba(255, 150, 220, 0.06) 58%,
-    transparent 68%
+    transparent 34%,
+    rgba(120, 180, 255, 0.09) 45%,
+    rgba(120, 230, 200, 0.08) 52%,
+    rgba(255, 150, 220, 0.07) 59%,
+    transparent 70%
   );
 
   /* 圆角：卡片 22，胶囊全圆角；嵌套元素按「内 = 外 − 内边距」推算 */
@@ -36,15 +38,17 @@
 }
 
 .dark {
-  --glass-fill: rgba(20, 20, 24, 0.5);
-  --glass-fill-strong: rgba(24, 24, 30, 0.7);
-  --glass-fill-quiet: rgba(20, 20, 24, 0.35);
+  --glass-fill: rgba(20, 21, 26, 0.56);
+  --glass-fill-strong: rgba(24, 25, 32, 0.82);
+  --glass-fill-quiet: rgba(20, 21, 26, 0.38);
   --glass-edge: rgba(255, 255, 255, 0.12);
-  --glass-edge-strong: rgba(255, 255, 255, 0.18);
+  --glass-edge-strong: rgba(255, 255, 255, 0.2);
   --glass-hairline: rgba(255, 255, 255, 0.1);
+  --glass-hairline-strong: rgba(255, 255, 255, 0.16);
+  --border: var(--glass-hairline);
   --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  --glass-shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.35);
-  --glass-shadow-pill: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --glass-shadow-soft: 0 10px 28px rgba(0, 0, 0, 0.36);
+  --glass-shadow-pill: 0 2px 10px rgba(0, 0, 0, 0.32);
   --sheen: linear-gradient(
     100deg,
     transparent 20%,
@@ -55,4 +59,3 @@
   );
   color-scheme: dark;
 }
-

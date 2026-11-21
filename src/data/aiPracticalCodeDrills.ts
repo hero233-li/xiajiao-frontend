@@ -21,10 +21,10 @@ export interface CodeDrillItem {
 }
 
 export const CODE_DRILL_STAGES: { id: CodeDrillStage; label: string; badge: string; desc: string }[] = [
-  { id: '3.2', label: '第一阶段 · 3.2 ONNX 图像推理', badge: '必考 20 分', desc: '5 题套路高度重复，优先吃透拿稳 16–20 分' },
-  { id: '2.1', label: '第二阶段 · 2.1 数据清洗规范', badge: '必考 15 分', desc: 'pandas 清洗 + 标准化 + 划分 + 保存' },
-  { id: '2.2', label: '第三阶段 · 2.2 机器学习建模', badge: '必考 20 分', desc: 'fit / predict / 保存模型 / 评估与调优' },
-  { id: '1.1', label: '第四阶段 · 1.1 业务数据处理', badge: '抽考 25 分', desc: 'np.where / pd.cut / groupby / fillna / between' },
+  { id: '3.2', label: '3.2 ONNX 图像推理', badge: '必考 20 分', desc: '5 题套路高度重复，优先吃透拿稳 16–20 分' },
+  { id: '2.1', label: '2.1 数据清洗规范', badge: '必考 15 分', desc: 'pandas 清洗 + 标准化 + 划分 + 保存' },
+  { id: '2.2', label: '2.2 机器学习建模', badge: '必考 20 分', desc: 'fit / predict / 保存模型 / 评估与调优' },
+  { id: '1.1', label: '1.1 业务数据处理', badge: '抽考 25 分', desc: 'np.where / pd.cut / groupby / fillna / between' },
 ];
 
 export const AI_PRACTICAL_CODE_DRILLS: CodeDrillItem[] = [
