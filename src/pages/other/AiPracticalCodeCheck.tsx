@@ -443,12 +443,6 @@ export function AiPracticalCodeCheck({ onExit, fixedCode }: { onExit: () => void
           })}
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-          <button type="button" onClick={doCheck} className="pill pill--solid px-5 py-2 text-[13px]">
-            <Check size={14} className="mr-1 inline" />
-            秒判对错
-          </button>
-        </div>
       </section>
 
       {/* 错空逐条对照 */}
