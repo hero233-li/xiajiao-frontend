@@ -499,8 +499,7 @@ export function AiTrainerPage() {
   const [wrongBook, setWrongBook] = useState<WrongBook>(() => loadWrongBook());
   /** 服务器 MySQL 里记过的「做过」题号（考试 + 刷题）。 */
   const [seenIds, setSeenIds] = useState<Set<string>>(new Set());
-  /** 首页错题集列表展开状态。 */
-  const [homeWrongOpen, setHomeWrongOpen] = useState(false);
+
   const [wrongOpen, setWrongOpen] = useState(false);
   const [wrongPicker, setWrongPicker] = useState(false);
   const [wrongScope, setWrongScope] = useState<WrongScope>('all');
@@ -1309,15 +1308,7 @@ export function AiTrainerPage() {
                       ? `错题模式（按错因专项 · ${wrongList.length} 题）`
                       : '错题模式（错题集是空的）'}
                   </button>
-                  {wrongList.length ? (
-                    <button
-                      type="button"
-                      onClick={() => setHomeWrongOpen((v) => !v)}
-                      className={`pill px-4 py-2.5 text-[14px] ${homeWrongOpen ? 'pill--solid' : ''}`}
-                    >
-                      错题集（{wrongList.length} 题）
-                    </button>
-                  ) : null}
+
                   {records.length || practiceWrongs.length ? (
                     <button
                       type="button"
@@ -1329,8 +1320,6 @@ export function AiTrainerPage() {
                   ) : null}
                 </div>
               </section>
-
-              {homeWrongOpen ? wrongBookSection : null}
 
               {wrongPicker && (wrongList.length > 0 || practiceWrongs.length > 0) ? (
                 <section className="glass flex flex-col gap-4 px-4 py-4 sm:px-5">
