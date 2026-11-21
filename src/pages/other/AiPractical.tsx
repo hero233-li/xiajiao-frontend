@@ -123,6 +123,80 @@ async function loadPages(): Promise<PageItem[]> {
   return pageCache;
 }
 
+/* 试题单：把整段文字按小节标题、编号小问、正文分层重排，避免糊成一片 */
+type SheetBlock = { kind: 'h' | 'p' | 'item' | 'meta'; text: string };
+
+function parseSheetText(text: string): SheetBlock[] {
+  const out: SheetBlock[] = [];
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (/^(试题名称|考核时间)[:：]/.test(line)) {
+      out.push({ kind: 'meta', text: line });
+      continue;
+    }
+    if (/^\d{1,2}[.、]\s*\S{1,26}$/.test(line)) {
+      out.push({ kind: 'h', text: line });
+      continue;
+    }
+    const parts = line
+      .split(/(?=[（(]\d{1,2}[)）])/u)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parts.length > 1) {
+      for (const part of parts) {
+        out.push({ kind: /^[（(]\d{1,2}[)）]/.test(part) ? 'item' : 'p', text: part });
+      }
+      continue;
+    }
+    out.push({ kind: 'p', text: line });
+  }
+  return out;
+}
+
+function SheetBody({ text }: { text: string }) {
+  const blocks = parseSheetText(text);
+  return (
+    <div className="space-y-2">
+      {blocks.map((b, i) => {
+        if (b.kind === 'meta') {
+          return (
+            <p key={i} className="text-muted text-[13px] tabular-nums">
+              {b.text}
+            </p>
+          );
+        }
+        if (b.kind === 'h') {
+          return (
+            <h4
+              key={i}
+              className="text-ink text-[15px] font-medium"
+              style={{ marginTop: i === 0 ? 0 : 16 }}
+            >
+              {b.text}
+            </h4>
+          );
+        }
+        if (b.kind === 'item') {
+          const mark = b.text.match(/^[（(]\d{1,2}[)）]/);
+          const head = mark ? mark[0] : '';
+          const rest = mark ? b.text.slice(head.length).trim() : b.text;
+          return (
+            <div key={i} className="flex gap-2 text-[13px] leading-[1.9]">
+              <span className="text-ink shrink-0 tabular-nums">{head}</span>
+              <span className="text-secondary">{rest}</span>
+            </div>
+          );
+        }
+        return (
+          <p key={i} className="text-secondary text-[13px] leading-[1.9]">
+            {b.text}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
 /* -------------------------------- 学习模式 -------------------------------- */
 
 const STUDY_DONE_KEY = 'xj.ai.practical.study.v1';
@@ -680,15 +754,8 @@ function StudyMode({
 
       <section className="glass px-4 py-4 sm:px-5">
         <h3 className="text-ink text-[15px] font-medium">{item.title}</h3>
-        <div className="text-secondary mt-2 space-y-2 text-[13px] leading-relaxed">
-          {item.sheet
-            .split('\n')
-            .filter((l) => l.trim())
-            .map((line, i) => (
-              <p key={i} className="whitespace-pre-wrap">
-                {line}
-              </p>
-            ))}
+        <div className="mt-3 max-w-[78ch]">
+          <SheetBody text={item.sheet} />
         </div>
       </section>
 
