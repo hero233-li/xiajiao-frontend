@@ -36,6 +36,8 @@ import { sheetOf, type PracticalSheet, type SheetCell, type SheetPara } from '..
 const SESSION_KEY = 'xj.ai.practical.exam.v3';
 const RESULT_KEY = 'xj.ai.practical.results.v1';
 const REPLAY_KEY = 'xj.ai.practical.replay.v1';
+/** 手动重置过的那一场成绩（存 at），重置后不再据此自动上锁 */
+const REPLAY_SKIP_KEY = 'xj.ai.practical.replay.skip.v1';
 /** 错题再战门槛：一次整卷低于 LOCK_BELOW 分就锁住新卷，同一套题做到 UNLOCK_AT 分才解锁。 */
 const LOCK_BELOW = 70;
 const UNLOCK_AT = 80;
@@ -1057,6 +1059,7 @@ export function AiPractical() {
   const [secPick, setSecPick] = useState(false);
   const [secNow, setSecNow] = useState<PracticalSection | null>(null);
   const [replay, setReplay] = useState<ReplayState | null>(() => loadJson<ReplayState | null>(REPLAY_KEY, null));
+  const [replaySkip, setReplaySkip] = useState<string | null>(() => loadJson<string | null>(REPLAY_SKIP_KEY, null));
   const [replayRun, setReplayRun] = useState(false);
 
   const [cloudReady, setCloudReady] = useState(false);
@@ -1098,6 +1101,8 @@ export function AiPractical() {
     const latest = history[0];
     if (!latest || !Array.isArray(latest.codes) || latest.codes.length !== AI_PRACTICAL_COUNT) return;
     const pct = pctOf(latest);
+    /* 手动重置过的那一场不再自动上锁，等下一场成绩出来再判断 */
+    if (!replay && replaySkip === latest.at) return;
     if (pct >= UNLOCK_AT) {
       if (replay) {
         setReplay(null);
@@ -1118,7 +1123,22 @@ export function AiPractical() {
       setReplay(next);
       saveJson(REPLAY_KEY, next);
     }
-  }, [cloudReady, history, replay]);
+  }, [cloudReady, history, replay, replaySkip]);
+
+  /* 手动重置错题再战：解除这一套的锁，可以重新抽新卷；已交成绩与错题记录都不动 */
+  const resetReplay = useCallback(() => {
+    if (!replay) return;
+    const ok = window.confirm(
+      `重置错题再战？\n\n这套 ${replay.codes.length} 题最好 ${replay.best} 分，重置后可以重新抽一套新题。\n已交卷的成绩和错题记录都保留。`,
+    );
+    if (!ok) return;
+    setReplaySkip(replay.at);
+    saveJson(REPLAY_SKIP_KEY, replay.at);
+    setReplay(null);
+    saveJson(REPLAY_KEY, null);
+    setReplayRun(false);
+    dbDel(SESSION_KEY);
+  }, [replay]);
 
   useEffect(() => {
     void (async () => {
@@ -1492,6 +1512,17 @@ export function AiPractical() {
               {phase === 'loading' ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} strokeWidth={2} />}
               {phase === 'loading' ? '正在组卷' : replay ? `错题再战（同一套 ${replay.codes.length} 题）` : '开始模拟考试'}
             </button>
+            {replay ? (
+              <button
+                type="button"
+                className="pill px-3 py-2.5 text-[13px]"
+                onClick={resetReplay}
+                disabled={phase === 'loading'}
+              >
+                <RotateCcw size={14} />
+                重置再战
+              </button>
+            ) : null}
           </div>
         </section>
 
