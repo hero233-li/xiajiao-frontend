@@ -744,13 +744,34 @@ export const AI_PRACTICAL_POOL: PoolItem[] = [
   },
 ];
 
-export function pickPracticalPaper(random: () => number = Math.random): PoolItem[] {
+export function pickPracticalPaper(
+  random: () => number = Math.random,
+  excludeCodes?: ReadonlySet<string>,
+): PoolItem[] {
   const used = new Set<string>();
   const paper: PoolItem[] = [];
   for (const section of AI_PRACTICAL_SECTIONS) {
-    const group = section.groups[Math.floor(random() * section.groups.length)] ?? section.groups[0];
-    const candidates = AI_PRACTICAL_POOL.filter((item) => item.group === group && !used.has(item.code));
-    if (candidates.length === 0) continue;
+    // 优先选还有未考过题的分组（如 1.1 / 1.2 或 4.1 / 4.2 交替覆盖）
+    let groupCandidates = section.groups;
+    if (excludeCodes && excludeCodes.size > 0 && section.groups.length > 1) {
+      const scored = section.groups.map((g) => ({
+        g,
+        fresh: AI_PRACTICAL_POOL.filter(
+          (item) => item.group === g && !used.has(item.code) && !excludeCodes.has(item.code),
+        ).length,
+      }));
+      const maxFresh = Math.max(...scored.map((s) => s.fresh));
+      if (maxFresh > 0) {
+        groupCandidates = scored.filter((s) => s.fresh === maxFresh).map((s) => s.g);
+      }
+    }
+    const group = groupCandidates[Math.floor(random() * groupCandidates.length)] ?? section.groups[0];
+    const allInGroup = AI_PRACTICAL_POOL.filter((item) => item.group === group && !used.has(item.code));
+    if (allInGroup.length === 0) continue;
+    const freshInGroup = excludeCodes?.size
+      ? allInGroup.filter((item) => !excludeCodes.has(item.code))
+      : allInGroup;
+    const candidates = freshInGroup.length > 0 ? freshInGroup : allInGroup;
     const picked = candidates[Math.floor(random() * candidates.length)];
     used.add(picked.code);
     paper.push(picked);
@@ -765,9 +786,12 @@ export function practicalPaperScore(paper: PoolItem[]): number {
 /* 指导手册：一场实操考核 6 题（项目1 抽一、项目4 抽一、其余必考各 1 题） */
 export const AI_PRACTICAL_COUNT = 6;
 
-/* 组卷：与认定方案一致，六个考核单元各取一题，项目1/项目4 在两组间抽一组 */
-export function pickPracticalExamPaper(random: () => number = Math.random): PoolItem[] {
-  return pickPracticalPaper(random);
+/* 组卷：与认定方案一致，六个考核单元各取一题，项目1/项目4 在两组间抽一组；优先避开已考过的题 */
+export function pickPracticalExamPaper(
+  random: () => number = Math.random,
+  excludeCodes?: ReadonlySet<string>,
+): PoolItem[] {
+  return pickPracticalPaper(random, excludeCodes);
 }
 
 export function practicalPaperSeconds(paper: PoolItem[]): number {

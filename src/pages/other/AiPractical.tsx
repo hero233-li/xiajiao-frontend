@@ -1118,6 +1118,17 @@ export function AiPractical() {
     return () => window.clearInterval(timer);
   }, [phase, exam, paper]);
 
+  /** 已实际作答交卷过的题号（跳过 0 分空白交卷）：下一场抽卷优先避开这些题。 */
+  const testedCodes = useMemo(() => {
+    const s = new Set<string>();
+    for (const h of history) {
+      if (h.total <= 0) continue;
+      for (const c of h.codes ?? []) s.add(c);
+    }
+    for (const c of exam?.codes ?? []) s.add(c);
+    return s;
+  }, [history, exam]);
+
   const begin = useCallback(async () => {
     setError('');
     setAutoSubmitted(false);
@@ -1125,7 +1136,7 @@ export function AiPractical() {
     try {
       const all = pages.length ? pages : await loadPages();
       setPages(all);
-      const nextPaper = pickPracticalExamPaper();
+      const nextPaper = pickPracticalExamPaper(Math.random, testedCodes);
       const sid = 'e' + Date.now().toString(36);
       const now = Date.now();
       const session: Session = {
@@ -1148,14 +1159,16 @@ export function AiPractical() {
       setError(err instanceof Error ? err.message : '题面加载失败');
       setPhase('error');
     }
-  }, [pages, reloadFiles]);
+  }, [pages, reloadFiles, testedCodes]);
 
-  /** 专项练习：只在选中的考核单元里随机抽一道题，计时按该单元的时长。 */
+  /** 专项练习：只在选中的考核单元里随机抽一道题，优先抽还没考过的题，计时按该单元的时长。 */
   const beginSection = useCallback(
     (sec: PracticalSection) => {
       const pool = sectionItems(sec);
       if (!pool.length) return;
-      const item = pool[Math.floor(Math.random() * pool.length)];
+      const fresh = pool.filter((it) => !testedCodes.has(it.code));
+      const candidates = fresh.length ? fresh : pool;
+      const item = candidates[Math.floor(Math.random() * candidates.length)];
       const sid = 'p' + Date.now().toString(36);
       const session: Session = { id: sid, codes: [item.code], startedAt: Date.now() };
       tickedRef.current = 0;
@@ -1172,7 +1185,7 @@ export function AiPractical() {
       setPhase('writing');
       void reloadFiles(sid, session.codes);
     },
-    [reloadFiles],
+    [reloadFiles, testedCodes],
   );
 
   const submit = useCallback(
