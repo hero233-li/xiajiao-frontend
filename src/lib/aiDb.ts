@@ -26,6 +26,7 @@ const ROUTES: Record<string, CloudRoute> = {
   'xj.ai.drill.session.v1': { cloud: 'ai-drill-session', field: 'drill' },
   'xj.ai.practical.exam.v3': { cloud: 'ai-practical', field: 'session' },
   'xj.ai.practical.results.v1': { cloud: 'ai-practical', field: 'results' },
+  'xj.ai.practical.replay.v1': { cloud: 'ai-practical', field: 'replay' },
   'xj.ai.practical.study.v1': { cloud: 'ai-practical', field: 'study' },
   'xj.ai.practical.sheets.v1': { cloud: 'ai-practical', field: 'sheets' },
 };
