@@ -184,7 +184,7 @@ function sizeOf(kind: DrillKind): number {
 
 
 interface DrillRun {
-  /** today = 按今日任务队列出题；free = 自由练，全库随机；wrongs = 错题模式，只出错题集里的题 */
+  /** today = 刷题模式，只出没做过的新题；free = 自由练，全库随机；wrongs = 错题模式，只出错题集里的题 */
   kind: DrillKind;
   questions: ExamQuestion[];
   cursor: number;
@@ -970,11 +970,7 @@ export function AiTrainerPage() {
     setWrongOpen(false);
   };
 
-  /**
-   * 每批 10 题的席位分配：错题集按权重占位，其余是新题。
-   * 起始 3:7（3 席错题），错题相对越多越往 5:5 靠（最多 5 席）；新题刷光了就整批全出错题，
-   * 错题也没有就到期复习 → 学过的随便补，保证任何阶段都刷得下去。
-   */
+  /** 刷题模式只出新题；错题模式只出错题集；自由练全库随机。 */
   const startDrill = (kind: DrillKind = 'today') => {
     const byId = qById;
     const size = sizeOf(kind);
@@ -986,52 +982,11 @@ export function AiTrainerPage() {
       labels[qid] = label;
     };
     if (kind === 'today') {
-      const freshIds = shuffle(PRACTICE_QUESTIONS)
-        .filter((q) => !srs[q.id] && !wrongBook[q.id] && !seenIds.has(q.id))
-        .map((q) => q.id);
-      // 错题集分成两堆：还在错的（积分 < 0）和已回的（积分回到 0，标「复习」）。
-      const activeWrongs = wrongList.filter((w) => !isReviewing(w));
-      const reviewIds = wrongList.filter((w) => isReviewing(w)).map((w) => w.qid);
-      const wrongCount = activeWrongs.length;
-      // 错题席位：错题在「没掌握的题」里占比越高越往 5 席靠；复习题和新题都没有了才整批错题。
-      let wrongSlots = 0;
-      if (wrongCount > 0) {
-        if (freshIds.length + reviewIds.length === 0) wrongSlots = size;
-        else {
-          const share = wrongCount / (wrongCount + freshIds.length + reviewIds.length);
-          wrongSlots = Math.round(size * (0.3 + 0.2 * share));
-          wrongSlots = Math.min(Math.max(wrongSlots, 3), 5, wrongCount);
-        }
+      // 刷题模式全部出新题：没建过复习卡片、不在错题集、也没被标记做过。
+      for (const q of shuffle(PRACTICE_QUESTIONS)) {
+        if (srs[q.id] || wrongBook[q.id] || seenIds.has(q.id)) continue;
+        push(q.id, 'new');
       }
-      const mainSlots = size - wrongSlots;
-      // 复习题排在前面：还有没刷过的复习题就先出复习题，复习题出完出新题。
-      const reviewPool = [...reviewIds];
-      const freshPool = [...freshIds];
-      while (ids.length < mainSlots && (reviewPool.length || freshPool.length)) {
-        if (reviewPool.length && (!freshPool.length || Math.random() < 0.75)) {
-          push(reviewPool.shift() as string, 'review');
-        } else if (freshPool.length) {
-          push(freshPool.shift() as string, 'new');
-        } else if (reviewPool.length) {
-          push(reviewPool.shift() as string, 'review');
-        }
-      }
-      // 错题席位按权重抽：考试错题权重 3 倍起，错得越多越容易抽到。
-      const rest = [...activeWrongs];
-      while (ids.length < size && rest.length) {
-        const weights = rest.map((w) => wrongWeight(w));
-        const totalWeight = weights.reduce((a, b) => a + b, 0);
-        let point = Math.random() * totalWeight;
-        let pickIndex = 0;
-        while (pickIndex < weights.length - 1 && point > weights[pickIndex]) {
-          point -= weights[pickIndex];
-          pickIndex += 1;
-        }
-        const picked = rest.splice(pickIndex, 1)[0];
-        push(picked.qid, 'wrong');
-      }
-      // 兜底：以前答对过、也不在错题集里的题
-      for (const q of shuffle(PRACTICE_QUESTIONS)) push(q.id, 'review');
     } else if (kind === 'wrongs') {
       // 错题模式：题源只有错题集。考卷错题排最前（它们还卡着下一次考试，可能不在错题集或已标回），
       // 其余还在错的按权重抽（错得越多越靠前），最后补已回的复习题。
@@ -1060,7 +1015,10 @@ export function AiTrainerPage() {
       .map((id) => byId.get(id))
       .filter((q): q is AiQuestion => !!q)
       .map(mixQuestion);
-    if (!questions.length) return;
+    if (!questions.length) {
+      window.alert(kind === 'today' ? '新题已经刷完了，600 道练习题都做过一遍。' : '错题集里还没有题。');
+      return;
+    }
     setDrillHome(true);
     setDrill({ kind, questions, cursor: 0, picks: {}, submitted: false, labels, fixPicks: {}, fixed: {} });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1323,7 +1281,7 @@ export function AiTrainerPage() {
                 <div className="min-w-0">
                   <h2 className="text-ink text-[14px] font-semibold">刷题模式</h2>
                   <p className="text-secondary mt-1 text-[12px] leading-relaxed">
-                    每批 {DRILL_COUNT} 题：先出复习题（错题集里已经回到 0 分的），复习题出完出新题，新题也刷完了出错题；交卷后才看答案。
+                    每批 {DRILL_COUNT} 题，全部是没做过的新题；交卷后才看答案。
                     错题模式只出错题集里的题，一局 {WRONG_COUNT} 题。
                   </p>
                 </div>
@@ -1344,7 +1302,7 @@ export function AiTrainerPage() {
                   onClick={() => startDrill('today')}
                   className="pill pill--solid px-5 py-2.5 text-[14px]"
                 >
-                  {wrongList.length ? '先做错题（' + wrongList.length + ' 题）' : '开始今日任务'}
+                  {'开始刷题（' + DRILL_COUNT + ' 题新题）'}
                 </button>
                 <button type="button" onClick={() => startDrill('free')} className="pill px-4 py-2.5 text-[14px]">
                   自由练 {DRILL_COUNT} 题
@@ -1369,7 +1327,7 @@ export function AiTrainerPage() {
                 <div className="min-w-0">
                   <div className="flex items-baseline gap-2">
                     <h2 className="text-ink text-[14px] font-semibold">
-                      {drill.kind === 'today' ? '今日任务' : drill.kind === 'wrongs' ? '错题模式' : '自由练习'}
+                      {drill.kind === 'today' ? '刷题模式' : drill.kind === 'wrongs' ? '错题模式' : '自由练习'}
                     </h2>
                     <span className="text-ink text-[13px] font-semibold tabular-nums">
                       已刷 {drillDoneCount} / {PRACTICE_QUESTIONS.length} 题
