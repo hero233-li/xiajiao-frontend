@@ -3,6 +3,7 @@ import { AppShell } from './AppShell';
 import { useSession } from '../lib/useSession';
 import { CODE_TRACKS } from '../data/codeTracks';
 import { HomePage } from '../pages/HomePage';
+import { TasksPage } from '../pages/TasksPage';
 import { LoginPage } from '../pages/LoginPage';
 import { Placeholder } from '../pages/Placeholder';
 import { CoursesPage } from '../pages/zikao/CoursesPage';
@@ -34,6 +35,10 @@ export function App() {
       <Route element={<RequireAuth />}>
         <Route index element={<Navigate to="/today" replace />} />
         <Route path="/today" element={<HomePage />} />
+        <Route path="/tasks" element={<Navigate to="/tasks/daily" replace />} />
+        <Route path="/tasks/daily" element={<TasksPage view="daily" />} />
+        <Route path="/tasks/weekly" element={<TasksPage view="weekly" />} />
+        <Route path="/tasks/monthly" element={<TasksPage view="monthly" />} />
         <Route path="/zikao/courses" element={<CoursesPage />} />
         <Route path="/zikao/schedule" element={<SchedulePage />} />
         <Route path="/zikao/exams" element={<Placeholder title="历年试卷" note="历年真题与答案解析，稍后补充。" />} />

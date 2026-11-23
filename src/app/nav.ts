@@ -5,6 +5,7 @@ import {
   Code2,
   GraduationCap,
   Languages,
+  ListChecks,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -20,12 +21,22 @@ export interface NavItem {
   children?: NavLeaf[];
 }
 
-/** 左侧菜单：一级入口 + 自考二级菜单。 */
+/** 左侧菜单：一级入口 + 二级下拉菜单。 */
 export const navGroups: { title: string; items: NavItem[] }[] = [
   {
     title: '学习',
     items: [
       { to: '/today', label: '备考计划', icon: CalendarCheck },
+      {
+        to: '/tasks/daily',
+        label: '每日任务',
+        icon: ListChecks,
+        children: [
+          { to: '/tasks/daily', label: '每日任务' },
+          { to: '/tasks/weekly', label: '周任务' },
+          { to: '/tasks/monthly', label: '月任务' },
+        ],
+      },
       {
         to: '/zikao/courses',
         label: '自考',

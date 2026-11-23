@@ -3,9 +3,13 @@ import { cloudPullStrict, cloudPut } from './aiSync';
 
 export type WeeklyCategory = 'zikao' | 'english' | 'tech' | 'admin';
 
-export interface CustomWeeklyTask {
+export interface CustomTaskItem {
   id: string;
-  weekId: string;
+  /** 兼容旧字段：老数据若只有 weekId 则视为 scope='weekly' */
+  weekId?: string;
+  scope?: 'daily' | 'weekly' | 'monthly';
+  /** daily=YYYY-MM-DD / weekly=w1..w6 / monthly=2026-12.. */
+  scopeKey?: string;
   category: WeeklyCategory;
   title: string;
 }
@@ -21,7 +25,7 @@ export interface EnglishMockRecord {
 
 export interface StudyTrackerDoc {
   checked: Record<string, boolean>;
-  customTasks: CustomWeeklyTask[];
+  customTasks: CustomTaskItem[];
   englishMocks: EnglishMockRecord[];
   updatedAt?: number;
 }
@@ -124,13 +128,20 @@ export function toggleTrackerItem(id: string) {
   scheduleFlush(false);
 }
 
-export function addCustomWeeklyTask(weekId: string, category: WeeklyCategory, title: string) {
+export function addCustomTask(
+  scope: 'daily' | 'weekly' | 'monthly',
+  scopeKey: string,
+  category: WeeklyCategory,
+  title: string,
+) {
   if (blocked || syncState === 'loading') return;
   const clean = title.trim();
   if (!clean) return;
-  const item: CustomWeeklyTask = {
+  const item: CustomTaskItem = {
     id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    weekId,
+    scope,
+    scopeKey,
+    weekId: scope === 'weekly' ? scopeKey : undefined,
     category,
     title: clean,
   };
@@ -139,7 +150,7 @@ export function addCustomWeeklyTask(weekId: string, category: WeeklyCategory, ti
   scheduleFlush(true);
 }
 
-export function removeCustomWeeklyTask(id: string) {
+export function removeCustomTask(id: string) {
   if (blocked || syncState === 'loading') return;
   const nextChecked = { ...doc.checked };
   delete nextChecked[id];
@@ -150,6 +161,18 @@ export function removeCustomWeeklyTask(id: string) {
   };
   emit();
   scheduleFlush(true);
+}
+
+export function getCustomTasks(
+  tasks: CustomTaskItem[],
+  scope: 'daily' | 'weekly' | 'monthly',
+  scopeKey: string,
+): CustomTaskItem[] {
+  return tasks.filter((t) => {
+    const resolvedScope = t.scope ?? 'weekly';
+    const resolvedKey = t.scopeKey ?? t.weekId ?? '';
+    return resolvedScope === scope && resolvedKey === scopeKey;
+  });
 }
 
 export function addEnglishMock(record: Omit<EnglishMockRecord, 'id'>) {
@@ -187,8 +210,8 @@ export function useStudyTracker() {
     syncState,
     blocked,
     toggle: toggleTrackerItem,
-    addCustomTask: addCustomWeeklyTask,
-    removeCustomTask: removeCustomWeeklyTask,
+    addCustomTask,
+    removeCustomTask,
     addEnglishMock,
     removeEnglishMock,
   };

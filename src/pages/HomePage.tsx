@@ -1,23 +1,7 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  ArrowRight,
-  ArrowUpRight,
-  CalendarDays,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Cloud,
-  CloudOff,
-  Flag,
-  Loader2,
-  Plus,
-  Target,
-  Trash2,
-} from 'lucide-react';
+import { ArrowRight, ArrowUpRight, CalendarDays, ChevronLeft, ChevronRight, Flag, Target } from 'lucide-react';
 import { EXAM_PLAN, type PlanItem } from '../data/examPlan';
-import { CATEGORY_META, WEEKLY_PLANS, findCurrentWeekIndex } from '../data/weeklyPlan';
-import { useStudyTracker, type SyncState, type WeeklyCategory } from '../lib/studyTracker';
 
 /** 把 YYYY-MM-DD 解析成当地日期（避免 new Date('YYYY-MM-DD') 的 UTC 偏移）。 */
 function parseDate(iso: string) {
@@ -69,31 +53,6 @@ function pickMainExam(today: Date): PlanItem {
   return EXAM_PLAN.find((item) => daysBetween(today, parseDate(item.date)) >= 0) ?? EXAM_PLAN[0];
 }
 
-function SyncBadge({ state }: { state: SyncState }) {
-  if (state === 'loading' || state === 'saving') {
-    return (
-      <span className="text-muted inline-flex items-center gap-1 text-[11px]">
-        <Loader2 size={12} className="animate-spin" />
-        {state === 'loading' ? '读取云端…' : '同步中…'}
-      </span>
-    );
-  }
-  if (state === 'offline') {
-    return (
-      <span className="text-warn inline-flex items-center gap-1 text-[11px]" title="云端读取失败，本次不覆盖远端数据">
-        <CloudOff size={12} />
-        离线只读
-      </span>
-    );
-  }
-  return (
-    <span className="text-muted inline-flex items-center gap-1 text-[11px]">
-      <Cloud size={12} className="text-brand-ink" />
-      {state === 'saved' ? '已同步云端' : '云端同步'}
-    </span>
-  );
-}
-
 function CountdownHero({ today, main }: { today: Date; main: PlanItem }) {
   const remaining = daysBetween(today, parseDate(main.date));
   const route = PLAN_ROUTES[main.id];
@@ -107,21 +66,18 @@ function CountdownHero({ today, main }: { today: Date; main: PlanItem }) {
             <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
               {main.date}
             </span>
-            {!main.confirmed ? (
-              <span className="bg-surface-2 text-muted rounded-full px-2 py-0.5 text-[11px]">待公布</span>
-            ) : null}
           </div>
           {main.note ? <p className="text-secondary mt-1.5 text-[13px]">{main.note}</p> : null}
           <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Link to="/tasks/daily" className="pill pill--solid px-4 py-2 text-[13px] font-medium">
+              进入每日任务
+              <ArrowRight size={14} strokeWidth={2} />
+            </Link>
             {route ? (
-              <Link to={route} className="pill pill--solid px-4 py-2 text-[13px] font-medium">
-                进入备考
-                <ArrowRight size={14} strokeWidth={2} />
+              <Link to={route} className="pill px-3.5 py-2 text-[13px] font-medium">
+                查看本场备考
               </Link>
             ) : null}
-            <Link to="/zikao/plan" className="pill px-3.5 py-2 text-[13px] font-medium">
-              全局计划
-            </Link>
           </div>
         </div>
 
@@ -137,261 +93,6 @@ function CountdownHero({ today, main }: { today: Date; main: PlanItem }) {
           </span>
         </div>
       </div>
-    </section>
-  );
-}
-
-function WeeklyGoalsCard({ today }: { today: Date }) {
-  const todayIso = dateKey(today);
-  const currentIdx = useMemo(() => findCurrentWeekIndex(todayIso), [todayIso]);
-  const [weekIdx, setWeekIdx] = useState(currentIdx);
-  const [filter, setFilter] = useState<'all' | WeeklyCategory>('all');
-  const [draftTitle, setDraftTitle] = useState('');
-  const [draftCategory, setDraftCategory] = useState<WeeklyCategory>('zikao');
-
-  const { doc, syncState, blocked, toggle, addCustomTask, removeCustomTask } = useStudyTracker();
-  const week = WEEKLY_PLANS[weekIdx];
-
-  const customForWeek = useMemo(
-    () => doc.customTasks.filter((t) => t.weekId === week.id),
-    [doc.customTasks, week.id],
-  );
-
-  const allItems = useMemo(
-    () => [
-      ...week.tasks.map((t) => ({ ...t, isCustom: false as const })),
-      ...customForWeek.map((t) => ({
-        id: t.id,
-        category: t.category,
-        title: t.title,
-        acceptance: '自定义补充项',
-        route: undefined as string | undefined,
-        isCustom: true as const,
-      })),
-    ],
-    [week.tasks, customForWeek],
-  );
-
-  const doneCount = allItems.filter((item) => Boolean(doc.checked[item.id])).length;
-  const totalCount = allItems.length;
-  const pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
-
-  const visibleItems = filter === 'all' ? allItems : allItems.filter((item) => item.category === filter);
-
-  function handleAdd(e: FormEvent) {
-    e.preventDefault();
-    if (!draftTitle.trim() || blocked) return;
-    addCustomTask(week.id, draftCategory, draftTitle);
-    setDraftTitle('');
-  }
-
-  return (
-    <section className="glass p-5 sm:p-6">
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-ink flex items-center gap-2 text-[15px] font-semibold">
-            <CheckCircle2 size={16} strokeWidth={1.9} className="text-brand-ink" />
-            本周目标
-          </h2>
-          <span className="bg-brand-soft text-brand-ink rounded-full px-2.5 py-0.5 text-[12px] font-medium tabular-nums">
-            {week.code} · {week.stage}
-          </span>
-          {weekIdx === currentIdx ? (
-            <span className="bg-success-soft text-success-ink rounded-full px-2 py-0.5 text-[11px] font-medium">
-              本周
-            </span>
-          ) : null}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <SyncBadge state={syncState} />
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setWeekIdx((i) => Math.max(0, i - 1))}
-              disabled={weekIdx === 0}
-              aria-label="上一周"
-              className="pill size-7 justify-center p-0 disabled:opacity-40"
-            >
-              <ChevronLeft size={14} strokeWidth={1.8} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setWeekIdx((i) => Math.min(WEEKLY_PLANS.length - 1, i + 1))}
-              disabled={weekIdx === WEEKLY_PLANS.length - 1}
-              aria-label="下一周"
-              className="pill size-7 justify-center p-0 disabled:opacity-40"
-            >
-              <ChevronRight size={14} strokeWidth={1.8} />
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div className="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <p className="text-ink text-[14px] font-medium">{week.title}</p>
-        <p className="text-muted text-[12px] tabular-nums">
-          {week.start.slice(5)} ~ {week.end.slice(5)} · 预算 {week.budget}
-        </p>
-      </div>
-      <p className="text-secondary mt-1 text-[12px]">{week.focus}</p>
-      <p className="bg-surface-2/75 text-secondary mt-2.5 rounded-[12px] px-3 py-2 text-[11px] leading-relaxed tabular-nums">
-        固定节律：早 <strong className="text-ink font-medium">06:00–08:00</strong>（英语 1h + 硬核 1h）· 碎片 0.5h 听词 · 晚{' '}
-        <strong className="text-ink font-medium">19:30–22:00</strong>（2.5h 主块）· 22:30 睡满 7.5h · 周末每天 8h
-      </p>
-
-      {/* 进度条 */}
-      <div className="mt-3.5 flex items-center gap-3">
-        <div className="bg-line h-1.5 min-w-0 flex-1 overflow-hidden rounded-full">
-          <span
-            className="bg-brand block h-full rounded-full transition-[width] duration-300"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <span className="text-secondary shrink-0 text-[12px] font-medium tabular-nums">
-          {doneCount}/{totalCount}（{pct}%）
-        </span>
-      </div>
-
-      {/* 周次快速切换 + 分类筛选 */}
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1">
-          {WEEKLY_PLANS.map((w, idx) => (
-            <button
-              key={w.id}
-              type="button"
-              onClick={() => setWeekIdx(idx)}
-              className={[
-                'rounded-full px-2.5 py-0.5 text-[11px] font-medium tabular-nums transition-colors cursor-pointer',
-                idx === weekIdx
-                  ? 'bg-brand text-white'
-                  : 'bg-surface-2 text-secondary hover:bg-brand-soft hover:text-brand-ink',
-              ].join(' ')}
-            >
-              {w.code}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-1">
-          {(['all', 'zikao', 'english', 'tech', 'admin'] as const).map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setFilter(cat)}
-              className={[
-                'rounded-full px-2 py-0.5 text-[11px] transition-colors cursor-pointer',
-                filter === cat ? 'bg-ink text-canvas font-medium' : 'text-muted hover:text-ink',
-              ].join(' ')}
-            >
-              {cat === 'all' ? '全部' : CATEGORY_META[cat].label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 任务勾选列表 */}
-      <ul className="mt-3.5 flex flex-col gap-2">
-        {visibleItems.map((item) => {
-          const checked = Boolean(doc.checked[item.id]);
-          const meta = CATEGORY_META[item.category];
-          return (
-            <li
-              key={item.id}
-              className={[
-                'glass-tile flex items-start gap-3 px-3.5 py-3',
-                checked ? 'opacity-65' : '',
-              ].join(' ')}
-            >
-              <input
-                type="checkbox"
-                className="check mt-0.5"
-                checked={checked}
-                disabled={blocked}
-                onChange={() => toggle(item.id)}
-                aria-label={item.title}
-              />
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${meta.badge}`}>
-                    {meta.label}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={blocked}
-                    onClick={() => toggle(item.id)}
-                    className={[
-                      'text-left text-[13px] font-medium leading-snug cursor-pointer',
-                      checked ? 'text-muted line-through' : 'text-ink',
-                    ].join(' ')}
-                  >
-                    {item.title}
-                  </button>
-                </div>
-                {item.acceptance ? (
-                  <p className="text-muted mt-1 text-[12px] leading-relaxed">验收：{item.acceptance}</p>
-                ) : null}
-              </div>
-
-              <div className="flex shrink-0 items-center gap-1 pt-0.5">
-                {item.route ? (
-                  <Link
-                    to={item.route}
-                    title="前往对应页面"
-                    aria-label={`前往${item.title}`}
-                    className="text-muted hover:text-brand-ink grid size-6 place-items-center rounded-full transition-colors"
-                  >
-                    <ArrowUpRight size={14} strokeWidth={1.8} />
-                  </Link>
-                ) : null}
-                {item.isCustom ? (
-                  <button
-                    type="button"
-                    disabled={blocked}
-                    onClick={() => removeCustomTask(item.id)}
-                    title="删除自定义项"
-                    aria-label="删除自定义项"
-                    className="text-muted hover:text-danger grid size-6 place-items-center rounded-full transition-colors cursor-pointer"
-                  >
-                    <Trash2 size={13} strokeWidth={1.8} />
-                  </button>
-                ) : null}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-
-      {/* 随手补一条本周任务 */}
-      <form onSubmit={handleAdd} className="hairline-t mt-3.5 flex flex-wrap items-center gap-2 pt-3.5">
-        <select
-          value={draftCategory}
-          onChange={(e) => setDraftCategory(e.target.value as WeeklyCategory)}
-          aria-label="分类"
-          className="field w-auto py-1.5 pr-7 pl-2.5 text-[12px]"
-        >
-          <option value="zikao">自考</option>
-          <option value="english">英语</option>
-          <option value="tech">Agent/求职</option>
-          <option value="admin">行政</option>
-        </select>
-        <input
-          type="text"
-          value={draftTitle}
-          onChange={(e) => setDraftTitle(e.target.value)}
-          disabled={blocked}
-          placeholder={`给 ${week.code} 补一条任务（如：补做 C++ 第 2 章课后题）`}
-          className="field min-w-[180px] flex-1 py-1.5 text-[13px]"
-        />
-        <button
-          type="submit"
-          disabled={blocked || !draftTitle.trim()}
-          className="pill px-3 py-1.5 text-[12px] font-medium disabled:opacity-45"
-        >
-          <Plus size={13} strokeWidth={2} />
-          添加
-        </button>
-      </form>
     </section>
   );
 }
@@ -605,7 +306,7 @@ function ExamPlanCard({
               className={[
                 'rounded-[14px] transition-colors duration-[var(--duration)] ease-[var(--ease-out)]',
                 isSelected ? 'bg-brand-soft/55' : 'hover:bg-surface-2/55',
-                passed ? 'opacity-55' : '',
+                passed ? 'opacity-50' : '',
               ].join(' ')}
             >
               <div className="flex items-start gap-3 px-3 py-3">
@@ -627,13 +328,8 @@ function ExamPlanCard({
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-ink truncate text-[15px] font-medium">{item.title}</span>
                       {!item.confirmed ? (
-                        <span className="bg-surface-2 text-muted rounded-full px-2 py-0.5 text-[11px]">
+                        <span className="bg-surface-2 text-muted rounded-full px-2 py-0.5 text-[12px]">
                           待公布
-                        </span>
-                      ) : null}
-                      {passed ? (
-                        <span className="bg-surface-2 text-secondary rounded-full px-2 py-0.5 text-[11px]">
-                          已考
                         </span>
                       ) : null}
                     </div>
@@ -641,7 +337,7 @@ function ExamPlanCard({
                     <div className="text-muted mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[12px] tabular-nums">
                       <span>{item.date}</span>
                       <span className={isMain ? 'text-brand-ink font-medium' : ''}>
-                        {passed ? '待出成绩' : days === 0 ? '今天' : `${days} 天后`}
+                        {passed ? '已考' : days === 0 ? '今天' : `${days} 天后`}
                       </span>
                     </div>
 
@@ -686,13 +382,9 @@ export function HomePage() {
   }
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.95fr)] lg:gap-5">
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] lg:gap-5">
       <div className="flex flex-col gap-4 lg:gap-5">
         <CountdownHero today={today} main={main} />
-        <WeeklyGoalsCard today={today} />
-      </div>
-      <div className="flex flex-col gap-4 lg:gap-5">
-        <ExamPlanCard today={today} mainId={main.id} selectedId={selectedId} onSelectExam={selectExam} />
         <CalendarCard
           today={today}
           cursor={cursor}
@@ -701,6 +393,7 @@ export function HomePage() {
           onSelectExam={selectExam}
         />
       </div>
+      <ExamPlanCard today={today} mainId={main.id} selectedId={selectedId} onSelectExam={selectExam} />
     </div>
   );
 }
