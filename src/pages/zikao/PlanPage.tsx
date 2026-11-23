@@ -45,7 +45,7 @@ export function PlanPage() {
       </section>
 
       <p className="text-muted text-[12px]">
-        计划来自 2026-11-04 定的四科安排；日期或强度有变动，改这份文档即可（src/data/studyPlan.md）。
+        计划已于 2026-11-23 结合三级考完、10 月复盘与复旦 2027 最新目录修订；日期或强度有变动，直接更新 src/data/studyPlan.md。
       </p>
     </div>
   );

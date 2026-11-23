@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppShell } from './AppShell';
 import { useSession } from '../lib/useSession';
+import { CODE_TRACKS } from '../data/codeTracks';
 import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
 import { Placeholder } from '../pages/Placeholder';
@@ -45,17 +46,9 @@ export function App() {
           path="/code/frontend"
           element={
             <TrackPage
-              title="前端"
-              note="从页面结构到数据请求。"
-              topics={[
-                'HTML 与语义化结构',
-                'CSS 布局与响应式',
-                'JavaScript 基础与异步',
-                'TypeScript 类型与泛型',
-                'React 组件与状态管理',
-                '路由与数据请求',
-                '构建工具与工程化',
-              ]}
+              title={CODE_TRACKS.frontend.title}
+              note={CODE_TRACKS.frontend.note}
+              topics={CODE_TRACKS.frontend.topics}
             />
           }
         />
@@ -63,17 +56,9 @@ export function App() {
           path="/code/backend"
           element={
             <TrackPage
-              title="后端"
-              note="从语言基础到上线部署。"
-              topics={[
-                'Java 语法与集合',
-                'Spring Boot 分层与依赖注入',
-                'MySQL 表设计与索引',
-                'Redis 缓存与过期策略',
-                '接口设计与鉴权',
-                '日志与异常处理',
-                'Docker 部署与回滚',
-              ]}
+              title={CODE_TRACKS.backend.title}
+              note={CODE_TRACKS.backend.note}
+              topics={CODE_TRACKS.backend.topics}
             />
           }
         />
@@ -81,16 +66,9 @@ export function App() {
           path="/code/ai"
           element={
             <TrackPage
-              title="AI"
-              note="从数值计算到大模型应用。"
-              topics={[
-                'Python 与 NumPy',
-                '机器学习基础',
-                '深度学习与常见网络',
-                '向量检索与 RAG',
-                '提示词与 Agent 编排',
-                '模型服务与部署',
-              ]}
+              title={CODE_TRACKS.ai.title}
+              note={CODE_TRACKS.ai.note}
+              topics={CODE_TRACKS.ai.topics}
             />
           }
         />
