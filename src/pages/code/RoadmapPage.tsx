@@ -13,7 +13,7 @@ export function RoadmapPage() {
       <div>
         <h1 className="text-ink text-[22px] font-semibold">学习路线</h1>
         <p className="text-secondary mt-1 text-[13px]">
-          当前主线聚焦「Python → FastAPI → AI 应用 MVP」（5h/周），与已有 Java 后端经验组合发力。
+          明年 3–4 月上海求职双栈主线（14h/周）：AI Agent 工业级项目主攻 + 5 年 Java 后端托底。
         </p>
       </div>
 

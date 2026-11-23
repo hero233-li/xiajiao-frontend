@@ -235,6 +235,10 @@ function WeeklyGoalsCard({ today }: { today: Date }) {
         </p>
       </div>
       <p className="text-secondary mt-1 text-[12px]">{week.focus}</p>
+      <p className="bg-surface-2/75 text-secondary mt-2.5 rounded-[12px] px-3 py-2 text-[11px] leading-relaxed tabular-nums">
+        固定节律：早 <strong className="text-ink font-medium">06:00–08:00</strong>（英语 1h + 硬核 1h）· 碎片 0.5h 听词 · 晚{' '}
+        <strong className="text-ink font-medium">19:30–22:00</strong>（2.5h 主块）· 22:30 睡满 7.5h · 周末每天 8h
+      </p>
 
       {/* 进度条 */}
       <div className="mt-3.5 flex items-center gap-3">
@@ -368,7 +372,7 @@ function WeeklyGoalsCard({ today }: { today: Date }) {
         >
           <option value="zikao">自考</option>
           <option value="english">英语</option>
-          <option value="tech">技术</option>
+          <option value="tech">Agent/求职</option>
           <option value="admin">行政</option>
         </select>
         <input
