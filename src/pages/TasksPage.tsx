@@ -348,8 +348,8 @@ export function TasksPage({ view }: { view: TaskView }) {
           >
             <option value="zikao">自考</option>
             <option value="english">英语</option>
-            <option value="tech">Agent/求职</option>
-            <option value="admin">行政</option>
+            <option value="tech">Agent/工作</option>
+            <option value="admin">考研/行政</option>
           </select>
           <input
             type="text"

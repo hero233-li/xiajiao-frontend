@@ -13,7 +13,7 @@ export function RoadmapPage() {
       <div>
         <h1 className="text-ink text-[22px] font-semibold">学习路线</h1>
         <p className="text-secondary mt-1 text-[13px]">
-          明年 3–4 月上海求职双栈主线（14h/周）：AI Agent 工业级项目主攻 + 5 年 Java 后端托底。
+          2 年软件测试无缝升级：明年 3–4 月上海双投「AI 测开 / Agent 评测」与「Python / Agent 应用开发」。
         </p>
       </div>
 
